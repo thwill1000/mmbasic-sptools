@@ -26,11 +26,17 @@ Sub matrix_fill()
 End Sub
 
 Function matrix_get(x, y)
-  matrix_get = (matrix(x) And 2^y) > 0
+  Local x2, y2
+  x2 = x + (y \ 8) * matrix_w
+  y2 = y Mod 8
+  matrix_get = (matrix(x2) And 2^y2) > 0
 End Function
 
 Sub matrix_set(x, y, z)
-  matrix(x) = matrix(x) And (&hFF Xor 2^y) Or (z * 2^y)
+  Local x2, y2
+  x2 = x + (y \ 8) * matrix_w
+  y2 = y Mod 8
+  matrix(x2) = matrix(x2) And (&hFF Xor 2^y2) Or (z * 2^y2)
 End Sub
 
 Sub matrix_left()
@@ -64,11 +70,13 @@ Sub matrix_draw()
   matrix_r = (matrix_r + 1) Mod 8
 End Sub
 
-Sub m7219_init(rows, cols)
+Sub m7219_init(w, h)
   Local i
-  If rows Mod 8 <> 0 Then Error "Invalid number of rows: " + Str$(rows)
-  If cols Mod 8 <> 0 Then Error "Invalid number of columns: " + Str$(cols)
-  matrix_nc = cols * (rows \ 8)
+  If w Mod 8 <> 0 Then Error "Invalid number of columns: " + Str$(w)
+  If w Mod 8 <> 0 Then Error "Invalid number of rows: " + Str$(h)
+  matrix_nc = w * (h \ 8)
+  matrix_h = h
+  matrix_w = w
   Dim matrix(matrix_nc - 1) ' all elements initialised to 0
 
   m7219_rx = 1
@@ -85,7 +93,7 @@ Sub m7219_init(rows, cols)
 
   For i = 0 To matrix_nc \ 8 - 1
     m7219_write(&h0900, i) ' BCD DECODE ALL DIGITS
-    m7219_write(&h0A02, i) ' BRIGHTNESS (0-15)
+    m7219_write(&h0A00, i) ' BRIGHTNESS (0-15)
     m7219_write(&h0B07, i) ' 8 COLUMNS
     m7219_write(&h0F00, i) ' TESTS OFF
     m7219_write(&h0C01, i) ' OPERATING MODE (i.e. NOT SHUTDOWN MODE)
@@ -96,18 +104,16 @@ End Sub
 
 Sub m7219_draw()
   Local c
-  Pin(m7219_cs) = 0
   For c = 0 To matrix_nc - 1
     m7219_write((1 + c Mod 8) * 256 + matrix(c), c \ 8)
   Next c
-  Pin(m7219_cs) = 1
 End Sub
 
 Sub m7219_write(x, idx)
   Local i
   Pin(m7219_cs) = 0
-  For i = 1 To matrix_nc \ 8
-    null = SPI(m7219_rx, m7219_tx, m7219_clk, x * (i = idx + 1), H, 3, 16)
+  For i = matrix_nc \ 8 - 1 To 0 Step -1
+    null = SPI(m7219_rx, m7219_tx, m7219_clk, x * (i = idx), H, 3, 16)
   Next i
   Pin(m7219_cs) = 1
 End Sub

@@ -58,19 +58,20 @@ Sub text_scroll(s$)
     Next c
     If cmd <> 0 Then i = Len(s$)
   Next i
-  For i = 1 To matrix_nc - 1 : Pause 100 : matrix_left() : Next i
+  For i = 1 To matrix_nc : Pause 100 : matrix_left() : Next i
 End Sub
 
 ' Copies column 'c' of glyph 'a' to the last column of the matrix.
 Sub text_blit(a, c)
-  Local i, r, s, z
+  Local i, p, s, z
 
-  r = 1
+  p = 1
   s = (a - 20) * 3
   For i = s To s + 2
     z = Peek(Var font4x6(0), i)
-    matrix_set(matrix_nc - 1, r, (z And 2^c) > 0)
-    matrix_set(matrix_nc - 1, r + 1, (z And 2^(c+4)) > 0)
-    r = r + 2
+    matrix_set(matrix_nc - 1, p, (z And 2^c) > 0)
+    p = p + 1
+    matrix_set(matrix_nc - 1, p, (z And 2^(c+4)) > 0)
+    p = p + 1
   Next i
 End Sub

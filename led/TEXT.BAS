@@ -3,16 +3,14 @@
 
 ' LED scrolling text demo.
 
-
 Library Load "matrix.lib"
 Library Load "text.lib"
 
 Cls
-matrix_init()
+m7219_init(8,8)
 text_init()
-SetTick 2, matrix_draw
+SetTick 50, m7219_draw
 s$ = MM.CmdLine$
 If Len(s$) = 0 Then Line Input "Message: ", s$
 text_scroll(s$)
 End
-
