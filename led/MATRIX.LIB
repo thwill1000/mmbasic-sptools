@@ -1,0 +1,138 @@
+' Copyright (c) 2020 Thomas Hugo Williams
+' For Maximite BASIC v4.5C
+
+' LED matrix manipulation library.
+
+' Makes use of a global matrix(8) created by calling matrix_init().
+' Elements 0-7 are the 8-bit pattern for the matrix columns.
+
+Sub matrix_init()
+  Local i
+  For i = 1 To 8 : SetPin i, dout : Next i
+  For i = 11 To 18 : SetPin i, dout : Next i
+  matrix_nc = 8
+  Dim matrix(matrix_nc - 1) ' All elements initalised to 0
+  matrix_r = 0
+End Sub
+
+Sub matrix_clear()
+  Local i
+  For i = 0 To matrix_nc - 1 : matrix(i) = 0 : Next i
+End Sub
+
+Sub matrix_fill()
+  Local i
+  For i = 0 To matrix_nc - 1 : matrix(i) = &hFF : Next i
+End Sub
+
+Function matrix_get(x, y)
+  matrix_get = (matrix(x) And 2^y) > 0
+End Function
+
+Sub matrix_set(x, y, z)
+  matrix(x) = matrix(x) And (&hFF Xor 2^y) Or (z * 2^y)
+End Sub
+
+Sub matrix_left()
+  Local i
+  For i = 0 To matrix_nc - 2 : matrix(i) = matrix(i + 1) : Next i
+  matrix(matrix_nc - 1) = 0
+End Sub
+
+' Updates scanline/row 'matrix_r'.
+'
+' Assumes that a HIGH is required on the row & column to light the LED.
+' If a LOW is required on the row then use the commented out values in the
+' calls to Port().
+'
+' This routine needs to be fast (it is called every 2ms) hence the
+' unrolled loop used to calculate 'x'.
+'
+' A much faster implementation is possible if matrix data is stored by
+' rows instead of columns, i.e.
+'
+'   Port(1, 8, 11, 8) = matrix(matrix_r) Or 2^(matrix_r + 8)
+Sub matrix_draw()
+  Local m, x
+  m = 2^matrix_r
+  x = ((matrix(0) And m) > 0) Or 2 * ((matrix(1) And m) > 0)
+  x = x Or 4  * ((matrix(2) And m) > 0) Or 8   * ((matrix(3) And m) > 0)
+  x = x Or 16 * ((matrix(4) And m) > 0) Or 32  * ((matrix(5) And m) > 0)
+  x = x Or 64 * ((matrix(6) And m) > 0) Or 128 * ((matrix(7) And m) > 0)
+  Port(1, 8, 11, 8) = 0 ' &hFF00
+  Port(1, 8, 11, 8) = x Or 2^(matrix_r + 8) ' &hFF00 - 2^(matrix_r + 8)
+  matrix_r = (matrix_r + 1) Mod 8
+End Sub
+
+Sub m7219_init(rows, cols)
+  Local i
+  If rows Mod 8 <> 0 Then Error "Invalid number of rows: " + Str$(rows)
+  If cols Mod 8 <> 0 Then Error "Invalid number of columns: " + Str$(cols)
+  matrix_nc = cols * (rows \ 8)
+  Dim matrix(matrix_nc - 1) ' all elements initialised to 0
+
+  m7219_rx = 1
+  m7219_tx = 9
+  m7219_cs = 4
+  m7219_clk = 10
+
+  SetPin m7219_rx, din
+  SetPin m7219_tx, dout
+  SetPin m7219_cs, dout
+  SetPin m7219_clk, dout
+
+  Pin(m7219_clk) = 1 ' Active low - so initially set high
+
+  For i = 0 To matrix_nc \ 8 - 1
+    m7219_write(&h0900, i) ' BCD DECODE ALL DIGITS
+    m7219_write(&h0A02, i) ' BRIGHTNESS (0-15)
+    m7219_write(&h0B07, i) ' 8 COLUMNS
+    m7219_write(&h0F00, i) ' TESTS OFF
+    m7219_write(&h0C01, i) ' OPERATING MODE (i.e. NOT SHUTDOWN MODE)
+  Next i
+
+  m7219_draw() ' Clears the matrix - is this necessary?
+End Sub
+
+Sub m7219_draw()
+  Local c
+  Pin(m7219_cs) = 0
+  For c = 0 To matrix_nc - 1
+    m7219_write((1 + c Mod 8) * 256 + matrix(c), c \ 8)
+  Next c
+  Pin(m7219_cs) = 1
+End Sub
+
+Sub m7219_write(x, idx)
+  Local i
+  Pin(m7219_cs) = 0
+  For i = 1 To matrix_nc \ 8
+    null = SPI(m7219_rx, m7219_tx, m7219_clk, x * (i = idx + 1), H, 3, 16)
+  Next i
+  Pin(m7219_cs) = 1
+End Sub
+
+Sub digits_init()
+  Local i, x
+  Dim digits(9, 7) ' 10 digits, 8 columns per character
+
+  ' Each DATA line represents dot-patterns for the 8-columns
+  ' (left to right) msb=bottom dot, lsb=top dot
+
+  Data &h7E, &hFF, &hFF, &hC3, &hC3, &hFF, &hFF, &h7E ' 0
+  Data &h00, &h00, &h04, &h06, &hFF, &hFF, &hFF, &h00 ' 1
+  Data &hE6, &hE7, &hF7, &hD3, &hDB, &hCF, &hCF, &hC6 ' 2
+  Data &hDB, &hDB, &hDB, &hDB, &hDB, &hFF, &hFF, &h66 ' 3
+  Data &h1F, &h1F, &h1F, &h18, &hFF, &hFF, &hFF, &h18 ' 4
+  Data &h5F, &hDF, &hDF, &hDB, &hDB, &hFB, &hFB, &h73 ' 5
+  Data &h7E, &hFF, &hFF, &hDB, &hDB, &hFB, &hFB, &h72 ' 6
+  Data &h03, &h03, &hE3, &hF3, &hFB, &h1F, &h0F, &h07 ' 7
+  Data &h66, &hFF, &hFF, &hDB, &hDB, &hFF, &hFF, &h66 ' 8
+  Data &h4E, &hDF, &hDF, &hDB, &hDB, &hFF, &hFF, &h7E ' 9
+
+  For i = 0 To 9
+    For x = 0 To 7
+      Read digits(i, x)
+    Next x
+  Next i
+End Sub
