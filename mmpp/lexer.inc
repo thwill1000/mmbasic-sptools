@@ -3,7 +3,7 @@
 Const LX_IDENTIFIER = 0
 Const LX_NUMBER = 1
 Const LX_COMMENT = 2
-Const LX_STRING_LITERAL = 3
+Const LX_STRING = 3
 Const LX_KEYWORD = 4
 Const LX_SYMBOL = 5
 Const LX_DIRECTIVE = 6
@@ -15,8 +15,21 @@ Dim lx_type(LX_MAX_TOKENS - 1)
 Dim lx_start(LX_MAX_TOKENS - 1)
 Dim lx_len(LX_MAX_TOKENS - 1)
 
+Const LX_NUM_DIRECTIVES = 8
+Dim LX_DIRECTIVES$(LX_NUM_DIRECTIVES - 1)
+LX_DIRECTIVES$(0) = "'!comment_if"
+LX_DIRECTIVES$(1) = "'!uncomment_if"
+LX_DIRECTIVES$(2) = "'!comment_if_not"
+LX_DIRECTIVES$(3) = "'!uncomment_if_not"
+LX_DIRECTIVES$(4) = "'!endif"
+LX_DIRECTIVES$(5) = "'!enable"
+LX_DIRECTIVES$(6) = "'!disable"
+LX_DIRECTIVES$(7) = "'!replace"
+
 Dim lx_char
+Dim lx_error$
 Dim lx_line$
+Dim lx_next_char
 Dim lx_num
 Dim lx_pos
 
@@ -26,6 +39,12 @@ Sub lx_advance()
     lx_char = -1
   Else
     lx_char = Peek(Var lx_line$, lx_pos)
+  EndIf
+  EndIf
+  If lx_pos + 1 > Len(lx_line$) Then
+    lx_next_char = -1
+  Else
+    lx_next_char = Peek(Var lx_line$, lx_pos + 1)
   EndIf
 End Sub
 
@@ -62,6 +81,7 @@ Sub lx_init()
 End Sub
 
 Function lx_is_keyword(s$)
+  Local i
   ' TODO: use binary chop
   For i = 0 To LX_NUM_KEYWORDS - 1
     If LCase$(s$) = LX_KEYWORDS$(i) Then lx_is_keyword = 1 : Exit Function
@@ -71,6 +91,7 @@ End Function
 Sub lx_parse_line(line$)
   Local i
 
+  lx_error$ = ""
   lx_line$ = line$
   lx_num = 0
   lx_pos = 0
@@ -83,7 +104,12 @@ Sub lx_parse_line(line$)
       lx_parse_number()
     ElseIf lx_char = 39 Then
       ' single-quote
-      lx_parse_comment_or_directive()
+      If lx_next_char = 33 Then
+        ' exclamation mark
+        lx_parse_directive()
+      Else
+        lx_parse_comment()
+      EndIf
     ElseIf lx_char = 34 Then
       ' double-quote
       lx_parse_string()
@@ -99,13 +125,22 @@ End Sub
 Sub lx_parse_number()
   Local start = lx_pos
 
-  Do While is_digit(lx_char) : lx_advance() : Loop
+  Do While lx_is_digit(lx_char) : lx_advance() : Loop
+
+  If lx_char = Asc(".") Then
+    lx_advance()
+    Do While lx_is_digit(lx_char) : lx_advance() : Loop
+  EndIf
+
+  If lx_char = Asc("e") Or lx_char = Asc("E") Then
+    lx_advance()
+    Do While lx_is_digit(lx_char) : lx_advance() : Loop
+  EndIf
 
   lx_store(LX_NUMBER, start, lx_pos - start)
-
 End Sub
 
-Sub lx_parse_comment_or_directive()
+Sub lx_parse_comment()
   lx_store(LX_COMMENT, lx_pos, Len(lx_line$) - lx_pos + 1)
   lx_char = -1
 End Sub
@@ -116,7 +151,7 @@ Sub lx_parse_string()
   lx_advance()
   Do While lx_char <> -1 And lx_char <> 34 : lx_advance() : Loop
 
-  lx_store(LX_STRING_LITERAL, start, lx_pos - start + 1)
+  lx_store(LX_STRING, start, lx_pos - start + 1)
   lx_advance()
 
 End Sub
@@ -137,6 +172,16 @@ Sub lx_parse_keyword()
 
 End Sub
 
+Sub lx_parse_directive()
+  Local start
+
+  start = lx_pos
+  lx_advance()
+  lx_advance()
+  Do While lx_is_keyword_char(lx_char) : lx_advance() : Loop
+  lx_store(LX_DIRECTIVE, start, lx_pos - start)
+End Sub
+
 Function lx_is_keyword_char(ch)
   lx_is_keyword_char = ch >= 65 And ch <= 90
   lx_is_keyword_char = lx_is_keyword_char Or (ch >=95 And ch <= 122)
@@ -145,7 +190,7 @@ Function lx_is_keyword_char(ch)
 End Function
 
 Function lx_is_digit(ch)
-  is_digit = ch >= 48 And ch <= 57
+  lx_is_digit = ch >= 48 And ch <= 57
 End Function
 
 Sub lx_parse_symbol()

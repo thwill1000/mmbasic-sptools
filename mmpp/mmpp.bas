@@ -1,5 +1,14 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+'!comment_if foo
+'!uncomment_if foo
+'!comment_if_not foo
+'!uncomment_if_not foo
+'!endif
+'!enable foo
+'!disable foo
+'!replace foo bar
+
 Option Explicit On
 Option Default Integer
 
@@ -30,7 +39,7 @@ Sub main()
   lx_init()
 
   f$ = "mmpp.bas"
-'  f$ = "zmim_main.bas"
+'  f$ = "examples/zmim_main.bas"
 '  f$ = "examples/maxdash.bas"
   Open f$ For Input As #1
 
@@ -48,11 +57,12 @@ Sub main()
 '        Print VT100_WHITE; "{";
         Print TK_COLOUR$(lx_type(i)); t$;
         If i < lx_num - 1 Then
-          no_space = (t$ = "(")
+          no_space = t$ = "("
           no_space = no_space Or lx_get_token$(i + 1) = "("
           no_space = no_space Or lx_get_token$(i + 1) = ")"
           no_space = no_space Or lx_get_token$(i + 1) = ","
           no_space = no_space Or lx_get_token$(i + 1) = ";"
+          no_space = no_space And t$ <> "=" And t$ <> ","
           If Not no_space Then Print " ";
         EndIf
 '        Print VT100_WHITE; "}";
