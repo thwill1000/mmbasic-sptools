@@ -26,7 +26,7 @@ Dim TK_COLOUR$(6)
 TK_COLOUR$(LX_IDENTIFIER) = VT100_WHITE
 TK_COLOUR$(LX_NUMBER) = VT100_GREEN
 TK_COLOUR$(LX_COMMENT) = VT100_YELLOW
-TK_COLOUR$(LX_STRING_LITERAL) = VT100_MAGENTA
+TK_COLOUR$(LX_STRING) = VT100_MAGENTA
 TK_COLOUR$(LX_KEYWORD) = VT100_CYAN
 TK_COLOUR$(LX_SYMBOL) = VT100_WHITE
 TK_COLOUR$(LX_DIRECTIVE) = VT100_RED
@@ -38,8 +38,9 @@ Sub main()
 
   lx_init()
 
-  f$ = "mmpp.bas"
-'  f$ = "examples/zmim_main.bas"
+'  f$ = "mmpp.bas"
+'   f$ = "examples/LIFE_CMM.bas"
+  f$ = "examples/zmim_main.bas"
 '  f$ = "examples/maxdash.bas"
   Open f$ For Input As #1
 

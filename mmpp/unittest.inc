@@ -1,8 +1,8 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Dim ut_tests$(9)
+Dim ut_tests$(19)
 Dim ut_num_tests = 0
-Dim ut_errors$(9)
+Dim ut_errors$(19)
 Dim ut_num_errors = 0
 
 Sub ut_add_test(test$)
@@ -22,7 +22,8 @@ Sub ut_run_tests()
 
   For i = 0 To ut_num_tests - 1
     Print ut_tests$(i); ":"
-    _ = Eval(UCase$(ut_tests$(i)) + "()")
+    ut_num_errors = 0
+    _ = Eval(ut_tests$(i) + "()")
     If ut_num_errors = 0 Then
       Print "  PASS"
     Else
