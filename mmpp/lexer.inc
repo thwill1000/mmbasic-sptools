@@ -67,7 +67,7 @@ Sub lx_store(type, start, length)
 End Sub
 
 Function lx_get_token$(i)
-  If i > lx_num Or lx_len(i) = 0 Then
+  If i > lx_num - 1 Or lx_len(i) = 0 Then
     lx_get_token$ = ""
   Else
     lx_get_token$ = Mid$(lx_line$, lx_start(i), lx_len(i))
