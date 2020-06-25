@@ -22,8 +22,8 @@ LX_DIRECTIVES$(1) = "'!uncomment_if"
 LX_DIRECTIVES$(2) = "'!comment_if_not"
 LX_DIRECTIVES$(3) = "'!uncomment_if_not"
 LX_DIRECTIVES$(4) = "'!endif"
-LX_DIRECTIVES$(5) = "'!enable"
-LX_DIRECTIVES$(6) = "'!disable"
+LX_DIRECTIVES$(5) = "'!set"
+LX_DIRECTIVES$(6) = "'!clear"
 LX_DIRECTIVES$(7) = "'!replace"
 
 Dim lx_char$
@@ -75,6 +75,7 @@ Function lx_get_token$(i)
 End Function
 
 Sub lx_init()
+'!comment_if LX_NO_KEYWORDS
   Local count, s$
 
   Open "/cmm/mmpp/resources/keywords.txt" For Input As #1
@@ -93,14 +94,17 @@ Sub lx_init()
   Loop While Not Eof(#1)
   
   Close #1
+'!endif
 End Sub
 
 Function lx_is_keyword(s$)
+'!comment_if LX_NO_KEYWORDS
   Local i
   ' TODO: use binary chop
   For i = 0 To LX_NUM_KEYWORDS - 1
     If LCase$(s$) = LX_KEYWORDS$(i) Then lx_is_keyword = 1 : Exit Function
   Next i
+'!endif
 End Function
 
 Sub lx_parse_line(line$)

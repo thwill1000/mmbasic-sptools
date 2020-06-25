@@ -1,14 +1,5 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-'!comment_if foo
-'!uncomment_if foo
-'!comment_if_not foo
-'!uncomment_if_not foo
-'!endif
-'!enable foo
-'!disable foo
-'!replace foo bar
-
 Option Explicit On
 Option Default Integer
 
@@ -32,11 +23,18 @@ TK_COLOUR$(LX_KEYWORD) = VT100_CYAN
 TK_COLOUR$(LX_SYMBOL) = VT100_WHITE
 TK_COLOUR$(LX_DIRECTIVE) = VT100_RED
 
+Const MAX_NUM_FLAGS = 10
+Const MAX_NUM_IFS = 10
+
 Dim cur_file_num = 0
 Dim open_files$(9) Length 40
 Dim line_buffer_len = 0
 Dim line_buffer$(9) Length 80
 Dim out_file_num = 0
+Dim num_comments = 0
+Dim flags$(MAX_NUM_FLAGS - 1)
+Dim if_stack(MAX_NUM_IFS)
+Dim num_ifs = 0
 
 Sub open_file(f$)
   cur_file_num = cur_file_num + 1
@@ -67,7 +65,7 @@ Function read_line$()
   EndIf
 End Function
 
-Sub output_line()
+Sub pretty_print()
   Local i, no_space, t$
 
   For i = 0 To lx_num - 1
@@ -108,6 +106,109 @@ Sub cendl()
   If out_file_num = 0 Then Print Else Print #out_file_num
 End Sub
 
+Sub add_comments()
+  If num_comments > 0 Then
+    lx_parse_line(String$(num_comments, "'") + lx_line$)
+  ElseIf num_comments < 0 Then
+    Local x = num_comments
+    Do While x < 0 And lx_type(0) = LX_COMMENT
+      lx_parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
+      x = x + 1
+    Loop
+  EndIf
+End Sub
+
+Sub push_if(x)
+  If num_ifs = MAX_NUM_IFS Then Error "Too many if directives"
+  if_stack(num_ifs) = x
+  num_ifs = num_ifs + 1
+End Sub
+
+Function pop_if()
+  If num_ifs = 0 Then Error "If directive stack is empty"
+  num_ifs = num_ifs - 1
+  pop_if = if_stack(num_ifs)
+End Function
+
+Sub process_directives()
+  Local f$, s$, t0$, t1$, x
+
+  t0$ = LCase$(lx_get_token$(0))
+  t1$ = LCase$(lx_get_token$(1))
+
+  If t0$ = "'!endif" Then
+    num_comments = num_comments - pop_if()
+    lx_parse_line("' PROCESSED: " + lx_line$)
+  EndIf
+
+  add_comments()
+
+  If lx_type(0) <> LX_DIRECTIVE Then Exit Sub
+
+  If t0$ = "#include" Then
+    f$ = lx_get_token$(1)
+    f$ = Mid$(f$, 2, Len(f$) - 2)
+    open_file(f$)
+    s$ = "' -------- BEGIN #Include " + Chr$(34) + f$ + Chr$(34) + " --------"
+    add_line(s$)
+    s$ = read_line$()
+    lx_parse_line(s$)
+  EndIf
+
+  If t0$ = "'!comment_if" Then
+    x = get_flag(t1$)
+    push_if(x)
+    If x Then num_comments = num_comments + 1
+  ElseIf t0$ = "'!uncomment_if" Then
+    x = get_flag(t1$)
+    push_if(x * -1)
+    If x Then num_comments = num_comments - 1
+  ElseIf t0$ = "'!comment_if_not" Then
+    x = get_flag(t1$)
+    push_if(1 - x)
+    If Not x Then num_comments = num_comments + 1
+  ElseIf t0$ = "'!uncomment_if_not" Then
+    x = get_flag(t1$)
+    push_if((1 - x) * -1)
+    If Not x Then num_comments = num_comments - 1
+  ElseIf t0$ = "'!set" Then
+    set_flag(t1$)
+  ElseIf t0$ = "'!clear" Then
+    clear_flag(t1$)
+  Else
+    Error "Unknown directive: " + t0$
+  EndIf
+
+  lx_parse_line("' PROCESSED: " + lx_line$)
+End Sub
+
+Function get_flag(s$)
+  Local i
+  If s$ = "" Then Error "No flag specified"
+  For i = 0 To MAX_NUM_FLAGS - 1
+    If flags$(i) = s$ Then get_flag = 1 : Exit Function
+  Next i
+End Function
+
+Sub set_flag(s$)
+  Local i, j = -1
+  If s$ = "" Then Error "No flag specified"
+  For i = 0 To MAX_NUM_FLAGS - 1
+    If j = -1 And flags$(i) = "" Then j = i
+    If flags$(i) = s$ Then Exit Sub ' already set
+  Next i
+  If j = -1 Then Error "Too many flags"
+  flags$(j) = s$
+End Sub
+
+Sub clear_flag(s$)
+  Local i
+  If s$ = "" Then Error "No flag specified"
+  For i = 0 To MAX_NUM_FLAGS - 1
+    If flags$(i) = s$ Then flags$(i) = "" : Exit Sub
+  Next i
+End Sub
+
 Sub main()
   Local count, f$, s$
 
@@ -128,23 +229,13 @@ Sub main()
   EndIf
 
   Do
-    s$ = read_line$()
-
     count = count + 1
     Print VT100_WHITE$ + Format$(count, "%-4g") + ": ";
+
+    s$ = read_line$()
     lx_parse_line(s$)
-
-    If LCase$(lx_get_token$(0)) = "#include" Then
-      f$ = lx_get_token$(1)
-      f$ = Mid$(f$, 2, Len(f$) - 2)
-      open_file(f$)
-      s$ = "' -------- BEGIN #Include " + Chr$(34) + f$ + Chr$(34) + " --------"
-      add_line(s$)
-      s$ = read_line$()
-      lx_parse_line(s$)
-    EndIf
-
-    output_line()
+    process_directives()
+    pretty_print()
 
     If Eof(#cur_file_num) Then
       If cur_file_num > 1 Then
