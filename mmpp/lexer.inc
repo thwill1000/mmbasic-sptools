@@ -67,13 +67,17 @@ Sub lx_store(type, start, length)
 End Sub
 
 Function lx_get_token$(i)
-  lx_get_token$ = Mid$(lx_line$, lx_start(i), lx_len(i))
+  If i > lx_num Or lx_len(i) = 0 Then
+    lx_get_token$ = ""
+  Else
+    lx_get_token$ = Mid$(lx_line$, lx_start(i), lx_len(i))
+  EndIf
 End Function
 
 Sub lx_init()
   Local count, s$
 
-  Open "resources/keywords.txt" For Input As #1
+  Open "/cmm/mmpp/resources/keywords.txt" For Input As #1
 
   Do
     Line Input #1, s$
