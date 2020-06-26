@@ -19,10 +19,14 @@ TK_COLOUR$(LX_SYMBOL) = VT100_WHITE
 TK_COLOUR$(LX_DIRECTIVE) = VT100_RED
 
 Dim pp_file_num = -1
+Dim pp_comment   ' 1 to print comments, 0 to ignore comments
 Dim pp_count
 Dim pp_indent
+Dim pp_empty = 1 ' 1 if previous printed line was empty or just contained a
+                 ' comment, otherwise 0
 
-Sub pp_open(f$)
+Sub pp_open(f$, comment)
+  pp_comment = comment
   If f$ <> "" Then
     pp_file_num = 10
     Open f$ For Output As #pp_file_num
@@ -67,62 +71,83 @@ Sub pp_inc_line()
   EndIf
 End Sub
 
-Function needs_trailing_space(i)
+Function pp_needs_space(i)
   Local t = lx_type(i)
-  needs_trailing_space = t = LX_KEYWORD Or t = LX_IDENTIFIER Or t = LX_NUMBER
+  pp_needs_space = t = LX_KEYWORD Or t = LX_IDENTIFIER Or t = LX_NUMBER
 End Function
 
 Sub pp_print_compact()
   Local i, space, t$, u$
 
   If lx_num = 0 Then Exit Sub
-  If lx_num = 1 And lx_type(i) = LX_COMMENT Then Exit Sub
+
+  ' If we are not including comments and the line consists solely of a comment
+  ' then ignore it.
+  If Not pp_comment And lx_num = 1 And lx_type(i) = LX_COMMENT Then Exit Sub
 
   pp_inc_line()
 
   For i = 0 To lx_num - 1
-    If i = lx_num - 1 And lx_type(i) = LX_COMMENT Then Exit For
 
-    t$ = LCase$(lx_get_token$(i))
-    If t$ <> "" Then
-      If Instr(" else elseif endif end loop next exit ", " " + t$  + " ") > 0 Then
-        pp_indent = pp_indent - 1 ': Print "{"; pp_indent; "}";
-        If t$ = "end" Then pp_indent = pp_indent - 1
-      EndIf
+    ' If we are not including comments and we reach a comment then don't process
+    ' any further tokens ... there shouldn't be any.
+    If Not pp_comment Then
+      If i = lx_num - 1 And lx_type(i) = LX_COMMENT Then Exit For
+    EndIf
 
-      If i = 0 and pp_indent > 0 Then pp_out(Space$(pp_indent))
+    t$ = " " + LCase$(lx_get_token$(i)) + " "
+    If t$ = "  " Then Error "Empty token"
 
-      pp_attrib(TK_COLOUR$(lx_type(i)))
-      pp_out(lx_get_token$(i))
-      If i < lx_num - 1 Then
-        If needs_trailing_space(i) Then
-          space = needs_trailing_space(i + 1)
-        Else
-          space = 0
-        EndIf
-        If space Then pp_out(" ")
-      EndIf
+    ' If a line starts with Sub or Function and was not preceeded by an empty
+    ' line then include one.
+    If Not pp_empty Then
+      If i = 0 And Instr(" sub function ", t$) > 0 Then pp_endl() : pp_inc_line()
+    EndIf
 
-      If Instr(" else then for do sub function ", " " + t$ + " ") > 0 Then
-        pp_indent = pp_indent + 1 ': Print "{"; pp_indent; "}";
+    ' Tokens requiring us to decrease the indent level before printing them.
+    If Instr(" else elseif endif end loop next exit ", t$) > 0 Then
+      pp_indent = pp_indent - 1
+      If t$ = " end " Then pp_indent = pp_indent - 1
+      ' Print "{"; pp_indent; "}";
+    EndIf
+
+    ' Indent the first line.
+    If i = 0 and pp_indent > 0 Then pp_out(Space$(pp_indent))
+
+    ' Output the token with a trailing space where required.
+    pp_attrib(TK_COLOUR$(lx_type(i)))
+    pp_out(lx_get_token$(i))
+    If i < lx_num - 1 Then
+      If pp_needs_space(i) And pp_needs_space(i + 1) Then pp_out(" ")
+    EndIf
+
+    ' Tokens requiring us to increase the indent level after printing them.
+    If Instr(" else then for do sub function ", t$) > 0 Then
+      If t$ = " else " Then
         u$ = LCase$(lx_get_token$(i + 1))
-        If t$ = "for" And (u$ = "input" Or u$ = "output") Then
-          pp_indent = pp_indent - 1 ': Print "{"; pp_indent; "}";
-        EndIf
-        If t$ = "then" Then
-          If u$ <> "" And Left$(u$, 1) <> "'" Then
-            pp_indent = pp_indent -1
-          EndIf
-        EndIf
+        If u$ <> "if" Then pp_indent = pp_indent + 1
+      ElseIf t$ = " for " Then
+        u$ = " " + LCase$(lx_get_token$(i + 1)) + " "
+        If Instr(" input output ", u$) <= 0 Then pp_indent = pp_indent + 1
+      ElseIf t$ = " then " Then
+        u$ = LCase$(lx_get_token$(i + 1))
+        If u$ = "" Or Left$(u$, 1) = "'" Then pp_indent = pp_indent + 1
+      Else
+        pp_indent = pp_indent + 1
       EndIf
+      ' Print "{"; pp_indent; "}";
     EndIf
   Next i
+
   pp_attrib(VT100_RESET)
   pp_endl()
 
-  If Instr(" sub function ", " " + t$ + " ") Then
-    pp_inc_line()
-    pp_endl()
+  pp_empty = lx_num = 0 Or lx_type(0) = LX_COMMENT
+
+  ' If a line ends with End Function|Sub then output an extra empty line.
+  If Instr(" function sub ", t$) Then
+    u$ = LCase$(lx_get_token$(lx_num - 2))
+    If u$ = "end" Then  pp_inc_line() : pp_endl() : pp_empty = 1
   EndIf
 
 End Sub

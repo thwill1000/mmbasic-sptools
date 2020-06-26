@@ -151,7 +151,7 @@ Sub main()
   open_file(s$)
 
   s$ = lx_get_token$(1)
-  pp_open(s$)
+  pp_open(s$, 1)
 
   Do
     If pp_file_num > -1 Then Print ".";
