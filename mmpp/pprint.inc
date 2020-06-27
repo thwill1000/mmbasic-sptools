@@ -128,7 +128,7 @@ Sub pp_print_compact()
         If u$ <> "if" Then pp_indent = pp_indent + 1
       ElseIf t$ = " for " Then
         u$ = " " + LCase$(lx_get_token$(i + 1)) + " "
-        If Instr(" input output ", u$) <= 0 Then pp_indent = pp_indent + 1
+        If Instr(" input output random ", u$) <= 0 Then pp_indent = pp_indent + 1
       ElseIf t$ = " then " Then
         u$ = LCase$(lx_get_token$(i + 1))
         If u$ = "" Or Left$(u$, 1) = "'" Then pp_indent = pp_indent + 1

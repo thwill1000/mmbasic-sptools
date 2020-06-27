@@ -6,57 +6,58 @@ Option Default Integer
 #Include "lexer.inc"
 #Include "pprint.inc"
 
+Const MAX_NUM_FILES = 5
 Const MAX_NUM_FLAGS = 10
 Const MAX_NUM_IFS = 10
 
-Dim cur_file_num = 0
-Dim open_files$(9) Length 40
-Dim num_comments = 0
-Dim flags$(MAX_NUM_FLAGS - 1)
-Dim if_stack(MAX_NUM_IFS)
-Dim num_ifs = 0
+Dim num_files = 0
+
+' We just ignore the 0'th element in all of these.
+Dim file_stack$(MAX_NUM_FILES) Length 40
+Dim num_comments(MAX_NUM_FILES)
+Dim num_ifs(MAX_NUM_FILES)
+Dim if_stack(MAX_NUM_FILES, MAX_NUM_IFS)
+Dim flags$(MAX_NUM_FLAGS)
 
 Sub open_file(f$)
-  cur_file_num = cur_file_num + 1
-'  Print "Opening '"; f$ ; "' ..."
-  Open f$ For Input As #cur_file_num
-  open_files$(cur_file_num - 1) = f$
+  num_files = num_files + 1
+  Open f$ For Input As #num_files
+  file_stack$(num_files) = f$
 End Sub
 
 Sub close_file()
-'  Print "Closing '"; open_files$(cur_file_num - 1); "'"
-  Close #cur_file_num
-  cur_file_num = cur_file_num - 1
+  Close #num_files
+  num_files = num_files - 1
 End Sub
 
 Function read_line$()
   Local s$
-  Line Input #cur_file_num, s$
+  Line Input #num_files, s$
   read_line$ = s$
 End Function
 
 Sub add_comments()
-  If num_comments > 0 Then
-    lx_parse_line(String$(num_comments, "'") + lx_line$)
-  ElseIf num_comments < 0 Then
-    Local x = num_comments
-    Do While x < 0 And lx_type(0) = LX_COMMENT
+  Local nc = num_comments(num_files)
+  If nc > 0 Then
+    lx_parse_line(String$(nc, "'") + lx_line$)
+  ElseIf nc < 0 Then
+    Do While nc < 0 And lx_num > 0 And lx_type(0) = LX_COMMENT
       lx_parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
-      x = x + 1
+      nc = nc + 1
     Loop
   EndIf
 End Sub
 
 Sub push_if(x)
-  If num_ifs = MAX_NUM_IFS Then Error "Too many if directives"
-  if_stack(num_ifs) = x
-  num_ifs = num_ifs + 1
+  If num_ifs(num_files) = MAX_NUM_IFS Then Error "Too many if directives"
+  num_ifs(num_files) = num_ifs(num_files) + 1
+  if_stack(num_files, num_ifs(num_files)) = x
 End Sub
 
 Function pop_if()
-  If num_ifs = 0 Then Error "If directive stack is empty"
-  num_ifs = num_ifs - 1
-  pop_if = if_stack(num_ifs)
+  If num_ifs(num_files) = 0 Then Error "If directive stack is empty"
+  pop_if = if_stack(num_files, num_ifs(num_files))
+  num_ifs(num_files) = num_ifs(num_files) - 1
 End Function
 
 Sub process_directives()
@@ -65,7 +66,7 @@ Sub process_directives()
   t0$ = LCase$(lx_get_token$(0))
 
   If t0$ = "'!endif" Then
-    num_comments = num_comments - pop_if()
+    update_num_comments(- pop_if())
     lx_parse_line("' PROCESSED: " + lx_line$)
   EndIf
 
@@ -86,19 +87,19 @@ Sub process_directives()
   If t0$ = "'!comment_if" Then
     x = get_flag(t1$)
     push_if(x)
-    If x Then num_comments = num_comments + 1
+    If x Then update_num_comments(+1)
   ElseIf t0$ = "'!uncomment_if" Then
     x = get_flag(t1$)
     push_if(x * -1)
-    If x Then num_comments = num_comments - 1
+    If x Then update_num_comments(-1)
   ElseIf t0$ = "'!comment_if_not" Then
     x = get_flag(t1$)
     push_if(1 - x)
-    If Not x Then num_comments = num_comments + 1
+    If Not x Then update_num_comments(+1)
   ElseIf t0$ = "'!uncomment_if_not" Then
     x = get_flag(t1$)
     push_if((1 - x) * -1)
-    If Not x Then num_comments = num_comments - 1
+    If Not x Then update_num_comments(-1)
   ElseIf t0$ = "'!set" Then
     set_flag(t1$)
   ElseIf t0$ = "'!clear" Then
@@ -108,6 +109,10 @@ Sub process_directives()
   EndIf
 
   lx_parse_line("' PROCESSED: " + lx_line$)
+End Sub
+
+Sub update_num_comments(x)
+  num_comments(num_files) = num_comments(num_files) + x
 End Sub
 
 Function get_flag(s$)
@@ -151,7 +156,7 @@ Sub main()
   open_file(s$)
 
   s$ = lx_get_token$(1)
-  pp_open(s$, 1)
+  pp_open(s$, 0)
 
   Do
     If pp_file_num > -1 Then Print ".";
@@ -161,17 +166,17 @@ Sub main()
     process_directives()
     pp_print_line()
 
-    If Eof(#cur_file_num) Then
-      If cur_file_num > 1 Then
+    If Eof(#num_files) Then
+      If num_files > 1 Then
         s$ = "' -------- END #Include " + Chr$(34)
-        s$ = s$ + open_files$(cur_file_num - 1) + Chr$(34) + " --------"
+        s$ = s$ + file_stack$(num_files) + Chr$(34) + " --------"
         lx_parse_line(s$)
         pp_print_line()
       EndIf
       close_file()
     EndIf
 
-  Loop Until cur_file_num = 0
+  Loop Until num_files = 0
 
   pp_close()
 
