@@ -10,10 +10,20 @@ Sub ut_add_test(test$)
   ut_num_tests = ut_num_tests + 1
 End Sub
 
+Sub ut_add_error(msg$)
+  ut_errors$(ut_num_errors) = msg$
+  ut_num_errors = ut_num_errors + 1
+End Sub
+
 Sub ut_assert(z, msg$)
-  If Not z Then
-    ut_errors$(ut_num_errors) = msg$
-    ut_num_errors = ut_num_errors + 1
+  If Not z Then ut_add_error(msg$)
+End Sub
+
+Sub ut_assert_string_equals(expected$, actual$)
+  If expected$ <> actual$ Then
+    Local s$ = "Assert equals failed, expected " + Chr$(34) + expected$ + Chr$(34)
+    s$ = s$ + " but actually " + Chr$(34) + actual$ + Chr$(34) + "."
+    ut_add_error(s$)
   EndIf
 End Sub
 

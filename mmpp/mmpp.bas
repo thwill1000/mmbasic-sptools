@@ -4,6 +4,7 @@ Option Explicit On
 Option Default Integer
 
 #Include "lexer.inc"
+#Include "replace.inc"
 #Include "pprint.inc"
 
 Const MAX_NUM_FILES = 5
@@ -104,6 +105,9 @@ Sub process_directives()
     set_flag(t1$)
   ElseIf t0$ = "'!clear" Then
     clear_flag(t1$)
+  ElseIf t0$ = "'!replace" Then
+    If lx_num <> 3 Then Error "Syntax error: !replace requires 2 parameters"
+    rp_add(lx_get_token$(1), lx_get_token$(2)
   Else
     Error "Unknown directive: " + t0$
   EndIf
