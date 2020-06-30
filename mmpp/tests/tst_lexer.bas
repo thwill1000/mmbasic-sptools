@@ -3,13 +3,14 @@
 Option Explicit On
 Option Default Integer
 
-#Include "unittest.inc"
-#Include "lexer.inc"
+#Include "../unittest.inc"
+#Include "../lexer.inc"
 
 Cls
 
-lx_init()
+lx_load_keywords()
 
+ut_add_test("test_tokenise")
 ut_add_test("test_binary_literals")
 ut_add_test("test_comments")
 ut_add_test("test_directives")
@@ -20,11 +21,21 @@ ut_add_test("test_integer_literals")
 ut_add_test("test_keywords")
 ut_add_test("test_real_literals")
 ut_add_test("test_string_literals")
+ut_add_test("test_string_no_closing_quote")
 ut_add_test("test_symbols")
 
 ut_run_tests()
 
 End
+
+Function test_tokenise()
+  lx_tokenise("  foo    bar/wom " + Chr$(34) + "bat" + Chr$(34) + "   ")
+
+  expect_success(3)
+  expect_tk(0, LX_IDENTIFIER, "foo")
+  expect_tk(1, LX_IDENTIFIER, "bar/wom")
+  expect_tk(2, LX_IDENTIFIER, Chr$(34) + "bat" + Chr$(34))
+End Function
 
 Function test_binary_literals()
   lx_parse_line("&b1001001")
@@ -115,6 +126,12 @@ Function test_string_literals()
   expect_tk(0, LX_STRING, Chr$(34) + "This is a string" + Chr$(34))
 End Function
 
+Function test_string_no_closing_quote()
+  lx_parse_line(Chr$(34) + "String literal with no closing quote")
+
+  expect_error("No closing quote")
+End Function
+
 Function test_symbols()
   lx_parse_line("a=b/c*d\e<=f=<g>=h=>i:j;k,l<m>n")
 
@@ -177,3 +194,6 @@ Sub expect_tk(i, type, s$)
   ut_assert(actual$ = s$, "excepted " + s$ + ", found " + actual$)
 End Sub
 
+Sub expect_error(msg$)
+  ut_assert(lx_error$ = msg$, "missing expected error: " + msg$)
+End Sub

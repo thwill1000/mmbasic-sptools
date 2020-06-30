@@ -8,7 +8,13 @@ Const LX_KEYWORD = 4
 Const LX_SYMBOL = 5
 Const LX_DIRECTIVE = 6
 
-Dim LX_NUM_KEYWORDS = 0
+Const LX_MAX_KEYWORDS = 600
+Dim lx_keywords$(LX_MAX_KEYWORDS- 1) Length 20
+Dim lx_keywords_sz
+For lx_keywords_sz = 0 To LX_MAX_KEYWORDS - 1
+  lx_keywords$(lx_keywords_sz) = String$(20, "z")
+Next lx_keywords_sz
+lx_keywords_sz = 0
 
 Const LX_MAX_TOKENS = 50
 Dim lx_type(LX_MAX_TOKENS - 1)
@@ -32,6 +38,16 @@ Dim lx_line$
 Dim lx_next_char$
 Dim lx_num
 Dim lx_pos
+
+Sub lx_add_keyword(s$)
+  lx_keywords$(lx_keywords_sz) = LCase$(s$)
+  lx_keywords_sz = lx_keywords_sz + 1
+  If lx_keywords_sz > 1 Then
+    If lx_keywords$(lx_keywords_sz - 1) < lx_keywords$(lx_keywords_sz - 2) Then
+      Sort lx_keywords$()
+    EndIf
+  EndIf
+End Sub
 
 Sub lx_advance()
   lx_pos = lx_pos + 1
@@ -74,38 +90,55 @@ Function lx_get_token$(i)
   EndIf
 End Function
 
-Sub lx_init()
-'!comment_if LX_NO_KEYWORDS
-  Local count, s$
+Sub lx_load_keywords()
+  Local i, s$
 
   Open "/cmm/mmpp/resources/keywords.txt" For Input As #1
 
   Do
     Line Input #1, s$
     If Len(s$) > 0 And Left$(s$, 1) <> "'" Then
-      If LX_NUM_KEYWORDS = 0 Then
-        LX_NUM_KEYWORDS = Val(s$)
-        Dim LX_KEYWORDS$(LX_NUM_KEYWORDS - 1)
-      Else
-        LX_KEYWORDS$(count) = LCase$(s$)
-        count = count + 1
-      EndIf
+      lx_add_keyword(s$)
     EndIf
   Loop While Not Eof(#1)
-  
+
   Close #1
-'!endif
 End Sub
 
 Function lx_is_keyword(s$)
-'!comment_if LX_NO_KEYWORDS
   Local i
   ' TODO: use binary chop
-  For i = 0 To LX_NUM_KEYWORDS - 1
-    If LCase$(s$) = LX_KEYWORDS$(i) Then lx_is_keyword = 1 : Exit Function
+  For i = 0 To lx_keywords_sz - 1
+    If LCase$(s$) = lx_keywords$(i) Then lx_is_keyword = 1 : Exit Function
   Next i
-'!endif
 End Function
+
+' Performs simple space separator based tokenisation.
+Sub lx_tokenise(line$)
+  Local start = -1
+
+  lx_error$ = ""
+  lx_line$ = line$
+  lx_next_char$ = ""
+  lx_num = 0
+  lx_pos = 0
+  lx_advance()
+
+  Do While lx_char$ <> Chr$(10)
+    If lx_char$ = " " Then
+      If start > -1 Then
+        lx_store(LX_IDENTIFIER, start, lx_pos - start)
+        start = -1
+      EndIf
+    Else
+      If start = -1 Then start = lx_pos
+    EndIf
+    lx_advance()
+  Loop
+
+  If start > -1 Then lx_store(LX_IDENTIFIER, start, lx_pos - start)
+
+End Sub
 
 Sub lx_parse_line(line$)
   lx_error$ = ""
@@ -141,6 +174,8 @@ Sub lx_parse_line(line$)
     Else
       lx_parse_symbol()
     EndIf
+
+    If lx_error$ <> "" Then Exit Do
   Loop
 
 End Sub
@@ -192,6 +227,7 @@ Sub lx_parse_string()
 
   lx_advance()
   lx_advance_until(Chr$(10) + Chr$(34))
+  If lx_char$ = Chr$(10) Then lx_error$ = "No closing quote" : Exit Sub
   lx_store(LX_STRING, start, lx_pos - start + 1)
   lx_advance()
 End Sub

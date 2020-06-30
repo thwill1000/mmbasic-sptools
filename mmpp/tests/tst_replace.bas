@@ -3,13 +3,13 @@
 Option Explicit On
 Option Default Integer
 
-#Include "unittest.inc"
-#Include "lexer.inc"
-#Include "replace.inc"
+#Include "../unittest.inc"
+#Include "../lexer.inc"
+#Include "../replace.inc"
 
 Cls
 
-lx_init()
+lx_load_keywords()
 
 ut_add_test("test_one_replacement")
 ut_add_test("test_two_replacements")

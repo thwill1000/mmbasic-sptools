@@ -15,15 +15,29 @@ Dim num_files = 0
 
 ' We just ignore the 0'th element in all of these.
 Dim file_stack$(MAX_NUM_FILES) Length 40
+Dim cur_line_no(MAX_NUM_FILES)
 Dim num_comments(MAX_NUM_FILES)
 Dim num_ifs(MAX_NUM_FILES)
 Dim if_stack(MAX_NUM_FILES, MAX_NUM_IFS)
 Dim flags$(MAX_NUM_FLAGS)
 
 Sub open_file(f$)
+  If Not fi_exists(f$) Then report_error("#Include file '" + f$ + "' not found")
   num_files = num_files + 1
   Open f$ For Input As #num_files
   file_stack$(num_files) = f$
+End Sub
+
+Function fi_exists(f$)
+  Local s$
+  s$ = Dir$(f$, File)
+  If s$ = "" Then s$ = Dir$(f$, Dir)
+  fi_exists = s$ <> ""
+End Function
+
+Sub report_error(msg$)
+  Print "["; file_stack$(num_files); ","; cur_line_no(num_files); "] Error: " + msg$
+  End
 End Sub
 
 Sub close_file()
@@ -35,6 +49,7 @@ Function read_line$()
   Local s$
   Line Input #num_files, s$
   read_line$ = s$
+  cur_line_no(num_files) = cur_line_no(num_files) + 1
 End Function
 
 Sub add_comments()
@@ -151,11 +166,12 @@ Sub main()
 
   Cls
 
-  lx_init()
+  lx_load_keywords()
 
 '  Print "** "; Mm.CmdLine$; " **"
-  lx_parse_line(Mm.CmdLine$)
+  lx_tokenise(Mm.CmdLine$)
   s$ = lx_get_token$(0)
+
   If s$ = "" Then Error "No file specified at command-line"
   open_file(s$)
 
@@ -167,6 +183,7 @@ Sub main()
 
     s$ = read_line$()
     lx_parse_line(s$)
+    If lx_error$ <> "" Then report_error(lx_error$)
     process_directives()
     pp_print_line()
 
