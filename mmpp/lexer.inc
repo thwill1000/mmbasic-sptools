@@ -105,12 +105,23 @@ Sub lx_load_keywords()
   Close #1
 End Sub
 
-Function lx_is_keyword(s$)
-  Local i
-  ' TODO: use binary chop
-  For i = 0 To lx_keywords_sz - 1
-    If LCase$(s$) = lx_keywords$(i) Then lx_is_keyword = 1 : Exit Function
-  Next i
+Function lx_is_keyword(t$)
+  Local i, lb, s$, ub
+
+  ' Binary search of lx_keywords$()
+  lb = 0
+  ub = lx_keywords_sz - 1
+  s$ = LCase$(t$)
+  Do
+    i = (lb + ub) \ 2
+    If s$ > lx_keywords$(i) Then
+      lb = i + 1
+    ElseIf s$ < lx_keywords$(i) Then
+      ub = i - 1
+    Else
+      lx_is_keyword = 1 : Exit Function
+    EndIf
+  Loop Until ub < lb
 End Function
 
 ' Performs simple space separator based tokenisation.
@@ -151,13 +162,15 @@ Sub lx_parse_line(line$)
   Do While lx_char$ <> Chr$(10)
     If lx_char$ = " " Then
       lx_advance()
-    ElseIf InStr("0123456789", lx_char$) Then
-      lx_parse_number()
+    ElseIf InStr(".0123456789", lx_char$) Then
+      lx_parse_decimal()
     ElseIf lx_char$ = "&" Then
       If lx_next_char$ = "b"  Then
         lx_parse_binary()
       ElseIf lx_next_char$ = "h" Then
         lx_parse_hexadecimal()
+      ElseIf lx_next_char$ = "o" Then
+        lx_parse_octal()
       Else
         Error
       EndIf
@@ -198,7 +211,7 @@ Sub lx_parse_hexadecimal()
   lx_store(LX_NUMBER, start, lx_pos - start)
 End Sub
 
-Sub lx_parse_number()
+Sub lx_parse_decimal()
   Local start = lx_pos
 
   lx_advance_while("0123456789")
@@ -210,10 +223,19 @@ Sub lx_parse_number()
 
   If lx_char$ = "e" Then
     lx_advance()
-    If lx_char$ = "-" Then lx_advance()
+    If lx_char$ = "-" Or lx_char$ = "+" Then lx_advance()
     lx_advance_while("0123456789")
   EndIf
 
+  lx_store(LX_NUMBER, start, lx_pos - start)
+End Sub
+
+Sub lx_parse_octal()
+  Local start = lx_pos
+
+  lx_advance()
+  lx_advance()
+  lx_advance_while("01234567")
   lx_store(LX_NUMBER, start, lx_pos - start)
 End Sub
 

@@ -19,6 +19,7 @@ ut_add_test("test_identifiers")
 ut_add_test("test_includes")
 ut_add_test("test_integer_literals")
 ut_add_test("test_keywords")
+ut_add_test("test_octal_literals")
 ut_add_test("test_real_literals")
 ut_add_test("test_string_literals")
 ut_add_test("test_string_no_closing_quote")
@@ -42,6 +43,12 @@ Function test_binary_literals()
 
   expect_success(1)
   expect_tk(0, LX_NUMBER, "&b1001001")
+
+  lx_parse_line("&B0123456789")
+
+  expect_success(2)
+  expect_tk(0, LX_NUMBER, "&B01")
+  expect_tk(1, LX_NUMBER, "23456789")
 End Function
 
 Function test_comments()
@@ -72,6 +79,12 @@ Function test_hexadecimal_literals()
 
   expect_success(1)
   expect_tk(0, LX_NUMBER, "&hABCDEF")
+
+  lx_parse_line("&Habcdefghijklmn")
+
+  expect_success(2)
+  expect_tk(0, LX_NUMBER, "&Habcdef")
+  expect_tk(1, LX_IDENTIFIER, "ghijklmn")
 End Function
 
 Function test_identifiers()
@@ -100,6 +113,25 @@ Function test_keywords()
   expect_tk(2, LX_KEYWORD, "Do")
   expect_tk(3, LX_KEYWORD, "Loop")
   expect_tk(4, LX_KEYWORD, "Chr$")
+
+  lx_parse_line("  #gps @ YELLOW  ")
+  expect_success(3)
+  expect_tk(0, LX_KEYWORD, "#gps")
+  expect_tk(1, LX_KEYWORD, "@")
+  expect_tk(2, LX_KEYWORD, "YELLOW")
+End Function
+
+Function test_octal_literals()
+  lx_parse_line("&O1234")
+
+  expect_success(1)
+  expect_tk(0, LX_NUMBER, "&O1234")
+
+  lx_parse_line("&O123456789")
+
+  expect_success(2)
+  expect_tk(0, LX_NUMBER, "&O1234567")
+  expect_tk(1, LX_NUMBER, "89")
 End Function
 
 Function test_real_literals()
@@ -117,6 +149,16 @@ Function test_real_literals()
 
   expect_success(1)
   expect_tk(0, LX_NUMBER, "3.421e-17")
+
+  lx_parse_line("3.421e+17")
+
+  expect_success(1)
+  expect_tk(0, LX_NUMBER, "3.421e+17")
+
+  lx_parse_line(".3421")
+
+  expect_success(1)
+  expect_tk(0, LX_NUMBER, ".3421")
 End Function
 
 Function test_string_literals()
