@@ -22,11 +22,32 @@ Dim if_stack(MAX_NUM_FILES, MAX_NUM_IFS)
 Dim flags$(MAX_NUM_FLAGS)
 
 Sub open_file(f$)
-  If Not fi_exists(f$) Then report_error("#Include file '" + f$ + "' not found")
+  Local f2$, p
+
+  If num_files > 0 Then
+    f2$ = get_parent$(file_stack$(1)) + f$
+  Else
+    f2$ = f$
+  EndIf
+  Print : Print f2$;
+  If Not fi_exists(f2$) Then report_error("#Include file '" + f2$ + "' not found")
   num_files = num_files + 1
-  Open f$ For Input As #num_files
-  file_stack$(num_files) = f$
+  Open f2$ For Input As #num_files
+  file_stack$(num_files) = f2$
 End Sub
+
+Function get_parent$(f$)
+  Local ch$, p
+
+  p = Len(f$)
+  Do
+    ch$ = Chr$(Peek(Var f$, p))
+    If (ch$ = "/") Or (ch$ = "\") Then Exit Do
+    p = p - 1
+  Loop Until p = 0
+
+  If p > 0 Then get_parent$ = Left$(f$, p)
+End Function
 
 Function fi_exists(f$)
   Local s$
@@ -122,7 +143,7 @@ Sub process_directives()
     clear_flag(t1$)
   ElseIf t0$ = "'!replace" Then
     If lx_num <> 3 Then Error "Syntax error: !replace requires 2 parameters"
-    rp_add(lx_get_token$(1), lx_get_token$(2)
+    rp_add(lx_get_token$(1), lx_get_token$(2))
   Else
     Error "Unknown directive: " + t0$
   EndIf
@@ -184,6 +205,7 @@ Sub main()
 
     s$ = read_line$()
     lx_parse_line(s$)
+    rp_apply()
     If lx_error$ <> "" Then report_error(lx_error$)
     process_directives()
     pp_print_line()

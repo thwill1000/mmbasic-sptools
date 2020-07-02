@@ -2,7 +2,7 @@
 
 Const RP_MAX_REPLACEMENTS = 100
 Dim rp_replace$(RP_MAX_REPLACEMENTS - 1) Length 20
-Dim rp_with$(RP_MAX_REPLACEMENTS - 1) Length 20
+Dim rp_with$(RP_MAX_REPLACEMENTS - 1) Length 80
 Dim rp_replace_sz
 rp_clear()
 
