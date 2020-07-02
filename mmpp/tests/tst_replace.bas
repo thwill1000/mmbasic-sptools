@@ -20,6 +20,7 @@ End
 
 Function test_one_replacement()
   lx_parse_line("foo")
+  rp_clear()
   rp_add("foo", "bar")
   rp_apply()
 
@@ -29,6 +30,7 @@ End Function
 
 Function test_two_replacements()
   lx_parse_line("Dim x = &hFFFF ' comment")
+  rp_clear()
   rp_add("x", "y")
   rp_add("&hFFFF", "z")
   rp_apply()

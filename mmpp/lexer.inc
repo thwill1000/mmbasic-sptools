@@ -10,11 +10,7 @@ Const LX_DIRECTIVE = 6
 
 Const LX_MAX_KEYWORDS = 600
 Dim lx_keywords$(LX_MAX_KEYWORDS- 1) Length 20
-Dim lx_keywords_sz
-For lx_keywords_sz = 0 To LX_MAX_KEYWORDS - 1
-  lx_keywords$(lx_keywords_sz) = String$(20, "z")
-Next lx_keywords_sz
-lx_keywords_sz = 0
+Dim lx_keywords_sz = 0
 
 Const LX_MAX_TOKENS = 50
 Dim lx_type(LX_MAX_TOKENS - 1)
@@ -39,6 +35,7 @@ Dim lx_next_char$
 Dim lx_num
 Dim lx_pos
 
+' Adds a new keyword.
 Sub lx_add_keyword(s$)
   lx_keywords$(lx_keywords_sz) = LCase$(s$)
   lx_keywords_sz = lx_keywords_sz + 1
@@ -47,6 +44,15 @@ Sub lx_add_keyword(s$)
       Sort lx_keywords$()
     EndIf
   EndIf
+End Sub
+
+' Clears the list of keywords.
+Sub lx_keywords_clear()
+  Local i
+
+  For i = 0 To LX_MAX_KEYWORDS - 1
+    lx_keywords$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
+  Next i
 End Sub
 
 Sub lx_advance()

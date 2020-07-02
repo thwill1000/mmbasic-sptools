@@ -162,7 +162,7 @@ Sub clear_flag(s$)
 End Sub
 
 Sub main()
-  Local s$
+  Local s$, t
 
   Cls
 
@@ -178,6 +178,7 @@ Sub main()
   s$ = lx_get_token$(1)
   pp_open(s$, 0)
 
+  t = Timer
   Do
     If pp_file_num > -1 Then Print ".";
 
@@ -198,6 +199,8 @@ Sub main()
     EndIf
 
   Loop Until num_files = 0
+
+  Print "Time taken ="; Timer - t; " ms"
 
   pp_close()
 
