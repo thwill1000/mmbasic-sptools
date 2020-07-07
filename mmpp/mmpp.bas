@@ -76,10 +76,10 @@ End Function
 Sub add_comments()
   Local nc = num_comments(num_files)
   If nc > 0 Then
-    lx_parse_line(String$(nc, "'") + lx_line$)
+    parse_line(String$(nc, "'") + lx_line$)
   ElseIf nc < 0 Then
     Do While nc < 0 And lx_num > 0 And lx_type(0) = LX_COMMENT
-      lx_parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
+      parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
       nc = nc + 1
     Loop
   EndIf
@@ -104,7 +104,7 @@ Sub process_directives()
 
   If t0$ = "'!endif" Then
     update_num_comments(- pop_if())
-    lx_parse_line("' PROCESSED: " + lx_line$)
+    parse_line("' PROCESSED: " + lx_line$)
   EndIf
 
   add_comments()
@@ -116,7 +116,7 @@ Sub process_directives()
     f$ = lx_get_token$(1)
     f$ = Mid$(f$, 2, Len(f$) - 2)
     open_file(f$)
-    lx_parse_line("' -------- BEGIN " + lx_line$ + " --------")
+    parse_line("' -------- BEGIN " + lx_line$ + " --------")
   EndIf
 
   If lx_type(0) <> LX_DIRECTIVE Then Exit Sub
@@ -148,7 +148,7 @@ Sub process_directives()
     Error "Unknown directive: " + t0$
   EndIf
 
-  lx_parse_line("' PROCESSED: " + lx_line$)
+  parse_line("' PROCESSED: " + lx_line$)
 End Sub
 
 Sub update_num_comments(x)
@@ -182,6 +182,11 @@ Sub clear_flag(s$)
   Next i
 End Sub
 
+Sub parse_line(s$)
+  lx_parse_line(s$)
+  rp_apply()
+End Sub
+
 Sub main()
   Local s$, t
 
@@ -189,14 +194,13 @@ Sub main()
 
   lx_load_keywords()
 
-'  Print "** "; Mm.CmdLine$; " **"
-  lx_tokenise(Mm.CmdLine$)
-  s$ = lx_get_token$(0)
+  lx_parse_line(Mm.CmdLine$)
+  s$ = lx_get_string$(0)
 
   If s$ = "" Then Error "No file specified at command-line"
   open_file(s$)
 
-  s$ = lx_get_token$(1)
+  If lx_num > 1 Then s$ = lx_get_string$(1) Else s$ = ""
   pp_open(s$, 0)
 
   t = Timer
@@ -204,8 +208,7 @@ Sub main()
     If pp_file_num > -1 Then Print ".";
 
     s$ = read_line$()
-    lx_parse_line(s$)
-    rp_apply()
+    parse_line(s$)
     If lx_error$ <> "" Then report_error(lx_error$)
     process_directives()
     pp_print_line()
@@ -214,7 +217,7 @@ Sub main()
       If num_files > 1 Then
         s$ = "' -------- END #Include " + Chr$(34)
         s$ = s$ + file_stack$(num_files) + Chr$(34) + " --------"
-        lx_parse_line(s$)
+        parse_line(s$)
         pp_print_line()
       EndIf
       close_file()

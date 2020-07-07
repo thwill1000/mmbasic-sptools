@@ -96,6 +96,11 @@ Function lx_get_token$(i)
   EndIf
 End Function
 
+Function lx_get_string$(i)
+  If lx_type(i) <> LX_STRING Then Error "Not a string literal"
+  lx_get_string$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 2)
+End Function
+
 Sub lx_load_keywords()
   Local i, s$
 
