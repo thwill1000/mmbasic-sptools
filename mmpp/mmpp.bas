@@ -136,11 +136,9 @@ Sub process_directives()
   ElseIf t$ = "'!clear"            Then : process_clear()
   ElseIf t$ = "'!comments"         Then : process_comments()
   ElseIf t$ = "'!comment_if"       Then : process_comment_if()
-  ElseIf t$ = "'!comment_if_not"   Then : process_comment_if_not()
   ElseIf t$ = "'!flatten"          Then : process_flatten()
   ElseIf t$ = "'!indent"           Then : process_indent()
   ElseIf t$ = "'!uncomment_if"     Then : process_uncomment_if()
-  ElseIf t$ = "'!uncomment_if_not" Then : process_uncomment_if_not()
   ElseIf t$ = "'!replace"          Then : process_replace()
   ElseIf t$ = "'!set"              Then : process_set()
   ElseIf t$ = "'!spacing"          Then : process_spacing()
@@ -151,11 +149,8 @@ Sub process_directives()
 End Sub
 
 Sub process_clear()
-  If lx_num < 2 Then
-    cerror("Syntax error: !clear directive requires 'flag' parameter")
-  Else
-    clear_flag(LCase$(lx_get_token$(1)))
-  EndIf
+  If lx_num <> 2 Then cerror("Syntax error: !clear directive requires 'flag' parameter")
+  clear_flag(LCase$(lx_get_token$(1)))
 End Sub
 
 Sub process_comments()
@@ -165,32 +160,40 @@ Sub process_comments()
   ElseIf t$ = "off" Then
     pp_comment = 0
   Else
-    cerror("Syntax error: !comments directive requires 'on' or 'off' parameter")
+    cerror("Syntax error: !comments directive requires 'on|off' parameter")
   EndIf
 End Sub
 
 Sub process_comment_if()
-  Local t$ = LCase$(lx_get_token$(1))
-  Local x = get_flag(t$)
+  Local t$, x
+
+  t$ = LCase$(lx_get_token$(1))
+
+  If lx_num = 2 Then
+    x = get_flag(t$)
+  Else If lx_num = 3 Then
+    If t$ <> "not" Then
+      t$ = "Syntax error: !comment_if directive followed by unexpected token '"
+      t$ = t$ + lx_get_token$(1) + "'"
+      cerror(t$)
+    EndIf
+    x = 1 - get_flag(t$)
+  Else
+    cerror("Syntax error: !comment_if directive with invalid parameters")
+  EndIf
+
   push_if(x)
   If x Then update_num_comments(+1)
 End Sub
 
-Sub process_comment_if_not()
-  Local t$ = LCase$(lx_get_token(1))
-  Local x = get_flag(t$)
-  push_if(1 - x)
-  If Not x Then update_num_comments(+1)
-End Sub
-
 Sub process_flatten()
-  Local t$ = LCase$(lx_get_token(1))
+  Local t$ = LCase$(lx_get_token$(1))
   If t$ = "on" Then
     flatten_includes = 1
   ElseIf t$ = "off" Then
     flatten_includes = 0
   Else
-    cerror("Syntax error: !flatten directive requires 'on' or 'off' parameter")
+    cerror("Syntax error: !flatten directive requires 'on|off' parameter")
   EndIf
 End Sub
 
@@ -203,26 +206,37 @@ Sub process_indent()
 End Sub
 
 Sub process_uncomment_if()
-  Local t$ = LCase$(lx_get_token$(1))
-  Local x = get_flag(t$)
-  push_if(x * -1)
+  Local t$, x
+
+  t$ = LCase$(lx_get_token$(1))
+
+  If lx_num = 2 Then
+    x = get_flag(t$)
+  Else If lx_num = 3 Then
+    If t$ <> "not" Then
+      t$ = "Syntax error: !uncomment_if directive followed by unexpected token '"
+      t$ = t$ + lx_get_token$(1) + "'"
+      cerror(t$)
+    EndIf
+    x = 1 - get_flag(t$)
+  Else
+    cerror("Syntax error: !comment_if directive with invalid parameters")
+  EndIf
+
+  push_if(-x)
   If x Then update_num_comments(-1)
 End Sub
 
-Sub process_uncomment_if_not()
-  Local t$ = LCase$(lx_get_token$(1))
-  Local x = get_flag(t$)
-  push_if((1 - x) * -1)
-  If Not x Then update_num_comments(-1)
-End Sub
-
 Sub process_replace()
-  If lx_num <> 3 Then cerror("Syntax error: !replace requires 2 parameters")
-  rp_add(lx_get_token$(1), lx_get_token$(2))
+  If lx_num <> 3 Then
+    cerror("Syntax error: !replace directive requires 'from' and 'to' parameters")
+  EndIf
+  rp_add(LCase$(lx_get_token$(1)), LCase$(lx_get_token$(2)))
 End Sub
 
 Sub process_set()
-  set_flag(lx_get_token$(1))
+  If lx_num <> 2 Then cerror("Syntax error: !set directive requires 'flag' parameter")
+  set_flag(LCase$(lx_get_token$(1)))
 End Sub
 
 Sub process_spacing()

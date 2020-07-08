@@ -1,6 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Const RP_MAX_REPLACEMENTS = 100
+Const RP_MAX_REPLACEMENTS = 200
 Dim rp_replace$(RP_MAX_REPLACEMENTS - 1) Length 20
 Dim rp_with$(RP_MAX_REPLACEMENTS - 1) Length 80
 Dim rp_replace_sz
