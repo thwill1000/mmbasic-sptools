@@ -17,17 +17,6 @@ Dim lx_type(LX_MAX_TOKENS - 1)
 Dim lx_start(LX_MAX_TOKENS - 1)
 Dim lx_len(LX_MAX_TOKENS - 1)
 
-Const LX_NUM_DIRECTIVES = 8
-Dim LX_DIRECTIVES$(LX_NUM_DIRECTIVES - 1)
-LX_DIRECTIVES$(0) = "'!comment_if"
-LX_DIRECTIVES$(1) = "'!uncomment_if"
-LX_DIRECTIVES$(2) = "'!comment_if_not"
-LX_DIRECTIVES$(3) = "'!uncomment_if_not"
-LX_DIRECTIVES$(4) = "'!endif"
-LX_DIRECTIVES$(5) = "'!set"
-LX_DIRECTIVES$(6) = "'!clear"
-LX_DIRECTIVES$(7) = "'!replace"
-
 Dim lx_char$
 Dim lx_error$
 Dim lx_line$
@@ -97,8 +86,13 @@ Function lx_get_token$(i)
 End Function
 
 Function lx_get_string$(i)
-  If lx_type(i) <> LX_STRING Then Error "Not a string literal"
+  If lx_type(i) <> LX_STRING Then Error "'" + lx_get_token$(i) + "' is not a string literal"
   lx_get_string$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 2)
+End Function
+
+Function lx_get_number(i)
+  If lx_type(i) <> LX_NUMBER Then Error "'" + lx_get_token$(i) + "' is not a number literal"
+  lx_get_number = Val(lx_get_token$(i))
 End Function
 
 Sub lx_load_keywords()

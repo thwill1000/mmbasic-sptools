@@ -24,6 +24,7 @@ ut_add_test("test_real_literals")
 ut_add_test("test_string_literals")
 ut_add_test("test_string_no_closing_quote")
 ut_add_test("test_symbols")
+ut_add_test("test_get_number")
 
 ut_run_tests()
 
@@ -223,6 +224,14 @@ Function test_symbols()
   expect_tk(3, LX_SYMBOL, "+")
   expect_tk(4, LX_NUMBER, "1")
 
+End Function
+
+Function test_get_number()
+  lx_parse_line("1 2 3.14 3.14e-15")
+  ut_assert_real_equals(1, lx_get_number(0))
+  ut_assert_real_equals(2, lx_get_number(1))
+  ut_assert_real_equals(3.14, lx_get_number(2))
+  ut_assert_real_equals(3.14e-15, lx_get_number(3))
 End Function
 
 Sub expect_success(num)

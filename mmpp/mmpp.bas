@@ -24,16 +24,20 @@ Dim flags$(MAX_NUM_FLAGS)
 Sub open_file(f$)
   Local f2$, p
 
+  cout(Chr$(13)) ' CR
+
   If num_files > 0 Then
     f2$ = get_parent$(file_stack$(1)) + f$
   Else
     f2$ = f$
   EndIf
-  Print : Print f2$;
-  If Not fi_exists(f2$) Then report_error("#Include file '" + f2$ + "' not found")
+
+  If Not fi_exists(f2$) Then cerror("#Include file '" + f2$ + "' not found")
+  cout(Space$(num_files * 2) + f2$) : cendl()
   num_files = num_files + 1
   Open f2$ For Input As #num_files
   file_stack$(num_files) = f2$
+  cout(Space$(1 + num_files * 2))
 End Sub
 
 Function get_parent$(f$)
@@ -56,14 +60,26 @@ Function fi_exists(f$)
   fi_exists = s$ <> ""
 End Function
 
-Sub report_error(msg$)
-  Print "["; file_stack$(num_files); ","; cur_line_no(num_files); "] Error: " + msg$
+Sub cendl()
+  If pp_file_num = -1 Then Exit Sub
+  Print
+End Sub
+
+Sub cout(s$)
+  If pp_file_num = -1 Then Exit Sub
+  Print s$;
+End Sub
+
+Sub cerror(msg$)
+  Print
+  Print "[" + file_stack$(num_files) + ":" + Str$(cur_line_no(num_files)) + "] Error: " + msg$
   End
 End Sub
 
 Sub close_file()
   Close #num_files
   num_files = num_files - 1
+  cout(Chr$(8) + " " + Chr$(13) + Space$(1 + num_files * 2))
 End Sub
 
 Function read_line$()
@@ -98,57 +114,119 @@ Function pop_if()
 End Function
 
 Sub process_directives()
-  Local f$, s$, t0$, t1$, x
+  Local t$ = LCase$(lx_get_token$(0))
 
-  t0$ = LCase$(lx_get_token$(0))
-
-  If t0$ = "'!endif" Then
+  If t$ = "'!endif" Then
     update_num_comments(- pop_if())
     parse_line("' PROCESSED: " + lx_line$)
   EndIf
 
   add_comments()
 
-  t0$ = LCase$(lx_get_token$(0))
-  t1$ = LCase$(lx_get_token$(1))
+  t$ = LCase$(lx_get_token$(0))
 
-  If t0$ = "#include" Then
-    f$ = lx_get_token$(1)
+  If t$ = "#include" Then
+    Local f$ = lx_get_token$(1)
     f$ = Mid$(f$, 2, Len(f$) - 2)
     open_file(f$)
     parse_line("' -------- BEGIN " + lx_line$ + " --------")
   EndIf
 
-  If lx_type(0) <> LX_DIRECTIVE Then Exit Sub
-
-  If t0$ = "'!comment_if" Then
-    x = get_flag(t1$)
-    push_if(x)
-    If x Then update_num_comments(+1)
-  ElseIf t0$ = "'!uncomment_if" Then
-    x = get_flag(t1$)
-    push_if(x * -1)
-    If x Then update_num_comments(-1)
-  ElseIf t0$ = "'!comment_if_not" Then
-    x = get_flag(t1$)
-    push_if(1 - x)
-    If Not x Then update_num_comments(+1)
-  ElseIf t0$ = "'!uncomment_if_not" Then
-    x = get_flag(t1$)
-    push_if((1 - x) * -1)
-    If Not x Then update_num_comments(-1)
-  ElseIf t0$ = "'!set" Then
-    set_flag(t1$)
-  ElseIf t0$ = "'!clear" Then
-    clear_flag(t1$)
-  ElseIf t0$ = "'!replace" Then
-    If lx_num <> 3 Then Error "Syntax error: !replace requires 2 parameters"
-    rp_add(lx_get_token$(1), lx_get_token$(2))
-  Else
-    Error "Unknown directive: " + t0$
+  If lx_type(0) <> LX_DIRECTIVE    Then : Exit Sub
+  ElseIf t$ = "'!clear"            Then : process_clear()
+  ElseIf t$ = "'!comments"         Then : process_comments()
+  ElseIf t$ = "'!comment_if"       Then : process_comment_if()
+  ElseIf t$ = "'!comment_if_not"   Then : process_comment_if_not()
+  ElseIf t$ = "'!flatten"          Then : process_flatten()
+  ElseIf t$ = "'!indent"           Then : process_indent()
+  ElseIf t$ = "'!uncomment_if"     Then : process_uncomment_if()
+  ElseIf t$ = "'!uncomment_if_not" Then : process_uncomment_if_not()
+  ElseIf t$ = "'!replace"          Then : process_replace()
+  ElseIf t$ = "'!set"              Then : process_set()
+  ElseIf t$ = "'!spacing"          Then : process_spacing()
+  Else : cerror("Unknown directive: " + Mid$(t$, 2))
   EndIf
 
   parse_line("' PROCESSED: " + lx_line$)
+End Sub
+
+Sub process_clear()
+  If lx_num < 2 Then
+    cerror("Syntax error: !clear directive requires 'flag' parameter")
+  Else
+    clear_flag(LCase$(lx_get_token$(1)))
+  EndIf
+End Sub
+
+Sub process_comments()
+  Local t$ = LCase$(lx_get_token$(1))
+  If t$ = "on" Then
+    pp_comment = 1
+  ElseIf t$ = "off" Then
+    pp_comment = 0
+  Else
+    cerror("Syntax error: !comments directive requires 'on' or 'off' parameter")
+  EndIf
+End Sub
+
+Sub process_comment_if()
+  Local t$ = LCase$(lx_get_token$(1))
+  Local x = get_flag(t$)
+  push_if(x)
+  If x Then update_num_comments(+1)
+End Sub
+
+Sub process_comment_if_not()
+  Local t$ = LCase$(lx_get_token(1))
+  Local x = get_flag(t$)
+  push_if(1 - x)
+  If Not x Then update_num_comments(+1)
+End Sub
+
+Sub process_flatten()
+  Local t$ = LCase$(lx_get_token(1))
+  If t$ = "on" Then
+    flatten_includes = 1
+  ElseIf t$ = "off" Then
+    flatten_includes = 0
+  Else
+    cerror("Syntax error: !flatten directive requires 'on' or 'off' parameter")
+  EndIf
+End Sub
+
+Sub process_indent()
+  If lx_num < 2 Or lx_type(1) <> LX_NUMBER Then
+    cerror("Syntax error: !indent requires 'number' parameter")
+  Else 
+    pp_indent_sz = lx_get_number(1)
+  EndIf
+End Sub
+
+Sub process_uncomment_if()
+  Local t$ = LCase$(lx_get_token$(1))
+  Local x = get_flag(t$)
+  push_if(x * -1)
+  If x Then update_num_comments(-1)
+End Sub
+
+Sub process_uncomment_if_not()
+  Local t$ = LCase$(lx_get_token$(1))
+  Local x = get_flag(t$)
+  push_if((1 - x) * -1)
+  If Not x Then update_num_comments(-1)
+End Sub
+
+Sub process_replace()
+  If lx_num <> 3 Then cerror("Syntax error: !replace requires 2 parameters")
+  rp_add(lx_get_token$(1), lx_get_token$(2))
+End Sub
+
+Sub process_set()
+  set_flag(lx_get_token$(1))
+End Sub
+
+Sub process_spacing()
+  ' TODO
 End Sub
 
 Sub update_num_comments(x)
@@ -188,28 +266,33 @@ Sub parse_line(s$)
 End Sub
 
 Sub main()
-  Local s$, t
+  Local in$, out$, s$, t
 
   Cls
 
   lx_load_keywords()
 
   lx_parse_line(Mm.CmdLine$)
-  s$ = lx_get_string$(0)
+  If lx_num = 0 Then Error "No input filename specified"
+  If lx_num > 0 Then
+    If lx_type(0) <> LX_STRING Then Error "Input filename must be quoted"
+    in$ = lx_get_string$(0)
+  EndIf
+  If lx_num > 1 Then
+    If lx_type(1) <> LX_STRING Then Error "Output filename must be quoted"
+    out$ = lx_get_string$(1)
+  EndIf
 
-  If s$ = "" Then Error "No file specified at command-line"
-  open_file(s$)
-
-  If lx_num > 1 Then s$ = lx_get_string$(1) Else s$ = ""
-  pp_open(s$, 0)
+  pp_open(out$, 0)
+  cout("Transpiling from '" + in$ + "' to '" + out$ + "' ...") : cendl()
+  open_file(in$)
 
   t = Timer
   Do
-    If pp_file_num > -1 Then Print ".";
-
+    cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(num_files) \ 8) Mod 4) + 1, 1))
     s$ = read_line$()
     parse_line(s$)
-    If lx_error$ <> "" Then report_error(lx_error$)
+    If lx_error$ <> "" Then cerror(lx_error$)
     process_directives()
     pp_print_line()
 
@@ -225,7 +308,7 @@ Sub main()
 
   Loop Until num_files = 0
 
-  Print "Time taken ="; Timer - t; " ms"
+  cout(Chr$(13) + "Time taken = " +Format$((Timer - t) / 1000, "%.1f s"))
 
   pp_close()
 

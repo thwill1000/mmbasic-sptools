@@ -19,6 +19,14 @@ Sub ut_assert(z, msg$)
   If Not z Then ut_add_error(msg$)
 End Sub
 
+Sub ut_assert_real_equals(expected, actual)
+  If expected <> actual Then
+    Local s$ = "Assert equals failed, expected " + Str$(expected)
+    s$ = s$ + " but actually " + Str$(actual)
+    ut_add_error(s$)
+  EndIf
+End Sub
+
 Sub ut_assert_string_equals(expected$, actual$)
   If expected$ <> actual$ Then
     Local s$ = "Assert equals failed, expected " + Chr$(34) + expected$ + Chr$(34)

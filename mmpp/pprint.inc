@@ -18,12 +18,13 @@ TK_COLOUR$(LX_KEYWORD) = VT100_CYAN
 TK_COLOUR$(LX_SYMBOL) = VT100_WHITE
 TK_COLOUR$(LX_DIRECTIVE) = VT100_RED
 
-Dim pp_file_num = -1
 Dim pp_comment   ' 1 to print comments, 0 to ignore comments
 Dim pp_count
-Dim pp_indent
 Dim pp_empty = 1 ' 1 if previous printed line was empty or just contained a
                  ' comment, otherwise 0
+Dim pp_file_num = -1
+Dim pp_indent_lvl
+Dim pp_indent_sz = 2
 
 Sub pp_open(f$, comment)
   pp_comment = comment
@@ -113,13 +114,13 @@ Sub pp_print_compact()
 
     ' Tokens requiring us to decrease the indent level before printing them.
     If Instr(" else elseif endif end loop next exit ", t$) > 0 Then
-      pp_indent = pp_indent - 1
-      If t$ = " end " Then pp_indent = pp_indent - 1
-      ' Print "{"; pp_indent; "}";
+      pp_indent_lvl = pp_indent_lvl - 1
+      If t$ = " end " Then pp_indent_lvl = pp_indent_lvl - 1
+      ' Print "{"; pp_indent_lvl; "}";
     EndIf
 
     ' Indent the first line.
-    If i = 0 and pp_indent > 0 Then pp_out(Space$(pp_indent))
+    If i = 0 and pp_indent_lvl > 0 Then pp_out(Space$(pp_indent_lvl * pp_indent_sz))
 
     ' Output the token with a trailing space where required.
     pp_attrib(TK_COLOUR$(lx_type(i)))
@@ -132,17 +133,17 @@ Sub pp_print_compact()
     If Instr(" else then for do sub function ", t$) > 0 Then
       If t$ = " else " Then
         u$ = LCase$(lx_get_token$(i + 1))
-        If u$ <> "if" Then pp_indent = pp_indent + 1
+        If u$ <> "if" Then pp_indent_lvl = pp_indent_lvl + 1
       ElseIf t$ = " for " Then
         u$ = " " + LCase$(lx_get_token$(i + 1)) + " "
-        If Instr(" input output random ", u$) <= 0 Then pp_indent = pp_indent + 1
+        If Instr(" input output random ", u$) <= 0 Then pp_indent_lvl = pp_indent_lvl + 1
       ElseIf t$ = " then " Then
         u$ = LCase$(lx_get_token$(i + 1))
-        If u$ = "" Or Left$(u$, 1) = "'" Then pp_indent = pp_indent + 1
+        If u$ = "" Or Left$(u$, 1) = "'" Then pp_indent_lvl = pp_indent_lvl + 1
       Else
-        pp_indent = pp_indent + 1
+        pp_indent_lvl = pp_indent_lvl + 1
       EndIf
-      ' Print "{"; pp_indent; "}";
+      ' Print "{"; pp_indent_lvl; "}";
     EndIf
   Next i
 
