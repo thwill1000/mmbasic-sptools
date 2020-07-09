@@ -121,18 +121,18 @@ Sub process_directives()
 
   If lx_token_lc$(0) = "#include" Then process_include()
 
-  If lx_type(0) <> LX_DIRECTIVE Then Exit Sub
+  If lx_type(0) <> TK_DIRECTIVE Then Exit Sub
 
-  Local t$ = lx_token_lc$(0)
-  If     t$ = "'!clear"        Then : process_clear()
-  ElseIf t$ = "'!comments"     Then : process_comments()
-  ElseIf t$ = "'!comment_if"   Then : process_comment_if()
-  ElseIf t$ = "'!flatten"      Then : process_flatten()
-  ElseIf t$ = "'!indent"       Then : process_indent()
-  ElseIf t$ = "'!uncomment_if" Then : process_uncomment_if()
-  ElseIf t$ = "'!replace"      Then : process_replace()
-  ElseIf t$ = "'!set"          Then : process_set()
-  ElseIf t$ = "'!spacing"      Then : process_spacing()
+  Local t$ = lx_directive$(0)
+  If     t$ = "!clear"        Then : process_clear()
+  ElseIf t$ = "!comments"     Then : process_comments()
+  ElseIf t$ = "!comment_if"   Then : process_if()
+  ElseIf t$ = "!flatten"      Then : process_flatten()
+  ElseIf t$ = "!indent"       Then : process_indent()
+  ElseIf t$ = "!uncomment_if" Then : process_if()
+  ElseIf t$ = "!replace"      Then : process_replace()
+  ElseIf t$ = "!set"          Then : process_set()
+  ElseIf t$ = "!spacing"      Then : process_spacing()
   Else : cerror("Unknown directive: " + Mid$(t$, 2))
   EndIf
 
@@ -155,26 +155,33 @@ Sub process_comments()
   EndIf
 End Sub
 
-Sub process_comment_if()
+Sub process_if()
   Local t$, x
 
   t$ = lx_token_lc$(1)
 
   If lx_num = 2 Then
     x = get_flag(t$)
-  Else If lx_num = 3 Then
+  ElseIf lx_num = 3 Then
     If t$ <> "not" Then
-      t$ = "Syntax error: !comment_if directive followed by unexpected token '"
+      t$ = "Syntax error: " + lx_directive$(0) + " directive followed by unexpected token '"
       t$ = t$ + lx_token$(1) + "'"
       cerror(t$)
     EndIf
     x = 1 - get_flag(t$)
   Else
-    cerror("Syntax error: !comment_if directive with invalid parameters")
+    cerror("Syntax error: " + lx_directive$(0) + " directive with invalid parameters")
   EndIf
 
-  push_if(x)
-  If x Then update_num_comments(+1)
+  If lx_directive$(0) = "!comment_if" Then
+    push_if(x)
+    If x Then update_num_comments(+1)
+  ElseIf lx_directive$(0) = "!uncomment_if" Then
+    push_if(-x)
+    If x Then update_num_comments(-1)
+  Else
+    Error
+  EndIf
 End Sub
 
 Sub process_endif()
@@ -206,28 +213,6 @@ Sub process_indent()
   Else 
     pp_indent_sz = lx_get_number(1)
   EndIf
-End Sub
-
-Sub process_uncomment_if()
-  Local t$, x
-
-  t$ = lx_token_lc$(1)
-
-  If lx_num = 2 Then
-    x = get_flag(t$)
-  Else If lx_num = 3 Then
-    If t$ <> "not" Then
-      t$ = "Syntax error: !uncomment_if directive followed by unexpected token '"
-      t$ = t$ + lx_token$(1) + "'"
-      cerror(t$)
-    EndIf
-    x = 1 - get_flag(t$)
-  Else
-    cerror("Syntax error: !comment_if directive with invalid parameters")
-  EndIf
-
-  push_if(-x)
-  If x Then update_num_comments(-1)
 End Sub
 
 Sub process_replace()

@@ -25,6 +25,9 @@ ut_add_test("test_string_literals")
 ut_add_test("test_string_no_closing_quote")
 ut_add_test("test_symbols")
 ut_add_test("test_get_number")
+ut_add_test("test_get_string")
+ut_add_test("test_get_directive")
+ut_add_test("test_get_token_lc")
 
 ut_run_tests()
 
@@ -63,7 +66,7 @@ Function test_directives()
   lx_parse_line("'!comment_if foo")
 
   expect_success(2)
-  expect_tk(0, LX_DIRECTIVE, "'!comment_if")
+  expect_tk(0, TK_DIRECTIVE, "'!comment_if")
   expect_tk(1, LX_IDENTIFIER, "foo")
 End Function
 
@@ -232,6 +235,26 @@ Function test_get_number()
   ut_assert_real_equals(2, lx_get_number(1))
   ut_assert_real_equals(3.14, lx_get_number(2))
   ut_assert_real_equals(3.14e-15, lx_get_number(3))
+End Function
+
+Function test_get_string()
+  lx_parse_line(Chr$(34) + "foo" + Chr$(34) + " " + Chr$(34) + "wom bat" + Chr$(34))
+  ut_assert_string_equals("foo", lx_get_string$(0))
+  ut_assert_string_equals("wom bat", lx_get_string$(1))
+End Function
+
+Function test_get_directive()
+  lx_parse_line("'!foo '!bar '!wombat")
+  ut_assert_string_equals("!foo", lx_directive$(0))
+  ut_assert_string_equals("!bar", lx_directive$(1))
+  ut_assert_string_equals("!wombat", lx_directive$(2))
+End Function
+
+Function test_get_token_lc()
+  lx_parse_line("FOO '!BAR 1E7")
+  ut_assert_string_equals("foo", lx_token_lc$(0))
+  ut_assert_string_equals("'!bar", lx_token_lc$(1))
+  ut_assert_string_equals("1e7", lx_token_lc$(2))
 End Function
 
 Sub expect_success(num)

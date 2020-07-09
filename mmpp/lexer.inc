@@ -6,7 +6,7 @@ Const LX_COMMENT = 2
 Const LX_STRING = 3
 Const LX_KEYWORD = 4
 Const LX_SYMBOL = 5
-Const LX_DIRECTIVE = 6
+Const TK_DIRECTIVE = 6
 
 Const LX_MAX_KEYWORDS = 600
 Dim lx_keywords$(LX_MAX_KEYWORDS- 1) Length 20
@@ -93,13 +93,21 @@ Function lx_token_lc$(i)
   lx_token_lc$ = LCase$(lx_token$(i))
 End Function
 
+' Gets the directive corresponding to token 'i'.
+'
+' Reports an Error if token 'i' is not a directive.
+Function lx_directive$(i)
+  If lx_type(i) <> TK_DIRECTIVE Then Error "{" + lx_token$(i) + "} is not a directive"
+  lx_directive$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 1)
+End Function
+
 Function lx_get_string$(i)
-  If lx_type(i) <> LX_STRING Then Error "'" + lx_token$(i) + "' is not a string literal"
+  If lx_type(i) <> LX_STRING Then Error "{" + lx_token$(i) + "} is not a string literal"
   lx_get_string$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 2)
 End Function
 
 Function lx_get_number(i)
-  If lx_type(i) <> LX_NUMBER Then Error "'" + lx_token$(i) + "' is not a number literal"
+  If lx_type(i) <> LX_NUMBER Then Error "{" + lx_token$(i) + "} is not a number literal"
   lx_get_number = Val(lx_token$(i))
 End Function
 
@@ -288,7 +296,7 @@ Sub lx_parse_directive()
   lx_advance()
   lx_advance()
   lx_advance_while("_abcdefghijklmnopqrstuvwxyz0123456789")
-  lx_store(LX_DIRECTIVE, start, lx_pos - start)
+  lx_store(TK_DIRECTIVE, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_symbol()
