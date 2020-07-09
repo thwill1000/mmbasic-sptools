@@ -54,12 +54,12 @@ Sub pp_print_default()
 
   For i = 0 To lx_num - 1
     If i = 0 Then pp_out(Space$(lx_start(i) - 1))
-    t$ = lx_get_token$(i)
+    t$ = lx_token$(i)
     If t$ <> "" Then
       pp_attrib(TK_COLOUR$(lx_type(i)))
       pp_out(t$)
       If i < lx_num - 1 Then
-        u$ = lx_get_token$(i + 1)
+        u$ = lx_token$(i + 1)
         no_space = t$ = "("
         no_space = no_space Or u$ = "(" Or u$ = ")" Or u$ = "," Or u$ = ";"
         no_space = no_space And t$ <> "=" And t$ <> ","
@@ -103,7 +103,7 @@ Sub pp_print_compact()
       If i = lx_num - 1 And lx_type(i) = LX_COMMENT Then Exit For
     EndIf
 
-    t$ = " " + LCase$(lx_get_token$(i)) + " "
+    t$ = " " + lx_token_lc$(i) + " "
     If t$ = "  " Then Error "Empty token"
 
     ' If a line starts with Sub or Function and was not preceeded by an empty
@@ -124,7 +124,7 @@ Sub pp_print_compact()
 
     ' Output the token with a trailing space where required.
     pp_attrib(TK_COLOUR$(lx_type(i)))
-    pp_out(lx_get_token$(i))
+    pp_out(lx_token$(i))
     If i < lx_num - 1 Then
       If pp_needs_space(i) And pp_needs_space(i + 1) Then pp_out(" ")
     EndIf
@@ -132,13 +132,13 @@ Sub pp_print_compact()
     ' Tokens requiring us to increase the indent level after printing them.
     If Instr(" else then for do sub function ", t$) > 0 Then
       If t$ = " else " Then
-        u$ = LCase$(lx_get_token$(i + 1))
+        u$ = lx_token_lc$(i + 1)
         If u$ <> "if" Then pp_indent_lvl = pp_indent_lvl + 1
       ElseIf t$ = " for " Then
-        u$ = " " + LCase$(lx_get_token$(i + 1)) + " "
+        u$ = " " + lx_token_lc$(i + 1) + " "
         If Instr(" input output random ", u$) <= 0 Then pp_indent_lvl = pp_indent_lvl + 1
       ElseIf t$ = " then " Then
-        u$ = LCase$(lx_get_token$(i + 1))
+        u$ = lx_token_lc$(i + 1)
         If u$ = "" Or Left$(u$, 1) = "'" Then pp_indent_lvl = pp_indent_lvl + 1
       Else
         pp_indent_lvl = pp_indent_lvl + 1
@@ -154,7 +154,7 @@ Sub pp_print_compact()
 
   ' If a line ends with End Function|Sub then output an extra empty line.
   If Instr(" function sub ", t$) Then
-    u$ = LCase$(lx_get_token$(lx_num - 2))
+    u$ = lx_token_lc$(lx_num - 2)
     If u$ = "end" Then  pp_inc_line() : pp_endl() : pp_empty = 1
   EndIf
 

@@ -26,7 +26,7 @@ Sub main()
 
   lx_parse_line(Mm.CmdLine$)
 
-  t$ = LCase$(lx_get_token$(0))
+  t$ = lx_token_lc$(0)
 
   If t$ = "" Then
     Error "Empty command line"
@@ -37,7 +37,7 @@ Sub main()
   ElseIf t$ = "remove" Then
     remove_file()
   Else
-    Error "Unknown command: " + lx_get_token$(0)
+    Error "Unknown command: " + lx_token$(0)
   EndIf
 End Sub
 
@@ -68,8 +68,8 @@ Sub add_file()
 
   If lx_num < 3 Then Error "'add' command requires two parameters"
 
-  cmd$ = lx_get_token$(1)
-  target$ = lx_get_token$(2)
+  cmd$ = lx_token$(1)
+  target$ = lx_token$(2)
  ' TODO: Handle file existing
  ' TODO: Check target exists and is absolute
 ' Open search_path$ + cmd$ + ".bas" For Output As #1

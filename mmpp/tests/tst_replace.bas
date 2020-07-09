@@ -51,7 +51,7 @@ End Sub
 
 Sub expect_tk(i, type, s$)
   ut_assert(lx_type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx_type(i)))
-  Local actual$ = lx_get_token$(i)
+  Local actual$ = lx_token$(i)
   ut_assert(actual$ = s$, "excepted " + s$ + ", found " + actual$)
 End Sub
 

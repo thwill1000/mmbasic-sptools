@@ -77,22 +77,30 @@ Sub lx_store(type, start, length)
   lx_num = lx_num + 1
 End Sub
 
-Function lx_get_token$(i)
-  If i > lx_num - 1 Or lx_len(i) = 0 Then
-    lx_get_token$ = ""
-  Else
-    lx_get_token$ = Mid$(lx_line$, lx_start(i), lx_len(i))
+' Gets the text of token 'i'.
+'
+' If i > the number of tokens then returns the empty string.
+Function lx_token$(i)
+  If i < lx_num And lx_len(i) > 0 Then
+    lx_token$ = Mid$(lx_line$, lx_start(i), lx_len(i))
   EndIf
 End Function
 
+' Gets the lower-case text of token 'i'.
+'
+' If i > the number of tokens then returns the empty string.
+Function lx_token_lc$(i)
+  lx_token_lc$ = LCase$(lx_token$(i))
+End Function
+
 Function lx_get_string$(i)
-  If lx_type(i) <> LX_STRING Then Error "'" + lx_get_token$(i) + "' is not a string literal"
+  If lx_type(i) <> LX_STRING Then Error "'" + lx_token$(i) + "' is not a string literal"
   lx_get_string$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 2)
 End Function
 
 Function lx_get_number(i)
-  If lx_type(i) <> LX_NUMBER Then Error "'" + lx_get_token$(i) + "' is not a number literal"
-  lx_get_number = Val(lx_get_token$(i))
+  If lx_type(i) <> LX_NUMBER Then Error "'" + lx_token$(i) + "' is not a number literal"
+  lx_get_number = Val(lx_token$(i))
 End Function
 
 Sub lx_load_keywords()

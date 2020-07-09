@@ -46,7 +46,7 @@ Sub rp_apply()
   If rp_replace_sz = 0 Then Exit Sub
 
   For i = 0 TO lx_num - 1
-    t$ = lx_get_token$(i)
+    t$ = lx_token_lc$(i)
     u$ = rp_get$(t$)
     If t$ <> u$ Then
       s$ = Left$(lx_line$, lx_start(i) - 1) + u$ + Mid$(lx_line$, lx_start(i) + lx_len(i))

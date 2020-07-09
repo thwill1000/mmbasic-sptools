@@ -12,6 +12,7 @@ Const MAX_NUM_FLAGS = 10
 Const MAX_NUM_IFS = 10
 
 Dim num_files = 0
+Dim flatten_includes = 1
 
 ' We just ignore the 0'th element in all of these.
 Dim file_stack$(MAX_NUM_FILES) Length 40
@@ -114,7 +115,7 @@ Function pop_if()
 End Function
 
 Sub process_directives()
-  Local t$ = LCase$(lx_get_token$(0))
+  Local t$ = lx_token_lc$(0)
 
   If t$ = "'!endif" Then
     update_num_comments(- pop_if())
@@ -123,10 +124,10 @@ Sub process_directives()
 
   add_comments()
 
-  t$ = LCase$(lx_get_token$(0))
+  t$ = lx_token_lc$(0)
 
   If t$ = "#include" Then
-    Local f$ = lx_get_token$(1)
+    Local f$ = lx_token$(1)
     f$ = Mid$(f$, 2, Len(f$) - 2)
     open_file(f$)
     parse_line("' -------- BEGIN " + lx_line$ + " --------")
@@ -150,11 +151,11 @@ End Sub
 
 Sub process_clear()
   If lx_num <> 2 Then cerror("Syntax error: !clear directive requires 'flag' parameter")
-  clear_flag(LCase$(lx_get_token$(1)))
+  clear_flag(lx_token_lc$(1))
 End Sub
 
 Sub process_comments()
-  Local t$ = LCase$(lx_get_token$(1))
+  Local t$ = lx_token_lc$(1)
   If t$ = "on" Then
     pp_comment = 1
   ElseIf t$ = "off" Then
@@ -167,14 +168,14 @@ End Sub
 Sub process_comment_if()
   Local t$, x
 
-  t$ = LCase$(lx_get_token$(1))
+  t$ = lx_token_lc$(1)
 
   If lx_num = 2 Then
     x = get_flag(t$)
   Else If lx_num = 3 Then
     If t$ <> "not" Then
       t$ = "Syntax error: !comment_if directive followed by unexpected token '"
-      t$ = t$ + lx_get_token$(1) + "'"
+      t$ = t$ + lx_token$(1) + "'"
       cerror(t$)
     EndIf
     x = 1 - get_flag(t$)
@@ -187,7 +188,7 @@ Sub process_comment_if()
 End Sub
 
 Sub process_flatten()
-  Local t$ = LCase$(lx_get_token$(1))
+  Local t$ = lx_token_lc$(1)
   If t$ = "on" Then
     flatten_includes = 1
   ElseIf t$ = "off" Then
@@ -208,14 +209,14 @@ End Sub
 Sub process_uncomment_if()
   Local t$, x
 
-  t$ = LCase$(lx_get_token$(1))
+  t$ = lx_token_lc$(1)
 
   If lx_num = 2 Then
     x = get_flag(t$)
   Else If lx_num = 3 Then
     If t$ <> "not" Then
       t$ = "Syntax error: !uncomment_if directive followed by unexpected token '"
-      t$ = t$ + lx_get_token$(1) + "'"
+      t$ = t$ + lx_token$(1) + "'"
       cerror(t$)
     EndIf
     x = 1 - get_flag(t$)
@@ -231,12 +232,12 @@ Sub process_replace()
   If lx_num <> 3 Then
     cerror("Syntax error: !replace directive requires 'from' and 'to' parameters")
   EndIf
-  rp_add(LCase$(lx_get_token$(1)), LCase$(lx_get_token$(2)))
+  rp_add(lx_token_lc$(1), lx_token_lc$(2))
 End Sub
 
 Sub process_set()
   If lx_num <> 2 Then cerror("Syntax error: !set directive requires 'flag' parameter")
-  set_flag(LCase$(lx_get_token$(1)))
+  set_flag(lx_token_lc$(1))
 End Sub
 
 Sub process_spacing()
