@@ -115,34 +115,24 @@ Function pop_if()
 End Function
 
 Sub process_directives()
-  Local t$ = lx_token_lc$(0)
-
-  If t$ = "'!endif" Then
-    update_num_comments(- pop_if())
-    parse_line("' PROCESSED: " + lx_line$)
-  EndIf
+  If lx_token_lc$(0) = "'!endif" Then process_endif()
 
   add_comments()
 
-  t$ = lx_token_lc$(0)
+  If lx_token_lc$(0) = "#include" Then process_include()
 
-  If t$ = "#include" Then
-    Local f$ = lx_token$(1)
-    f$ = Mid$(f$, 2, Len(f$) - 2)
-    open_file(f$)
-    parse_line("' -------- BEGIN " + lx_line$ + " --------")
-  EndIf
+  If lx_type(0) <> LX_DIRECTIVE Then Exit Sub
 
-  If lx_type(0) <> LX_DIRECTIVE    Then : Exit Sub
-  ElseIf t$ = "'!clear"            Then : process_clear()
-  ElseIf t$ = "'!comments"         Then : process_comments()
-  ElseIf t$ = "'!comment_if"       Then : process_comment_if()
-  ElseIf t$ = "'!flatten"          Then : process_flatten()
-  ElseIf t$ = "'!indent"           Then : process_indent()
-  ElseIf t$ = "'!uncomment_if"     Then : process_uncomment_if()
-  ElseIf t$ = "'!replace"          Then : process_replace()
-  ElseIf t$ = "'!set"              Then : process_set()
-  ElseIf t$ = "'!spacing"          Then : process_spacing()
+  Local t$ = lx_token_lc$(0)
+  If     t$ = "'!clear"        Then : process_clear()
+  ElseIf t$ = "'!comments"     Then : process_comments()
+  ElseIf t$ = "'!comment_if"   Then : process_comment_if()
+  ElseIf t$ = "'!flatten"      Then : process_flatten()
+  ElseIf t$ = "'!indent"       Then : process_indent()
+  ElseIf t$ = "'!uncomment_if" Then : process_uncomment_if()
+  ElseIf t$ = "'!replace"      Then : process_replace()
+  ElseIf t$ = "'!set"          Then : process_set()
+  ElseIf t$ = "'!spacing"      Then : process_spacing()
   Else : cerror("Unknown directive: " + Mid$(t$, 2))
   EndIf
 
@@ -187,6 +177,11 @@ Sub process_comment_if()
   If x Then update_num_comments(+1)
 End Sub
 
+Sub process_endif()
+  update_num_comments(- pop_if())
+  parse_line("' PROCESSED: " + lx_line$)
+End Sub
+
 Sub process_flatten()
   Local t$ = lx_token_lc$(1)
   If t$ = "on" Then
@@ -196,6 +191,13 @@ Sub process_flatten()
   Else
     cerror("Syntax error: !flatten directive requires 'on|off' parameter")
   EndIf
+End Sub
+
+Sub process_include()
+  Local f$ = lx_token$(1)
+  f$ = Mid$(f$, 2, Len(f$) - 2)
+  open_file(f$)
+  parse_line("' -------- BEGIN " + lx_line$ + " --------")
 End Sub
 
 Sub process_indent()
