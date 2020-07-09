@@ -5,6 +5,7 @@ Option Default Integer
 
 #Include "../unittest.inc"
 #Include "../lexer.inc"
+#Include "../set.inc"
 
 Cls
 

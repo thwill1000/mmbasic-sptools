@@ -6,9 +6,9 @@ Option Default Integer
 #Include "lexer.inc"
 #Include "replace.inc"
 #Include "pprint.inc"
+#Include "set.inc"
 
 Const MAX_NUM_FILES = 5
-Const MAX_NUM_FLAGS = 10
 Const MAX_NUM_IFS = 10
 
 Dim num_files = 0
@@ -20,7 +20,12 @@ Dim cur_line_no(MAX_NUM_FILES)
 Dim num_comments(MAX_NUM_FILES)
 Dim num_ifs(MAX_NUM_FILES)
 Dim if_stack(MAX_NUM_FILES, MAX_NUM_IFS)
-Dim flags$(MAX_NUM_FLAGS)
+
+' The set of active flags.
+Const MAX_NUM_FLAGS = 10
+Dim flags$(MAX_NUM_FLAGS - 1)
+Dim flags_sz = 0
+set_init(flags$(), MAX_NUM_FLAGS)
 
 Sub open_file(f$)
   Local f2$, p
@@ -140,8 +145,15 @@ Sub process_directives()
 End Sub
 
 Sub process_clear()
-  If lx_num <> 2 Then cerror("Syntax error: !clear directive requires 'flag' parameter")
-  clear_flag(lx_token_lc$(1))
+  Local t$ = lx_token_lc$(1)
+  If lx_num <> 2 Or t$ = "" Then
+    cerror("Syntax error: !clear directive requires 'flag' parameter")
+  EndIf
+  If set_get(flags$(), flags_sz, t$) < 0 Then
+    ' TODO: Is this really the behaviour we want?
+    cerror("Error: flag '" + t$ + "' is not set")
+  EndIf
+  set_remove(flags$(), flags_sz, t$)
 End Sub
 
 Sub process_comments()
@@ -156,22 +168,26 @@ Sub process_comments()
 End Sub
 
 Sub process_if()
-  Local t$, x
+  Local invert, is_set, t$
 
   t$ = lx_token_lc$(1)
 
   If lx_num = 2 Then
-    x = get_flag(t$)
+    ' Do nothing
   ElseIf lx_num = 3 Then
-    If t$ <> "not" Then
-      t$ = "Syntax error: " + lx_directive$(0) + " directive followed by unexpected token '"
-      t$ = t$ + lx_token$(1) + "'"
+    If t$ = "not" Then
+      invert = 1
+    Else
+      t$ = "Syntax error: " + lx_directive$(0) + " directive followed by unexpected token {"
+      t$ = t$ + lx_token$(1) + "}"
       cerror(t$)
     EndIf
-    x = 1 - get_flag(t$)
   Else
     cerror("Syntax error: " + lx_directive$(0) + " directive with invalid parameters")
   EndIf
+
+  Local x = set_get(flags$(), flags_sz, t$) > -1
+  If invert Then x = Not is_set
 
   If lx_directive$(0) = "!comment_if" Then
     push_if(x)
@@ -223,8 +239,14 @@ Sub process_replace()
 End Sub
 
 Sub process_set()
-  If lx_num <> 2 Then cerror("Syntax error: !set directive requires 'flag' parameter")
-  set_flag(lx_token_lc$(1))
+  Local t$ = lx_token_lc$(1)
+  If lx_num <> 2 Or t$ = "" Then
+    cerror("Syntax error: !set directive requires 'flag' parameter")
+  EndIf
+  If set_get(flags$(), flags_sz, t$) > -1 Then
+    cerror("Error: flag '" + t$ + "' is already set")
+  EndIf
+  set_put(flags$(), flags_sz, t$)
 End Sub
 
 Sub process_spacing()
@@ -233,33 +255,6 @@ End Sub
 
 Sub update_num_comments(x)
   num_comments(num_files) = num_comments(num_files) + x
-End Sub
-
-Function get_flag(s$)
-  Local i
-  If s$ = "" Then Error "No flag specified"
-  For i = 0 To MAX_NUM_FLAGS - 1
-    If flags$(i) = s$ Then get_flag = 1 : Exit Function
-  Next i
-End Function
-
-Sub set_flag(s$)
-  Local i, j = -1
-  If s$ = "" Then Error "No flag specified"
-  For i = 0 To MAX_NUM_FLAGS - 1
-    If j = -1 And flags$(i) = "" Then j = i
-    If flags$(i) = s$ Then Exit Sub ' already set
-  Next i
-  If j = -1 Then Error "Too many flags"
-  flags$(j) = s$
-End Sub
-
-Sub clear_flag(s$)
-  Local i
-  If s$ = "" Then Error "No flag specified"
-  For i = 0 To MAX_NUM_FLAGS - 1
-    If flags$(i) = s$ Then flags$(i) = "" : Exit Sub
-  Next i
 End Sub
 
 Sub parse_line(s$)

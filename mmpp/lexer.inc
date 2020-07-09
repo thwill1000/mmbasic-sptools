@@ -9,8 +9,9 @@ Const TK_SYMBOL = 5
 Const TK_DIRECTIVE = 6
 
 Const LX_MAX_KEYWORDS = 600
-Dim lx_keywords$(LX_MAX_KEYWORDS- 1) Length 20
+Dim lx_keywords$(LX_MAX_KEYWORDS - 1) Length 20
 Dim lx_keywords_sz = 0
+set_init(lx_keywords$(), LX_MAX_KEYWORDS)
 
 Const LX_MAX_TOKENS = 50
 Dim lx_type(LX_MAX_TOKENS - 1)
@@ -23,26 +24,6 @@ Dim lx_line$
 Dim lx_next_char$
 Dim lx_num
 Dim lx_pos
-
-' Adds a new keyword.
-Sub lx_add_keyword(s$)
-  lx_keywords$(lx_keywords_sz) = LCase$(s$)
-  lx_keywords_sz = lx_keywords_sz + 1
-  If lx_keywords_sz > 1 Then
-    If lx_keywords$(lx_keywords_sz - 1) < lx_keywords$(lx_keywords_sz - 2) Then
-      Sort lx_keywords$()
-    EndIf
-  EndIf
-End Sub
-
-' Clears the list of keywords.
-Sub lx_keywords_clear()
-  Local i
-
-  For i = 0 To LX_MAX_KEYWORDS - 1
-    lx_keywords$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
-  Next i
-End Sub
 
 Sub lx_advance()
   lx_pos = lx_pos + 1
@@ -125,7 +106,7 @@ Sub lx_load_keywords()
   Do
     Line Input #1, s$
     If Len(s$) > 0 And Left$(s$, 1) <> "'" Then
-      lx_add_keyword(s$)
+      set_put(lx_keywords$(), lx_keywords_sz, LCase$(s$))
     EndIf
   Loop While Not Eof(#1)
 
@@ -133,22 +114,7 @@ Sub lx_load_keywords()
 End Sub
 
 Function lx_is_keyword(t$)
-  Local i, lb, s$, ub
-
-  ' Binary search of lx_keywords$()
-  lb = 0
-  ub = lx_keywords_sz - 1
-  s$ = LCase$(t$)
-  Do
-    i = (lb + ub) \ 2
-    If s$ > lx_keywords$(i) Then
-      lb = i + 1
-    ElseIf s$ < lx_keywords$(i) Then
-      ub = i - 1
-    Else
-      lx_is_keyword = 1 : Exit Function
-    EndIf
-  Loop Until ub < lb
+  lx_is_keyword = set_get(lx_keywords$(), lx_keywords_sz, LCase$(t$)) > -1
 End Function
 
 ' Performs simple space separator based tokenisation.
