@@ -1,11 +1,11 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Const LX_IDENTIFIER = 0
-Const LX_NUMBER = 1
-Const LX_COMMENT = 2
-Const LX_STRING = 3
-Const LX_KEYWORD = 4
-Const LX_SYMBOL = 5
+Const TK_IDENTIFIER = 0
+Const TK_NUMBER = 1
+Const TK_COMMENT = 2
+Const TK_STRING = 3
+Const TK_KEYWORD = 4
+Const TK_SYMBOL = 5
 Const TK_DIRECTIVE = 6
 
 Const LX_MAX_KEYWORDS = 600
@@ -93,22 +93,28 @@ Function lx_token_lc$(i)
   lx_token_lc$ = LCase$(lx_token$(i))
 End Function
 
-' Gets the directive corresponding to token 'i'.
+' Gets the directive corresponding to token 'i' without the leading single quote.
 '
-' Reports an Error if token 'i' is not a directive.
+' Throws an Error if token 'i' is not a directive.
 Function lx_directive$(i)
   If lx_type(i) <> TK_DIRECTIVE Then Error "{" + lx_token$(i) + "} is not a directive"
   lx_directive$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 1)
 End Function
 
-Function lx_get_string$(i)
-  If lx_type(i) <> LX_STRING Then Error "{" + lx_token$(i) + "} is not a string literal"
-  lx_get_string$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 2)
+' Gets the string corresponding to token 'i' without the surrounding quotes.
+'
+' Throws an Error if token 'i' is not a string literal.
+Function lx_string$(i)
+  If lx_type(i) <> TK_STRING Then Error "{" + lx_token$(i) + "} is not a string literal"
+  lx_string$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 2)
 End Function
 
-Function lx_get_number(i)
-  If lx_type(i) <> LX_NUMBER Then Error "{" + lx_token$(i) + "} is not a number literal"
-  lx_get_number = Val(lx_token$(i))
+' Gets the number corresponding to token 'i'.
+'
+' Throws an Error if token 'i' is not a number literal.
+Function lx_number(i)
+  If lx_type(i) <> TK_NUMBER Then Error "{" + lx_token$(i) + "} is not a number literal"
+  lx_number = Val(lx_token$(i))
 End Function
 
 Sub lx_load_keywords()
@@ -159,7 +165,7 @@ Sub lx_tokenise(line$)
   Do While lx_char$ <> Chr$(10)
     If lx_char$ = " " Then
       If start > -1 Then
-        lx_store(LX_IDENTIFIER, start, lx_pos - start)
+        lx_store(TK_IDENTIFIER, start, lx_pos - start)
         start = -1
       EndIf
     Else
@@ -168,7 +174,7 @@ Sub lx_tokenise(line$)
     lx_advance()
   Loop
 
-  If start > -1 Then lx_store(LX_IDENTIFIER, start, lx_pos - start)
+  If start > -1 Then lx_store(TK_IDENTIFIER, start, lx_pos - start)
 
 End Sub
 
@@ -220,7 +226,7 @@ Sub lx_parse_binary()
   lx_advance()
   lx_advance()
   lx_advance_while("01")
-  lx_store(LX_NUMBER, start, lx_pos - start)
+  lx_store(TK_NUMBER, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_hexadecimal()
@@ -229,7 +235,7 @@ Sub lx_parse_hexadecimal()
   lx_advance()
   lx_advance()
   lx_advance_while("0123456789abcdefABCDEF")
-  lx_store(LX_NUMBER, start, lx_pos - start)
+  lx_store(TK_NUMBER, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_decimal()
@@ -248,7 +254,7 @@ Sub lx_parse_decimal()
     lx_advance_while("0123456789")
   EndIf
 
-  lx_store(LX_NUMBER, start, lx_pos - start)
+  lx_store(TK_NUMBER, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_octal()
@@ -257,11 +263,11 @@ Sub lx_parse_octal()
   lx_advance()
   lx_advance()
   lx_advance_while("01234567")
-  lx_store(LX_NUMBER, start, lx_pos - start)
+  lx_store(TK_NUMBER, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_comment()
-  lx_store(LX_COMMENT, lx_pos, Len(lx_line$) - lx_pos + 1)
+  lx_store(TK_COMMENT, lx_pos, Len(lx_line$) - lx_pos + 1)
   lx_char$ = Chr$(10)
 End Sub
 
@@ -271,7 +277,7 @@ Sub lx_parse_string()
   lx_advance()
   lx_advance_until(Chr$(10) + Chr$(34))
   If lx_char$ = Chr$(10) Then lx_error$ = "No closing quote" : Exit Sub
-  lx_store(LX_STRING, start, lx_pos - start + 1)
+  lx_store(TK_STRING, start, lx_pos - start + 1)
   lx_advance()
 End Sub
 
@@ -282,9 +288,9 @@ Sub lx_parse_keyword()
   lx_advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
   If lx_char$ = "$" Then lx_advance()
   If lx_is_keyword(Mid$(lx_line$, start, lx_pos - start)) Then
-    lx_store(LX_KEYWORD, start, lx_pos - start)
+    lx_store(TK_KEYWORD, start, lx_pos - start)
   Else
-    lx_store(LX_IDENTIFIER, start, lx_pos - start)
+    lx_store(TK_IDENTIFIER, start, lx_pos - start)
   EndIf
 
 End Sub
@@ -304,15 +310,15 @@ Sub lx_parse_symbol()
 
   start = lx_pos
   If lx_char$ <> "<" And lx_char$ <> ">" And lx_char$ <> "=" Then
-    lx_store(LX_SYMBOL, start, 1)
+    lx_store(TK_SYMBOL, start, 1)
     lx_advance()
   Else
     lx_advance()
     If lx_char$ = "<" Or lx_char$ = ">" Or lx_char$ = "=" Then
-      lx_store(LX_SYMBOL, start, 2)
+      lx_store(TK_SYMBOL, start, 2)
       lx_advance()
     Else
-      lx_store(LX_SYMBOL, start, 1)
+      lx_store(TK_SYMBOL, start, 1)
     EndIf
   EndIf
 End Sub

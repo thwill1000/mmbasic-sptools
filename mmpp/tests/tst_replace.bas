@@ -25,7 +25,7 @@ Function test_one_replacement()
   rp_apply()
 
   expect_tokens(1)
-  expect_tk(0, LX_IDENTIFIER, "bar")
+  expect_tk(0, TK_IDENTIFIER, "bar")
 End Function
 
 Function test_two_replacements()
@@ -36,11 +36,11 @@ Function test_two_replacements()
   rp_apply()
 
   expect_tokens(5)
-  expect_tk(0, LX_KEYWORD, "Dim")
-  expect_tk(1, LX_IDENTIFIER, "y")
-  expect_tk(2, LX_SYMBOL, "=")
-  expect_tk(3, LX_IDENTIFIER, "z")
-  expect_tk(4, LX_COMMENT, "' comment")
+  expect_tk(0, TK_KEYWORD, "Dim")
+  expect_tk(1, TK_IDENTIFIER, "y")
+  expect_tk(2, TK_SYMBOL, "=")
+  expect_tk(3, TK_IDENTIFIER, "z")
+  expect_tk(4, TK_COMMENT, "' comment")
   ut_assert_string_equals("Dim y = z ' comment", lx_line$)
 End Function
 

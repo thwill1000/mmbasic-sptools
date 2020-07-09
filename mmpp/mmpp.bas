@@ -95,7 +95,7 @@ Sub add_comments()
   If nc > 0 Then
     parse_line(String$(nc, "'") + lx_line$)
   ElseIf nc < 0 Then
-    Do While nc < 0 And lx_num > 0 And lx_type(0) = LX_COMMENT
+    Do While nc < 0 And lx_num > 0 And lx_type(0) = TK_COMMENT
       parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
       nc = nc + 1
     Loop
@@ -201,18 +201,18 @@ Sub process_flatten()
 End Sub
 
 Sub process_include()
-  Local f$ = lx_token$(1)
-  f$ = Mid$(f$, 2, Len(f$) - 2)
-  open_file(f$)
+  If lx_num <> 2 Or lx_type(1) <> TK_STRING Then
+    cerror("Syntax error: #Include requires a 'file' parameter")
+  EndIf
+  open_file(lx_string$(1))
   parse_line("' -------- BEGIN " + lx_line$ + " --------")
 End Sub
 
 Sub process_indent()
-  If lx_num < 2 Or lx_type(1) <> LX_NUMBER Then
+  If lx_num < 2 Or lx_type(1) <> TK_NUMBER Then
     cerror("Syntax error: !indent requires 'number' parameter")
-  Else 
-    pp_indent_sz = lx_get_number(1)
   EndIf
+  pp_indent_sz = lx_number(1)
 End Sub
 
 Sub process_replace()
@@ -277,12 +277,12 @@ Sub main()
   lx_parse_line(Mm.CmdLine$)
   If lx_num = 0 Then Error "No input filename specified"
   If lx_num > 0 Then
-    If lx_type(0) <> LX_STRING Then Error "Input filename must be quoted"
-    in$ = lx_get_string$(0)
+    If lx_type(0) <> TK_STRING Then Error "Input filename must be quoted"
+    in$ = lx_string$(0)
   EndIf
   If lx_num > 1 Then
-    If lx_type(1) <> LX_STRING Then Error "Output filename must be quoted"
-    out$ = lx_get_string$(1)
+    If lx_type(1) <> TK_STRING Then Error "Output filename must be quoted"
+    out$ = lx_string$(1)
   EndIf
 
   pp_open(out$, 0)
