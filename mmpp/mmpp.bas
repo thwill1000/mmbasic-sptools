@@ -3,30 +3,18 @@
 Option Explicit On
 Option Default Integer
 
+Const MAX_NUM_FILES = 5
+
 #Include "lexer.inc"
 #Include "map.inc"
 #Include "pprint.inc"
-#Include "replace.inc"
 #Include "set.inc"
-
-Const MAX_NUM_FILES = 5
-Const MAX_NUM_IFS = 10
+#Include "trans.inc"
 
 Dim num_files = 0
-Dim flatten_includes = 1
-
-' We just ignore the 0'th element in all of these.
+' We ignore the 0'th element in these.
 Dim file_stack$(MAX_NUM_FILES) Length 40
 Dim cur_line_no(MAX_NUM_FILES)
-Dim num_comments(MAX_NUM_FILES)
-Dim num_ifs(MAX_NUM_FILES)
-Dim if_stack(MAX_NUM_FILES, MAX_NUM_IFS)
-
-' The set of active flags.
-Const MAX_NUM_FLAGS = 10
-Dim flags$(MAX_NUM_FLAGS - 1)
-Dim flags_sz = 0
-set_init(flags$(), MAX_NUM_FLAGS)
 
 Sub open_file(f$)
   Local f2$, p
@@ -34,7 +22,7 @@ Sub open_file(f$)
   cout(Chr$(13)) ' CR
 
   If num_files > 0 Then
-    f2$ = get_parent$(file_stack$(1)) + f$
+    f2$ = fi_get_parent$(file_stack$(1)) + f$
   Else
     f2$ = f$
   EndIf
@@ -47,7 +35,7 @@ Sub open_file(f$)
   cout(Space$(1 + num_files * 2))
 End Sub
 
-Function get_parent$(f$)
+Function fi_get_parent$(f$)
   Local ch$, p
 
   p = Len(f$)
@@ -57,7 +45,7 @@ Function get_parent$(f$)
     p = p - 1
   Loop Until p = 0
 
-  If p > 0 Then get_parent$ = Left$(f$, p)
+  If p > 0 Then fi_get_parent$ = Left$(f$, p)
 End Function
 
 Function fi_exists(f$)
@@ -66,6 +54,12 @@ Function fi_exists(f$)
   If s$ = "" Then s$ = Dir$(f$, Dir)
   fi_exists = s$ <> ""
 End Function
+
+Sub close_file()
+  Close #num_files
+  num_files = num_files - 1
+  cout(Chr$(8) + " " + Chr$(13) + Space$(1 + num_files * 2))
+End Sub
 
 Sub cendl()
   If pp_file_num = -1 Then Exit Sub
@@ -83,185 +77,12 @@ Sub cerror(msg$)
   End
 End Sub
 
-Sub close_file()
-  Close #num_files
-  num_files = num_files - 1
-  cout(Chr$(8) + " " + Chr$(13) + Space$(1 + num_files * 2))
-End Sub
-
 Function read_line$()
   Local s$
   Line Input #num_files, s$
   read_line$ = s$
   cur_line_no(num_files) = cur_line_no(num_files) + 1
 End Function
-
-Sub add_comments()
-  Local nc = num_comments(num_files)
-  If nc > 0 Then
-    parse_line(String$(nc, "'") + lx_line$)
-  ElseIf nc < 0 Then
-    Do While nc < 0 And lx_num > 0 And lx_type(0) = TK_COMMENT
-      parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
-      nc = nc + 1
-    Loop
-  EndIf
-End Sub
-
-Sub push_if(x)
-  If num_ifs(num_files) = MAX_NUM_IFS Then Error "Too many if directives"
-  num_ifs(num_files) = num_ifs(num_files) + 1
-  if_stack(num_files, num_ifs(num_files)) = x
-End Sub
-
-Function pop_if()
-  If num_ifs(num_files) = 0 Then Error "If directive stack is empty"
-  pop_if = if_stack(num_files, num_ifs(num_files))
-  num_ifs(num_files) = num_ifs(num_files) - 1
-End Function
-
-Sub process_directives()
-  If lx_token_lc$(0) = "'!endif" Then process_endif()
-
-  add_comments()
-
-  If lx_token_lc$(0) = "#include" Then process_include()
-
-  If lx_type(0) <> TK_DIRECTIVE Then Exit Sub
-
-  Local t$ = lx_directive$(0)
-  If     t$ = "!clear"        Then : process_clear()
-  ElseIf t$ = "!comments"     Then : process_comments()
-  ElseIf t$ = "!comment_if"   Then : process_if()
-  ElseIf t$ = "!flatten"      Then : process_flatten()
-  ElseIf t$ = "!indent"       Then : process_indent()
-  ElseIf t$ = "!uncomment_if" Then : process_if()
-  ElseIf t$ = "!replace"      Then : process_replace()
-  ElseIf t$ = "!set"          Then : process_set()
-  ElseIf t$ = "!spacing"      Then : process_spacing()
-  Else : cerror("Unknown directive: " + Mid$(t$, 2))
-  EndIf
-
-  parse_line("' PROCESSED: " + lx_line$)
-End Sub
-
-Sub process_clear()
-  Local t$ = lx_token_lc$(1)
-  If lx_num <> 2 Or t$ = "" Then
-    cerror("Syntax error: !clear directive requires 'flag' parameter")
-  EndIf
-  If set_get(flags$(), flags_sz, t$) < 0 Then
-    ' TODO: Is this really the behaviour we want?
-    cerror("Error: flag '" + t$ + "' is not set")
-  EndIf
-  set_remove(flags$(), flags_sz, t$)
-End Sub
-
-Sub process_comments()
-  Local t$ = lx_token_lc$(1)
-  If t$ = "on" Then
-    pp_comment = 1
-  ElseIf t$ = "off" Then
-    pp_comment = 0
-  Else
-    cerror("Syntax error: !comments directive requires 'on|off' parameter")
-  EndIf
-End Sub
-
-Sub process_if()
-  Local invert, is_set, t$
-
-  t$ = lx_token_lc$(1)
-
-  If lx_num = 2 Then
-    ' Do nothing
-  ElseIf lx_num = 3 Then
-    If t$ = "not" Then
-      invert = 1
-    Else
-      t$ = "Syntax error: " + lx_directive$(0) + " directive followed by unexpected token {"
-      t$ = t$ + lx_token$(1) + "}"
-      cerror(t$)
-    EndIf
-  Else
-    cerror("Syntax error: " + lx_directive$(0) + " directive with invalid parameters")
-  EndIf
-
-  Local x = set_get(flags$(), flags_sz, t$) > -1
-  If invert Then x = Not is_set
-
-  If lx_directive$(0) = "!comment_if" Then
-    push_if(x)
-    If x Then update_num_comments(+1)
-  ElseIf lx_directive$(0) = "!uncomment_if" Then
-    push_if(-x)
-    If x Then update_num_comments(-1)
-  Else
-    Error
-  EndIf
-End Sub
-
-Sub process_endif()
-  update_num_comments(- pop_if())
-  parse_line("' PROCESSED: " + lx_line$)
-End Sub
-
-Sub process_flatten()
-  Local t$ = lx_token_lc$(1)
-  If t$ = "on" Then
-    flatten_includes = 1
-  ElseIf t$ = "off" Then
-    flatten_includes = 0
-  Else
-    cerror("Syntax error: !flatten directive requires 'on|off' parameter")
-  EndIf
-End Sub
-
-Sub process_include()
-  If lx_num <> 2 Or lx_type(1) <> TK_STRING Then
-    cerror("Syntax error: #Include requires a 'file' parameter")
-  EndIf
-  open_file(lx_string$(1))
-  parse_line("' -------- BEGIN " + lx_line$ + " --------")
-End Sub
-
-Sub process_indent()
-  If lx_num < 2 Or lx_type(1) <> TK_NUMBER Then
-    cerror("Syntax error: !indent requires 'number' parameter")
-  EndIf
-  pp_indent_sz = lx_number(1)
-End Sub
-
-Sub process_replace()
-  If lx_num <> 3 Then
-    cerror("Syntax error: !replace directive requires 'from' and 'to' parameters")
-  EndIf
-  rp_add(lx_token_lc$(1), lx_token_lc$(2))
-End Sub
-
-Sub process_set()
-  Local t$ = lx_token_lc$(1)
-  If lx_num <> 2 Or t$ = "" Then
-    cerror("Syntax error: !set directive requires 'flag' parameter")
-  EndIf
-  If set_get(flags$(), flags_sz, t$) > -1 Then
-    cerror("Error: flag '" + t$ + "' is already set")
-  EndIf
-  set_put(flags$(), flags_sz, t$)
-End Sub
-
-Sub process_spacing()
-  ' TODO
-End Sub
-
-Sub update_num_comments(x)
-  num_comments(num_files) = num_comments(num_files) + x
-End Sub
-
-Sub parse_line(s$)
-  lx_parse_line(s$)
-  rp_apply()
-End Sub
 
 Sub main()
   Local in$, out$, s$, t
@@ -289,16 +110,14 @@ Sub main()
   Do
     cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(num_files) \ 8) Mod 4) + 1, 1))
     s$ = read_line$()
-    parse_line(s$)
-    If lx_error$ <> "" Then cerror(lx_error$)
-    process_directives()
+    transpile(s$)
     pp_print_line()
 
     If Eof(#num_files) Then
       If num_files > 1 Then
         s$ = "' -------- END #Include " + Chr$(34)
         s$ = s$ + file_stack$(num_files) + Chr$(34) + " --------"
-        parse_line(s$)
+        transpile(s$)
         pp_print_line()
       EndIf
       close_file()
@@ -306,7 +125,7 @@ Sub main()
 
   Loop Until num_files = 0
 
-  cout(Chr$(13) + "Time taken = " +Format$((Timer - t) / 1000, "%.1f s"))
+  cout(Chr$(13) + "Time taken = " + Format$((Timer - t) / 1000, "%.1f s"))
 
   pp_close()
 

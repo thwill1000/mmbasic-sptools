@@ -3,9 +3,12 @@
 Option Explicit On
 Option Default Integer
 
+Const MAX_NUM_FILES = 5
+Dim num_files = 1
+
 #Include "../lexer.inc"
 #Include "../map.inc"
-#Include "../replace.inc"
+#Include "../trans.inc"
 #Include "../set.inc"
 #Include "../unittest.inc"
 
@@ -13,29 +16,18 @@ Cls
 
 lx_load_keywords()
 
-ut_add_test("test_one_replacement")
-ut_add_test("test_two_replacements")
+ut_add_test("test_replace")
 
 ut_run_tests()
 
 End
 
-Function test_one_replacement()
-  lx_parse_line("foo")
-  rp_clear()
-  rp_add("foo", "bar")
-  rp_apply()
+Function test_replace()
+  map_clear(replace$(), with$(), replace_sz)
+  transpile("'!replace x      y")
+  transpile("'!replace &hFFFF z")
 
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "bar")
-End Function
-
-Function test_two_replacements()
-  lx_parse_line("Dim x = &hFFFF ' comment")
-  rp_clear()
-  rp_add("x", "y")
-  rp_add("&hFFFF", "z")
-  rp_apply()
+  transpile("Dim x = &hFFFF ' comment")
 
   expect_tokens(5)
   expect_tk(0, TK_KEYWORD, "Dim")
@@ -53,7 +45,6 @@ End Sub
 
 Sub expect_tk(i, type, s$)
   ut_assert(lx_type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx_type(i)))
-  Local actual$ = lx_token$(i)
-  ut_assert(actual$ = s$, "excepted " + s$ + ", found " + actual$)
+  ut_assert_string_equals(s$, lx_token$(i))
 End Sub
 
