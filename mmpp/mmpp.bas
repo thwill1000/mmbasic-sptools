@@ -4,8 +4,9 @@ Option Explicit On
 Option Default Integer
 
 #Include "lexer.inc"
-#Include "replace.inc"
+#Include "map.inc"
 #Include "pprint.inc"
+#Include "replace.inc"
 #Include "set.inc"
 
 Const MAX_NUM_FILES = 5

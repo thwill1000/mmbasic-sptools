@@ -3,10 +3,11 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../unittest.inc"
 #Include "../lexer.inc"
+#Include "../map.inc"
 #Include "../replace.inc"
 #Include "../set.inc"
+#Include "../unittest.inc"
 
 Cls
 

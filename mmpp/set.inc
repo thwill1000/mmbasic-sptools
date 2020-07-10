@@ -1,12 +1,21 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Sub set_init(set$(), sz)
+' Initialises the set.
+Sub set_init(set$(), num_elements)
+  Local sz = num_elements ' don't want to change num_elements
+  set_clear(set$(), sz)
+End Sub
+
+' Clears the set and resets the size.
+Sub set_clear(set$(), sz)
   Local i
   For i = 0 To sz - 1
     set$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
   Next i
+  sz = 0
 End Sub
 
+' Adds a value to the set.
 Sub set_put(set$(), sz, s$)
   set$(sz) = s$
   sz = sz + 1
@@ -17,6 +26,7 @@ Sub set_put(set$(), sz, s$)
   EndIf
 End Sub
 
+' Gets the index of a value in the set, or -1 if not present.
 Function set_get(set$(), sz, s$)
   Local i, lb, ub
 
@@ -37,6 +47,7 @@ Function set_get(set$(), sz, s$)
   set_get = -1
 End Function
 
+' Removes a value from the set if present.
 Sub set_remove(set$(), sz, s$)
   Local i = set_get(set$(), sz, s$)
   If i > -1 Then
@@ -44,5 +55,14 @@ Sub set_remove(set$(), sz, s$)
     sz = sz - 1
     Sort set$()
   EndIf
+End Sub
+
+' Prints the contents of the set.
+Sub set_dump(set$(), sz)
+  Local i
+  For i = 0 To sz - 1
+    Print "["; Str$(i); "] "; set$(i)
+  Next i
+  Print "END"
 End Sub
 
