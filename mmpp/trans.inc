@@ -22,29 +22,32 @@ Dim with$(MAX_NUM_REPLACEMENTS - 1) Length 50
 Dim replace_sz
 map_init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
 
-Sub add_comments()
-  Local nc = num_comments(num_files)
-  If nc > 0 Then
-    parse_line(String$(nc, "'") + lx_line$)
-  ElseIf nc < 0 Then
-    Do While nc < 0 And lx_num > 0 And lx_type(0) = TK_COMMENT
-      parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
-      nc = nc + 1
-    Loop
-  EndIf
+Sub transpile(s$)
+  parse_line(s$)
+  process_directives()
 End Sub
 
-Sub push_if(x)
-  If num_ifs(num_files) = MAX_NUM_IFS Then Error "Too many if directives"
-  num_ifs(num_files) = num_ifs(num_files) + 1
-  if_stack(num_files, num_ifs(num_files)) = x
+Sub parse_line(s$)
+  lx_parse_line(s$)
+  If lx_error$ <> "" Then cerror(lx_error$)
+  apply_replacements()
+  If lx_error$ <> "" Then cerror(lx_error$)
 End Sub
 
-Function pop_if()
-  If num_ifs(num_files) = 0 Then Error "If directive stack is empty"
-  pop_if = if_stack(num_files, num_ifs(num_files))
-  num_ifs(num_files) = num_ifs(num_files) - 1
-End Function
+' Applies replacements to the currently parsed line, lx_line$.
+Sub apply_replacements()
+  If replace_sz = 0 Then Exit Sub
+
+  Local i, r$, s$
+  For i = 0 TO lx_num - 1
+    r$ = map_get$(replace$(), with$(), replace_sz, lx_token_lc$(i))
+    If r$ <> Chr$(0) Then
+      s$ = Left$(lx_line$, lx_start(i) - 1) + r$ + Mid$(lx_line$, lx_start(i) + lx_len(i))
+      lx_parse_line(s$)
+      ' TODO: what if this changes the number of tokens?
+    EndIf
+  Next i
+End Sub
 
 Sub process_directives()
   If lx_token_lc$(0) = "'!endif" Then process_endif()
@@ -69,6 +72,33 @@ Sub process_directives()
   EndIf
 
   parse_line("' PROCESSED: " + lx_line$)
+End Sub
+
+Sub process_endif()
+  update_num_comments(- pop_if())
+  parse_line("' PROCESSED: " + lx_line$)
+End Sub
+
+Sub update_num_comments(x)
+  num_comments(num_files) = num_comments(num_files) + x
+End Sub
+
+Function pop_if()
+  If num_ifs(num_files) = 0 Then Error "If directive stack is empty"
+  pop_if = if_stack(num_files, num_ifs(num_files))
+  num_ifs(num_files) = num_ifs(num_files) - 1
+End Function
+
+Sub add_comments()
+  Local nc = num_comments(num_files)
+  If nc > 0 Then
+    parse_line(String$(nc, "'") + lx_line$)
+  ElseIf nc < 0 Then
+    Do While nc < 0 And lx_num > 0 And lx_type(0) = TK_COMMENT
+      parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
+      nc = nc + 1
+    Loop
+  EndIf
 End Sub
 
 Sub process_clear()
@@ -127,9 +157,10 @@ Sub process_if()
   EndIf
 End Sub
 
-Sub process_endif()
-  update_num_comments(- pop_if())
-  parse_line("' PROCESSED: " + lx_line$)
+Sub push_if(x)
+  If num_ifs(num_files) = MAX_NUM_IFS Then Error "Too many if directives"
+  num_ifs(num_files) = num_ifs(num_files) + 1
+  if_stack(num_files, num_ifs(num_files)) = x
 End Sub
 
 Sub process_flatten()
@@ -178,35 +209,4 @@ End Sub
 
 Sub process_spacing()
   ' TODO
-End Sub
-
-Sub update_num_comments(x)
-  num_comments(num_files) = num_comments(num_files) + x
-End Sub
-
-Sub parse_line(s$)
-  lx_parse_line(s$)
-  If lx_error$ <> "" Then cerror(lx_error$)
-  apply_replacements()
-  If lx_error$ <> "" Then cerror(lx_error$)
-End Sub
-
-' Applies replacements to the currently parsed line, lx_line$.
-Sub apply_replacements()
-  If replace_sz = 0 Then Exit Sub
-
-  Local i, r$, s$
-  For i = 0 TO lx_num - 1
-    r$ = map_get$(replace$(), with$(), replace_sz, lx_token_lc$(i))
-    If r$ <> Chr$(0) Then
-      s$ = Left$(lx_line$, lx_start(i) - 1) + r$ + Mid$(lx_line$, lx_start(i) + lx_len(i))
-      lx_parse_line(s$)
-      ' TODO: what if this changes the number of tokens?
-    EndIf
-  Next i
-End Sub
-
-Sub transpile(s$)
-  parse_line(s$)
-  process_directives()
 End Sub
