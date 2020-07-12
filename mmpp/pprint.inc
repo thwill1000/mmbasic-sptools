@@ -25,6 +25,7 @@ Dim pp_empty = 1 ' 1 if previous printed line was empty or just contained a
 Dim pp_file_num = -1
 Dim pp_indent_lvl
 Dim pp_indent_sz = 2
+Dim pp_spaces
 
 Sub pp_open(f$, comment)
   pp_comment = comment
@@ -45,32 +46,6 @@ Sub pp_close()
   If pp_file_num > -1 Then Close #pp_file_num
 End Sub
 
-Sub pp_print_line()
-  pp_print_compact()
-End Sub
-
-Sub pp_print_default()
-  Local i, no_space, t$, u$
-
-  For i = 0 To lx_num - 1
-    If i = 0 Then pp_out(Space$(lx_start(i) - 1))
-    t$ = lx_token$(i)
-    If t$ <> "" Then
-      pp_attrib(TK_COLOUR$(lx_type(i)))
-      pp_out(t$)
-      If i < lx_num - 1 Then
-        u$ = lx_token$(i + 1)
-        no_space = t$ = "("
-        no_space = no_space Or u$ = "(" Or u$ = ")" Or u$ = "," Or u$ = ";"
-        no_space = no_space And t$ <> "=" And t$ <> ","
-        If Not no_space Then pp_out(" ")
-      EndIf
-    EndIf
-  Next i
-  pp_attrib(VT100_RESET)
-  pp_endl()
-End Sub
-
 Sub pp_inc_line()
   pp_count = pp_count + 1
   If pp_file_num = -1 Then
@@ -79,13 +54,8 @@ Sub pp_inc_line()
   EndIf
 End Sub
 
-Function pp_needs_space(i)
-  Local t = lx_type(i)
-  pp_needs_space = t = TK_KEYWORD Or t = TK_IDENTIFIER Or t = TK_NUMBER
-End Function
-
-Sub pp_print_compact()
-  Local i, space, t$, u$
+Sub pp_print_line()
+  Local i, t$, u$
 
   If lx_num = 0 Then Exit Sub
 
@@ -113,10 +83,13 @@ Sub pp_print_compact()
     EndIf
 
     ' Tokens requiring us to decrease the indent level before printing them.
-    If Instr(" else elseif endif end loop next exit ", t$) > 0 Then
+    If Instr(" end ", t$) Then
+      If Instr(" select sub function ", " " + lx_token_lc$(i + 1) + " ") Then
+        pp_indent_lvl = pp_indent_lvl - 1
+        If lx_token_lc$(i + 1) = "select" Then pp_indent_lvl = pp_indent_lvl - 1
+      EndIf
+    ElseIf Instr(" else elseif endif loop next exit ", t$) > 0 Then
       pp_indent_lvl = pp_indent_lvl - 1
-      If t$ = " end " Then pp_indent_lvl = pp_indent_lvl - 1
-      ' Print "{"; pp_indent_lvl; "}";
     EndIf
 
     ' Indent the first line.
@@ -125,26 +98,33 @@ Sub pp_print_compact()
     ' Output the token with a trailing space where required.
     pp_attrib(TK_COLOUR$(lx_type(i)))
     pp_out(lx_token$(i))
-    If i < lx_num - 1 Then
-      If pp_needs_space(i) And pp_needs_space(i + 1) Then pp_out(" ")
-    EndIf
+    If pp_space(i) Then pp_out(" ")
 
     ' Tokens requiring us to increase the indent level after printing them.
-    If Instr(" else then for do sub function ", t$) > 0 Then
-      If t$ = " else " Then
-        u$ = lx_token_lc$(i + 1)
-        If u$ <> "if" Then pp_indent_lvl = pp_indent_lvl + 1
-      ElseIf t$ = " for " Then
-        u$ = " " + lx_token_lc$(i + 1) + " "
-        If Instr(" input output random ", u$) <= 0 Then pp_indent_lvl = pp_indent_lvl + 1
-      ElseIf t$ = " then " Then
-        u$ = lx_token_lc$(i + 1)
-        If u$ = "" Or Left$(u$, 1) = "'" Then pp_indent_lvl = pp_indent_lvl + 1
-      Else
+    If t$ = " do " Then
+      pp_indent_lvl = pp_indent_lvl + 1
+
+    ElseIf t$ = " for " Then
+      u$ = " " + lx_token_lc$(i + 1) + " "
+      If Instr(" input output random ", u$) <= 0 Then pp_indent_lvl = pp_indent_lvl + 1
+
+    ElseIf t$ = " else " Then
+      u$ = lx_token_lc$(i + 1)
+      If u$ <> "if" Then pp_indent_lvl = pp_indent_lvl + 1
+
+    ElseIf Instr(" case function sub ", t$) Then
+      If i = 0 Then
+        pp_indent_lvl = pp_indent_lvl + 1
+      Else If lx_token_lc$(i - 1) <> "end" Then
         pp_indent_lvl = pp_indent_lvl + 1
       EndIf
-      ' Print "{"; pp_indent_lvl; "}";
+
+    ElseIf t$ = " then " Then
+      u$ = lx_token_lc$(i + 1)
+      If u$ = "" Or Left$(u$, 1) = "'" Then pp_indent_lvl = pp_indent_lvl + 1
+
     EndIf
+
   Next i
 
   pp_attrib(VT100_RESET)
@@ -159,6 +139,77 @@ Sub pp_print_compact()
   EndIf
 
 End Sub
+
+' Does token 'i' need to be followed by a space?
+Function pp_space(i)
+  Local x = (5 + 4) + (6 + 7)
+
+  ' Never need a space after the last token.
+  If i >= lx_num - 1 Then Exit Function
+
+  Local t$ = lx_token$(i)
+  Local u$ = lx_token$(i + 1)
+
+  ' Never need a space before a comma, semi-colon or closing bracket.
+  If InStr(",;)", u$) Then Exit Function
+
+  ' Never need a space after an opening bracket.
+  If t$ = "(" Then Exit Function
+
+  ' Rules applying to 'comfortable' spacing.
+  If pp_spaces >= 2 Then
+    ' Don't need a space before an opening bracket
+    ' unless it is preceeded by a symbol.
+    If u$ = "(" Then
+      If lx_type(i) <> TK_SYMBOL Then Exit Function
+    EndIf
+
+    ' Don't need a space after +/- if preceeded by equals.
+    If InStr("+-", t$) Then
+      If lx_num > 1 Then
+        If lx_token$(i - 1) = "=" Then Exit Function
+      EndIf
+    EndIf
+
+    ' Need a space before/after any symbol.
+    If lx_type(i) = TK_SYMBOL Then pp_space = 1 : Exit Function
+    If lx_type(i + 1) = TK_SYMBOL Then pp_space = 1 : Exit Function
+  EndIf
+
+  ' Rules applying to 'standard' spacing.
+  If pp_spaces >= 1 Then
+    ' Need a space between a keyword/identifier and string.
+    If lx_type(i) = TK_KEYWORD Or lx_type(i) = TK_IDENTIFIER Then
+      If lx_type(i + 1) = TK_STRING Then pp_space = 1 : Exit Function
+    EndIf
+
+    ' Need a space before a comment.
+    If lx_type(i + 1) = TK_COMMENT Then pp_space = 1 : Exit Function
+
+    ' Need a space after a string unless followed by a symbol.
+    If lx_type(i) = TK_STRING Then
+      If lx_type(i + 1) <> TK_SYMBOL Then pp_space = 1 : Exit Function
+    EndIf
+
+    ' Space after a closing bracket unless followed by a symbol.
+    If lx_token$(i) = ")" Then
+      If lx_type(i + 1) <> TK_SYMBOL Then pp_space = 1 : Exit Function
+    EndIf
+
+    ' Need a space before or after a ':'
+    If lx_token$(i) = ":" Then pp_space = 1 : Exit Function
+    If lx_token$(i + 1) = ":" Then pp_space = 1 : Exit Function
+  EndIf
+
+  ' Rules applying to minimal spacing
+  Select Case lx_type(i)
+    Case TK_KEYWORD, TK_IDENTIFIER, TK_NUMBER, TK_DIRECTIVE
+      Select Case lx_type(i + 1)
+        Case TK_KEYWORD, TK_IDENTIFIER, TK_NUMBER
+          pp_space = 1
+      End Select
+  End Select
+End Function
 
 Sub pp_attrib(c$)
   If pp_file_num < 0 Then pp_out(c$)

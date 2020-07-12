@@ -15,6 +15,9 @@ Dim num_files = 0
 ' We ignore the 0'th element in these.
 Dim file_stack$(MAX_NUM_FILES) Length 40
 Dim cur_line_no(MAX_NUM_FILES)
+Dim format_only ' set =1 to just format / pretty-print and not transpile
+Dim in$         ' input filepath
+Dim out$        ' output filepath
 
 Sub open_file(f$)
   Local f2$, p
@@ -84,25 +87,35 @@ Function read_line$()
   cur_line_no(num_files) = cur_line_no(num_files) + 1
 End Function
 
+Sub parse_cmdline()
+  Local i
+
+  lx_parse_line(Mm.CmdLine$)
+  If lx_num = 0 Then Error "No input filename specified"
+  If lx_token_lc$(i) = "fmt" Then format_only = 1 : i = i + 1
+
+  If i >= lx_num Then Error "No input filename specified"
+  If lx_type(i) <> TK_STRING Then Error "Input filename must be quoted"
+  in$ = lx_string$(i)
+  i = i + 1
+
+  If i >= lx_num Then Exit Sub
+
+  If lx_type(i) <> TK_STRING Then Error "Output filename must be quoted"
+  out$ = lx_string$(i)
+End Sub
+
 Sub main()
-  Local in$, out$, s$, t
+  Local s$, t
 
   Cls
 
   lx_load_keywords()
 
-  lx_parse_line(Mm.CmdLine$)
-  If lx_num = 0 Then Error "No input filename specified"
-  If lx_num > 0 Then
-    If lx_type(0) <> TK_STRING Then Error "Input filename must be quoted"
-    in$ = lx_string$(0)
-  EndIf
-  If lx_num > 1 Then
-    If lx_type(1) <> TK_STRING Then Error "Output filename must be quoted"
-    out$ = lx_string$(1)
-  EndIf
+  parse_cmdline()
 
-  pp_open(out$, 0)
+  pp_open(out$, format_only)
+  pp_spaces = 2
   cout("Transpiling from '" + in$ + "' to '" + out$ + "' ...") : cendl()
   open_file(in$)
 
@@ -110,7 +123,12 @@ Sub main()
   Do
     cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(num_files) \ 8) Mod 4) + 1, 1))
     s$ = read_line$()
-    transpile(s$)
+    If format_only Then
+      lx_parse_line(s$)
+      If lx_error$ <> "" Then cerror(lx_error$)
+    Else
+      transpile(s$)
+    EndIf
     pp_print_line()
 
     If Eof(#num_files) Then
