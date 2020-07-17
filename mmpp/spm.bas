@@ -24,7 +24,7 @@ Sub main()
   lx_add_keyword("link")
   lx_add_keyword("clone")
 
-  lx_parse_line(Mm.CmdLine$)
+  lx_parse_basic(Mm.CmdLine$)
 
   t$ = lx_token_lc$(0)
 

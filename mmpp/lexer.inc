@@ -25,6 +25,52 @@ Dim lx_next_char$
 Dim lx_num
 Dim lx_pos
 
+Sub lx_load_keywords()
+  Local i, s$
+
+  Open "/cmm/mmpp/resources/keywords.txt" For Input As #1
+
+  Do
+    Line Input #1, s$
+    If Len(s$) > 0 And Left$(s$, 1) <> "'" Then
+      set_put(lx_keywords$(), lx_keywords_sz, LCase$(s$))
+    EndIf
+  Loop While Not Eof(#1)
+
+  Close #1
+End Sub
+
+Sub lx_parse_basic(line$)
+  lx_reset_globals(line$)
+  lx_advance()
+
+  Do While lx_char$ <> Chr$(10)
+    If lx_char$ = " " Then
+      lx_advance()
+    ElseIf InStr("&.0123456789", lx_char$) Then
+      lx_parse_number()
+    ElseIf lx_char$ = "'" Then
+      lx_parse_comment_or_directive()
+    ElseIf lx_char$ = Chr$(34) Then
+      lx_parse_string()
+    ElseIf InStr("@#_abcdefghijklmnopqrstuvwxyz", lx_char$) Then
+      lx_parse_keyword()
+    Else
+      lx_parse_symbol()
+    EndIf
+
+    If lx_error$ <> "" Then Exit Do
+  Loop
+End Sub
+
+Sub lx_reset_globals(line$)
+  lx_error$ = ""
+  lx_line$ = line$
+  lx_next_char$ = ""
+  lx_num = 0
+  lx_pos = 0
+End Sub
+
 Sub lx_advance()
   lx_pos = lx_pos + 1
   If lx_next_char$ = "" Then
@@ -43,12 +89,39 @@ Sub lx_advance()
   EndIf
 End Sub
 
-Sub lx_advance_while(allowed$)
-  Do While InStr(allowed$, lx_char$) > 0 : lx_advance() : Loop
+Sub lx_parse_number()
+  If InStr(".0123456789", lx_char$) Then
+    lx_parse_decimal()
+  ElseIf lx_char$ = "&" Then
+    If lx_next_char$ = "b"  Then
+      lx_parse_binary()
+    ElseIf lx_next_char$ = "h" Then
+      lx_parse_hexadecimal()
+    ElseIf lx_next_char$ = "o" Then
+      lx_parse_octal()
+    Else
+      Then lx_error$ = "Unknown literal type &" + lx_next_char$ : Exit Sub
+    EndIf
+  EndIf
 End Sub
 
-Sub lx_advance_until(disallowed$)
-  Do While Not InStr(disallowed$, lx_char$) > 0 : lx_advance() : Loop
+Sub lx_parse_decimal()
+  Local start = lx_pos
+
+  lx_advance_while("0123456789")
+
+  If lx_char$ = "." Then
+    lx_advance()
+    lx_advance_while("0123456789")
+  EndIf
+
+  If lx_char$ = "e" Then
+    lx_advance()
+    If lx_char$ = "-" Or lx_char$ = "+" Then lx_advance()
+    lx_advance_while("0123456789")
+  EndIf
+
+  lx_store(TK_NUMBER, start, lx_pos - start)
 End Sub
 
 Sub lx_store(type, start, length)
@@ -56,6 +129,108 @@ Sub lx_store(type, start, length)
   lx_start(lx_num) = start
   lx_len(lx_num) = length
   lx_num = lx_num + 1
+End Sub
+
+Sub lx_advance_while(allowed$)
+  Do While InStr(allowed$, lx_char$) > 0 : lx_advance() : Loop
+End Sub
+
+Sub lx_parse_binary()
+  Local start = lx_pos
+
+  lx_advance()
+  lx_advance()
+  lx_advance_while("01")
+  lx_store(TK_NUMBER, start, lx_pos - start)
+End Sub
+
+Sub lx_parse_hexadecimal()
+  Local start = lx_pos
+
+  lx_advance()
+  lx_advance()
+  lx_advance_while("0123456789abcdefABCDEF")
+  lx_store(TK_NUMBER, start, lx_pos - start)
+End Sub
+
+Sub lx_parse_octal()
+  Local start = lx_pos
+
+  lx_advance()
+  lx_advance()
+  lx_advance_while("01234567")
+  lx_store(TK_NUMBER, start, lx_pos - start)
+End Sub
+
+Sub lx_parse_comment_or_directive()
+  If lx_next_char$ = "!" Then
+    lx_parse_directive()
+  Else
+    lx_parse_comment()
+  EndIf
+End Sub
+
+Sub lx_parse_directive()
+  Local start = lx_pos
+
+  lx_advance()
+  lx_advance()
+  lx_advance_while("_abcdefghijklmnopqrstuvwxyz0123456789")
+  lx_store(TK_DIRECTIVE, start, lx_pos - start)
+End Sub
+
+Sub lx_parse_comment()
+  lx_store(TK_COMMENT, lx_pos, Len(lx_line$) - lx_pos + 1)
+  lx_char$ = Chr$(10)
+End Sub
+
+Sub lx_parse_string()
+  Local start = lx_pos
+
+  lx_advance()
+  lx_advance_until(Chr$(10) + Chr$(34))
+  If lx_char$ = Chr$(10) Then lx_error$ = "No closing quote" : Exit Sub
+  lx_store(TK_STRING, start, lx_pos - start + 1)
+  lx_advance()
+End Sub
+
+Sub lx_advance_until(disallowed$)
+  Do While Not InStr(disallowed$, lx_char$) > 0 : lx_advance() : Loop
+End Sub
+
+Sub lx_parse_keyword()
+  Local start = lx_pos
+
+  lx_advance()
+  lx_advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
+  If lx_char$ = "$" Then lx_advance()
+  If lx_is_keyword(Mid$(lx_line$, start, lx_pos - start)) Then
+    lx_store(TK_KEYWORD, start, lx_pos - start)
+  Else
+    lx_store(TK_IDENTIFIER, start, lx_pos - start)
+  EndIf
+End Sub
+
+Function lx_is_keyword(t$)
+  lx_is_keyword = set_get(lx_keywords$(), lx_keywords_sz, LCase$(t$)) > -1
+End Function
+
+Sub lx_parse_symbol()
+  Local start
+
+  start = lx_pos
+  If lx_char$ <> "<" And lx_char$ <> ">" And lx_char$ <> "=" Then
+    lx_store(TK_SYMBOL, start, 1)
+    lx_advance()
+  Else
+    lx_advance()
+    If lx_char$ = "<" Or lx_char$ = ">" Or lx_char$ = "=" Then
+      lx_store(TK_SYMBOL, start, 2)
+      lx_advance()
+    Else
+      lx_store(TK_SYMBOL, start, 1)
+    EndIf
+  EndIf
 End Sub
 
 ' Gets the text of token 'i'.
@@ -98,25 +273,6 @@ Function lx_number(i)
   lx_number = Val(lx_token$(i))
 End Function
 
-Sub lx_load_keywords()
-  Local i, s$
-
-  Open "/cmm/mmpp/resources/keywords.txt" For Input As #1
-
-  Do
-    Line Input #1, s$
-    If Len(s$) > 0 And Left$(s$, 1) <> "'" Then
-      set_put(lx_keywords$(), lx_keywords_sz, LCase$(s$))
-    EndIf
-  Loop While Not Eof(#1)
-
-  Close #1
-End Sub
-
-Function lx_is_keyword(t$)
-  lx_is_keyword = set_get(lx_keywords$(), lx_keywords_sz, LCase$(t$)) > -1
-End Function
-
 ' Performs simple space separator based tokenisation.
 Sub lx_tokenise(line$)
   Local start = -1
@@ -141,150 +297,4 @@ Sub lx_tokenise(line$)
   Loop
 
   If start > -1 Then lx_store(TK_IDENTIFIER, start, lx_pos - start)
-
-End Sub
-
-Sub lx_parse_line(line$)
-  lx_error$ = ""
-  lx_line$ = line$
-  lx_next_char$ = ""
-  lx_num = 0
-  lx_pos = 0
-  lx_advance()
-
-  Do While lx_char$ <> Chr$(10)
-    If lx_char$ = " " Then
-      lx_advance()
-    ElseIf InStr(".0123456789", lx_char$) Then
-      lx_parse_decimal()
-    ElseIf lx_char$ = "&" Then
-      If lx_next_char$ = "b"  Then
-        lx_parse_binary()
-      ElseIf lx_next_char$ = "h" Then
-        lx_parse_hexadecimal()
-      ElseIf lx_next_char$ = "o" Then
-        lx_parse_octal()
-      Else
-        Error
-      EndIf
-    ElseIf lx_char$ = "'" Then
-      If lx_next_char$ = "!" Then
-        lx_parse_directive()
-      Else
-        lx_parse_comment()
-      EndIf
-    ElseIf lx_char$ = Chr$(34) Then
-      lx_parse_string()
-    ElseIf InStr("@#_abcdefghijklmnopqrstuvwxyz", lx_char$) Then
-      lx_parse_keyword()
-    Else
-      lx_parse_symbol()
-    EndIf
-
-    If lx_error$ <> "" Then Exit Do
-  Loop
-
-End Sub
-
-Sub lx_parse_binary()
-  Local start = lx_pos
-
-  lx_advance()
-  lx_advance()
-  lx_advance_while("01")
-  lx_store(TK_NUMBER, start, lx_pos - start)
-End Sub
-
-Sub lx_parse_hexadecimal()
-  Local start = lx_pos
-
-  lx_advance()
-  lx_advance()
-  lx_advance_while("0123456789abcdefABCDEF")
-  lx_store(TK_NUMBER, start, lx_pos - start)
-End Sub
-
-Sub lx_parse_decimal()
-  Local start = lx_pos
-
-  lx_advance_while("0123456789")
-
-  If lx_char$ = "." Then
-    lx_advance()
-    lx_advance_while("0123456789")
-  EndIf
-
-  If lx_char$ = "e" Then
-    lx_advance()
-    If lx_char$ = "-" Or lx_char$ = "+" Then lx_advance()
-    lx_advance_while("0123456789")
-  EndIf
-
-  lx_store(TK_NUMBER, start, lx_pos - start)
-End Sub
-
-Sub lx_parse_octal()
-  Local start = lx_pos
-
-  lx_advance()
-  lx_advance()
-  lx_advance_while("01234567")
-  lx_store(TK_NUMBER, start, lx_pos - start)
-End Sub
-
-Sub lx_parse_comment()
-  lx_store(TK_COMMENT, lx_pos, Len(lx_line$) - lx_pos + 1)
-  lx_char$ = Chr$(10)
-End Sub
-
-Sub lx_parse_string()
-  Local start = lx_pos
-
-  lx_advance()
-  lx_advance_until(Chr$(10) + Chr$(34))
-  If lx_char$ = Chr$(10) Then lx_error$ = "No closing quote" : Exit Sub
-  lx_store(TK_STRING, start, lx_pos - start + 1)
-  lx_advance()
-End Sub
-
-Sub lx_parse_keyword()
-  Local start = lx_pos
-
-  lx_advance()
-  lx_advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
-  If lx_char$ = "$" Then lx_advance()
-  If lx_is_keyword(Mid$(lx_line$, start, lx_pos - start)) Then
-    lx_store(TK_KEYWORD, start, lx_pos - start)
-  Else
-    lx_store(TK_IDENTIFIER, start, lx_pos - start)
-  EndIf
-
-End Sub
-
-Sub lx_parse_directive()
-  Local start
-
-  start = lx_pos
-  lx_advance()
-  lx_advance()
-  lx_advance_while("_abcdefghijklmnopqrstuvwxyz0123456789")
-  lx_store(TK_DIRECTIVE, start, lx_pos - start)
-End Sub
-
-Sub lx_parse_symbol()
-  Local start
-
-  start = lx_pos
-  If lx_char$ <> "<" And lx_char$ <> ">" And lx_char$ <> "=" Then
-    lx_store(TK_SYMBOL, start, 1)
-    lx_advance()
-  Else
-    lx_advance()
-    If lx_char$ = "<" Or lx_char$ = ">" Or lx_char$ = "=" Then
-      lx_store(TK_SYMBOL, start, 2)
-      lx_advance()
-    Else
-      lx_store(TK_SYMBOL, start, 1)
-    EndIf
-  EndIf
 End Sub

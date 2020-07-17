@@ -90,7 +90,7 @@ End Function
 Sub parse_cmdline()
   Local i
 
-  lx_parse_line(Mm.CmdLine$)
+  lx_parse_basic(Mm.CmdLine$)
   If lx_num = 0 Then Error "No input filename specified"
   If lx_token_lc$(i) = "fmt" Then format_only = 1 : i = i + 1
 
@@ -124,7 +124,7 @@ Sub main()
     cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(num_files) \ 8) Mod 4) + 1, 1))
     s$ = read_line$()
     If format_only Then
-      lx_parse_line(s$)
+      lx_parse_basic(s$)
       If lx_error$ <> "" Then cerror(lx_error$)
     Else
       transpile(s$)

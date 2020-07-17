@@ -10,6 +10,7 @@ Cls
 
 ut_add_test("test_init")
 ut_add_test("test_put")
+ut_add_test("test_put_given_already_present")
 ut_add_test("test_get")
 ut_add_test("test_remove")
 ut_add_test("test_clear")
@@ -37,6 +38,23 @@ Function test_put()
   Local my_set_sz = 0
 
   set_init(my_set$(), 20)
+
+  set_put(my_set$(), my_set_sz, "foo")
+  set_put(my_set$(), my_set_sz, "bar")
+
+  ut_assert_equals(2, my_set_sz)
+  ut_assert_string_equals("bar", my_set$(0))
+  ut_assert_string_equals("foo", my_set$(1))
+End Function
+
+Function test_put_given_already_present()
+  Local my_set$(19)
+  Local my_set_sz = 0
+
+  set_init(my_set$(), 20)
+  set_put(my_set$(), my_set_sz, "foo")
+  set_put(my_set$(), my_set_sz, "bar")
+
   set_put(my_set$(), my_set_sz, "foo")
   set_put(my_set$(), my_set_sz, "bar")
 

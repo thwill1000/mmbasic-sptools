@@ -11,6 +11,7 @@ Cls
 
 ut_add_test("test_init")
 ut_add_test("test_put")
+ut_add_test("test_put_given_already_present")
 ut_add_test("test_get")
 ut_add_test("test_remove")
 ut_add_test("test_clear")
@@ -52,6 +53,29 @@ Function test_put()
   ut_assert_string_equals("bar", my_values$(1))
   ut_assert_string_equals("wom", my_keys$(2))
   ut_assert_string_equals("bat", my_values$(2))
+End Function
+
+Function test_put_given_already_present()
+  Local my_keys$(19)
+  Local my_values$(19)
+  Local my_map_sz = 0
+
+  map_init(my_keys$(), my_values$(), 20)
+  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
+  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
+  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
+
+  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar2")
+  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat2")
+  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb2")
+
+  ut_assert_equals(3, my_map_sz)
+  ut_assert_string_equals("aaa", my_keys$(0))
+  ut_assert_string_equals("bbb2", my_values$(0))
+  ut_assert_string_equals("foo", my_keys$(1))
+  ut_assert_string_equals("bar2", my_values$(1))
+  ut_assert_string_equals("wom", my_keys$(2))
+  ut_assert_string_equals("bat2", my_values$(2))
 End Function
 
 Function test_get()

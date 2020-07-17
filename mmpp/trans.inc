@@ -28,7 +28,7 @@ Sub transpile(s$)
 End Sub
 
 Sub parse_line(s$)
-  lx_parse_line(s$)
+  lx_parse_basic(s$)
   If lx_error$ <> "" Then cerror(lx_error$)
   apply_replacements()
   If lx_error$ <> "" Then cerror(lx_error$)
@@ -43,7 +43,7 @@ Sub apply_replacements()
     r$ = map_get$(replace$(), with$(), replace_sz, lx_token_lc$(i))
     If r$ <> Chr$(0) Then
       s$ = Left$(lx_line$, lx_start(i) - 1) + r$ + Mid$(lx_line$, lx_start(i) + lx_len(i))
-      lx_parse_line(s$)
+      lx_parse_basic(s$)
       ' TODO: what if this changes the number of tokens?
     EndIf
   Next i

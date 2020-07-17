@@ -17,6 +17,7 @@ End Sub
 
 ' Adds a value to the set.
 Sub set_put(set$(), sz, s$)
+  If set_get(set$(), sz, s$) <> -1  Then Exit Sub
   set$(sz) = s$
   sz = sz + 1
   If sz > 1 Then
@@ -52,8 +53,8 @@ Sub set_remove(set$(), sz, s$)
   Local i = set_get(set$(), sz, s$)
   If i > -1 Then
     set$(i) = Chr$(&h7F)
-    sz = sz - 1
     Sort set$()
+    sz = sz - 1
   EndIf
 End Sub
 
