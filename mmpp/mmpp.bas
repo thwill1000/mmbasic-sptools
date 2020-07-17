@@ -10,6 +10,7 @@ Const MAX_NUM_FILES = 5
 #Include "pprint.inc"
 #Include "set.inc"
 #Include "trans.inc"
+#Include "cmdline.inc"
 
 Dim num_files = 0
 ' We ignore the 0'th element in these.
@@ -88,60 +89,6 @@ Function read_line$()
   cur_line_no(num_files) = cur_line_no(num_files) + 1
 End Function
 
-Sub parse_cmdline()
-  Local i = 0, o$
-  Local spaces = -2, indent = -2, comments = -2, empty_lines = -2
-
-  lx_parse_command_line(Mm.CmdLine$)
-
-  ' Process options.
-
-  Do While i < lx_num
-    If lx_type(i) = TK_OPTION Then
-      o$ = LCase$(lx_option$(i))
-      If o$ = "h" Or o$ = "help" Then
-        print_usage()
-        End
-      ElseIf o$ = "spaces" Then
-        If lx_type(i + 1) <> TK_NUMBER Then err$ = "Expected integer option" : Exit Sub
-        spaces = lx_number(i + 1)
-        i = i + 2
-      ElseIf o$ = "indent" Then
-        If lx_type(i + 1) <> TK_NUMBER Then err$ = "Expected integer option" : Exit Sub
-        indent = lx_number(i + 1)
-        i = i + 2
-      ElseIf o$ = "comments" Then
-        If lx_type(i + 1) <> TK_NUMBER Then err$ = "Expected integer option" : Exit Sub
-        comments = lx_number(i + 1)
-        i = i + 2
-      ElseIf o$ = "emptylines" Then
-        If lx_type(i + 1) <> TK_NUMBER Then err$ = "Expected integer option" : Exit Sub
-        emptylines = lx_number(i + 1)
-        i = i + 2
-      ElseIf o$ = "foo" Then
-        format_only = 1
-        i = i + 1
-      Else
-        err$ = "Unrecognised command-line option: " + lx_token$(i) : Exit Sub
-      EndIf
-    Else
-      Exit Do
-    EndIf
-  Loop
-
-  ' Process arguments.
-
-  If i >= lx_num Then err$ = "No input file specified" : Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "Input file name must be quoted" : Exit Sub
-  in$ = lx_string$(i)
-  i = i + 1
-
-  If i >= lx_num Then Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "Output file name must be quoted" : Exit Sub
-  out$ = lx_string$(i)
-  i = i + 1
-End Sub
-
 Sub main()
   Local s$, t
 
@@ -185,41 +132,6 @@ Sub main()
 
   pp_close()
 
-End Sub
-
-Sub print_usage()
-  Local in$ = Chr$(34) + "input file" + Chr$(34)
-  Local out$ = Chr$(34) + "output file" + Chr$(34)
-  Print "Usage: RUN "; Chr$(34); "mmpp.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
-  Print
-  Print "Transcompiles the given "; in$; " flattening any #Include hierarchy and processing"
-  Print "any !directives encountered. The transpiled output is written to the "; out$; ", or"
-  Print "the console if unspecified. By using the --format-only option it can also be used as"
-  Print "a simple BASIC code formatter."
-  Print
-  Print "  -c, --comments=0|1     controls output of comments:"
-  Print "                           0 - omit all comments"
-  Print "                           1 - insert additional comments from transpiler"
-  Print "                         if omitted then comments will be preserved"
-  Print "  -C, --colour           syntax highlight the output,"
-  Print "                         only valid for output to VT100 serial console"
-  Print "  -e, --empty-lines=0|1  controls output of empty lines:"
-  Print "                           0 - omit all empty lines"
-  Print "                           1 - include one empty line between each Function/Sub"
-  Print "                         if ommitted then original formatting will be preserved"
-  Print "  -f, --format-only      only format the output, do not follow #Includes or"
-  Print "                         process directives"
-  Print "  -h, --help             display these instructions"
-  Print "  -i, --indent=NUM       automatically indent output by NUM spaces per level,"
-  Print "                         if omitted then original formatting will be preserved"
-  Print "  -s, --spacing=0|1|2    controls output of spaces between tokens:"
-  Print "                           0 - omit all unnecessary spaces"
-  Print "                           1 - compact spacing"
-  Print "                           2 - generous spacing"
-  Print "                         if omitted then original formatting will be preserved"
-  Print
-  Print "Note that --comments, --empty-lines, --indent and --spacing will be overridden by"
-  Print "the corresponding directives in source files, unless --format-only is also specified."
 End Sub
 
 main()

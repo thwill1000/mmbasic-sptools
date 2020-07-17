@@ -326,7 +326,7 @@ End Sub
 
 Sub lx_parse_option()
   Local e = 0
-  Local legal$ = "_abcdefghijklmnopqrstuvwxyz0123456789"
+  Local legal$ = "-_abcdefghijklmnopqrstuvwxyz0123456789"
   Local start = lx_pos
 
   If lx_char$ = "-" Then
@@ -340,8 +340,8 @@ Sub lx_parse_option()
     Error ' this should never happen
   EndIf
 
-  If e = 1 Or InStr(" " + Chr$(10), lx_char$) < 1 Then
-    If InStr(" " + Chr$(10), lx_char$) < 1 Then lx_advance()
+  If e = 1 Or InStr("= " + Chr$(10), lx_char$) < 1 Then
+    If InStr("= " + Chr$(10), lx_char$) < 1 Then lx_advance()
     lx_error$ = "Illegal command-line option format: " + Mid$(lx_line$, start, lx_pos - start)
     Exit Sub
   EndIf
