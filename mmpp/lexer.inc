@@ -7,6 +7,7 @@ Const TK_STRING = 3
 Const TK_KEYWORD = 4
 Const TK_SYMBOL = 5
 Const TK_DIRECTIVE = 6
+Const TK_OPTION = 7
 
 Const LX_MAX_KEYWORDS = 600
 Dim lx_keywords$(LX_MAX_KEYWORDS - 1) Length 20
@@ -216,9 +217,8 @@ Function lx_is_keyword(t$)
 End Function
 
 Sub lx_parse_symbol()
-  Local start
+  Local start = lx_pos
 
-  start = lx_pos
   If lx_char$ <> "<" And lx_char$ <> ">" And lx_char$ <> "=" Then
     lx_store(TK_SYMBOL, start, 1)
     lx_advance()
@@ -298,3 +298,65 @@ Sub lx_tokenise(line$)
 
   If start > -1 Then lx_store(TK_IDENTIFIER, start, lx_pos - start)
 End Sub
+
+Sub lx_parse_command_line(line$)
+  lx_reset_globals(line$)
+  lx_advance()
+
+  Do While lx_char$ <> Chr$(10)
+    If lx_char$ = " " Then
+      lx_advance()
+    ElseIf InStr("&.0123456789", lx_char$) Then
+      lx_parse_number()
+    ElseIf lx_char$ = "'" Then
+      lx_parse_comment_or_directive()
+    ElseIf lx_char$ = Chr$(34) Then
+      lx_parse_string()
+    ElseIf InStr("@#_abcdefghijklmnopqrstuvwxyz", lx_char$) Then
+      lx_parse_keyword()
+    ElseIf InStr("-/", lx_char$) Then
+      lx_parse_option()
+    Else
+      lx_parse_symbol()
+    EndIf
+
+    If lx_error$ <> "" Then Exit Do
+  Loop
+End Sub
+
+Sub lx_parse_option()
+  Local e = 0
+  Local legal$ = "_abcdefghijklmnopqrstuvwxyz0123456789"
+  Local start = lx_pos
+
+  If lx_char$ = "-" Then
+    lx_advance()
+    If lx_char$ = "-" Then lx_advance()
+    If InStr(legal$, lx_char$) < 1 Then e = 1 Else lx_advance_while(legal$)
+  ElseIf lx_char$ = "/" Then
+    lx_advance()
+    If InStr(legal$, lx_char$) < 1 Then e = 1 Else lx_advance_while(legal$)
+  Else
+    Error ' this should never happen
+  EndIf
+
+  If e = 1 Or InStr(" " + Chr$(10), lx_char$) < 1 Then
+    If InStr(" " + Chr$(10), lx_char$) < 1 Then lx_advance()
+    lx_error$ = "Illegal command-line option format: " + Mid$(lx_line$, start, lx_pos - start)
+    Exit Sub
+  EndIf
+
+  lx_store(TK_OPTION, start, lx_pos - start)
+End Sub
+
+' Gets the command-line option corresponding to token 'i'.
+'
+' Throws an Error if token 'i' is not a command-line option.
+Function lx_option$(i)
+  If lx_type(i) <> TK_OPTION Then Error "{" + lx_token$(i) + "} is not a command-line option"
+  If Mid$(lx_line$, lx_start(i), 2) = "--" Then
+    lx_option$ = Mid$(lx_line$, lx_start(i) + 2, lx_len(i) - 2)
+  Else
+    lx_option$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 1)
+  EndIf
+End Function

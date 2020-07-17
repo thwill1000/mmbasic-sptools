@@ -29,6 +29,7 @@ ut_add_test("test_get_number")
 ut_add_test("test_get_string")
 ut_add_test("test_get_directive")
 ut_add_test("test_get_token_lc")
+ut_add_test("test_parse_command_line")
 
 ut_run_tests()
 
@@ -256,6 +257,28 @@ Function test_get_token_lc()
   ut_assert_string_equals("foo", lx_token_lc$(0))
   ut_assert_string_equals("'!bar", lx_token_lc$(1))
   ut_assert_string_equals("1e7", lx_token_lc$(2))
+End Function
+
+Function test_parse_command_line()
+  lx_parse_command_line("--foo -bar /wombat")
+  ut_assert_string_equals("--foo", lx_token_lc$(0))
+  ut_assert_string_equals("foo", lx_option$(0))
+  ut_assert_string_equals("-bar", lx_token_lc$(1))
+  ut_assert_string_equals("bar", lx_option$(1))
+  ut_assert_string_equals("/wombat", lx_token_lc$(2))
+  ut_assert_string_equals("wombat", lx_option$(2))
+
+  lx_parse_command_line("--")
+  ut_assert_string_equals("Illegal command-line option format: --", lx_error$)
+
+  lx_parse_command_line("-")
+  ut_assert_string_equals("Illegal command-line option format: -", lx_error$)
+
+  lx_parse_command_line("/")
+  ut_assert_string_equals("Illegal command-line option format: /", lx_error$)
+
+  lx_parse_command_line("--foo@ bar")
+  ut_assert_string_equals("Illegal command-line option format: --foo@", lx_error$)
 End Function
 
 Sub expect_success(num)
