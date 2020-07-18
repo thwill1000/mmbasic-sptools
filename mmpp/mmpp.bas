@@ -16,9 +16,9 @@ Dim num_files = 0
 ' We ignore the 0'th element in these.
 Dim file_stack$(MAX_NUM_FILES) Length 40
 Dim cur_line_no(MAX_NUM_FILES)
-Dim format_only ' set =1 to just format / pretty-print and not transpile
-Dim in$         ' input filepath
-Dim out$        ' output filepath
+Dim mbt_format_only ' set =1 to just format / pretty-print and not transpile
+Dim mbt_in$     ' input filepath
+Dim mbt_out$    ' output filepath
 Dim err$        ' global error message / flag
 
 Sub open_file(f$)
@@ -92,23 +92,22 @@ End Function
 Sub main()
   Local s$, t
 
-  parse_cmdline()
+  parse_cmdline(Mm.CmdLine$)
   If err$ <> "" Then Print "mmpp: "; err$ : Print : print_usage() : End
 
   Cls
 
   lx_load_keywords()
 
-  pp_open(out$, format_only)
-  pp_spaces = 2
-  cout("Transpiling from '" + in$ + "' to '" + out$ + "' ...") : cendl()
-  open_file(in$)
+  pp_open(mbt_out$)
+  cout("Transpiling from '" + mbt_in$ + "' to '" + mbt_out$ + "' ...") : cendl()
+  open_file(mbt_in$)
 
   t = Timer
   Do
     cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(num_files) \ 8) Mod 4) + 1, 1))
     s$ = read_line$()
-    If format_only Then
+    If mbt_format_only Then
       lx_parse_basic(s$)
       If lx_error$ <> "" Then cerror(lx_error$)
     Else

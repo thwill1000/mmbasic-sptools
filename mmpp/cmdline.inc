@@ -42,7 +42,7 @@ Sub parse_cmdline(s$)
         If lx_token$(i + 1) <> "=" Then Exit Sub
         If lx_type(i + 2) <> TK_NUMBER Then Exit Sub
         err$ = ""
-        pp_indent = lx_number(i + 2)
+        pp_indent_sz = lx_number(i + 2)
         i = i + 3
 
       ElseIf o$ = "h" Or o$ = "help" Then

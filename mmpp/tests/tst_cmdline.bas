@@ -10,7 +10,7 @@ Dim mbt_out$
 Dim pp_colour
 Dim pp_comments
 Dim pp_empty_lines
-Dim pp_indent
+Dim pp_indent_sz
 Dim pp_spacing
 
 #Include "../cmdline.inc"
@@ -50,7 +50,7 @@ Sub test_setup()
   pp_colour = 0
   pp_comments = -1
   pp_empty_lines = -1
-  pp_indent = -1
+  pp_indent_sz = -1
   pp_spacing = -1
 End Sub
 
@@ -143,18 +143,18 @@ Function test_indent()
   parse_cmdline("--indent=0 " + input_file$)
 
   ut_assert_string_equals("", err$)
-  ut_assert_equals(0, pp_indent)
+  ut_assert_equals(0, pp_indent_sz)
 
   parse_cmdline("--indent=1 " + input_file$)
 
   ut_assert_string_equals("", err$)
-  ut_assert_equals(1, pp_indent)
+  ut_assert_equals(1, pp_indent_sz)
 
   parse_cmdline("--indent " + input_file$)
   ut_assert_string_equals("option '--indent' expects number argument >= 0", err$)
 
   parse_cmdline("--indent=3" + input_file$)
-  ut_assert_equals(3, pp_indent)
+  ut_assert_equals(3, pp_indent_sz)
 End Function
 
 Function test_spacing()
@@ -228,6 +228,6 @@ Function test_everything()
   ut_assert_equals(1, pp_colour)
   ut_assert_equals(1, pp_comments)
   ut_assert_equals(1, pp_empty_lines)
-  ut_assert_equals(2, pp_indent)
+  ut_assert_equals(2, pp_indent_sz)
   ut_assert_equals(0, pp_spacing)
 End Function
