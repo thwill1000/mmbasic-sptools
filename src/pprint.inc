@@ -112,7 +112,7 @@ Sub pp_print_line()
     If i = 0 Then
       If pp_indent_sz = -1 Then
         ' Use existing indentation.
-        pp_out(Space$(lx_start(0)))
+        pp_out(Space$(lx_start(0) - 1))
       ElseIf pp_indent_lvl > 0 Then
         ' Use automatic indentation.
         pp_out(Space$(pp_indent_lvl * pp_indent_sz))
