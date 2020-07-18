@@ -29,7 +29,7 @@ Dim lx_pos
 Sub lx_load_keywords()
   Local i, s$
 
-  Open "/cmm/mmpp/resources/keywords.txt" For Input As #1
+  Open "/mbt/resources/keywords.txt" For Input As #1
 
   Do
     Line Input #1, s$

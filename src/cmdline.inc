@@ -86,7 +86,7 @@ End Sub
 Sub print_usage()
   Local in$ = Chr$(34) + "input file" + Chr$(34)
   Local out$ = Chr$(34) + "output file" + Chr$(34)
-  Print "Usage: RUN "; Chr$(34); "mmpp.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
+  Print "Usage: RUN "; Chr$(34); "mbt.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
   Print
   Print "Transcompiles the given "; in$; " flattening any #Include hierarchy and processing"
   Print "any !directives encountered. The transpiled output is written to the "; out$; ", or"

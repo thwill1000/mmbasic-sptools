@@ -93,7 +93,7 @@ Sub main()
   Local s$, t
 
   parse_cmdline(Mm.CmdLine$)
-  If err$ <> "" Then Print "mmpp: "; err$ : Print : print_usage() : End
+  If err$ <> "" Then Print "mbt: "; err$ : Print : print_usage() : End
 
   Cls
 
