@@ -2,8 +2,6 @@
 
 Const MAX_NUM_IFS = 10
 
-Dim flatten_includes = 1
-
 ' We ignore the 0'th element in these.
 Dim num_comments(MAX_NUM_FILES)
 Dim num_ifs(MAX_NUM_FILES)
@@ -62,7 +60,7 @@ Sub process_directives()
   If     t$ = "!clear"        Then : process_clear()
   ElseIf t$ = "!comments"     Then : process_comments()
   ElseIf t$ = "!comment_if"   Then : process_if()
-  ElseIf t$ = "!flatten"      Then : process_flatten()
+  ElseIf t$ = "!empty-lines"  Then : process_empty_lines()
   ElseIf t$ = "!indent"       Then : process_indent()
   ElseIf t$ = "!uncomment_if" Then : process_if()
   ElseIf t$ = "!replace"      Then : process_replace()
@@ -116,9 +114,9 @@ End Sub
 Sub process_comments()
   Local t$ = lx_token_lc$(1)
   If t$ = "on" Then
-    pp_comment = 1
+    pp_comments = -1
   ElseIf t$ = "off" Then
-    pp_comment = 0
+    pp_comments = 0
   Else
     cerror("Syntax error: !comments directive requires 'on|off' parameter")
   EndIf
@@ -163,15 +161,17 @@ Sub push_if(x)
   if_stack(num_files, num_ifs(num_files)) = x
 End Sub
 
-Sub process_flatten()
-  Local t$ = lx_token_lc$(1)
-  If t$ = "on" Then
-    flatten_includes = 1
-  ElseIf t$ = "off" Then
-    flatten_includes = 0
-  Else
-    cerror("Syntax error: !flatten directive requires 'on|off' parameter")
+Sub process_empty_lines()
+  If lx_num = 2 Then
+    Local t$ = lx_token_lc$(1)
+    If t$ = "0" Or t$ = "none" Then
+      pp_empty_lines = 0 : Exit Sub
+    ElseIf t$ = "1" Or t$ = "single" Then
+      pp_empty_lines = 1 : Exit Sub
+    EndIf
   EndIf
+
+  cerror("Syntax error: !empty-lines directive requires 'none|single' parameter")
 End Sub
 
 Sub process_include()
@@ -208,5 +208,16 @@ Sub process_set()
 End Sub
 
 Sub process_spacing()
-  ' TODO
+  If lx_num = 2 Then
+    Local t$ = lx_token_lc$(1)
+    If t$ = "0" Or t$ = "minimal" Then
+      pp_spacing = 0 : Exit Sub
+    ElseIf t$ = "1" Or t$ = "compact" Then
+      pp_spacing = 1 : Exit Sub
+    ElseIf t$ = "2" Or t$ = "generous" Then
+      pp_spacing = 2 : Exit Sub
+    EndIf
+  EndIf
+
+  cerror("Syntax error: !spacing directive requires 'minimal|compact|generous' parameter")
 End Sub

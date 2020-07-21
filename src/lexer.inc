@@ -176,7 +176,7 @@ Sub lx_parse_directive()
 
   lx_advance()
   lx_advance()
-  lx_advance_while("_abcdefghijklmnopqrstuvwxyz0123456789")
+  lx_advance_while("-_abcdefghijklmnopqrstuvwxyz0123456789")
   lx_store(TK_DIRECTIVE, start, lx_pos - start)
 End Sub
 

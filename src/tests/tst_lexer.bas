@@ -70,6 +70,11 @@ Function test_directives()
   expect_success(2)
   expect_tk(0, TK_DIRECTIVE, "'!comment_if")
   expect_tk(1, TK_IDENTIFIER, "foo")
+
+  lx_parse_basic("'!empty-lines off")
+  expect_success(2)
+  expect_tk(0, TK_DIRECTIVE, "'!empty-lines")
+  expect_tk(1, TK_KEYWORD, "off")
 End Function
 
 Function test_includes()

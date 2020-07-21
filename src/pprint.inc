@@ -67,13 +67,14 @@ End Sub
 Sub pp_print_line()
   Local i, t$, u$
 
-  If pp_empty_lines > -1 And lx_num = 0 Then Exit Sub
+  ' Ignore empty lines if the 'empty-lines' option is set or the previous line
+  ' was empty.
+  If (pp_empty_lines > -1 Or pp_previous_empty = 1) And lx_num = 0 Then Exit Sub
 
-  ' If we are not including comments and the line consists solely of a comment
-  ' then ignore it.
+  ' Ignore lines consisting solely of a comment if the 'comments' option is 0.
   If pp_comments = 0 Then
     If lx_num = 1 Then
-      If lx_type(i) = TK_COMMENT Then Exit Sub
+      If lx_type(0) = TK_COMMENT Then Exit Sub
     EndIf
   EndIf
 

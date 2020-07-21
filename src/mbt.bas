@@ -127,7 +127,8 @@ Sub main()
 
   Loop Until num_files = 0
 
-  cout(Chr$(13) + "Time taken = " + Format$((Timer - t) / 1000, "%.1f s"))
+  Print
+  Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
 
   pp_close()
 
