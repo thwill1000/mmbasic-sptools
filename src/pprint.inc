@@ -19,9 +19,9 @@ TK_COLOUR$(TK_SYMBOL) = VT100_WHITE
 TK_COLOUR$(TK_DIRECTIVE) = VT100_RED
 
 Dim pp_count
-Dim pp_previous = 0    '  0    : previous line was empty
-                       '  1    : previous line was comment
-                       '  2    : previous line had content
+Dim pp_previous = 0 ' 0 : previous line was empty
+                    ' 1 : previous line was comment
+                    ' 2 : previous line had content
 Dim pp_file_num = -1
 Dim pp_indent_lvl
 
@@ -63,7 +63,7 @@ Sub pp_print_line()
   ' Ignore lines consisting solely of a comment if the 'comments' option is 0.
   If op_comments = 0 Then
     If lx_num = 1 Then
-      If lx_type(0) = TK_COMMENT Then pp_previous = 1 : Exit Sub
+      If lx_type(0) = TK_COMMENT Then Exit Sub
     EndIf
   EndIf
 
@@ -84,7 +84,7 @@ Sub pp_print_line()
 
     t$ = " " + lx_token_lc$(i) + " "
 
-    ' If the 'empty-lines' option is 'single|1' and previous printed line was
+    ' If the 'empty-lines' option is 'single|1' and previous printed line
     ' had content and the line starts with {Function|Sub} then print empty line.
     If op_empty_lines = 1 And pp_previous = 2 Then
       If i = 0 And Instr(" sub function ", t$) > 0 Then pp_endl() : pp_inc_line()
@@ -96,7 +96,7 @@ Sub pp_print_line()
         pp_indent_lvl = pp_indent_lvl - 1
         If lx_token_lc$(i + 1) = "select" Then pp_indent_lvl = pp_indent_lvl - 1
       EndIf
-    ElseIf Instr(" else elseif endif loop next exit ", t$) > 0 Then
+    ElseIf Instr(" case else elseif endif loop next exit ", t$) > 0 Then
       pp_indent_lvl = pp_indent_lvl - 1
     EndIf
 
@@ -127,11 +127,12 @@ Sub pp_print_line()
       u$ = lx_token_lc$(i + 1)
       If u$ <> "if" Then pp_indent_lvl = pp_indent_lvl + 1
 
-    ElseIf Instr(" case function sub ", t$) Then
+    ElseIf Instr(" case function select sub ", t$) Then
       If i = 0 Then
         pp_indent_lvl = pp_indent_lvl + 1
       Else If lx_token_lc$(i - 1) <> "end" Then
         pp_indent_lvl = pp_indent_lvl + 1
+        If Instr(" case ", t$) Then pp_indent_lvl = pp_indent_lvl + 1
       EndIf
 
     ElseIf t$ = " then " Then

@@ -54,8 +54,7 @@ Function fi_get_parent$(f$)
 End Function
 
 Function fi_exists(f$)
-  Local s$
-  s$ = Dir$(f$, File)
+  Local s$ = Dir$(f$, File)
   If s$ = "" Then s$ = Dir$(f$, Dir)
   fi_exists = s$ <> ""
 End Function
@@ -96,6 +95,12 @@ Sub main()
 
   cl_parse(Mm.CmdLine$)
   If err$ <> "" Then Print "mbt: "; err$ : Print : cl_usage() : End
+
+  If mbt_out$ <> "" Then
+    If fi_exists(mbt_out$)) Then
+      Print "mbt: file '" + mbt_out$ + "' already exists, please delete it first" : End
+    EndIf
+  EndIf
 
   Cls
 
