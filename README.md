@@ -28,7 +28,23 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## FAQ
 
-**1. What is the Colour Maximite 2 ?**
+**1. Why didn't you just copy the design of the C preprocessor like FreeBASIC does ?**
+
+ 1. The current design was chosen so that a file annotated with !directives is still a valid MMBasic file for at least one flavour of MMBasic (currently MMBasic 5.05 on the CMM2) that can be RUN without first running the transpiler over it.
+
+ 2. Because that would be a lot more work.
+
+**2. When is it getting C preprocessor style macro support ?**
+
+Not yet ;-)
+
+**3. Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
+
+My next goal (after rewriting the auto-indent code) is to use the transpiler to help port itself to Pi-cromite and MMBasic for DOS.
+
+I do not intend to support the original Colour Maximite or Mono Maximite as the MMBasic 4.5 that these run is missing a number of important features that the code relies on.
+
+**4. What is the Colour Maximite 2 ?**
 
 The Colour Maximite 2 is a small self contained "Boot to BASIC" computer inspired by the home computers of the early 80's such as the Tandy TRS-80, Commodore 64 and Apple II.
 
@@ -37,22 +53,6 @@ While the concept of the Colour Maximite 2 is borrowed from the computers of the
 The power of the ARM processor means it is capable of running BASIC at speeds comparable to running native machine-code on an 8-bit home computer with the additional advantage of vastly more memory and superior graphics and audio capabilities.
 
 More information can be found on the official Colour Maximite 2 website at http://geoffg.net/maximite.html
-
-**2. Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
-
-My next goal (after rewriting the auto-indent code) is to use the transpiler to help port itself to Pi-cromite and MMBasic for DOS.
-
-I do not intend to support the original Colour Maximite or Mono Maximite as the MMBasic 4.5 that these run is missing a number of important features that the code relies on.
-
-**3. Why didn't you just copy the design of the C preprocessor like FreeBASIC does ?**
-
- 1. The current design was chosen so that a file annotated with !directives is still a valid MMBasic file for at least one flavour of MMBasic (currently MMBasic 5.05 on the CMM2) that can be RUN without first running the transpiler over it.
-
- 2. Because that would be a lot more work.
-
-**4. When is it getting C preprocessor style macro support ?**
-
-Not yet ;-)
 
 **5. How do I contact the author ?**
 
