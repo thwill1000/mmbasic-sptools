@@ -7,6 +7,7 @@ Const MAX_NUM_FILES = 5
 
 #Include "lexer.inc"
 #Include "map.inc"
+#Include "options.inc"
 #Include "pprint.inc"
 #Include "set.inc"
 #Include "trans.inc"
@@ -16,7 +17,6 @@ Dim num_files = 0
 ' We ignore the 0'th element in these.
 Dim file_stack$(MAX_NUM_FILES) Length 40
 Dim cur_line_no(MAX_NUM_FILES)
-Dim mbt_format_only ' set =1 to just format / pretty-print and not transpile
 Dim mbt_in$     ' input filepath
 Dim mbt_out$    ' output filepath
 Dim err$        ' global error message / flag
@@ -92,8 +92,10 @@ End Function
 Sub main()
   Local s$, t
 
-  parse_cmdline(Mm.CmdLine$)
-  If err$ <> "" Then Print "mbt: "; err$ : Print : print_usage() : End
+  op_init()
+
+  cl_parse(Mm.CmdLine$)
+  If err$ <> "" Then Print "mbt: "; err$ : Print : cl_usage() : End
 
   Cls
 
@@ -107,7 +109,7 @@ Sub main()
   Do
     cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(num_files) \ 8) Mod 4) + 1, 1))
     s$ = read_line$()
-    If mbt_format_only Then
+    If op_format_only Then
       lx_parse_basic(s$)
       If lx_error$ <> "" Then cerror(lx_error$)
     Else

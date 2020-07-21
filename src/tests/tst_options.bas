@@ -37,10 +37,11 @@ Function test_colour()
   elements$(0) = "0"
   elements$(1) = "off"
   elements$(2) = ""
-  elements$(3) = Chr$(0)
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_colour = -1
+    op_colour = 999
     op_set("colour", elements$(i))
     ut_assert_equals(0, op_colour)
     i = i + 1
@@ -51,7 +52,7 @@ Function test_colour()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_colour = -1
+    op_colour = 999
     op_set("colour", elements$(i))
     ut_assert_equals(1, op_colour)
     i = i + 1
@@ -65,7 +66,21 @@ Function test_comments()
   Local elements$(10) Length 10, i
 
   test_setup()
-  ut_assert_equals(1, op_comments)
+  ut_assert_equals(-1, op_comments)
+
+  elements$(0) = "preserve"
+  elements$(1) = "default"
+  elements$(2) = "on"
+  elements$(3) = "-1"
+  elements$(4) = ""
+  elements$(5) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    op_comments = 999
+    op_set("comments", elements$(i))
+    ut_assert_equals(-1, op_comments)
+    i = i + 1
+  Loop
 
   elements$(0) = "omit"
   elements$(1) = "off"
@@ -74,33 +89,20 @@ Function test_comments()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = -1
+    op_comments = 999
     op_set("comments", elements$(i))
     ut_assert_equals(0, op_comments)
     i = i + 1
   Loop
 
-  elements$(0) = "preserve"
-  elements$(1) = "on"
-  elements$(2) = "1"
-  elements$(3) = ""
-  elements$(4) = Chr$(0)
-  i = 0
-  Do While elements$(i) <> Chr$(0)
-    op_comments = -1
-    op_set("comments", elements$(i))
-    ut_assert_equals(1, op_comments)
-    i = i + 1
-  Loop
-
   elements$(0) = "extra"
-  elements$(1) = "2"
+  elements$(1) = "1"
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = -1
+    op_comments = 999
     op_set("comments", elements$(i))
-    ut_assert_equals(2, op_comments)
+    ut_assert_equals(1, op_comments)
     i = i + 1
   Loop
 
@@ -112,7 +114,21 @@ Function test_empty_lines()
   Local elements$(10) Length 10, i
 
   test_setup()
-  ut_assert_equals(1, op_empty_lines)
+  ut_assert_equals(-1, op_empty_lines)
+
+  elements$(0) = "preserve"
+  elements$(1) = "default"
+  elements$(1) = "on"
+  elements$(2) = "-1"
+  elements$(3) = ""
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    op_empty_lines = 999
+    op_set("empty-lines", elements$(i))
+    ut_assert_equals(-1, op_empty_lines)
+    i = i + 1
+  Loop
 
   elements$(0) = "none"
   elements$(1) = "omit"
@@ -121,33 +137,20 @@ Function test_empty_lines()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = -1
+    op_comments = 999
     op_set("empty-lines", elements$(i))
     ut_assert_equals(0, op_empty_lines)
     i = i + 1
   Loop
 
-  elements$(0) = "preserve"
-  elements$(1) = "on"
-  elements$(2) = "1"
-  elements$(3) = ""
-  elements$(4) = Chr$(0)
-  i = 0
-  Do While elements$(i) <> Chr$(0)
-    op_empty_lines = -1
-    op_set("empty-lines", elements$(i))
-    ut_assert_equals(1, op_empty_lines)
-    i = i + 1
-  Loop
-
   elements$(0) = "single"
-  elements$(1) = "2"
+  elements$(1) = "1"
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = -1
+    op_comments = 999
     op_set("empty-lines", elements$(i))
-    ut_assert_equals(2, op_empty_lines)
+    ut_assert_equals(1, op_empty_lines)
     i = i + 1
   Loop
 
@@ -164,10 +167,11 @@ Function test_format_only()
   elements$(0) = "0"
   elements$(1) = "off"
   elements$(2) = ""
-  elements$(3) = Chr$(0)
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_format_only = -1
+    op_format_only = 999
     op_set("format-only", elements$(i))
     ut_assert_equals(0, op_format_only)
     i = i + 1
@@ -178,7 +182,7 @@ Function test_format_only()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_format_only = -1
+    op_format_only = 999
     op_set("format-only", elements$(i))
     ut_assert_equals(1, op_format_only)
     i = i + 1
@@ -197,7 +201,8 @@ Function test_indent()
   elements$(0) = "-1"
   elements$(1) = "preserve"
   elements$(2) = ""
-  elements$(3) = Chr$(0)
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
     op_indent_sz = 999
@@ -235,11 +240,12 @@ Function test_spacing()
   test_setup()
   ut_assert_equals(-1, op_spacing)
 
-  elements$(0) = "default"
-  elements$(1) = "on"
-  elements$(2) = ""
-  elements$(3) = "-1"
-  elements$(4) = Chr$(0)
+  elements$(0) = "preserve"
+  elements$(1) = "default"
+  elements$(2) = "on"
+  elements$(3) = ""
+  elements$(4) = "-1"
+  elements$(5) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
     op_spacing = 999

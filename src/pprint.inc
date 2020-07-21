@@ -18,20 +18,6 @@ TK_COLOUR$(TK_KEYWORD) = VT100_CYAN
 TK_COLOUR$(TK_SYMBOL) = VT100_WHITE
 TK_COLOUR$(TK_DIRECTIVE) = VT100_RED
 
-Dim pp_colour = 0      '  0    : no syntax colouring of console output
-                       '  1    : VT100 syntax colouring of console output
-Dim pp_comments = -1   ' -1    : preserve comments
-                       '  0    : omit all comments
-                       '  1    : insert additional comments from transpiler
-Dim pp_empty_lines= -1 ' -1    : preserve empty lines
-                       '  0    : omit all empty lines
-                       '  1    : include empty line between each Function/Sub
-Dim pp_indent_sz= -1   ' -1    : preserve indenting
-                       '  0..N : automatically indent by N spaces per level
-Dim pp_spacing= -1     ' -1    : preserve inter-token spaces
-                       '  0    : omit all unnecessary spaces
-                       '  1    : space compactly
-                       '  2    : space generously
 Dim pp_count
 Dim pp_previous = 0    '  0    : previous line was empty
                        '  1    : previous line was comment
@@ -45,12 +31,14 @@ Sub pp_open(f$)
     Open f$ For Output As #pp_file_num
   EndIf
 
-  pp_inc_line()
-  pp_attrib(TK_COLOUR$(TK_COMMENT))
-  pp_out("' Transpiled on " + DateTime$(Now)) : pp_endl()
-  pp_attrib(VT100_RESET)
-  pp_inc_line()
-  pp_endl()
+  If op_format_only = 0 Then
+    pp_inc_line()
+    pp_attrib(TK_COLOUR$(TK_COMMENT))
+    pp_out("' Transpiled on " + DateTime$(Now)) : pp_endl()
+    pp_attrib(VT100_RESET)
+    pp_inc_line()
+    pp_endl()
+  EndIf
 End Sub
 
 Sub pp_close()
@@ -70,10 +58,10 @@ Sub pp_print_line()
 
   ' Ignore empty lines if the 'empty-lines' option is set or the previous line
   ' was empty.
-  If (pp_empty_lines > -1 Or pp_previous = 0) And lx_num = 0 Then Exit Sub
+  If (op_empty_lines > -1 Or pp_previous = 0) And lx_num = 0 Then Exit Sub
 
   ' Ignore lines consisting solely of a comment if the 'comments' option is 0.
-  If pp_comments = 0 Then
+  If op_comments = 0 Then
     If lx_num = 1 Then
       If lx_type(0) = TK_COMMENT Then pp_previous = 1 : Exit Sub
     EndIf
@@ -88,7 +76,7 @@ Sub pp_print_line()
 
     ' If we are not including comments and we reach a comment then don't process
     ' any further tokens ... there shouldn't be any.
-    If pp_comments = 0 Then
+    If op_comments = 0 Then
       If i = lx_num - 1 Then
         If lx_type(i) = TK_COMMENT Then Exit For
       EndIf
@@ -98,7 +86,7 @@ Sub pp_print_line()
 
     ' If the 'empty-lines' option is 'single|1' and previous printed line was
     ' had content and the line starts with {Function|Sub} then print empty line.
-    If pp_empty_lines = 1 And pp_previous = 2 Then
+    If op_empty_lines = 1 And pp_previous = 2 Then
       If i = 0 And Instr(" sub function ", t$) > 0 Then pp_endl() : pp_inc_line()
     EndIf
 
@@ -114,12 +102,12 @@ Sub pp_print_line()
 
     ' Indent the first token.
     If i = 0 Then
-      If pp_indent_sz = -1 Then
+      If op_indent_sz = -1 Then
         ' Use existing indentation.
         pp_out(Space$(lx_start(0) - 1))
       ElseIf pp_indent_lvl > 0 Then
         ' Use automatic indentation.
-        pp_out(Space$(pp_indent_lvl * pp_indent_sz))
+        pp_out(Space$(pp_indent_lvl * op_indent_sz))
       EndIf
     EndIf
 
@@ -160,7 +148,7 @@ Sub pp_print_line()
 
   ' If the 'empty-lines' option is 'single|1' and the line ends with
   ' End {Function|Sub} then print one.
-  If pp_empty_lines = 1 Then
+  If op_empty_lines = 1 Then
     If Instr(" function sub ", t$) > 0 Then
       u$ = lx_token_lc$(lx_num - 2)
       If u$ = "end" Then pp_inc_line() : pp_endl() : pp_previous = 0
@@ -178,7 +166,7 @@ Function pp_num_spaces(i)
   ' Never need a space after the last token.
   If i >= lx_num - 1 Then Exit Function
 
-  If pp_spacing = -1 Then
+  If op_spacing = -1 Then
     ' Maintain existing spaces.
     pp_num_spaces = lx_start(i + 1) - lx_start(i) - lx_len(i)
     Exit Function
@@ -194,7 +182,7 @@ Function pp_num_spaces(i)
   If t$ = "(" Then Exit Function
 
   ' Rules applying to 'generous' spacing.
-  If pp_spacing >= 2 Then
+  If op_spacing >= 2 Then
     ' Don't need a space before an opening bracket
     ' unless it is preceeded by a symbol.
     If u$ = "(" Then
@@ -214,7 +202,7 @@ Function pp_num_spaces(i)
   EndIf
 
   ' Rules applying to 'compact' spacing.
-  If pp_spacing >= 1 Then
+  If op_spacing >= 1 Then
     ' Need a space between a keyword/identifier and string.
     If lx_type(i) = TK_KEYWORD Or lx_type(i) = TK_IDENTIFIER Then
       If lx_type(i + 1) = TK_STRING Then pp_num_spaces = 1 : Exit Function
@@ -249,7 +237,7 @@ Function pp_num_spaces(i)
 End Function
 
 Sub pp_attrib(c$)
-  If pp_file_num < 0 And pp_colour > 0 Then pp_out(c$)
+  If pp_file_num < 0 And op_colour > 0 Then pp_out(c$)
 End Sub
 
 Sub pp_out(s$)

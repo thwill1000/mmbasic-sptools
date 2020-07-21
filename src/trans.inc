@@ -102,7 +102,7 @@ End Sub
 Sub process_clear()
   Local t$ = lx_token_lc$(1)
   If lx_num <> 2 Or t$ = "" Then
-    cerror("Syntax error: !clear directive requires 'flag' parameter")
+    cerror("Syntax error: !clear directive expects a <flag> argument")
   EndIf
   If set_get(flags$(), flags_sz, t$) < 0 Then
     ' TODO: Is this really the behaviour we want?
@@ -112,14 +112,9 @@ Sub process_clear()
 End Sub
 
 Sub process_comments()
-  Local t$ = lx_token_lc$(1)
-  If t$ = "on" Then
-    pp_comments = -1
-  ElseIf t$ = "off" Then
-    pp_comments = 0
-  Else
-    cerror("Syntax error: !comments directive requires 'on|off' parameter")
-  EndIf
+  If lx_num > 2 Then cerror("Syntax error: !comments directive has too many arguments")
+  op_set_comments(lx_token_lc$(1))
+  If err$ <> "" Then cerror("Syntax error: !comments directive " + err$)
 End Sub
 
 Sub process_if()
@@ -138,7 +133,7 @@ Sub process_if()
       cerror(t$)
     EndIf
   Else
-    cerror("Syntax error: " + lx_directive$(0) + " directive with invalid parameters")
+    cerror("Syntax error: " + lx_directive$(0) + " directive with invalid arguments")
   EndIf
 
   Local x = set_get(flags$(), flags_sz, t$) > -1
@@ -162,36 +157,28 @@ Sub push_if(x)
 End Sub
 
 Sub process_empty_lines()
-  If lx_num = 2 Then
-    Local t$ = lx_token_lc$(1)
-    If t$ = "0" Or t$ = "none" Then
-      pp_empty_lines = 0 : Exit Sub
-    ElseIf t$ = "1" Or t$ = "single" Then
-      pp_empty_lines = 1 : Exit Sub
-    EndIf
-  EndIf
-
-  cerror("Syntax error: !empty-lines directive requires 'none|single' parameter")
+  If lx_num > 2 Then cerror("Syntax error: !empty-lines directive has too many arguments")
+  op_set_empty_lines(lx_token_lc$(1))
+  If err$ <> "" Then cerror("Syntax error: !empty-lines directive " + err$)
 End Sub
 
 Sub process_include()
   If lx_num <> 2 Or lx_type(1) <> TK_STRING Then
-    cerror("Syntax error: #Include requires a 'file' parameter")
+    cerror("Syntax error: #Include expects a <file> argument")
   EndIf
   open_file(lx_string$(1))
   parse_line("' -------- " + lx_line$ + " " + String$(68 - Len(lx_line$), "-"))
 End Sub
 
 Sub process_indent()
-  If lx_num < 2 Or lx_type(1) <> TK_NUMBER Then
-    cerror("Syntax error: !indent requires 'number' parameter")
-  EndIf
-  pp_indent_sz = lx_number(1)
+  If lx_num > 2 Then cerror("Syntax error: !indent directive has too many arguments")
+  op_set_indent_sz(lx_token_lc$(1))
+  If err$ <> "" Then cerror("Syntax error: !indent directive " + err$)
 End Sub
 
 Sub process_replace()
   If lx_num <> 3 Then
-    cerror("Syntax error: !replace directive requires 'from' and 'to' parameters")
+    cerror("Syntax error: !replace directive expects <from> and <to> argumentss")
   EndIf
   map_put(replace$(), with$(), replace_sz, lx_token_lc$(1), lx_token_lc$(2))
 End Sub
@@ -199,7 +186,7 @@ End Sub
 Sub process_set()
   Local t$ = lx_token_lc$(1)
   If lx_num <> 2 Or t$ = "" Then
-    cerror("Syntax error: !set directive requires 'flag' parameter")
+    cerror("Syntax error: !set directive expects <flag> argument")
   EndIf
   If set_get(flags$(), flags_sz, t$) > -1 Then
     cerror("Error: flag '" + t$ + "' is already set")
@@ -208,16 +195,8 @@ Sub process_set()
 End Sub
 
 Sub process_spacing()
-  If lx_num = 2 Then
-    Local t$ = lx_token_lc$(1)
-    If t$ = "0" Or t$ = "minimal" Then
-      pp_spacing = 0 : Exit Sub
-    ElseIf t$ = "1" Or t$ = "compact" Then
-      pp_spacing = 1 : Exit Sub
-    ElseIf t$ = "2" Or t$ = "generous" Then
-      pp_spacing = 2 : Exit Sub
-    EndIf
-  EndIf
-
-  cerror("Syntax error: !spacing directive requires 'minimal|compact|generous' parameter")
+  If lx_num > 2 Then cerror("Syntax error: !spacing directive has too many arguments")
+  op_set_spacing(lx_token_lc$(1))
+  If err$ <> "" Then cerror("Syntax error: !spacing directive " + err$)
 End Sub
+

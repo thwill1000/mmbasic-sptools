@@ -1,72 +1,32 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Sub parse_cmdline(s$)
+' Parses command-line 's$'.
+'
+' Sets 'err$' if it encounters an error.
+Sub cl_parse(s$)
   Local i = 0, o$
 
+  err$ = ""
   lx_parse_command_line(s$)
   If lx_error$ <> "" Then err$ = lx_error$ : Exit Sub
 
   ' Process options.
 
-  Do While i < lx_num
-
-    If lx_type(i) = TK_OPTION Then
-      o$ = lx_option$(i)
-
-      If o$ = "C" Or o$ = "colour" Then
-        pp_colour = 1
-        i = i + 1
-
-      ElseIf o$ = "c" Or o$ = "comments" Then
-        err$ = "option '--comments' expects argument of 0 or 1"
-        If lx_token$(i + 1) <> "=" Then Exit Sub
-        If lx_token$(i + 2) <> "0" And lx_token$(i + 2) <> "1" Then Exit Sub
-        err$ = ""
-        pp_comments = lx_number(i + 2)
-        i = i + 3
-
-      ElseIf o$ = "e" Or o$ = "empty-lines" Then
-        err$ = "option '--empty-lines' expects argument of 0 or 1"
-        If lx_token$(i + 1) <> "=" Then Exit Sub
-        If lx_token$(i + 2) <> "0" And lx_token$(i + 2) <> "1" Then Exit Sub
-        err$ = ""
-        pp_empty_lines = lx_number(i + 2)
-        i = i + 3
-
-      ElseIf o$ = "f" Or o$ = "format-only" Then
-        mbt_format_only = 1
-        i = i + 1
-
-      ElseIf o$ = "i" or o$ = "indent" Then
-        err$ = "option '--indent' expects number argument >= 0"
-        If lx_token$(i + 1) <> "=" Then Exit Sub
-        If lx_type(i + 2) <> TK_NUMBER Then Exit Sub
-        err$ = ""
-        pp_indent_sz = lx_number(i + 2)
-        i = i + 3
-
-      ElseIf o$ = "h" Or o$ = "help" Then
-        print_usage()
-        End
-
-      ElseIf o$ = "s" Or o$ = "spacing" Then
-        err$ = "option '--spacing' expects argument of 0, 1 or 2"
-        If lx_token$(i + 1) <> "=" Then Exit Sub
-        If lx_type(i + 2) <> TK_NUMBER Then Exit Sub
-        pp_spacing = lx_number(i + 2)
-        If pp_spacing > 2 Then Exit Sub
-        err$ = ""
-        i = i + 3
-
-      Else
-        err$ = "option '" + lx_token$(i) + "' is unknown" : Exit Sub
-      EndIf
-
-    Else
-      Exit Do
-
-    EndIf
+  Do While i < lx_num And err$ = "" And lx_type(i) = TK_OPTION
+    Select Case lx_option$(i)
+      Case "C", "colour"      : cl_parse_no_arg("colour", i)
+      Case "c", "comments"    : cl_parse_arg("comments", i, "{0|1}")
+      Case "e", "empty-lines" : cl_parse_arg("empty-lines", i, "{0|1}")
+      Case "f", "format-only" : cl_parse_no_arg("format-only", i)
+      Case "i", "indent"      : cl_parse_arg("indent", i, "<number>")
+      Case "h", "help"        : cl_usage() : End
+      Case "s", "spacing"     : cl_parse_arg("spacing", i, "{0|1|2}")
+      Case Else:
+        err$ = "option '" + lx_token$(i) + "' is unknown"
+    End Select
   Loop
+
+  If err$ <> "" Then Exit Sub
 
   ' Process arguments.
 
@@ -83,7 +43,28 @@ Sub parse_cmdline(s$)
   If i <> lx_num Then err$ = "unexpected argument '" + lx_token$(i) + "'"
 End Sub
 
-Sub print_usage()
+' Parses an option with an argument.
+Sub cl_parse_arg(option$, i, arg$)
+  If lx_token$(i + 1) <> "=" Or lx_token$(i + 2) = "" Then
+    err$ = "missing argument"
+  Else
+    op_set(option$, lx_token$(i + 2))
+  EndIf
+  If err$ <> "" Then err$ = "option '" + lx_token$(i) + "' expects " + arg$ + " argument"
+  i = i + 3
+End Sub
+
+' Parses an option without an argument.
+Sub cl_parse_no_arg(option$, i)
+  If lx_token$(i + 1) = "=" Then
+    err$ = "option '" + lx_token$(i) + "' does not expect argument"
+  Else
+    op_set(option$, "on")
+  EndIf
+  i = i + 1
+End Sub
+
+Sub cl_usage()
   Local in$ = Chr$(34) + "input file" + Chr$(34)
   Local out$ = Chr$(34) + "output file" + Chr$(34)
   Print "Usage: RUN "; Chr$(34); "mbt.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
