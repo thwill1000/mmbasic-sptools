@@ -90,7 +90,7 @@ End Function
 Sub add_comments()
   Local nc = num_comments(num_files)
   If nc > 0 Then
-    parse_line(String$(nc, "'") + lx_line$)
+    parse_line(String$(nc, "'") + " " + lx_line$)
   ElseIf nc < 0 Then
     Do While nc < 0 And lx_num > 0 And lx_type(0) = TK_COMMENT
       parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
@@ -179,7 +179,7 @@ Sub process_include()
     cerror("Syntax error: #Include requires a 'file' parameter")
   EndIf
   open_file(lx_string$(1))
-  parse_line("' -------- BEGIN " + lx_line$ + " --------")
+  parse_line("' -------- " + lx_line$ + " " + String$(68 - Len(lx_line$), "-"))
 End Sub
 
 Sub process_indent()

@@ -117,8 +117,9 @@ Sub main()
 
     If Eof(#num_files) Then
       If num_files > 1 Then
-        s$ = "' -------- END #Include " + Chr$(34)
-        s$ = s$ + file_stack$(num_files) + Chr$(34) + " --------"
+        s$ = "' -------- #Include " + Chr$(34)
+        s$ = s$ + file_stack$(num_files) + Chr$(34) + " "
+        s$ = s$ + String$(80 - Len(s$), "-")
         transpile(s$)
         pp_print_line()
       EndIf

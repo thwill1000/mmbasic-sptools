@@ -126,6 +126,7 @@ Sub lx_parse_decimal()
 End Sub
 
 Sub lx_store(type, start, length)
+  If length = 0 Then Error "Empty token"
   lx_type(lx_num) = type
   lx_start(lx_num) = start
   lx_len(lx_num) = length
