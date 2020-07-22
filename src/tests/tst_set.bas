@@ -3,7 +3,7 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../unittest.inc"
+#Include "unittest.inc"
 #Include "../set.inc"
 
 Cls

@@ -3,9 +3,9 @@
 Option Explicit On
 Option Default Integer
 
+#Include "unittest.inc"
 #Include "../map.inc"
 #Include "../set.inc"
-#Include "../unittest.inc"
 
 Cls
 

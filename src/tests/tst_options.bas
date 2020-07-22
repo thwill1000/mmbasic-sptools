@@ -5,8 +5,8 @@ Option Default Integer
 
 Dim err$
 
+#Include "unittest.inc"
 #Include "../options.inc"
-#Include "../unittest.inc"
 
 Cls
 

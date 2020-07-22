@@ -7,11 +7,11 @@ Dim err$
 Dim mbt_in$
 Dim mbt_out$
 
+#Include "unittest.inc"
 #Include "../cmdline.inc"
 #Include "../lexer.inc"
 #Include "../options.inc"
 #Include "../set.inc"
-#Include "../unittest.inc"
 
 Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)
 Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)
@@ -22,7 +22,7 @@ ut_add_test("test_no_input_file")
 ut_add_test("test_input_file")
 ut_add_test("test_unquoted_input_file")
 ut_add_test("test_colour")
-ut_add_test("test_comments")
+ut_add_test("test_no_comments")
 ut_add_test("test_empty_lines")
 ut_add_test("test_format_only")
 ut_add_test("test_indent")
@@ -80,24 +80,21 @@ Function test_colour()
   ut_assert_string_equals("option '-C' does not expect argument", err$)
 End Function
 
-Function test_comments()
+Function test_no_comments()
   test_setup()
 
-  cl_parse("--comments=0 " + input_file$)
-
+  op_comments = 999
+  cl_parse("--no-comments " + input_file$)
   ut_assert_string_equals("", err$)
   ut_assert_equals(0, op_comments)
 
-  cl_parse("--comments=1 " + input_file$)
-
+  op_comments = 999
+  cl_parse("-n " + input_file$)
   ut_assert_string_equals("", err$)
-  ut_assert_equals(1, op_comments)
+  ut_assert_equals(0, op_comments)
 
-  cl_parse("--comments " + input_file$)
-  ut_assert_string_equals("option '--comments' expects {0|1} argument", err$)
-
-  cl_parse("--comments=3" + input_file$)
-  ut_assert_string_equals("option '--comments' expects {0|1} argument", err$)
+  cl_parse("--no-comments=1" + input_file$)
+  ut_assert_string_equals("option '--no-comments' does not expect argument", err$)
 End Function
 
 Function test_empty_lines()
@@ -212,14 +209,14 @@ End Function
 Function test_everything()
   test_setup()
 
-  cl_parse("-f -C -e=1 -i=2 -s=0 -c=1 " + input_file$ + " " + output_file$)
+  cl_parse("-f -C -e=1 -i=2 -s=0 -n " + input_file$ + " " + output_file$)
 
   ut_assert_string_equals("", err$)
   ut_assert_equals(1, op_format_only)
   ut_assert_string_equals("input.bas", mbt_in$)
   ut_assert_string_equals("output.bas", mbt_out$)
   ut_assert_equals(1, op_colour)
-  ut_assert_equals(1, op_comments)
+  ut_assert_equals(0, op_comments)
   ut_assert_equals(1, op_empty_lines)
   ut_assert_equals(2, op_indent_sz)
   ut_assert_equals(0, op_spacing)

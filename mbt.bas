@@ -1,4 +1,4 @@
-' Transpiled on 22-07-2020 12:35:43
+' Transpiled on 22-07-2020 13:17:45
 
 ' Copyright (c) 2020 Thomas Hugo Williams
 '
@@ -486,7 +486,6 @@ Dim op_colour       '  0    : no syntax colouring of console output
                     '  1    : VT100 syntax colouring of console output
 Dim op_comments     ' -1    : preserve comments
                     '  0    : omit all comments
-                    '  1    : insert additional comments from transpiler
 Dim op_empty_lines  ' -1    : preserve empty lines
                     '  0    : omit all empty lines
                     '  1    : include empty line between each Function/Sub
