@@ -214,9 +214,10 @@ Print "Goodbye, world!"
 
 ## Known Issues
 
- 1. Does not recognise REM statements as being comments.
+ 1. Does not recognise `REM` statements as being comments.
  2. Automatic indenting does not handle multiple statement lines correctly.
      * to be honest the auto-indent code is a "hive of scum an villainy" that I need to put under unit-test and rewrite.
+ 3. Innumerable other bugs that I am not aware of.
 
 ## FAQ
 
