@@ -22,6 +22,111 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## Directives
 
+### Directives controlling formatting
+
+#### '!comments {off|on}
+
+Controls the inclusion of comments in the transpiled output, e.g.
+
+```
+'!comments off
+' This comment will not be included in the transpiled output,
+' and nor will this one,
+'!comments on
+' but this one will be.
+```
+
+The default setting is ```on``` unless the ```--no-comments``` command-line option is used.
+
+#### '!empty-lines {off|on|single}
+
+Controls the inclusion of empty lines in the transpiled output:
+* ```off``` - do not include empty lines.
+* ```on``` - include existing empty lines.
+* ```single``` - include a single empty line before each Function/Sub, otherwise do not include any empty lines.
+
+The default setting is ```on``` unless the ```--empty-lines``` command-line option is used.
+
+#### '!indent {on | 0 | 1 | 2 ...}
+
+Controls the code indentation of the transpiled output:
+* ```on``` - use existing indentation.
+* ```0``` - use no indentation.
+* ```1``` - indent by 1 space per level.
+* ```2``` - indent by 2 spaces per level.
+* etc.
+
+The default setting is ```on``` unless the ```--indent``` command-line option is used.
+
+#### '!spacing {on | minimal | compact | generous}
+
+Controls the spacing between tokens in the the transpiled output:
+* ```on``` - use existing spacing.
+* ```minimal``` - use the minimal spacing required for the code to be valid, e.g.
+    ```TODO```
+* ```compact``` - additional spacing, e.g.
+    ```TODO```
+* ```generous``` - even more spacing, e.g.
+    ```TODO```
+
+The default setting is ```on``` unless the ```--spacing``` command-line option is used.
+
+### Directives controlling conditional (un)commenting of code
+
+#### !set \<flag\>
+
+Sets ```<flag>``` for use with the ```'!comment_if``` and ```'!uncomment_if``` directives.
+
+#### !clear \<flag\>
+
+Clears ```<flag>```.
+
+#### !comment_if \<flag\>
+
+If ```<flag>``` is set then the transpiler will comment out all the following lines until the next ```'!end_if```, e.g.
+```vba
+'!set foo
+'!comment_if foo
+Print "This line and those that follow it will be commented out,"
+Print "including this one,"
+'!endif
+Print "but not this one."
+```
+
+#### !uncomment_if \<flag\>
+
+If ```<flag>``` is set then the transpiler will remove **one** comment character from all the following lines until the next ```'!end_if```, e.g.
+```vba
+'!set foo
+'!uncomment_if foo
+'Print "This line and those that follow it will be uncommented,"
+'Print "including this one,"
+''Print "but this one will still have a single comment character,"
+'!endif
+'Print "and this one will not be affected."
+```
+
+### Directives controlling replacement of tokens
+
+#### '!replace \<to\> \<from\>
+
+Tells the transpiler to replace **one** token with another, e.g.
+
+When transpiled this:
+```vba
+'!replace apple pear
+'!replace banana 30
+'!replace "Hello, world!" "Goodbye, world!"
+Dim apple = banana
+Print "Hello, world!"
+```
+
+Will become this:
+```vba
+Dim pear = 30
+Print "Goodbye, world!"
+```
+
 ## Command-line options
 
 ## Known Issues
