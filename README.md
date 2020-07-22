@@ -1,6 +1,6 @@
 # MMBasic Transpiler
 
-A BASIC transcompiler and code-formatter for the [Colour Maximite 2](http://geoffg.net/maximite.html).
+A transcompiler and code-formatter for MMBasic 5.05 running on the [Colour Maximite 2](http://geoffg.net/maximite.html).
 
 **Features**
 
@@ -68,7 +68,7 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
     * Display basic help information, including a description of these options, and then exit.
 
 * ```-i, --indent=<number>```
-    * Automatically indent by \<number\> spaces per level, may be 0.
+    * Automatically indent by ```<number>``` spaces per level, may be 0.
     * The default is to use the existing indentation.
 
 * ```-n, --no-comments```
@@ -125,7 +125,7 @@ The default setting is ```on``` unless the ```--empty-lines``` command-line opti
 
 Controls the code indentation of the transpiled output:
 * ```on``` - use existing indentation.
-* ```<number>``` - indent by \<number\> spaces per level, may b 0 to use no indentation.
+* ```<number>``` - indent by ```<number>``` spaces per level, use 0 for no indentation.
 
 e.g. ```'!indent 2```
 
@@ -136,11 +136,23 @@ The default setting is ```on``` unless the ```--indent``` command-line option is
 Controls the spacing between tokens in the the transpiled output:
 * ```on``` - use existing spacing.
 * ```minimal``` - use the minimal spacing required for the code to be valid, e.g.
-    ```TODO```
+    ```vba
+    If Left$(s$,1)="B"Then
+      st=-1:br=de_branch()' comment
+    EndIf
+    ``` 
 * ```compact``` - additional spacing, e.g.
-    ```TODO```
+    ```vba
+    If Left$(s$,1)="B" Then
+      st=-1 : br=de_branch() ' comment
+    EndIf
+    ```
 * ```generous``` - even more spacing, e.g.
-    ```TODO```
+    ```vba
+    If Left$(s$, 1) = "B" Then
+      st = -1 : br = de_branch() 'comment
+    EndIf
+    ```
 
 e.g. ```'!spacing compact```
 
