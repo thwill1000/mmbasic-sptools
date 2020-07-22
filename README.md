@@ -6,16 +6,18 @@ A BASIC transcompiler and code-formatter for the [Colour Maximite 2](http://geof
 
 * Flattens #Include hierarchies
      * useful for moving code from the CMM2 to other MMBasic flavours that currently do not support #Include.
+     * supports multiple levels of #Include and does not require the files to have ".inc" file-extension
+         * MMBasic 5.05 on the CMM2 only supports a single level of #Include, i.e. a ".bas" file can #Include one or more ".inc" files and that's it.
  * Configurable code reformatting
      * automatic indentation.
-     * remove empty-lines.
+     * automatic update of spacing between tokens.
      * remove comments.
-     * automatically "fix" spacing between tokens.
+     * remove empty-lines.
  * Conditional commenting/uncommenting of code sections
      * useful for supporting multiple MMBasic flavours from a single source-tree.
  * Configurable token replacement
-     * currently only supports a 1 → 1 mapping.
      * useful for improve performance by inlining constants and shortening identifiers.
+     * currently only supports a 1 → 1 mapping.
 
 Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
@@ -49,11 +51,11 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 * ```-C, --colour```
     * Use VT100 control codes to syntax highlight the output.
-    * This should only be used when accessing the CMM2 via a VT100 compatible terminal.
+    * This should only be used when accessing the CMM2 via a VT100 compatible terminal, otherwise you see the control codes verbatim.
     * It has no effect if outputting to a file.
 
 * ```-e, --empty-lines=off|single```
-    * Controls inclusion of empty lines in the transpiled output:<br/>
+    * Control inclusion of empty lines in the transpiled output:<br/>
         * ```off``` (or 0) - do not include empty lines.<br/>
         * ```single``` (or 1) - include a single empty line before each Function/Sub, otherwise do not include any empty lines.
     * The default is to include all existing empty lines.
@@ -63,7 +65,7 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
     * Useful if you just want to reformat the whitespace in a single file.
 
 * ```-h, --help```
-    * Displays basic help information, including a description of these options, and then exits.
+    * Display basic help information, including a description of these options, and then exit.
 
 * ```-i, --indent=<number>```
     * Automatically indent by \<number\> spaces per level, may be 0.
@@ -73,24 +75,26 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
     * Do not include comments in the transpiled output.
 
 * ```-s, --spacing=minimal|compact|generous```
-    * Controls output of spacing between tokens, see the description of the ```'!spacing``` directive for details:
+    * Control output of spacing between tokens, see the description of the ```'!spacing``` directive for details:
          * `minimal` (or 0)
          * `compact` (or 1)
          * `generous` (or 2)
     * The default is to use the existing spacing. 
 
 * ```-v, --version```
-    * Displays version information and then exits.
+    * Display version information and then exit.
 
 ## Directives
 
 Directives can be added to the MMBasic code to control the behaviour of the transpiler:
 * They all begin ```'!``` with the leading single-quote meaning that the MMBasic interpreter will ignore them if the untranspiled code is ```RUN```.
 * They must be the first token on a line.
+* By convention if a file just contains directives, comments and #Include I give it the ".mbt" file-extension.
+    * This is not enforced and the transpiler does not care what file-extension its input or output file has.
 
 ### Directives that control formatting of transpiled code
 
-*Where present these directives override any formatting specified in the command-line options.*
+*Where present these directives override any formatting specified by the command-line options.*
 
 #### '!comments {on | off}
 
@@ -113,6 +117,8 @@ Controls the inclusion of empty lines in the transpiled output:
 * ```on``` - include existing empty lines.
 * ```single``` - include a single empty line before each Function/Sub, otherwise do not include any empty lines.
 
+e.g. ```'!empty-lines single```
+
 The default setting is ```on``` unless the ```--empty-lines``` command-line option is used.
 
 #### '!indent {on | \<number\>}
@@ -120,6 +126,8 @@ The default setting is ```on``` unless the ```--empty-lines``` command-line opti
 Controls the code indentation of the transpiled output:
 * ```on``` - use existing indentation.
 * ```<number>``` - indent by \<number\> spaces per level, may b 0 to use no indentation.
+
+e.g. ```'!indent 2```
 
 The default setting is ```on``` unless the ```--indent``` command-line option is used.
 
@@ -134,6 +142,8 @@ Controls the spacing between tokens in the the transpiled output:
 * ```generous``` - even more spacing, e.g.
     ```TODO```
 
+e.g. ```'!spacing compact```
+
 The default setting is ```on``` unless the ```--spacing``` command-line option is used.
 
 ### Directives that control conditional (un)commenting of code
@@ -142,9 +152,13 @@ The default setting is ```on``` unless the ```--spacing``` command-line option i
 
 Sets \<flag\> for use with the ```'!comment_if``` and ```'!uncomment_if``` directives.
 
+e.g. ```'!set foo```
+
 #### !clear \<flag\>
 
 Clears \<flag\>.
+
+e.g. ```'!clear foo```
 
 #### !comment_if \<flag\>
 
@@ -174,6 +188,8 @@ If \<flag\> is set then the transpiler will remove **one** comment character fro
 #### '!endif
 
 Ends a ```'!comment_if``` or ```'!uncomment_if``` block.
+
+e.g. ```'!endif```
 
 ### Directives that control replacement of tokens
 
