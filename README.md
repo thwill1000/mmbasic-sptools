@@ -20,6 +20,43 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## How do I run it?
 
+## Command-line options
+
+* ```-n, --no-comments```
+    * Do not include comments in the transpiled output.
+
+* ```-C, --colour```
+    * Use VT100 control codes to syntax highlight the output.
+    * This should only be used when accessing the CMM2 via a VT100 compatible terminal.
+    * It has no effect if outputting to a file.
+
+* ```-e, --empty-lines=off|single```
+    * Controls inclusion of empty lines in the transpiled output:<br/>
+        * ```off``` (or 0) - do not include empty lines.<br/>
+        * ```single``` (or 1) - include a single empty line before each Function/Sub, otherwise do not include any empty lines.
+    * The default is to include all existing empty lines.
+
+* ```-f, --format-only```
+    * Only format the output, do not follow #Includes or process directives.
+    * Useful if you just want to reformat the whitespace in a single file.
+
+* ```-h, --help```
+    * Displays basic help information, including a description of these options, and then exits.
+
+* ```-i, --indent=<number>```
+    * Automatically indent by \<number\> spaces per level, may be 0.
+    * The default is to use the existing indentation.
+
+* ```-s, --spacing=minimal|compact|generous```
+    * Controls output of spacing between tokens, see the description of the ```'!spacing``` directive for details:
+         * `minimal` (or 0)
+         * `compact` (or 1)
+         * `generous` (or 2)
+    * The default is to use the existing spacing. 
+
+* ```-v, --version```
+    * Displays version information and then exits.
+
 ## Directives
 
 Directives added to the code control the behaviour of the transpiler:
@@ -42,7 +79,7 @@ Controls the inclusion of comments in the transpiled output, e.g.
 
 The default setting is ```on``` unless the ```--no-comments``` command-line option is used.
 
-#### '!empty-lines {off |on | single}
+#### '!empty-lines {off | on | single}
 
 Controls the inclusion of empty lines in the transpiled output:
 * ```off``` - do not include empty lines.
@@ -132,8 +169,6 @@ Will become this:
 Dim pear = 30
 Print "Goodbye, world!"
 ```
-
-## Command-line options
 
 ## Known Issues
 
