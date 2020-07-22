@@ -22,9 +22,13 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## Directives
 
-### Directives controlling formatting
+Directives added to the code control the behaviour of the transpiler:
+* They all begin ```'!``` with the leading single-quote meaning that the MMBasic interpreter will ignore them if the untranspiled code is ```RUN```.
+* They must be the first token on a line.
 
-#### '!comments {off|on}
+### Directives controlling code formatting
+
+#### '!comments {off | on}
 
 Controls the inclusion of comments in the transpiled output, e.g.
 
@@ -38,7 +42,7 @@ Controls the inclusion of comments in the transpiled output, e.g.
 
 The default setting is ```on``` unless the ```--no-comments``` command-line option is used.
 
-#### '!empty-lines {off|on|single}
+#### '!empty-lines {off |on | single}
 
 Controls the inclusion of empty lines in the transpiled output:
 * ```off``` - do not include empty lines.
@@ -47,14 +51,12 @@ Controls the inclusion of empty lines in the transpiled output:
 
 The default setting is ```on``` unless the ```--empty-lines``` command-line option is used.
 
-#### '!indent {on | 0 | 1 | 2 ...}
+#### '!indent {on | 0 | \<number\>}
 
 Controls the code indentation of the transpiled output:
 * ```on``` - use existing indentation.
 * ```0``` - use no indentation.
-* ```1``` - indent by 1 space per level.
-* ```2``` - indent by 2 spaces per level.
-* etc.
+* ```<number>``` - indent by \<number\> spaces per level.
 
 The default setting is ```on``` unless the ```--indent``` command-line option is used.
 
@@ -75,15 +77,15 @@ The default setting is ```on``` unless the ```--spacing``` command-line option i
 
 #### !set \<flag\>
 
-Sets ```<flag>``` for use with the ```'!comment_if``` and ```'!uncomment_if``` directives.
+Sets \<flag\> for use with the ```'!comment_if``` and ```'!uncomment_if``` directives.
 
 #### !clear \<flag\>
 
-Clears ```<flag>```.
+Clears \<flag\>.
 
 #### !comment_if \<flag\>
 
-If ```<flag>``` is set then the transpiler will comment out all the following lines until the next ```'!end_if```, e.g.
+If \<flag\> is set then the transpiler will comment out all the following lines until the next ```'!end_if```, e.g.
 ```vba
 '!set foo
 '!comment_if foo
@@ -95,7 +97,7 @@ Print "but not this one."
 
 #### !uncomment_if \<flag\>
 
-If ```<flag>``` is set then the transpiler will remove **one** comment character from all the following lines until the next ```'!end_if```, e.g.
+If \<flag\> is set then the transpiler will remove **one** comment character from all the following lines until the next ```'!end_if```, e.g.
 ```vba
 '!set foo
 '!uncomment_if foo
@@ -105,6 +107,10 @@ If ```<flag>``` is set then the transpiler will remove **one** comment character
 '!endif
 'Print "and this one will not be affected."
 ```
+
+#### '!endif
+
+Ends a ```'!comment_if``` or ```'!uncomment_if``` block.
 
 ### Directives controlling replacement of tokens
 
