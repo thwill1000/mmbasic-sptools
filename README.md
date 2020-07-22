@@ -2,6 +2,8 @@
 
 A transcompiler and code-formatter for MMBasic 5.05 running on the [Colour Maximite 2](http://geoffg.net/maximite.html).
 
+Written in MMBasic 5.05 by Thomas Hugo Williams in 2020.
+
 **Features**
 
 * Flattens #Include hierarchies
@@ -18,8 +20,6 @@ A transcompiler and code-formatter for MMBasic 5.05 running on the [Colour Maxim
  * Configurable token replacement
      * useful for improve performance by inlining constants and shortening identifiers.
      * currently only supports a 1 → 1 mapping.
-
-Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## How do I run it?
 
