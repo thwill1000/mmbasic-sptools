@@ -52,7 +52,7 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020.
 * ```-C, --colour```
     * Use VT100 control codes to syntax highlight the output.
     * This should only be used when accessing the CMM2 via a VT100 compatible terminal, otherwise you see the control codes verbatim.
-    * It has no effect if outputting to a file.
+    * It has no effect when an output file is specified.
 
 * ```-e, --empty-lines=off|single```
     * Control inclusion of empty lines in the transpiled output:<br/>
