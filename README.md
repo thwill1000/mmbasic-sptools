@@ -18,7 +18,7 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020.
  * Conditional commenting/uncommenting of code sections
      * useful for supporting multiple MMBasic flavours from a single source-tree.
  * Configurable token replacement
-     * useful for improve performance by inlining constants and shortening identifiers.
+     * useful for improving performance by inlining constants and shortening identifiers.
      * currently only supports a 1 → 1 mapping.
 
 ## How do I run it?
