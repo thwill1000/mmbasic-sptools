@@ -21,36 +21,14 @@ Dim replace_sz
 map_init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
 
 Sub transpile(s$)
-  parse_line(s$)
-  process_directives()
-End Sub
-
-Sub parse_line(s$)
   lx_parse_basic(s$)
   If lx_error$ <> "" Then cerror(lx_error$)
-  apply_replacements()
-  If lx_error$ <> "" Then cerror(lx_error$)
-End Sub
 
-' Applies replacements to the currently parsed line, lx_line$.
-Sub apply_replacements()
-  If replace_sz = 0 Then Exit Sub
-
-  Local i, r$, s$
-  For i = 0 TO lx_num - 1
-    r$ = map_get$(replace$(), with$(), replace_sz, lx_token_lc$(i))
-    If r$ <> Chr$(0) Then
-      s$ = Left$(lx_line$, lx_start(i) - 1) + r$ + Mid$(lx_line$, lx_start(i) + lx_len(i))
-      lx_parse_basic(s$)
-      ' TODO: what if this changes the number of tokens?
-    EndIf
-  Next i
-End Sub
-
-Sub process_directives()
   If lx_token_lc$(0) = "'!endif" Then process_endif()
 
   add_comments()
+  apply_replacements()
+  If lx_error$ <> "" Then cerror(lx_error$)
 
   If lx_token_lc$(0) = "#include" Then process_include()
 
@@ -69,12 +47,12 @@ Sub process_directives()
   Else : cerror("Unknown directive: " + Mid$(t$, 2))
   EndIf
 
-  parse_line("' PROCESSED: " + lx_line$)
+  lx_parse_basic("' PROCESSED: " + Mid$(lx_line$, lx_start(0) + 1))
 End Sub
 
 Sub process_endif()
   update_num_comments(- pop_if())
-  parse_line("' PROCESSED: " + lx_line$)
+  lx_parse_basic("' PROCESSED: " + Mid$(lx_line$, lx_start(0) + 1))
 End Sub
 
 Sub update_num_comments(x)
@@ -90,13 +68,29 @@ End Function
 Sub add_comments()
   Local nc = num_comments(num_files)
   If nc > 0 Then
-    parse_line(String$(nc, "'") + " " + lx_line$)
+    lx_parse_basic(String$(nc, "'") + " " + lx_line$)
   ElseIf nc < 0 Then
     Do While nc < 0 And lx_num > 0 And lx_type(0) = TK_COMMENT
-      parse_line(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
+      lx_parse_basic(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
       nc = nc + 1
     Loop
   EndIf
+End Sub
+
+' Applies replacements to the currently parsed line, lx_line$.
+Sub apply_replacements()
+  If replace_sz = 0 Then Exit Sub
+
+  Local i, r$, s$
+  For i = 0 TO lx_num - 1
+    r$ = map_get$(replace$(), with$(), replace_sz, lx_token_lc$(i))
+    If r$ <> Chr$(0) Then
+      s$ = Left$(lx_line$, lx_start(i) - 1) + r$ + Mid$(lx_line$, lx_start(i) + lx_len(i))
+      lx_parse_basic(s$)
+      ' TODO: at the moment this can't change the number of tokens, but when it
+      '       can this will need looking at closer.
+    EndIf
+  Next i
 End Sub
 
 Sub process_clear()
@@ -167,7 +161,7 @@ Sub process_include()
     cerror("Syntax error: #Include expects a <file> argument")
   EndIf
   open_file(lx_string$(1))
-  parse_line("' -------- " + lx_line$ + " " + String$(68 - Len(lx_line$), "-"))
+  lx_parse_basic("' BEGIN:     " + lx_line$ + " " + String$(66 - Len(lx_line$), "-"))
 End Sub
 
 Sub process_indent()

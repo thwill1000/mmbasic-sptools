@@ -1,5 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+'!comment_if INLINE_CONSTANTS
 Const TK_IDENTIFIER = 0
 Const TK_NUMBER = 1
 Const TK_COMMENT = 2
@@ -8,6 +9,7 @@ Const TK_KEYWORD = 4
 Const TK_SYMBOL = 5
 Const TK_DIRECTIVE = 6
 Const TK_OPTION = 7
+'!endif
 
 Const LX_MAX_KEYWORDS = 600
 Dim lx_keywords$(LX_MAX_KEYWORDS - 1) Length 20
@@ -26,10 +28,10 @@ Dim lx_next_char$
 Dim lx_num
 Dim lx_pos
 
-Sub lx_load_keywords()
+Sub lx_load_keywords(f$)
   Local i, s$
 
-  Open "/mbt/resources/keywords.txt" For Input As #1
+  Open f$ For Input As #1
 
   Do
     Line Input #1, s$
@@ -70,6 +72,7 @@ Sub lx_reset_globals(line$)
   lx_next_char$ = ""
   lx_num = 0
   lx_pos = 0
+  lx_type(0) = TK_COMMENT
 End Sub
 
 Sub lx_advance()

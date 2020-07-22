@@ -39,6 +39,7 @@ Sub op_set(name$, value$)
     Case "empty-lines" : op_set_empty_lines(v$)
     Case "format-only" : op_set_format_only(v$)
     Case "indent"      : op_set_indent_sz(v$)
+    Case "no-comments" : op_set_no_comments(v$)
     Case "spacing"     : op_set_spacing(v$)
     Case Else
       err$ = "unknown option: " + name$
@@ -58,9 +59,8 @@ Sub op_set_comments(value$)
   Select Case value$
     Case "preserve", "default", "on", "-1", "" : op_comments = -1
     Case "none", "omit", "off", "0"            : op_comments = 0
-    Case "extra", "1"                          : op_comments = 1
     Case Else
-      err$ = "expects 'preserve|none|extra' argument"
+      err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -70,7 +70,7 @@ Sub op_set_empty_lines(value$)
     Case "none", "omit", "off", "0"            : op_empty_lines = 0
     Case "single", "1"                         : op_empty_lines = 1
     Case Else
-      err$ = "expects 'preserve|none|single' argument"
+      err$ = "expects 'on|off|single' argument"
   End Select
 End Sub
 
@@ -89,9 +89,17 @@ Sub op_set_indent_sz(value$)
       If Str$(Val(value$)) = value$ And Val(value$) >= 0 Then
         op_indent_sz = Val(value$)
       Else
-        err$= "expects 'preserve|<number>' argument"
+        err$= "expects 'on|<number>' argument"
       EndIf
     End Select
+  End Select
+End Sub
+
+Sub op_set_no_comments(value$)
+  Select Case value$
+    Case "default", "off", "0", "" : op_comments = -1
+    Case "on", "1"                 : op_comments = 0
+    Case Else                      : err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -102,6 +110,6 @@ Sub op_set_spacing(value$)
     Case "compact", "1"                        : op_spacing = 1
     Case "generous", "2"                       : op_spacing = 2
     Case Else
-      err$ = "expects 'preserve|minimal|compact|generous' argument"
+      err$ = "expects 'on|minimal|compact|generous' argument"
   End Select
 End Sub

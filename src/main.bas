@@ -4,6 +4,8 @@ Option Explicit On
 Option Default Integer
 
 Const MAX_NUM_FILES = 5
+Const INSTALL_DIR$ = "\mbt"
+Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 
 #Include "lexer.inc"
 #Include "map.inc"
@@ -104,7 +106,7 @@ Sub main()
 
   Cls
 
-  lx_load_keywords()
+  lx_load_keywords(RESOURCES_DIR$ + "\keywords.txt")
 
   pp_open(mbt_out$)
   cout("Transpiling from '" + mbt_in$ + "' to '" + mbt_out$ + "' ...") : cendl()
@@ -124,7 +126,7 @@ Sub main()
 
     If Eof(#num_files) Then
       If num_files > 1 Then
-        s$ = "' -------- #Include " + Chr$(34)
+        s$ = "' END:       #Include " + Chr$(34)
         s$ = s$ + file_stack$(num_files) + Chr$(34) + " "
         s$ = s$ + String$(80 - Len(s$), "-")
         transpile(s$)

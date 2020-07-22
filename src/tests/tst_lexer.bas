@@ -9,7 +9,7 @@ Option Default Integer
 
 Cls
 
-lx_load_keywords()
+lx_load_keywords("\mbt\resources\keywords.txt")
 
 ut_add_test("test_tokenise")
 ut_add_test("test_binary_literals")

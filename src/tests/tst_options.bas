@@ -95,19 +95,8 @@ Function test_comments()
     i = i + 1
   Loop
 
-  elements$(0) = "extra"
-  elements$(1) = "1"
-  elements$(2) = Chr$(0)
-  i = 0
-  Do While elements$(i) <> Chr$(0)
-    op_comments = 999
-    op_set("comments", elements$(i))
-    ut_assert_equals(1, op_comments)
-    i = i + 1
-  Loop
-
   op_set("comments", "foo")
-  ut_assert_string_equals("expects 'preserve|none|extra' argument", err$)
+  ut_assert_string_equals("expects 'on|off' argument", err$)
 End Function
 
 Function test_empty_lines()
@@ -155,7 +144,7 @@ Function test_empty_lines()
   Loop
 
   op_set("empty-lines", "foo")
-  ut_assert_string_equals("expects 'preserve|none|single' argument", err$)
+  ut_assert_string_equals("expects 'on|off|single' argument", err$)
 End Function
 
 Function test_format_only()
@@ -202,7 +191,8 @@ Function test_indent()
   elements$(1) = "preserve"
   elements$(2) = ""
   elements$(3) = "default"
-  elements$(4) = Chr$(0)
+  elements$(4) = "on"
+  elements$(5) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
     op_indent_sz = 999
@@ -227,11 +217,11 @@ Function test_indent()
 
   err$ = ""
   op_set("indent", "foo")
-  ut_assert_string_equals("expects 'preserve|<number>' argument", err$)
+  ut_assert_string_equals("expects 'on|<number>' argument", err$)
 
   err$ = ""
   op_set("indent", "-2")
-  ut_assert_string_equals("expects 'preserve|<number>' argument", err$)
+  ut_assert_string_equals("expects 'on|<number>' argument", err$)
 End Function
 
 Function test_spacing()
@@ -289,10 +279,10 @@ Function test_spacing()
 
   err$ = ""
   op_set("spacing", "foo")
-  ut_assert_string_equals("expects 'preserve|minimal|compact|generous' argument", err$)
+  ut_assert_string_equals("expects 'on|minimal|compact|generous' argument", err$)
 
   err$ = ""
   op_set("spacing", "3")
-  ut_assert_string_equals("expects 'preserve|minimal|compact|generous' argument", err$)
+  ut_assert_string_equals("expects 'on|minimal|compact|generous' argument", err$)
 End Function
 
