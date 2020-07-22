@@ -59,11 +59,13 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## Directives
 
-Directives added to the code control the behaviour of the transpiler:
+Directives can be added to the MMBasic code to control the behaviour of the transpiler:
 * They all begin ```'!``` with the leading single-quote meaning that the MMBasic interpreter will ignore them if the untranspiled code is ```RUN```.
 * They must be the first token on a line.
 
-### Directives controlling code formatting
+### Directives that control code formatting
+
+*Where present these directives override any formatting specified in the command-line options.*
 
 #### '!comments {off | on}
 
@@ -110,7 +112,7 @@ Controls the spacing between tokens in the the transpiled output:
 
 The default setting is ```on``` unless the ```--spacing``` command-line option is used.
 
-### Directives controlling conditional (un)commenting of code
+### Directives that control conditional (un)commenting of code
 
 #### !set \<flag\>
 
@@ -149,7 +151,7 @@ If \<flag\> is set then the transpiler will remove **one** comment character fro
 
 Ends a ```'!comment_if``` or ```'!uncomment_if``` block.
 
-### Directives controlling replacement of tokens
+### Directives that control replacement of tokens
 
 #### '!replace \<to\> \<from\>
 
