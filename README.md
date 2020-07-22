@@ -39,7 +39,7 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\mbt\src\mbt_cm2.mbt" "mbt_new.bas"```
  
-&nbsp;&nbsp;&nbsp;&nbsp;Or to transpile Z-MIM (https://github.com/thwill1000/zmim):
+&nbsp;&nbsp;&nbsp;&nbsp;Or transpile Z-MIM (https://github.com/thwill1000/zmim):
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\zmim\src\zmim_cm2.mbt" "\zmim_new.bas"```
 
