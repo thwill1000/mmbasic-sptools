@@ -20,6 +20,30 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## How do I run it?
 
+1. Download the latest release:
+    - https://github.com/thwill1000/mmbasic-transpiler/releases/download/r1b1/mbt-r1b1.zip
+    - or clone/download the latest work in progress: https://github.com/thwill1000/mmbasic-transpiler
+
+2. Extract all the files to ```\mbt\```
+    - to run from a different directory you need to edit the ```INSTALL_DIR$``` constant near the top of ```mbt.bas```.
+
+3. Run `mbt` with:
+    - ```RUN "\mbt\mbt.bas", [OPTION]... "input file" ["output file"]```
+
+**Examples**
+        
+Use the program to transpile itself:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\mbt\src\mbt_cm2.mbt" "mbt_new.bas"```
+ 
+Or to transpile Z-MIM (https://github.com/thwill1000/zmim):
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\zmim\src\zmim_cm2.mbt" "\zmim_new.bas"```
+
+Or just reformat a file:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", -f --indent=2 --spacing=generous "old.bas" "new.bas"```
+
 ## Command-line options
 
 * ```-C, --colour```
@@ -67,7 +91,7 @@ Directives can be added to the MMBasic code to control the behaviour of the tran
 
 *Where present these directives override any formatting specified in the command-line options.*
 
-#### '!comments {off | on}
+#### '!comments {on | off}
 
 Controls the inclusion of comments in the transpiled output, e.g.
 
@@ -81,7 +105,7 @@ Controls the inclusion of comments in the transpiled output, e.g.
 
 The default setting is ```on``` unless the ```--no-comments``` command-line option is used.
 
-#### '!empty-lines {off | on | single}
+#### '!empty-lines {on | off | single}
 
 Controls the inclusion of empty lines in the transpiled output:
 * ```off``` - do not include empty lines.
@@ -90,12 +114,11 @@ Controls the inclusion of empty lines in the transpiled output:
 
 The default setting is ```on``` unless the ```--empty-lines``` command-line option is used.
 
-#### '!indent {on | 0 | \<number\>}
+#### '!indent {on | \<number\>}
 
 Controls the code indentation of the transpiled output:
 * ```on``` - use existing indentation.
-* ```0``` - use no indentation.
-* ```<number>``` - indent by \<number\> spaces per level.
+* ```<number>``` - indent by \<number\> spaces per level, may b 0 to use no indentation.
 
 The default setting is ```on``` unless the ```--indent``` command-line option is used.
 
