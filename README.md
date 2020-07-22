@@ -22,9 +22,6 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 ## Command-line options
 
-* ```-n, --no-comments```
-    * Do not include comments in the transpiled output.
-
 * ```-C, --colour```
     * Use VT100 control codes to syntax highlight the output.
     * This should only be used when accessing the CMM2 via a VT100 compatible terminal.
@@ -46,6 +43,9 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 * ```-i, --indent=<number>```
     * Automatically indent by \<number\> spaces per level, may be 0.
     * The default is to use the existing indentation.
+
+* ```-n, --no-comments```
+    * Do not include comments in the transpiled output.
 
 * ```-s, --spacing=minimal|compact|generous```
     * Controls output of spacing between tokens, see the description of the ```'!spacing``` directive for details:
