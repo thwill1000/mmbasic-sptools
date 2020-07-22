@@ -2,8 +2,9 @@
 
 A BASIC transcompiler and code-formatter for the [Colour Maximite 2](http://geoffg.net/maximite.html).
 
-Features:
- * Flattens #Include hierarchies
+**Features**
+
+* Flattens #Include hierarchies
      * useful for moving code from the CMM2 to other MMBasic flavours that currently do not support #Include.
  * Configurable code reformatting
      * automatic indentation.
@@ -32,15 +33,15 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020
 
 **Examples**
         
-Use the program to transpile itself:
+&nbsp;&nbsp;&nbsp;&nbsp;Use the program to transpile itself:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\mbt\src\mbt_cm2.mbt" "mbt_new.bas"```
  
-Or to transpile Z-MIM (https://github.com/thwill1000/zmim):
+&nbsp;&nbsp;&nbsp;&nbsp;Or to transpile Z-MIM (https://github.com/thwill1000/zmim):
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\zmim\src\zmim_cm2.mbt" "\zmim_new.bas"```
 
-Or just reformat a file:
+&nbsp;&nbsp;&nbsp;&nbsp;Or just reformat a file:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", -f --indent=2 --spacing=generous "old.bas" "new.bas"```
 
