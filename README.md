@@ -63,7 +63,7 @@ Directives can be added to the MMBasic code to control the behaviour of the tran
 * They all begin ```'!``` with the leading single-quote meaning that the MMBasic interpreter will ignore them if the untranspiled code is ```RUN```.
 * They must be the first token on a line.
 
-### Directives that control code formatting
+### Directives that control formatting of transpiled code
 
 *Where present these directives override any formatting specified in the command-line options.*
 
