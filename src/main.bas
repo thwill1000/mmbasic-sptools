@@ -118,7 +118,7 @@ Sub main()
     s$ = read_line$()
     If op_format_only Then
       lx_parse_basic(s$)
-      If lx_error$ <> "" Then cerror(lx_error$)
+      If err$ <> "" Then cerror(err$)
     Else
       transpile(s$)
     EndIf

@@ -6,9 +6,8 @@
 Sub cl_parse(s$)
   Local i = 0, o$
 
-  err$ = ""
   lx_parse_command_line(s$)
-  If lx_error$ <> "" Then err$ = lx_error$ : Exit Sub
+  If err$ <> "" Then Exit Sub
 
   ' Process options.
 

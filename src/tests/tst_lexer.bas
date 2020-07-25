@@ -191,7 +191,7 @@ End Function
 Function test_string_no_closing_quote()
   lx_parse_basic(Chr$(34) + "String literal with no closing quote")
 
-  expect_error("No closing quote")
+  assert_error("No closing quote")
 End Function
 
 Function test_symbols()
@@ -283,20 +283,20 @@ Function test_parse_command_line()
   assert_string_equals("wombat", lx_option$(2))
 
   lx_parse_command_line("--")
-  assert_string_equals("Illegal command-line option format: --", lx_error$)
+  assert_error("Illegal command-line option format: --")
 
   lx_parse_command_line("-")
-  assert_string_equals("Illegal command-line option format: -", lx_error$)
+  assert_error("Illegal command-line option format: -")
 
   lx_parse_command_line("/")
-  assert_string_equals("Illegal command-line option format: /", lx_error$)
+  assert_error("Illegal command-line option format: /")
 
   lx_parse_command_line("--foo@ bar")
-  assert_string_equals("Illegal command-line option format: --foo@", lx_error$)
+  assert_error("Illegal command-line option format: --foo@")
 End Function
 
 Sub expect_success(num)
-  assert_true(lx_error$ = "", "unexpected lexer error: " + lx_error$)
+  assert_no_error()
   assert_true(lx_num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx_num))
 End Sub
 
@@ -304,8 +304,4 @@ Sub expect_tk(i, type, s$)
   assert_true(lx_type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx_type(i)))
   Local actual$ = lx_token$(i)
   assert_true(actual$ = s$, "excepted " + s$ + ", found " + actual$)
-End Sub
-
-Sub expect_error(msg$)
-  assert_true(lx_error$ = msg$, "missing expected error: " + msg$)
 End Sub

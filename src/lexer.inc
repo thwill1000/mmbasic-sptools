@@ -22,7 +22,6 @@ Dim lx_start(LX_MAX_TOKENS - 1)
 Dim lx_len(LX_MAX_TOKENS - 1)
 
 Dim lx_char$
-Dim lx_error$
 Dim lx_line$
 Dim lx_next_char$
 Dim lx_num
@@ -62,12 +61,12 @@ Sub lx_parse_basic(line$)
       lx_parse_symbol()
     EndIf
 
-    If lx_error$ <> "" Then Exit Do
+    If err$ <> "" Then Exit Do
   Loop
 End Sub
 
 Sub lx_reset_globals(line$)
-  lx_error$ = ""
+  err$ = ""
   lx_line$ = line$
   lx_next_char$ = ""
   lx_num = 0
@@ -104,7 +103,7 @@ Sub lx_parse_number()
     ElseIf lx_next_char$ = "o" Then
       lx_parse_octal()
     Else
-      Then lx_error$ = "Unknown literal type &" + lx_next_char$ : Exit Sub
+      Then err$ = "Unknown literal type &" + lx_next_char$ : Exit Sub
     EndIf
   EndIf
 End Sub
@@ -194,7 +193,7 @@ Sub lx_parse_string()
 
   lx_advance()
   lx_advance_until(Chr$(10) + Chr$(34))
-  If lx_char$ = Chr$(10) Then lx_error$ = "No closing quote" : Exit Sub
+  If lx_char$ = Chr$(10) Then err$ = "No closing quote" : Exit Sub
   lx_store(TK_STRING, start, lx_pos - start + 1)
   lx_advance()
 End Sub
@@ -281,7 +280,7 @@ End Function
 Sub lx_tokenise(line$)
   Local start = -1
 
-  lx_error$ = ""
+  err$ = ""
   lx_line$ = line$
   lx_next_char$ = ""
   lx_num = 0
@@ -324,7 +323,7 @@ Sub lx_parse_command_line(line$)
       lx_parse_symbol()
     EndIf
 
-    If lx_error$ <> "" Then Exit Do
+    If err$ <> "" Then Exit Do
   Loop
 End Sub
 
@@ -346,7 +345,7 @@ Sub lx_parse_option()
 
   If e = 1 Or InStr("= " + Chr$(10), lx_char$) < 1 Then
     If InStr("= " + Chr$(10), lx_char$) < 1 Then lx_advance()
-    lx_error$ = "Illegal command-line option format: " + Mid$(lx_line$, start, lx_pos - start)
+    err$ = "Illegal command-line option format: " + Mid$(lx_line$, start, lx_pos - start)
     Exit Sub
   EndIf
 

@@ -22,13 +22,13 @@ map_init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
 
 Sub transpile(s$)
   lx_parse_basic(s$)
-  If lx_error$ <> "" Then cerror(lx_error$)
+  If err$ <> "" Then cerror(err$)
 
   If lx_token_lc$(0) = "'!endif" Then process_endif()
 
   add_comments()
   apply_replacements()
-  If lx_error$ <> "" Then cerror(lx_error$)
+  If err$ <> "" Then cerror(err$)
 
   If lx_token_lc$(0) = "#include" Then process_include()
 

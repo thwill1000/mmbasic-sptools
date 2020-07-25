@@ -47,7 +47,7 @@ Function test_replace()
 End Function
 
 Sub expect_tokens(num)
-  assert_true(lx_error$ = "", "unexpected lexer error: " + lx_error$)
+  assert_no_error()
   assert_true(lx_num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx_num))
 End Sub
 
