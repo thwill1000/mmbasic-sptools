@@ -73,8 +73,9 @@ End Sub
 Sub run_tests()
   Local i, j, _
 
+  Print Mm.Info$(Current)
   For i = 0 To ut_tests_sz - 1
-    Print ut_tests$(i); ":"; Space$(35 - Len(ut_tests$(i)));
+    Print "  " + ut_tests$(i); ":"; Space$(35 - Len(ut_tests$(i)));
 
     ut_asserts_count = 0
     ut_failures_sz = 0
@@ -93,4 +94,46 @@ Sub run_tests()
     EndIf
 
   Next i
+
+' TODO: correct once firmware bug fixed
+'  If Mm.CmdLine$ = "--all" Then run_next_test_file()
+  If Mm.CmdLine$ <> "" Then run_next_test_file(fi_current_name$())
 End Sub
+
+Sub run_next_test_file(current$)
+  Const MAX_NUM_TEST_FILES = 20
+  Local test_files$(MAX_NUM_TEST_FILES - 1) Length 40
+  Local test_files_sz = 0
+  Local f$, i
+
+  On Error Skip 1
+  set_init(test_files$(), MAX_NUM_TEST_FILES)
+  If Mm.ErrNo <> 0 Then Error "requires 'set.inc'"
+
+  ' Get alphabetic list of all "tst_*" files.
+  f$ = Dir$("tst*", All)
+  Do While f$ <> ""
+    set_put(test_files$(), test_files_sz, f$)
+    f$ = Dir$()
+  Loop
+
+  ' Lookup the index of the current file and run the next one.
+  i = set_get(test_files$(), test_files_sz, current$)
+  If i < test_files_sz - 1 Then
+    Print
+    Execute "Run " + Chr$(34) + test_files$(i + 1) + Chr$(34) + ", --all"
+  EndIf
+End Sub
+
+Function fi_current_name$()
+  Local f$, i
+  f$ = Mm.Info$(Current) ' full path
+  For i = Len(f$) To 1 Step -1
+    If Mid$(f$, i, 1) = "/" Then Exit For
+  Next i
+  If i = 1 Then
+    fi_current_name$ = f$
+  Else
+    fi_current_name$ = Mid$(f$, i + 1)
+  EndIf
+End Function

@@ -13,8 +13,6 @@ Dim num_files = 1
 #Include "../trans.inc"
 #Include "../set.inc"
 
-Cls
-
 lx_load_keywords("\mbt\resources\keywords.txt")
 
 add_test("test_replace")

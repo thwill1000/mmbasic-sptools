@@ -9,8 +9,6 @@ Dim err$
 #Include "../lexer.inc"
 #Include "../set.inc"
 
-Cls
-
 lx_load_keywords("\mbt\resources\keywords.txt")
 
 add_test("test_tokenise")

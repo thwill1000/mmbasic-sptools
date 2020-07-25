@@ -16,8 +16,6 @@ Dim mbt_out$
 Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)
 Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)
 
-Cls
-
 add_test("test_no_input_file")
 add_test("test_input_file")
 add_test("test_unquoted_input_file")

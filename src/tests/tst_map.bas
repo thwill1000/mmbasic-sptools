@@ -9,8 +9,6 @@ Dim err$
 #Include "../map.inc"
 #Include "../set.inc"
 
-Cls
-
 add_test("test_init")
 add_test("test_put")
 add_test("test_put_given_already_present")

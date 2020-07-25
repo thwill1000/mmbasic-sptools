@@ -7,8 +7,7 @@ Dim err$
 
 #Include "unittest.inc"
 #Include "../options.inc"
-
-Cls
+#Include "../set.inc"
 
 add_test("test_colour")
 add_test("test_comments")
