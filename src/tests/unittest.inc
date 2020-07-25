@@ -1,68 +1,73 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Dim ut_tests$(19)
-Dim ut_num_tests = 0
-Dim ut_errors$(19)
-Dim ut_num_errors = 0
-Dim ut_assert_count
+Dim ut_tests$(100) Length 40
+Dim ut_tests_sz = 0
+Dim ut_failures$(100)
+Dim ut_failures_sz = 0
+Dim ut_asserts_count
 
-Sub ut_add_test(test$)
-  ut_tests$(ut_num_tests) = test$
-  ut_num_tests = ut_num_tests + 1
+Sub add_test(test$)
+  ut_tests$(ut_tests_sz) = test$
+  ut_tests_sz = ut_tests_sz + 1
 End Sub
 
-Sub ut_add_error(msg$)
-  ut_errors$(ut_num_errors) = Str$(ut_assert_count) + ": " + msg$
-  ut_num_errors = ut_num_errors + 1
+Sub fail(msg$)
+  ut_asserts_count = ut_asserts_count + 1
+  ut_add_failure(msg$)
 End Sub
 
-Sub ut_assert(z, msg$)
-  ut_assert_count = ut_assert_count + 1
-  If Not z Then ut_add_error(msg$)
+Sub assert_true(z, msg$)
+  ut_asserts_count = ut_asserts_count + 1
+  If Not z Then ut_add_failure(msg$)
 End Sub
 
-Sub ut_assert_equals(expected, actual)
-  ut_assert_count = ut_assert_count + 1
+Sub ut_add_failure(msg$)
+  ut_failures$(ut_failures_sz) = Str$(ut_asserts_count) + ": " + msg$
+  ut_failures_sz = ut_failures_sz + 1
+End Sub
+
+Sub assert_equals(expected As Integer, actual As Integer)
+  ut_asserts_count = ut_asserts_count + 1
   If expected <> actual Then
     Local s$ = "Assert equals failed, expected " + Str$(expected)
     s$ = s$ + " but actually " + Str$(actual)
-    ut_add_error(s$)
+    ut_add_failure(s$)
   EndIf
 End Sub
 
-Sub ut_assert_real_equals(expected, actual)
-  ut_assert_count = ut_assert_count + 1
+Sub assert_float_equals(expected As Float, actual As float)
+  ut_asserts_count = ut_asserts_count + 1
   If expected <> actual Then
     Local s$ = "Assert equals failed, expected " + Str$(expected)
     s$ = s$ + " but actually " + Str$(actual)
-    ut_add_error(s$)
+    ut_add_failure(s$)
   EndIf
 End Sub
 
-Sub ut_assert_string_equals(expected$, actual$)
-  ut_assert_count = ut_assert_count + 1
+Sub assert_string_equals(expected$, actual$)
+  ut_asserts_count = ut_asserts_count + 1
   If expected$ <> actual$ Then
     Local s$ = "Assert equals failed, expected " + Chr$(34) + expected$ + Chr$(34)
     s$ = s$ + " but actually " + Chr$(34) + actual$ + Chr$(34) + "."
-    ut_add_error(s$)
+    ut_add_failure(s$)
   EndIf
 End Sub
 
-Sub ut_run_tests()
+Sub run_tests()
   Local i, j, _
 
-  For i = 0 To ut_num_tests - 1
-    Print ut_tests$(i); ":"
-    ut_assert_count = 0
-    ut_num_errors = 0
+  For i = 0 To ut_tests_sz - 1
+    Print ut_tests$(i); ":"; Space$(35 - Len(ut_tests$(i)));
+    ut_asserts_count = 0
+    ut_failures_sz = 0
     _ = Eval(ut_tests$(i) + "()")
-    If ut_num_errors = 0 Then
-      Print "  PASS"
-    Else
-      For j = 0 To ut_num_errors - 1
-        Print "  FAIL " + ut_errors$(j)
+    If ut_failures_sz = 0 Then
+      Print "PASS ("; Str$(ut_asserts_count); "/"; Str$(ut_asserts_count); ")"
+    Else If ut_failures_sz > 0 Then
+      Print "FAIL ("; Str$(ut_failures_sz); "/"; Str$(ut_asserts_count); ")"
+      For j = 0 To ut_failures_sz - 1
+        Print "  "; ut_failures$(j)
       Next j
     EndIf
   Next i
 End Sub
-

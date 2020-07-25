@@ -11,27 +11,27 @@ Cls
 
 lx_load_keywords("\mbt\resources\keywords.txt")
 
-ut_add_test("test_tokenise")
-ut_add_test("test_binary_literals")
-ut_add_test("test_comments")
-ut_add_test("test_directives")
-ut_add_test("test_hexadecimal_literals")
-ut_add_test("test_identifiers")
-ut_add_test("test_includes")
-ut_add_test("test_integer_literals")
-ut_add_test("test_keywords")
-ut_add_test("test_octal_literals")
-ut_add_test("test_real_literals")
-ut_add_test("test_string_literals")
-ut_add_test("test_string_no_closing_quote")
-ut_add_test("test_symbols")
-ut_add_test("test_get_number")
-ut_add_test("test_get_string")
-ut_add_test("test_get_directive")
-ut_add_test("test_get_token_lc")
-ut_add_test("test_parse_command_line")
+add_test("test_tokenise")
+add_test("test_binary_literals")
+add_test("test_comments")
+add_test("test_directives")
+add_test("test_hexadecimal_literals")
+add_test("test_identifiers")
+add_test("test_includes")
+add_test("test_integer_literals")
+add_test("test_keywords")
+add_test("test_octal_literals")
+add_test("test_real_literals")
+add_test("test_string_literals")
+add_test("test_string_no_closing_quote")
+add_test("test_symbols")
+add_test("test_get_number")
+add_test("test_get_string")
+add_test("test_get_directive")
+add_test("test_get_token_lc")
+add_test("test_parse_command_line")
 
-ut_run_tests()
+run_tests()
 
 End
 
@@ -238,65 +238,65 @@ End Function
 
 Function test_get_number()
   lx_parse_basic("1 2 3.14 3.14e-15")
-  ut_assert_real_equals(1, lx_number(0))
-  ut_assert_real_equals(2, lx_number(1))
-  ut_assert_real_equals(3.14, lx_number(2))
-  ut_assert_real_equals(3.14e-15, lx_number(3))
+  assert_float_equals(1, lx_number(0))
+  assert_float_equals(2, lx_number(1))
+  assert_float_equals(3.14, lx_number(2))
+  assert_float_equals(3.14e-15, lx_number(3))
 End Function
 
 Function test_get_string()
   lx_parse_basic(Chr$(34) + "foo" + Chr$(34) + " " + Chr$(34) + "wom bat" + Chr$(34))
-  ut_assert_string_equals("foo", lx_string$(0))
-  ut_assert_string_equals("wom bat", lx_string$(1))
+  assert_string_equals("foo", lx_string$(0))
+  assert_string_equals("wom bat", lx_string$(1))
 End Function
 
 Function test_get_directive()
   lx_parse_basic("'!foo '!bar '!wombat")
-  ut_assert_string_equals("!foo", lx_directive$(0))
-  ut_assert_string_equals("!bar", lx_directive$(1))
-  ut_assert_string_equals("!wombat", lx_directive$(2))
+  assert_string_equals("!foo", lx_directive$(0))
+  assert_string_equals("!bar", lx_directive$(1))
+  assert_string_equals("!wombat", lx_directive$(2))
 End Function
 
 Function test_get_token_lc()
   lx_parse_basic("FOO '!BAR 1E7")
-  ut_assert_string_equals("foo", lx_token_lc$(0))
-  ut_assert_string_equals("'!bar", lx_token_lc$(1))
-  ut_assert_string_equals("1e7", lx_token_lc$(2))
+  assert_string_equals("foo", lx_token_lc$(0))
+  assert_string_equals("'!bar", lx_token_lc$(1))
+  assert_string_equals("1e7", lx_token_lc$(2))
 End Function
 
 Function test_parse_command_line()
   lx_parse_command_line("--foo -bar /wombat")
-  ut_assert_string_equals("--foo", lx_token_lc$(0))
-  ut_assert_string_equals("foo", lx_option$(0))
-  ut_assert_string_equals("-bar", lx_token_lc$(1))
-  ut_assert_string_equals("bar", lx_option$(1))
-  ut_assert_string_equals("/wombat", lx_token_lc$(2))
-  ut_assert_string_equals("wombat", lx_option$(2))
+  assert_string_equals("--foo", lx_token_lc$(0))
+  assert_string_equals("foo", lx_option$(0))
+  assert_string_equals("-bar", lx_token_lc$(1))
+  assert_string_equals("bar", lx_option$(1))
+  assert_string_equals("/wombat", lx_token_lc$(2))
+  assert_string_equals("wombat", lx_option$(2))
 
   lx_parse_command_line("--")
-  ut_assert_string_equals("Illegal command-line option format: --", lx_error$)
+  assert_string_equals("Illegal command-line option format: --", lx_error$)
 
   lx_parse_command_line("-")
-  ut_assert_string_equals("Illegal command-line option format: -", lx_error$)
+  assert_string_equals("Illegal command-line option format: -", lx_error$)
 
   lx_parse_command_line("/")
-  ut_assert_string_equals("Illegal command-line option format: /", lx_error$)
+  assert_string_equals("Illegal command-line option format: /", lx_error$)
 
   lx_parse_command_line("--foo@ bar")
-  ut_assert_string_equals("Illegal command-line option format: --foo@", lx_error$)
+  assert_string_equals("Illegal command-line option format: --foo@", lx_error$)
 End Function
 
 Sub expect_success(num)
-  ut_assert(lx_error$ = "", "unexpected lexer error: " + lx_error$)
-  ut_assert(lx_num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx_num))
+  assert_true(lx_error$ = "", "unexpected lexer error: " + lx_error$)
+  assert_true(lx_num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx_num))
 End Sub
 
 Sub expect_tk(i, type, s$)
-  ut_assert(lx_type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx_type(i)))
+  assert_true(lx_type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx_type(i)))
   Local actual$ = lx_token$(i)
-  ut_assert(actual$ = s$, "excepted " + s$ + ", found " + actual$)
+  assert_true(actual$ = s$, "excepted " + s$ + ", found " + actual$)
 End Sub
 
 Sub expect_error(msg$)
-  ut_assert(lx_error$ = msg$, "missing expected error: " + msg$)
+  assert_true(lx_error$ = msg$, "missing expected error: " + msg$)
 End Sub

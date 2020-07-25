@@ -18,22 +18,22 @@ Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)
 
 Cls
 
-ut_add_test("test_no_input_file")
-ut_add_test("test_input_file")
-ut_add_test("test_unquoted_input_file")
-ut_add_test("test_colour")
-ut_add_test("test_no_comments")
-ut_add_test("test_empty_lines")
-ut_add_test("test_format_only")
-ut_add_test("test_indent")
-ut_add_test("test_spacing")
-ut_add_test("test_output_file")
-ut_add_test("test_unquoted_output_file")
-ut_add_test("test_unknown_option")
-ut_add_test("test_too_many_arguments")
-ut_add_test("test_everything")
+add_test("test_no_input_file")
+add_test("test_input_file")
+add_test("test_unquoted_input_file")
+add_test("test_colour")
+add_test("test_no_comments")
+add_test("test_empty_lines")
+add_test("test_format_only")
+add_test("test_indent")
+add_test("test_spacing")
+add_test("test_output_file")
+add_test("test_unquoted_output_file")
+add_test("test_unknown_option")
+add_test("test_too_many_arguments")
+add_test("test_everything")
 
-ut_run_tests()
+run_tests()
 
 End
 
@@ -49,7 +49,7 @@ Function test_no_input_file()
 
   cl_parse("-f")
 
-  ut_assert_string_equals("no input file specified", err$)
+  assert_string_equals("no input file specified", err$)
 End Function
 
 Function test_input_file()
@@ -57,8 +57,8 @@ Function test_input_file()
 
   cl_parse(input_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_string_equals("input.bas", mbt_in$)
+  assert_string_equals("", err$)
+  assert_string_equals("input.bas", mbt_in$)
 End Function
 
 Function test_unquoted_input_file()
@@ -66,18 +66,18 @@ Function test_unquoted_input_file()
 
   cl_parse("input.bas")
 
-  ut_assert_string_equals("input file name must be quoted", err$)
+  assert_string_equals("input file name must be quoted", err$)
 End Function
 
 Function test_colour()
   test_setup() ' TODO: automate calling of this before each test function
 
   cl_parse("--colour " + input_file$)
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(1, op_colour)
+  assert_string_equals("", err$)
+  assert_equals(1, op_colour)
 
   cl_parse("-C=1 " + input_file$)
-  ut_assert_string_equals("option '-C' does not expect argument", err$)
+  assert_string_equals("option '-C' does not expect argument", err$)
 End Function
 
 Function test_no_comments()
@@ -85,16 +85,16 @@ Function test_no_comments()
 
   op_comments = 999
   cl_parse("--no-comments " + input_file$)
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(0, op_comments)
+  assert_string_equals("", err$)
+  assert_equals(0, op_comments)
 
   op_comments = 999
   cl_parse("-n " + input_file$)
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(0, op_comments)
+  assert_string_equals("", err$)
+  assert_equals(0, op_comments)
 
   cl_parse("--no-comments=1" + input_file$)
-  ut_assert_string_equals("option '--no-comments' does not expect argument", err$)
+  assert_string_equals("option '--no-comments' does not expect argument", err$)
 End Function
 
 Function test_empty_lines()
@@ -102,49 +102,49 @@ Function test_empty_lines()
 
   cl_parse("--empty-lines=0 " + input_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(0, op_empty_lines)
+  assert_string_equals("", err$)
+  assert_equals(0, op_empty_lines)
 
   cl_parse("--empty-lines=1 " + input_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(1, op_empty_lines)
+  assert_string_equals("", err$)
+  assert_equals(1, op_empty_lines)
 
   cl_parse("--empty-lines " + input_file$)
-  ut_assert_string_equals("option '--empty-lines' expects {0|1} argument", err$)
+  assert_string_equals("option '--empty-lines' expects {0|1} argument", err$)
 
   cl_parse("--empty-lines=3" + input_file$)
-  ut_assert_string_equals("option '--empty-lines' expects {0|1} argument", err$)
+  assert_string_equals("option '--empty-lines' expects {0|1} argument", err$)
 End Function
 
 Function test_format_only()
   test_setup()
 
   cl_parse("--format-only " + input_file$)
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(1, op_format_only)
+  assert_string_equals("", err$)
+  assert_equals(1, op_format_only)
 
   cl_parse("-f=1 " + input_file$)
-  ut_assert_string_equals("option '-f' does not expect argument", err$)
+  assert_string_equals("option '-f' does not expect argument", err$)
 End Function
 
 Function test_indent()
   test_setup()
 
   cl_parse("--indent=0 " + input_file$)
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(0, op_indent_sz)
+  assert_string_equals("", err$)
+  assert_equals(0, op_indent_sz)
 
   cl_parse("--indent=1 " + input_file$)
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(1, op_indent_sz)
+  assert_string_equals("", err$)
+  assert_equals(1, op_indent_sz)
 
   cl_parse("--indent " + input_file$)
-  ut_assert_string_equals("option '--indent' expects <number> argument", err$)
+  assert_string_equals("option '--indent' expects <number> argument", err$)
 
   cl_parse("--indent=3 " + input_file$)
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(3, op_indent_sz)
+  assert_string_equals("", err$)
+  assert_equals(3, op_indent_sz)
 End Function
 
 Function test_spacing()
@@ -152,24 +152,24 @@ Function test_spacing()
 
   cl_parse("--spacing=0 " + input_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(0, op_spacing)
+  assert_string_equals("", err$)
+  assert_equals(0, op_spacing)
 
   cl_parse("--spacing=1 " + input_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(1, op_spacing)
+  assert_string_equals("", err$)
+  assert_equals(1, op_spacing)
 
   cl_parse("--spacing=2 " + input_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(2, op_spacing)
+  assert_string_equals("", err$)
+  assert_equals(2, op_spacing)
 
   cl_parse("--spacing " + input_file$)
-  ut_assert_string_equals("option '--spacing' expects {0|1|2} argument", err$)
+  assert_string_equals("option '--spacing' expects {0|1|2} argument", err$)
 
   cl_parse("--spacing=3 " + input_file$)
-  ut_assert_string_equals("option '--spacing' expects {0|1|2} argument", err$)
+  assert_string_equals("option '--spacing' expects {0|1|2} argument", err$)
 End Function
 
 Function test_output_file()
@@ -177,9 +177,9 @@ Function test_output_file()
 
   cl_parse(input_file$ + " " + output_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_string_equals("input.bas", mbt_in$)
-  ut_assert_string_equals("output.bas", mbt_out$)
+  assert_string_equals("", err$)
+  assert_string_equals("input.bas", mbt_in$)
+  assert_string_equals("output.bas", mbt_out$)
 End Function
 
 Function test_unquoted_output_file()
@@ -187,7 +187,7 @@ Function test_unquoted_output_file()
 
   cl_parse(input_file$ + " output.bas")
 
-  ut_assert_string_equals("output file name must be quoted", err$)
+  assert_string_equals("output file name must be quoted", err$)
 End Function
 
 Function test_unknown_option()
@@ -195,7 +195,7 @@ Function test_unknown_option()
 
   cl_parse("--wombat " + input_file$)
 
-  ut_assert_string_equals("option '--wombat' is unknown", err$)
+  assert_string_equals("option '--wombat' is unknown", err$)
 End Function
 
 Function test_too_many_arguments()
@@ -203,7 +203,7 @@ Function test_too_many_arguments()
 
   cl_parse(input_file$ + " " + output_file$ + " wombat")
 
-  ut_assert_string_equals("unexpected argument 'wombat'", err$)
+  assert_string_equals("unexpected argument 'wombat'", err$)
 End Function
 
 Function test_everything()
@@ -211,13 +211,13 @@ Function test_everything()
 
   cl_parse("-f -C -e=1 -i=2 -s=0 -n " + input_file$ + " " + output_file$)
 
-  ut_assert_string_equals("", err$)
-  ut_assert_equals(1, op_format_only)
-  ut_assert_string_equals("input.bas", mbt_in$)
-  ut_assert_string_equals("output.bas", mbt_out$)
-  ut_assert_equals(1, op_colour)
-  ut_assert_equals(0, op_comments)
-  ut_assert_equals(1, op_empty_lines)
-  ut_assert_equals(2, op_indent_sz)
-  ut_assert_equals(0, op_spacing)
+  assert_string_equals("", err$)
+  assert_equals(1, op_format_only)
+  assert_string_equals("input.bas", mbt_in$)
+  assert_string_equals("output.bas", mbt_out$)
+  assert_equals(1, op_colour)
+  assert_equals(0, op_comments)
+  assert_equals(1, op_empty_lines)
+  assert_equals(2, op_indent_sz)
+  assert_equals(0, op_spacing)
 End Function
