@@ -48,7 +48,24 @@ Sub assert_string_equals(expected$, actual$)
   ut_asserts_count = ut_asserts_count + 1
   If expected$ <> actual$ Then
     Local s$ = "Assert equals failed, expected " + Chr$(34) + expected$ + Chr$(34)
-    s$ = s$ + " but actually " + Chr$(34) + actual$ + Chr$(34) + "."
+    s$ = s$ + " but actually " + Chr$(34) + actual$ + Chr$(34)
+    ut_add_failure(s$)
+  EndIf
+End Sub
+
+Sub assert_no_error()
+  ut_asserts_count = ut_asserts_count + 1
+  If err$ <> "" Then
+    Local s$ = "Expected no error, but actually " + Chr$(34) + err$ + Chr$(34)
+    ut_add_failure(s$)
+  EndIf
+End Sub
+
+Sub assert_error(expected$)
+  ut_asserts_count = ut_asserts_count + 1
+  If err$ <> expected$ Then
+    Local s$ = "Expected Error " + Chr$(34) + expected$ + Chr$(34)
+    s$ = s$ + ", but actually " + Chr$(34) + err$ + Chr$(34)
     ut_add_failure(s$)
   EndIf
 End Sub

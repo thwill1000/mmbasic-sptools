@@ -59,7 +59,7 @@ Function test_colour()
   Loop
 
   op_set("colour", "foo")
-  assert_string_equals("expects 'on|off' argument", err$)
+  assert_error("expects 'on|off' argument")
 End Function
 
 Function test_comments()
@@ -96,7 +96,7 @@ Function test_comments()
   Loop
 
   op_set("comments", "foo")
-  assert_string_equals("expects 'on|off' argument", err$)
+  assert_error("expects 'on|off' argument")
 End Function
 
 Function test_empty_lines()
@@ -144,7 +144,7 @@ Function test_empty_lines()
   Loop
 
   op_set("empty-lines", "foo")
-  assert_string_equals("expects 'on|off|single' argument", err$)
+  assert_error("expects 'on|off|single' argument")
 End Function
 
 Function test_format_only()
@@ -178,7 +178,7 @@ Function test_format_only()
   Loop
 
   op_set("format-only", "foo")
-  assert_string_equals("expects 'on|off' argument", err$)
+  assert_error("expects 'on|off' argument")
 End Function
 
 Function test_indent()
@@ -217,11 +217,11 @@ Function test_indent()
 
   err$ = ""
   op_set("indent", "foo")
-  assert_string_equals("expects 'on|<number>' argument", err$)
+  assert_error("expects 'on|<number>' argument")
 
   err$ = ""
   op_set("indent", "-2")
-  assert_string_equals("expects 'on|<number>' argument", err$)
+  assert_error("expects 'on|<number>' argument")
 End Function
 
 Function test_spacing()
@@ -279,10 +279,10 @@ Function test_spacing()
 
   err$ = ""
   op_set("spacing", "foo")
-  assert_string_equals("expects 'on|minimal|compact|generous' argument", err$)
+  assert_error("expects 'on|minimal|compact|generous' argument")
 
   err$ = ""
   op_set("spacing", "3")
-  assert_string_equals("expects 'on|minimal|compact|generous' argument", err$)
+  assert_error("expects 'on|minimal|compact|generous' argument")
 End Function
 
