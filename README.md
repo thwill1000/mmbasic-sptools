@@ -4,6 +4,13 @@ A transcompiler and code-formatter for MMBasic 5.05 running on the [Colour Maxim
 
 Written in MMBasic 5.05 by Thomas Hugo Williams in 2020.
 
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick" />
+<input type="hidden" name="hosted_button_id" value="T5F7BZ5NZFF66" />
+<input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+<img alt="" border="0" src="https://www.paypal.com/en_GB/i/scr/pixel.gif" width="1" height="1" />
+</form>
+
 **Features**
 
 * Flattens #Include hierarchies
