@@ -75,9 +75,14 @@ Sub run_tests()
 
   For i = 0 To ut_tests_sz - 1
     Print ut_tests$(i); ":"; Space$(35 - Len(ut_tests$(i)));
+
     ut_asserts_count = 0
     ut_failures_sz = 0
+
+    setup_test()
     _ = Eval(ut_tests$(i) + "()")
+    teardown_test()
+
     If ut_failures_sz = 0 Then
       Print "PASS ("; Str$(ut_asserts_count); "/"; Str$(ut_asserts_count); ")"
     Else If ut_failures_sz > 0 Then
@@ -86,5 +91,6 @@ Sub run_tests()
         Print "  "; ut_failures$(j)
       Next j
     EndIf
+
   Next i
 End Sub

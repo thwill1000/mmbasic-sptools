@@ -3,6 +3,8 @@
 Option Explicit On
 Option Default Integer
 
+Dim err$
+
 #Include "unittest.inc"
 #Include "../map.inc"
 #Include "../set.inc"
@@ -21,6 +23,13 @@ add_test("test_clear")
 run_tests()
 
 End
+
+Sub setup_test()
+  err$ = ""
+End Sub
+
+Sub teardown_test()
+End Sub
 
 Function test_init()
   Local i

@@ -3,6 +3,7 @@
 Option Explicit On
 Option Default Integer
 
+Dim err$
 Const MAX_NUM_FILES = 5
 Dim num_files = 1
 
@@ -21,6 +22,13 @@ add_test("test_replace")
 run_tests()
 
 End
+
+Sub setup_test()
+  err$ = ""
+End Sub
+
+Sub teardown_test()
+End Sub
 
 Function test_replace()
   map_clear(replace$(), with$(), replace_sz)

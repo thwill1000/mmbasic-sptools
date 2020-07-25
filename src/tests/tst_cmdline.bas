@@ -37,24 +37,23 @@ run_tests()
 
 End
 
-Sub test_setup()
+Sub setup_test()
   err$ = ""
   op_init()
   mbt_in$ = ""
   mbt_out$ = ""
 End Sub
 
-Function test_no_input_file()
-  test_setup() ' TODO: automate calling of this before each test function
+Sub teardown_test()
+End Sub
 
+Function test_no_input_file()
   cl_parse("-f")
 
   assert_error("no input file specified")
 End Function
 
 Function test_input_file()
-  test_setup()
-
   cl_parse(input_file$)
 
   assert_no_error()
@@ -62,16 +61,12 @@ Function test_input_file()
 End Function
 
 Function test_unquoted_input_file()
-  test_setup()
-
   cl_parse("input.bas")
 
   assert_error("input file name must be quoted")
 End Function
 
 Function test_colour()
-  test_setup() ' TODO: automate calling of this before each test function
-
   cl_parse("--colour " + input_file$)
   assert_no_error()
   assert_equals(1, op_colour)
@@ -81,8 +76,6 @@ Function test_colour()
 End Function
 
 Function test_no_comments()
-  test_setup()
-
   op_comments = 999
   cl_parse("--no-comments " + input_file$)
   assert_no_error()
@@ -98,15 +91,11 @@ Function test_no_comments()
 End Function
 
 Function test_empty_lines()
-  test_setup()
-
   cl_parse("--empty-lines=0 " + input_file$)
-
   assert_no_error()
   assert_equals(0, op_empty_lines)
 
   cl_parse("--empty-lines=1 " + input_file$)
-
   assert_no_error()
   assert_equals(1, op_empty_lines)
 
@@ -118,8 +107,6 @@ Function test_empty_lines()
 End Function
 
 Function test_format_only()
-  test_setup()
-
   cl_parse("--format-only " + input_file$)
   assert_no_error()
   assert_equals(1, op_format_only)
@@ -129,8 +116,6 @@ Function test_format_only()
 End Function
 
 Function test_indent()
-  test_setup()
-
   cl_parse("--indent=0 " + input_file$)
   assert_no_error()
   assert_equals(0, op_indent_sz)
@@ -148,20 +133,15 @@ Function test_indent()
 End Function
 
 Function test_spacing()
-  test_setup()
-
   cl_parse("--spacing=0 " + input_file$)
-
   assert_no_error()
   assert_equals(0, op_spacing)
 
   cl_parse("--spacing=1 " + input_file$)
-
   assert_no_error()
   assert_equals(1, op_spacing)
 
   cl_parse("--spacing=2 " + input_file$)
-
   assert_no_error()
   assert_equals(2, op_spacing)
 
@@ -173,8 +153,6 @@ Function test_spacing()
 End Function
 
 Function test_output_file()
-  test_setup()
-
   cl_parse(input_file$ + " " + output_file$)
 
   assert_no_error()
@@ -183,32 +161,24 @@ Function test_output_file()
 End Function
 
 Function test_unquoted_output_file()
-  test_setup()
-
   cl_parse(input_file$ + " output.bas")
 
   assert_error("output file name must be quoted")
 End Function
 
 Function test_unknown_option()
-  test_setup()
-
   cl_parse("--wombat " + input_file$)
 
   assert_error("option '--wombat' is unknown")
 End Function
 
 Function test_too_many_arguments()
-  test_setup()
-
   cl_parse(input_file$ + " " + output_file$ + " wombat")
 
   assert_error("unexpected argument 'wombat'")
 End Function
 
 Function test_everything()
-  test_setup()
-
   cl_parse("-f -C -e=1 -i=2 -s=0 -n " + input_file$ + " " + output_file$)
 
   assert_no_error()

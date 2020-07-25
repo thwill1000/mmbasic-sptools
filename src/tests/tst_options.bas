@@ -22,16 +22,17 @@ run_tests()
 
 End
 
-' TODO: automate calling this before each test function
-Sub test_setup()
+Sub setup_test()
   err$ = ""
   op_init()
+End Sub
+
+Sub teardown_test()
 End Sub
 
 Function test_colour()
   Local elements$(10) Length 10, i
 
-  test_setup()
   assert_equals(0, op_colour)
 
   elements$(0) = "0"
@@ -65,7 +66,6 @@ End Function
 Function test_comments()
   Local elements$(10) Length 10, i
 
-  test_setup()
   assert_equals(-1, op_comments)
 
   elements$(0) = "preserve"
@@ -102,7 +102,6 @@ End Function
 Function test_empty_lines()
   Local elements$(10) Length 10, i
 
-  test_setup()
   assert_equals(-1, op_empty_lines)
 
   elements$(0) = "preserve"
@@ -150,7 +149,6 @@ End Function
 Function test_format_only()
   Local elements$(10) Length 10, i
 
-  test_setup()
   assert_equals(0, op_format_only)
 
   elements$(0) = "0"
@@ -184,7 +182,6 @@ End Function
 Function test_indent()
   Local elements$(10) Length 10, i
 
-  test_setup()
   assert_equals(-1, op_indent_sz)
 
   elements$(0) = "-1"
@@ -227,7 +224,6 @@ End Function
 Function test_spacing()
   Local elements$(10) Length 10, i
 
-  test_setup()
   assert_equals(-1, op_spacing)
 
   elements$(0) = "preserve"

@@ -3,6 +3,8 @@
 Option Explicit On
 Option Default Integer
 
+Dim err$
+
 #Include "unittest.inc"
 #Include "../lexer.inc"
 #Include "../set.inc"
@@ -34,6 +36,13 @@ add_test("test_parse_command_line")
 run_tests()
 
 End
+
+Sub setup_test()
+  err$ = ""
+End Sub
+
+Sub teardown_test()
+End Sub
 
 Function test_tokenise()
   lx_tokenise("  foo    bar/wom " + Chr$(34) + "bat" + Chr$(34) + "   ")
