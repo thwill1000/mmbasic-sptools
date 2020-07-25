@@ -272,7 +272,7 @@ End Function
 ' Gets the number corresponding to token 'i'.
 '
 ' Throws an Error if token 'i' is not a number literal.
-Function lx_number(i)
+Function lx_number(i) As Float
   If lx_type(i) <> TK_NUMBER Then Error "{" + lx_token$(i) + "} is not a number literal"
   lx_number = Val(lx_token$(i))
 End Function
