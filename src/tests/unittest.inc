@@ -95,45 +95,50 @@ Sub run_tests()
 
   Next i
 
-' TODO: correct once firmware bug fixed
-'  If Mm.CmdLine$ = "--all" Then run_next_test_file()
-  If Mm.CmdLine$ <> "" Then run_next_test_file(fi_current_name$())
+  If Mm.CmdLine$ = "--all" Then run_next_test_file()
 End Sub
 
-Sub run_next_test_file(current$)
+Sub run_next_test_file()
   Const MAX_NUM_TEST_FILES = 20
   Local test_files$(MAX_NUM_TEST_FILES - 1) Length 40
   Local test_files_sz = 0
-  Local f$, i
+  Local f$, i, old$
 
   On Error Skip 1
   set_init(test_files$(), MAX_NUM_TEST_FILES)
   If Mm.ErrNo <> 0 Then Error "requires 'set.inc'"
 
-  ' Get alphabetic list of all "tst_*" files.
-  f$ = Dir$("tst*", All)
+  ' If there is a "tests/" directory then we look there for "tst_*" files,
+  ' otherwise we look in the current working directory.
+  f$ = Dir$("tests", Dir)
+  If f$ <> "" Then old$ = Cwd$ : ChDir f$
+
+  ' Get alphabetic list of all "tst_*.bas" files.
+  f$ = Dir$("tst*.bas", All)
   Do While f$ <> ""
     set_put(test_files$(), test_files_sz, f$)
     f$ = Dir$()
   Loop
 
+  If old$ <> "" Then ChDir old$
+
   ' Lookup the index of the current file and run the next one.
+  ' Note that if the current file was "sptest.bas" then the lookup returns -1
+  ' and thus the first "tst_*.bas" file will be run.
+  Local current$ = fi_current_name$()
   i = set_get(test_files$(), test_files_sz, current$)
   If i < test_files_sz - 1 Then
-    Print
-    Execute "Run " + Chr$(34) + test_files$(i + 1) + Chr$(34) + ", --all"
+    If old$ = "" Then f$ = "" Else f$ = "tests/"
+    f$ = f$ + test_files$(i + 1)
+    Execute "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
   EndIf
 End Sub
 
 Function fi_current_name$()
-  Local f$, i
-  f$ = Mm.Info$(Current) ' full path
+  Local i
+  Local f$ = Mm.Info$(Current) ' full path
   For i = Len(f$) To 1 Step -1
     If Mid$(f$, i, 1) = "/" Then Exit For
   Next i
-  If i = 1 Then
-    fi_current_name$ = f$
-  Else
-    fi_current_name$ = Mid$(f$, i + 1)
-  EndIf
+  fi_current_name$ = Mid$(f$, i + 1)
 End Function
