@@ -11,12 +11,12 @@ Const TK_DIRECTIVE = 6
 Const TK_OPTION = 7
 '!endif
 
-Const LX_MAX_KEYWORDS = 600
+Const LX_MAX_KEYWORDS = 1000
 Dim lx_keywords$(LX_MAX_KEYWORDS - 1) Length 20
 Dim lx_keywords_sz = 0
 set_init(lx_keywords$(), LX_MAX_KEYWORDS)
 
-Const LX_MAX_TOKENS = 50
+Const LX_MAX_TOKENS = 100
 Dim lx_type(LX_MAX_TOKENS - 1)
 Dim lx_start(LX_MAX_TOKENS - 1)
 Dim lx_len(LX_MAX_TOKENS - 1)
