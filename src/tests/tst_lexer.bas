@@ -29,6 +29,7 @@ add_test("test_get_number")
 add_test("test_get_string")
 add_test("test_get_directive")
 add_test("test_get_token_lc")
+add_test("test_old_tokens_cleared")
 add_test("test_parse_command_line")
 
 run_tests()
@@ -291,6 +292,21 @@ Function test_parse_command_line()
 
   lx_parse_command_line("--foo@ bar")
   assert_error("Illegal command-line option format: --foo@")
+End Function
+
+Function test_old_tokens_cleared()
+  Local i
+
+  lx_parse_basic("Dim s$(20) Length 20")
+  assert_equals(7, lx_num)
+
+  lx_parse_basic("' comment")
+  assert_equals(1, lx_num)
+  For i = 1 To 10
+    assert_equals(0, lx_type(i))
+    assert_equals(0, lx_start(i))
+    assert_equals(0, lx_len(i))
+  Next i
 End Function
 
 Sub expect_success(num)

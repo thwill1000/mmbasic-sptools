@@ -1,14 +1,14 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
 '!comment_if INLINE_CONSTANTS
-Const TK_IDENTIFIER = 0
-Const TK_NUMBER = 1
-Const TK_COMMENT = 2
-Const TK_STRING = 3
-Const TK_KEYWORD = 4
-Const TK_SYMBOL = 5
-Const TK_DIRECTIVE = 6
-Const TK_OPTION = 7
+Const TK_IDENTIFIER = 1
+Const TK_NUMBER = 2
+Const TK_COMMENT = 3
+Const TK_STRING = 4
+Const TK_KEYWORD = 5
+Const TK_SYMBOL = 6
+Const TK_DIRECTIVE = 7
+Const TK_OPTION = 8
 '!endif
 
 Const LX_MAX_KEYWORDS = 1000
@@ -66,12 +66,18 @@ Sub lx_parse_basic(line$)
 End Sub
 
 Sub lx_reset_globals(line$)
+  ' Clear old token data
+  Do While lx_num > 0
+    lx_num = lx_num - 1
+    lx_type(lx_num) = 0
+    lx_start(lx_num) = 0
+    lx_len(lx_num) = 0
+  Loop
+
   err$ = ""
   lx_line$ = line$
   lx_next_char$ = ""
-  lx_num = 0
   lx_pos = 0
-  lx_type(0) = TK_COMMENT
 End Sub
 
 Sub lx_advance()
