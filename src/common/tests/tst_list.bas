@@ -5,7 +5,7 @@ Option Default Integer
 
 Dim err$
 
-#Include "../check.inc"
+#Include "../common.inc"
 #Include "../list.inc"
 #Include "../set.inc"
 #Include "../../sptest/unittest.inc"
