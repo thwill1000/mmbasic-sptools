@@ -1,5 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+Function check_file_included() : End Function
+
 ' Gets the parent directory of 'f$', or the empty string if it does not have one.
 Function fi_get_parent$(f$)
   Local c, i
@@ -78,4 +80,3 @@ End Function
 Function fi_exists(f$)
   fi_exists = Mm.Info(FileSize fi_get_canonical$(f$)) <> -1
 End Function
-

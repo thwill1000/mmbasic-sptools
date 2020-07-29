@@ -5,6 +5,7 @@ Option Default Integer
 
 Dim err$
 
+#Include "../check.inc"
 #Include "../file.inc"
 #Include "../list.inc"
 #Include "../set.inc"

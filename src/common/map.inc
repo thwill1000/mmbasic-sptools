@@ -1,5 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+Function check_map_included() : End Function
+
 ' Initialises the keys and values.
 Sub map_init(keys$(), values$(), num_elements)
   Local sz = num_elements ' don't want to change num_elements
@@ -73,4 +75,3 @@ Sub map_dump(keys$(), values$(), sz)
   Next i
   Print "END"
 End Sub
-

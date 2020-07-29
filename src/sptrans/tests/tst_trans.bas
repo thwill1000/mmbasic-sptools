@@ -9,6 +9,8 @@ Dim num_files = 1
 
 #Include "../lexer.inc"
 #Include "../trans.inc"
+#Include "../../common/check.inc"
+#Include "../../common/list.inc"
 #Include "../../common/map.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"

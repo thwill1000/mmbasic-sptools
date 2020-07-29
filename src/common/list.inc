@@ -1,5 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+Function check_list_included() : End Function
+
 ' Initialises the list.
 Sub list_init(list$(), sz)
   list_clear(list$(), sz)

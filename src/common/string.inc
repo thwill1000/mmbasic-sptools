@@ -1,5 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+Function check_string_included() : End Function
+
 Sub str_tokenise(s$, sep$, tokens$(), tokens_sz)
   Local c$, i, start = 1
   For i = 1 To Len(s$)
@@ -11,7 +13,7 @@ Sub str_tokenise(s$, sep$, tokens$(), tokens_sz)
     EndIf
   Next i
 
-  If i > start Then 
+  If i > start Then
     tokens$(tokens_sz) = Mid$(s$, start, i - start)
     tokens_sz = tokens_sz + 1
   EndIf
@@ -24,4 +26,3 @@ Function str_join$(tokens$(), tokens_sz, ch$)
     str_join$ = str_join$ + tokens$(i)
   Next i
 End Function
-

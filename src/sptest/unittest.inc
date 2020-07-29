@@ -1,14 +1,19 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Dim ut_tests$(100) Length 40
-Dim ut_tests_sz = 0
-Dim ut_failures$(100)
-Dim ut_failures_sz = 0
+check_included("list")
+check_included("set")
+
+Dim ut_tests_sz = 100
+Dim ut_tests$(ut_tests_sz - 1) Length 40
+Dim ut_failures_sz = 100
+Dim ut_failures$(ut_failures_sz - 1)
 Dim ut_asserts_count
 
+list_init(ut_tests$(), ut_tests_sz)
+list_init(ut_failures$(), ut_failures_sz)
+
 Sub add_test(test$)
-  ut_tests$(ut_tests_sz) = test$
-  ut_tests_sz = ut_tests_sz + 1
+  list_add(ut_tests$(), ut_tests_sz, test$)
 End Sub
 
 Sub fail(msg$)
@@ -22,8 +27,7 @@ Sub assert_true(z, msg$)
 End Sub
 
 Sub ut_add_failure(msg$)
-  ut_failures$(ut_failures_sz) = Str$(ut_asserts_count) + ": " + msg$
-  ut_failures_sz = ut_failures_sz + 1
+  list_add(ut_failures$(), ut_failures_sz, Str$(ut_asserts_count) + ": " + msg$)
 End Sub
 
 Sub assert_equals(expected As Integer, actual As Integer)
@@ -78,7 +82,7 @@ Sub run_tests()
     Print "  " + ut_tests$(i); ":"; Space$(35 - Len(ut_tests$(i)));
 
     ut_asserts_count = 0
-    ut_failures_sz = 0
+    list_clear(ut_failures$(), ut_failures_sz)
 
     setup_test()
     _ = Eval(ut_tests$(i) + "()")
@@ -104,9 +108,7 @@ Sub run_next_test_file()
   Local test_files_sz = 0
   Local f$, i, old$
 
-  On Error Skip 1
   set_init(test_files$(), MAX_NUM_TEST_FILES)
-  If Mm.ErrNo <> 0 Then Error "requires 'set.inc'"
 
   ' If there is a "tests/" directory then we look there for "tst_*" files,
   ' otherwise we look in the current working directory.

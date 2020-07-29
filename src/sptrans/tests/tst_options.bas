@@ -6,6 +6,8 @@ Option Default Integer
 Dim err$
 
 #Include "../options.inc"
+#Include "../../common/check.inc"
+#Include "../../common/list.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
 

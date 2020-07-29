@@ -1,5 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+Function check_set_included() : End Function
+
 ' Initialises the set.
 Sub set_init(set$(), num_elements)
   Local sz = num_elements ' don't want to change num_elements
@@ -66,4 +68,3 @@ Sub set_dump(set$(), sz)
   Next i
   Print "END"
 End Sub
-
