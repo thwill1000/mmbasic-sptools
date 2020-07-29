@@ -122,6 +122,11 @@ Sub run_next_test_file()
 
   If old$ <> "" Then ChDir old$
 
+  If test_files_sz = 0 Then
+    Print "No tests found"
+    Exit Sub
+  EndIf
+
   ' Lookup the index of the current file and run the next one.
   ' Note that if the current file was "sptest.bas" then the lookup returns -1
   ' and thus the first "tst_*.bas" file will be run.

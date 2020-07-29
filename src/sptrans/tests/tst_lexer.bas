@@ -5,9 +5,9 @@ Option Default Integer
 
 Dim err$
 
-#Include "unittest.inc"
 #Include "../lexer.inc"
-#Include "../set.inc"
+#Include "../../common/set.inc"
+#Include "../../sptest/unittest.inc"
 
 lx_load_keywords("\mbt\resources\keywords.txt")
 

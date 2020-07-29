@@ -5,9 +5,9 @@ Option Default Integer
 
 Dim err$
 
-#Include "unittest.inc"
 #Include "../options.inc"
-#Include "../set.inc"
+#Include "../../common/set.inc"
+#Include "../../sptest/unittest.inc"
 
 add_test("test_colour")
 add_test("test_comments")

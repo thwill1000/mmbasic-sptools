@@ -7,11 +7,11 @@ Dim err$
 Const MAX_NUM_FILES = 5
 Dim num_files = 1
 
-#Include "unittest.inc"
 #Include "../lexer.inc"
-#Include "../map.inc"
 #Include "../trans.inc"
-#Include "../set.inc"
+#Include "../../common/map.inc"
+#Include "../../common/set.inc"
+#Include "../../sptest/unittest.inc"
 
 lx_load_keywords("\mbt\resources\keywords.txt")
 

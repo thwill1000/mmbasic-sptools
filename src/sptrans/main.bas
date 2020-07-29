@@ -8,12 +8,15 @@ Const INSTALL_DIR$ = "\mbt"
 Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 
 #Include "lexer.inc"
-#Include "map.inc"
 #Include "options.inc"
 #Include "pprint.inc"
-#Include "set.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
+#Include "../common/file.inc"
+#Include "../common/list.inc"
+#Include "../common/map.inc"
+#Include "../common/set.inc"
+#Include "../common/string.inc"
 
 Dim num_files = 0
 ' We ignore the 0'th element in these.
@@ -41,25 +44,6 @@ Sub open_file(f$)
   file_stack$(num_files) = f2$
   cout(Space$(1 + num_files * 2))
 End Sub
-
-Function fi_get_parent$(f$)
-  Local ch$, p
-
-  p = Len(f$)
-  Do
-    ch$ = Chr$(Peek(Var f$, p))
-    If (ch$ = "/") Or (ch$ = "\") Then Exit Do
-    p = p - 1
-  Loop Until p = 0
-
-  If p > 0 Then fi_get_parent$ = Left$(f$, p)
-End Function
-
-Function fi_exists(f$)
-  Local s$ = Dir$(f$, File)
-  If s$ = "" Then s$ = Dir$(f$, Dir)
-  fi_exists = s$ <> ""
-End Function
 
 Sub close_file()
   Close #num_files

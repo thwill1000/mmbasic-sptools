@@ -7,11 +7,11 @@ Dim err$
 Dim mbt_in$
 Dim mbt_out$
 
-#Include "unittest.inc"
 #Include "../cmdline.inc"
 #Include "../lexer.inc"
 #Include "../options.inc"
-#Include "../set.inc"
+#Include "../../common/set.inc"
+#Include "../../sptest/unittest.inc"
 
 Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)
 Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)

@@ -5,8 +5,8 @@ Option Default Integer
 
 Dim err$
 
-#Include "unittest.inc"
 #Include "../set.inc"
+#Include "../../sptest/unittest.inc"
 
 add_test("test_init")
 add_test("test_put")

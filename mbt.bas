@@ -1,4 +1,4 @@
-' Transpiled on 22-07-2020 13:17:45
+' Transpiled on 29-07-2020 23:35:31
 
 ' Copyright (c) 2020 Thomas Hugo Williams
 '
@@ -14,15 +14,15 @@
 ' PROCESSED: !set INLINE_CONSTANTS
 
 ' From "lexer.inc"
-' PROCESSED: !replace TK_IDENTIFIER  0
-' PROCESSED: !replace TK_NUMBER      1
-' PROCESSED: !replace TK_COMMENT     2
-' PROCESSED: !replace TK_STRING      3
-' PROCESSED: !replace TK_KEYWORD     4
-' PROCESSED: !replace TK_SYMBOL      5
-' PROCESSED: !replace TK_DIRECTIVE   6
-' PROCESSED: !replace TK_OPTION      7
-' END:       #Include "src/constants.mbt" --------------------------------------
+' PROCESSED: !replace TK_IDENTIFIER  1
+' PROCESSED: !replace TK_NUMBER      2
+' PROCESSED: !replace TK_COMMENT     3
+' PROCESSED: !replace TK_STRING      4
+' PROCESSED: !replace TK_KEYWORD     5
+' PROCESSED: !replace TK_SYMBOL      6
+' PROCESSED: !replace TK_DIRECTIVE   7
+' PROCESSED: !replace TK_OPTION      8
+' END:       #Include "constants.mbt" ------------------------------------------
 ' BEGIN:     #Include "main.bas" -----------------------------------------------
 ' Copyright (c) 2020 Thomas Hugo Williams
 
@@ -37,28 +37,27 @@ Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 ' Copyright (c) 2020 Thomas Hugo Williams
 
 ' PROCESSED: !comment_if INLINE_CONSTANTS
-' Const TK_IDENTIFIER = 0
-' Const TK_NUMBER = 1
-' Const TK_COMMENT = 2
-' Const TK_STRING = 3
-' Const TK_KEYWORD = 4
-' Const TK_SYMBOL = 5
-' Const TK_DIRECTIVE = 6
-' Const TK_OPTION = 7
+' Const TK_IDENTIFIER = 1
+' Const TK_NUMBER = 2
+' Const TK_COMMENT = 3
+' Const TK_STRING = 4
+' Const TK_KEYWORD = 5
+' Const TK_SYMBOL = 6
+' Const TK_DIRECTIVE = 7
+' Const TK_OPTION = 8
 ' PROCESSED: !endif
 
-Const LX_MAX_KEYWORDS = 600
+Const LX_MAX_KEYWORDS = 1000
 Dim lx_keywords$(LX_MAX_KEYWORDS - 1) Length 20
 Dim lx_keywords_sz = 0
 set_init(lx_keywords$(), LX_MAX_KEYWORDS)
 
-Const LX_MAX_TOKENS = 50
+Const LX_MAX_TOKENS = 100
 Dim lx_type(LX_MAX_TOKENS - 1)
 Dim lx_start(LX_MAX_TOKENS - 1)
 Dim lx_len(LX_MAX_TOKENS - 1)
 
 Dim lx_char$
-Dim lx_error$
 Dim lx_line$
 Dim lx_next_char$
 Dim lx_num
@@ -98,17 +97,23 @@ Sub lx_parse_basic(line$)
       lx_parse_symbol()
     EndIf
 
-    If lx_error$ <> "" Then Exit Do
+    If err$ <> "" Then Exit Do
   Loop
 End Sub
 
 Sub lx_reset_globals(line$)
-  lx_error$ = ""
+  ' Clear old token data
+  Do While lx_num > 0
+    lx_num = lx_num - 1
+    lx_type(lx_num) = 0
+    lx_start(lx_num) = 0
+    lx_len(lx_num) = 0
+  Loop
+
+  err$ = ""
   lx_line$ = line$
   lx_next_char$ = ""
-  lx_num = 0
   lx_pos = 0
-  lx_type(0) = 2
 End Sub
 
 Sub lx_advance()
@@ -140,7 +145,7 @@ Sub lx_parse_number()
     ElseIf lx_next_char$ = "o" Then
       lx_parse_octal()
     Else
-      Then lx_error$ = "Unknown literal type &" + lx_next_char$ : Exit Sub
+      Then err$ = "Unknown literal type &" + lx_next_char$ : Exit Sub
     EndIf
   EndIf
 End Sub
@@ -161,7 +166,7 @@ Sub lx_parse_decimal()
     lx_advance_while("0123456789")
   EndIf
 
-  lx_store(1, start, lx_pos - start)
+  lx_store(2, start, lx_pos - start)
 End Sub
 
 Sub lx_store(type, start, length)
@@ -182,7 +187,7 @@ Sub lx_parse_binary()
   lx_advance()
   lx_advance()
   lx_advance_while("01")
-  lx_store(1, start, lx_pos - start)
+  lx_store(2, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_hexadecimal()
@@ -191,7 +196,7 @@ Sub lx_parse_hexadecimal()
   lx_advance()
   lx_advance()
   lx_advance_while("0123456789abcdefABCDEF")
-  lx_store(1, start, lx_pos - start)
+  lx_store(2, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_octal()
@@ -200,7 +205,7 @@ Sub lx_parse_octal()
   lx_advance()
   lx_advance()
   lx_advance_while("01234567")
-  lx_store(1, start, lx_pos - start)
+  lx_store(2, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_comment_or_directive()
@@ -217,11 +222,11 @@ Sub lx_parse_directive()
   lx_advance()
   lx_advance()
   lx_advance_while("-_abcdefghijklmnopqrstuvwxyz0123456789")
-  lx_store(6, start, lx_pos - start)
+  lx_store(7, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_comment()
-  lx_store(2, lx_pos, Len(lx_line$) - lx_pos + 1)
+  lx_store(3, lx_pos, Len(lx_line$) - lx_pos + 1)
   lx_char$ = Chr$(10)
 End Sub
 
@@ -230,8 +235,8 @@ Sub lx_parse_string()
 
   lx_advance()
   lx_advance_until(Chr$(10) + Chr$(34))
-  If lx_char$ = Chr$(10) Then lx_error$ = "No closing quote" : Exit Sub
-  lx_store(3, start, lx_pos - start + 1)
+  If lx_char$ = Chr$(10) Then err$ = "No closing quote" : Exit Sub
+  lx_store(4, start, lx_pos - start + 1)
   lx_advance()
 End Sub
 
@@ -246,9 +251,9 @@ Sub lx_parse_keyword()
   lx_advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
   If lx_char$ = "$" Then lx_advance()
   If lx_is_keyword(Mid$(lx_line$, start, lx_pos - start)) Then
-    lx_store(4, start, lx_pos - start)
+    lx_store(5, start, lx_pos - start)
   Else
-    lx_store(0, start, lx_pos - start)
+    lx_store(1, start, lx_pos - start)
   EndIf
 End Sub
 
@@ -260,15 +265,15 @@ Sub lx_parse_symbol()
   Local start = lx_pos
 
   If lx_char$ <> "<" And lx_char$ <> ">" And lx_char$ <> "=" Then
-    lx_store(5, start, 1)
+    lx_store(6, start, 1)
     lx_advance()
   Else
     lx_advance()
     If lx_char$ = "<" Or lx_char$ = ">" Or lx_char$ = "=" Then
-      lx_store(5, start, 2)
+      lx_store(6, start, 2)
       lx_advance()
     Else
-      lx_store(5, start, 1)
+      lx_store(6, start, 1)
     EndIf
   EndIf
 End Sub
@@ -293,7 +298,7 @@ End Function
 '
 ' Throws an Error if token 'i' is not a directive.
 Function lx_directive$(i)
-  If lx_type(i) <> 6 Then Error "{" + lx_token$(i) + "} is not a directive"
+  If lx_type(i) <> 7 Then Error "{" + lx_token$(i) + "} is not a directive"
   lx_directive$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 1)
 End Function
 
@@ -301,15 +306,15 @@ End Function
 '
 ' Throws an Error if token 'i' is not a string literal.
 Function lx_string$(i)
-  If lx_type(i) <> 3 Then Error "{" + lx_token$(i) + "} is not a string literal"
+  If lx_type(i) <> 4 Then Error "{" + lx_token$(i) + "} is not a string literal"
   lx_string$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 2)
 End Function
 
 ' Gets the number corresponding to token 'i'.
 '
 ' Throws an Error if token 'i' is not a number literal.
-Function lx_number(i)
-  If lx_type(i) <> 1 Then Error "{" + lx_token$(i) + "} is not a number literal"
+Function lx_number(i) As Float
+  If lx_type(i) <> 2 Then Error "{" + lx_token$(i) + "} is not a number literal"
   lx_number = Val(lx_token$(i))
 End Function
 
@@ -317,7 +322,7 @@ End Function
 Sub lx_tokenise(line$)
   Local start = -1
 
-  lx_error$ = ""
+  err$ = ""
   lx_line$ = line$
   lx_next_char$ = ""
   lx_num = 0
@@ -327,7 +332,7 @@ Sub lx_tokenise(line$)
   Do While lx_char$ <> Chr$(10)
     If lx_char$ = " " Then
       If start > -1 Then
-        lx_store(0, start, lx_pos - start)
+        lx_store(1, start, lx_pos - start)
         start = -1
       EndIf
     Else
@@ -336,7 +341,7 @@ Sub lx_tokenise(line$)
     lx_advance()
   Loop
 
-  If start > -1 Then lx_store(0, start, lx_pos - start)
+  If start > -1 Then lx_store(1, start, lx_pos - start)
 End Sub
 
 Sub lx_parse_command_line(line$)
@@ -360,7 +365,7 @@ Sub lx_parse_command_line(line$)
       lx_parse_symbol()
     EndIf
 
-    If lx_error$ <> "" Then Exit Do
+    If err$ <> "" Then Exit Do
   Loop
 End Sub
 
@@ -382,103 +387,25 @@ Sub lx_parse_option()
 
   If e = 1 Or InStr("= " + Chr$(10), lx_char$) < 1 Then
     If InStr("= " + Chr$(10), lx_char$) < 1 Then lx_advance()
-    lx_error$ = "Illegal command-line option format: " + Mid$(lx_line$, start, lx_pos - start)
+    err$ = "Illegal command-line option format: " + Mid$(lx_line$, start, lx_pos - start)
     Exit Sub
   EndIf
 
-  lx_store(7, start, lx_pos - start)
+  lx_store(8, start, lx_pos - start)
 End Sub
 
 ' Gets the command-line option corresponding to token 'i'.
 '
 ' Throws an Error if token 'i' is not a command-line option.
 Function lx_option$(i)
-  If lx_type(i) <> 7 Then Error "{" + lx_token$(i) + "} is not a command-line option"
+  If lx_type(i) <> 8 Then Error "{" + lx_token$(i) + "} is not a command-line option"
   If Mid$(lx_line$, lx_start(i), 2) = "--" Then
     lx_option$ = Mid$(lx_line$, lx_start(i) + 2, lx_len(i) - 2)
   Else
     lx_option$ = Mid$(lx_line$, lx_start(i) + 1, lx_len(i) - 1)
   EndIf
 End Function
-' END:       #Include "src/lexer.inc" ------------------------------------------
-' BEGIN:     #Include "map.inc" ------------------------------------------------
-' Copyright (c) 2020 Thomas Hugo Williams
-
-' Initialises the keys and values.
-Sub map_init(keys$(), values$(), num_elements)
-  Local sz = num_elements ' don't want to change num_elements
-  map_clear(keys$(), values$(), sz)
-End Sub
-
-' Clears the keys and values and resets the size.
-Sub map_clear(keys$(), values$(), sz)
-  Local i
-  For i = 0 To sz - 1
-    keys$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
-    values$(i) = Chr$(0)
-  Next i
-  sz = 0
-End Sub
-
-' Adds a key/value pair.
-Sub map_put(keys$(), values$(), sz, k$, v$)
-  Local i = set_get(keys$(), sz, k$)
-  If i <> -1 Then values$(i) = v$ : Exit Sub
-  keys$(sz) = k$
-  values$(sz) = v$
-  sz = sz + 1
-  If sz > 1 Then
-    If keys$(sz - 1) < keys$(sz - 2) Then map_sort(keys$(), values$(), sz)
-  EndIf
-End Sub
-
-' Resorts the keys and values.
-Sub map_sort(keys$(), values$(), sz)
-  Local i, idx(sz - 1), k$(sz - 1), v$(sz - 1)
-
-  For i = 0 To sz - 1
-    k$(i) = keys$(i)
-    v$(i) = values$(i)
-  Next i
-
-  Sort k$(), idx()
-
-  For i = 0 To sz - 1
-    keys$(i) = k$(i)
-    values$(i) = v$(idx(i))
-  Next i
-End Sub
-
-' Gets the value corresponding to a key, or Chr$(0) if the key is not present.
-Function map_get$(keys$(), values$(), sz, k$)
-  Local i = set_get(keys$(), sz, k$)
-  If i > -1 Then map_get$ = values$(i) Else map_get$ = Chr$(0)
-End Function
-
-' Removes a key/value pair.
-Sub map_remove(keys$(), values$(), sz, k$)
-  Local i = set_get(keys$(), sz, k$)
-  If i > -1 Then
-    keys$(i) = Chr$(&h7F)
-    values$(i) = Chr$(0)
-    If sz > 1 Then map_sort(keys$(), values$(), sz)
-    sz = sz - 1
-  EndIf
-End Sub
-
-' Prints the contents of the map.
-Sub map_dump(keys$(), values$(), sz)
-  Local i, length
-  For i = 0 To sz - 1
-    If Len(keys$(i)) > length Then length = Len(keys$(i))
-  Next i
-  For i = 0 To sz - 1
-    Print "["; Str$(i); "] "; keys$(i); Space$(length - Len(keys$(i))); " => "; values$(i)
-  Next i
-  Print "END"
-End Sub
-
-' END:       #Include "src/map.inc" --------------------------------------------
+' END:       #Include "lexer.inc" ----------------------------------------------
 ' BEGIN:     #Include "options.inc" --------------------------------------------
 ' Copyright (c) 2020 Thomas Hugo Williams
 
@@ -594,7 +521,7 @@ Sub op_set_spacing(value$)
       err$ = "expects 'on|minimal|compact|generous' argument"
   End Select
 End Sub
-' END:       #Include "src/options.inc" ----------------------------------------
+' END:       #Include "options.inc" --------------------------------------------
 ' BEGIN:     #Include "pprint.inc" ---------------------------------------------
 ' Copyright (c) 2020 Thomas Hugo Williams
 
@@ -607,14 +534,14 @@ Const VT100_CYAN = Chr$(27) + "[36m"
 Const VT100_WHITE = Chr$(27) + "[37m"
 Const VT100_RESET = Chr$(27) + "[0m"
 
-Dim TK_COLOUR$(6)
-TK_COLOUR$(0) = VT100_WHITE
-TK_COLOUR$(1) = VT100_GREEN
-TK_COLOUR$(2) = VT100_YELLOW
-TK_COLOUR$(3) = VT100_MAGENTA
-TK_COLOUR$(4) = VT100_CYAN
-TK_COLOUR$(5) = VT100_WHITE
-TK_COLOUR$(6) = VT100_RED
+Dim TK_COLOUR$(7)
+TK_COLOUR$(1) = VT100_WHITE
+TK_COLOUR$(2) = VT100_GREEN
+TK_COLOUR$(3) = VT100_YELLOW
+TK_COLOUR$(4) = VT100_MAGENTA
+TK_COLOUR$(5) = VT100_CYAN
+TK_COLOUR$(6) = VT100_WHITE
+TK_COLOUR$(7) = VT100_RED
 
 Dim pp_count
 Dim pp_previous = 0 ' 0 : previous line was empty
@@ -631,7 +558,7 @@ Sub pp_open(f$)
 
   If op_format_only = 0 Then
     pp_inc_line()
-    pp_attrib(TK_COLOUR$(2))
+    pp_attrib(TK_COLOUR$(3))
     pp_out("' Transpiled on " + DateTime$(Now)) : pp_endl()
     pp_attrib(VT100_RESET)
     pp_inc_line()
@@ -661,7 +588,7 @@ Sub pp_print_line()
   ' Ignore lines consisting solely of a comment if the 'comments' option is 0.
   If op_comments = 0 Then
     If lx_num = 1 Then
-      If lx_type(0) = 2 Then Exit Sub
+      If lx_type(0) = 3 Then Exit Sub
     EndIf
   EndIf
 
@@ -676,7 +603,7 @@ Sub pp_print_line()
     ' any further tokens ... there shouldn't be any.
     If op_comments = 0 Then
       If i = lx_num - 1 Then
-        If lx_type(i) = 2 Then Exit For
+        If lx_type(i) = 3 Then Exit For
       EndIf
     EndIf
 
@@ -743,7 +670,7 @@ Sub pp_print_line()
 
   pp_attrib(VT100_RESET)
   pp_endl()
-  If lx_type(0) = 2 Then pp_previous = 1 Else pp_previous = 2
+  If lx_type(0) = 3 Then pp_previous = 1 Else pp_previous = 2
 
   ' If the 'empty-lines' option is 'single|1' and the line ends with
   ' End {Function|Sub} then print one.
@@ -785,7 +712,7 @@ Function pp_num_spaces(i)
     ' Don't need a space before an opening bracket
     ' unless it is preceeded by a symbol.
     If u$ = "(" Then
-      If lx_type(i) <> 5 Then Exit Function
+      If lx_type(i) <> 6 Then Exit Function
     EndIf
 
     ' Don't need a space after +/- if preceeded by equals.
@@ -796,28 +723,28 @@ Function pp_num_spaces(i)
     EndIf
 
     ' Need a space before/after any symbol.
-    If lx_type(i) = 5 Then pp_num_spaces = 1 : Exit Function
-    If lx_type(i + 1) = 5 Then pp_num_spaces = 1 : Exit Function
+    If lx_type(i) = 6 Then pp_num_spaces = 1 : Exit Function
+    If lx_type(i + 1) = 6 Then pp_num_spaces = 1 : Exit Function
   EndIf
 
   ' Rules applying to 'compact' spacing.
   If op_spacing >= 1 Then
     ' Need a space between a keyword/identifier and string.
-    If lx_type(i) = 4 Or lx_type(i) = 0 Then
-      If lx_type(i + 1) = 3 Then pp_num_spaces = 1 : Exit Function
+    If lx_type(i) = 5 Or lx_type(i) = 1 Then
+      If lx_type(i + 1) = 4 Then pp_num_spaces = 1 : Exit Function
     EndIf
 
     ' Need a space before a comment.
-    If lx_type(i + 1) = 2 Then pp_num_spaces = 1 : Exit Function
+    If lx_type(i + 1) = 3 Then pp_num_spaces = 1 : Exit Function
 
     ' Need a space after a string unless followed by a symbol.
-    If lx_type(i) = 3 Then
-      If lx_type(i + 1) <> 5 Then pp_num_spaces = 1 : Exit Function
+    If lx_type(i) = 4 Then
+      If lx_type(i + 1) <> 6 Then pp_num_spaces = 1 : Exit Function
     EndIf
 
     ' Space after a closing bracket unless followed by a symbol.
     If lx_token$(i) = ")" Then
-      If lx_type(i + 1) <> 5 Then pp_num_spaces = 1 : Exit Function
+      If lx_type(i + 1) <> 6 Then pp_num_spaces = 1 : Exit Function
     EndIf
 
     ' Need a space before or after a ':'
@@ -827,9 +754,9 @@ Function pp_num_spaces(i)
 
   ' Rules applying to minimal spacing
   Select Case lx_type(i)
-    Case 4, 0, 1, 6
+    Case 5, 1, 2, 7
       Select Case lx_type(i + 1)
-        Case 4, 0, 1
+        Case 5, 1, 2
           pp_num_spaces = 1
       End Select
   End Select
@@ -850,78 +777,7 @@ End Sub
 Sub pp_endl()
   If pp_file_num < 0 Then Print Else Print #pp_file_num
 End Sub
-' END:       #Include "src/pprint.inc" -----------------------------------------
-' BEGIN:     #Include "set.inc" ------------------------------------------------
-' Copyright (c) 2020 Thomas Hugo Williams
-
-' Initialises the set.
-Sub set_init(set$(), num_elements)
-  Local sz = num_elements ' don't want to change num_elements
-  set_clear(set$(), sz)
-End Sub
-
-' Clears the set and resets the size.
-Sub set_clear(set$(), sz)
-  Local i
-  For i = 0 To sz - 1
-    set$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
-  Next i
-  sz = 0
-End Sub
-
-' Adds a value to the set.
-Sub set_put(set$(), sz, s$)
-  If set_get(set$(), sz, s$) <> -1  Then Exit Sub
-  set$(sz) = s$
-  sz = sz + 1
-  If sz > 1 Then
-    If set$(sz - 1) < set$(sz - 2) Then
-      Sort set$()
-    EndIf
-  EndIf
-End Sub
-
-' Gets the index of a value in the set, or -1 if not present.
-Function set_get(set$(), sz, s$)
-  Local i, lb, ub
-
-  ' Binary search of set$()
-  lb = 0
-  ub = sz - 1
-  Do
-    i = (lb + ub) \ 2
-    If s$ > set$(i) Then
-      lb = i + 1
-    ElseIf s$ < set$(i) Then
-      ub = i - 1
-    Else
-      set_get = i : Exit Function
-    EndIf
-  Loop Until ub < lb
-
-  set_get = -1
-End Function
-
-' Removes a value from the set if present.
-Sub set_remove(set$(), sz, s$)
-  Local i = set_get(set$(), sz, s$)
-  If i > -1 Then
-    set$(i) = Chr$(&h7F)
-    Sort set$()
-    sz = sz - 1
-  EndIf
-End Sub
-
-' Prints the contents of the set.
-Sub set_dump(set$(), sz)
-  Local i
-  For i = 0 To sz - 1
-    Print "["; Str$(i); "] "; set$(i)
-  Next i
-  Print "END"
-End Sub
-
-' END:       #Include "src/set.inc" --------------------------------------------
+' END:       #Include "pprint.inc" ---------------------------------------------
 ' BEGIN:     #Include "trans.inc" ----------------------------------------------
 ' Copyright (c) 2020 Thomas Hugo Williams
 
@@ -947,17 +803,17 @@ map_init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
 
 Sub transpile(s$)
   lx_parse_basic(s$)
-  If lx_error$ <> "" Then cerror(lx_error$)
+  If err$ <> "" Then cerror(err$)
 
   If lx_token_lc$(0) = "'!endif" Then process_endif()
 
   add_comments()
   apply_replacements()
-  If lx_error$ <> "" Then cerror(lx_error$)
+  If err$ <> "" Then cerror(err$)
 
   If lx_token_lc$(0) = "#include" Then process_include()
 
-  If lx_type(0) <> 6 Then Exit Sub
+  If lx_type(0) <> 7 Then Exit Sub
 
   Local t$ = lx_directive$(0)
   If     t$ = "!clear"        Then : process_clear()
@@ -995,7 +851,7 @@ Sub add_comments()
   If nc > 0 Then
     lx_parse_basic(String$(nc, "'") + " " + lx_line$)
   ElseIf nc < 0 Then
-    Do While nc < 0 And lx_num > 0 And lx_type(0) = 2
+    Do While nc < 0 And lx_num > 0 And lx_type(0) = 3
       lx_parse_basic(Space$(lx_start(0)) + Right$(lx_line$, Len(lx_line$) - lx_start(0)))
       nc = nc + 1
     Loop
@@ -1082,7 +938,7 @@ Sub process_empty_lines()
 End Sub
 
 Sub process_include()
-  If lx_num <> 2 Or lx_type(1) <> 3 Then
+  If lx_num <> 2 Or lx_type(1) <> 4 Then
     cerror("Syntax error: #Include expects a <file> argument")
   EndIf
   open_file(lx_string$(1))
@@ -1119,7 +975,7 @@ Sub process_spacing()
   If err$ <> "" Then cerror("Syntax error: !spacing directive " + err$)
 End Sub
 
-' END:       #Include "src/trans.inc" ------------------------------------------
+' END:       #Include "trans.inc" ----------------------------------------------
 ' BEGIN:     #Include "cmdline.inc" --------------------------------------------
 ' Copyright (c) 2020 Thomas Hugo Williams
 
@@ -1129,13 +985,12 @@ End Sub
 Sub cl_parse(s$)
   Local i = 0, o$
 
-  err$ = ""
   lx_parse_command_line(s$)
-  If lx_error$ <> "" Then err$ = lx_error$ : Exit Sub
+  If err$ <> "" Then Exit Sub
 
   ' Process options.
 
-  Do While i < lx_num And err$ = "" And lx_type(i) = 7
+  Do While i < lx_num And err$ = "" And lx_type(i) = 8
     Select Case lx_option$(i)
       Case "C", "colour"      : cl_parse_no_arg("colour", i)
       Case "e", "empty-lines" : cl_parse_arg("empty-lines", i, "{0|1}")
@@ -1155,12 +1010,12 @@ Sub cl_parse(s$)
   ' Process arguments.
 
   If i >= lx_num Then err$ = "no input file specified" : Exit Sub
-  If lx_type(i) <> 3 Then err$ = "input file name must be quoted" : Exit Sub
+  If lx_type(i) <> 4 Then err$ = "input file name must be quoted" : Exit Sub
   mbt_in$ = lx_string$(i)
   i = i + 1
 
   If i >= lx_num Then Exit Sub
-  If lx_type(i) <> 3 Then err$ = "output file name must be quoted" : Exit Sub
+  If lx_type(i) <> 4 Then err$ = "output file name must be quoted" : Exit Sub
   mbt_out$ = lx_string$(i)
   i = i + 1
 
@@ -1232,7 +1087,333 @@ Sub cl_version()
   Print
   Print "Written by Thomas Hugo Williams."
 End Sub
-' END:       #Include "src/cmdline.inc" ----------------------------------------
+' END:       #Include "cmdline.inc" --------------------------------------------
+' BEGIN:     #Include "../common/file.inc" -------------------------------------
+' Copyright (c) 2020 Thomas Hugo Williams
+
+' Gets the parent directory of 'f$', or the empty string if it does not have one.
+Function fi_get_parent$(f$)
+  Local c, i
+
+  For i = Len(f$) To 1 Step -1
+    c = Asc(Mid$(f$, i, 1))
+    ' ASCII 47= / and ASCII 92 = \
+    If c = 47 Or c = 92 Then Exit For
+  Next i
+  If i = 0 Then
+    fi_get_parent$ = ""
+  Else
+    fi_get_parent$ = Left$(f$, i - 1)
+  EndIf
+End Function
+
+' Gets the name of file/directory 'f$' minus any path information.
+Function fi_get_name$(f$)
+  Local c, i
+
+  For i = Len(f$) To 1 Step -1
+    c = Asc(Mid$(f$, i, 1))
+    ' ASCII 47= / and ASCII 92 = \
+    If c = 47 Or c = 92 Then Exit For
+  Next i
+  fi_get_name$ = Mid$(f$, i + 1)
+End Function
+
+Function fi_is_absolute(f$)
+  fi_is_absolute = 1
+  If InStr(f$, "/") = 1 Then Exit Function
+  If InStr(f$, "\") = 1 Then Exit Function
+  If InStr(UCase$(f$), "A:\") = 1 Then Exit Function
+  If InStr(UCase$(f$), "A:/") = 1 Then Exit Function
+  fi_is_absolute = 0
+End Function
+
+' Gets the canonical path for file/directory 'f$'.
+Function fi_get_canonical$(f$)
+  Local i
+  Local sz = 20
+  Local elements$(sz - 1) Length 40
+
+  list_init(elements$(), sz)
+
+  If fi_is_absolute(f$) Then
+    If Instr(UCase$(f$), "A:") = 1 Then
+      str_tokenise(f$, "/\", elements$(), sz)
+    Else
+      str_tokenise("A:" + f$, "/\", elements$(), sz)
+    EndIf
+  Else
+    str_tokenise(Cwd$ + "/" + f$, "/\", elements$(), sz)
+  EndIf
+
+  elements$(0) = "A:"
+
+  Do While i < sz
+    If elements$(i) = "." Then
+      list_remove(elements$(), sz, i)
+    ElseIf elements$(i) = ".." Then
+      list_remove(elements$(), sz, i)
+      list_remove(elements$(), sz, i - 1)
+      i = i - 1
+    Else
+      i = i + 1
+    EndIf
+  Loop
+
+  fi_get_canonical$ = str_join$(elements$(), sz, "/")
+End Function
+
+' Does the file/directory 'f$' exist?
+'
+' @return  1 if the file exists, otherwise 0.
+Function fi_exists(f$)
+  fi_exists = Mm.Info(FileSize fi_get_canonical$(f$)) <> -1
+End Function
+
+' END:       #Include "../common/file.inc" -------------------------------------
+' BEGIN:     #Include "../common/list.inc" -------------------------------------
+' Copyright (c) 2020 Thomas Hugo Williams
+
+' Initialises the list.
+Sub list_init(list$(), sz)
+  list_clear(list$(), sz)
+End Sub
+
+' Clears the list and resets the size.
+Sub list_clear(elements$(), sz)
+  Do While sz > 0
+    sz = sz - 1
+    elements$(sz) = Chr$(&h7F) ' so empty elements are at the end when sorted
+  Loop
+End Sub
+
+' Appends an element to the end of the list.
+Sub list_add(elements$(), sz, s$)
+  elements$(sz) = s$
+  sz = sz + 1
+End Sub
+
+' Inserts an element into the list.
+Sub list_insert(elements$(), sz, index, s$)
+  Local i
+  If index > sz Then Error "index > sz"
+  For i = sz To index + 1 Step -1
+    elements$(i) = elements$(i - 1)
+  Next i
+  elements$(i) = s$
+  sz = sz + 1
+End Sub
+
+' Removes an element from the list.
+Sub list_remove(elements$(), sz, index)
+  Local i
+  If index >= sz Then Error "index >= sz"
+  For i = index To sz - 1
+    elements$(i) = elements$(i + 1)
+  Next i
+  sz = sz - 1
+  elements$(sz) = Chr$(&h7F)
+End Sub
+
+' Removes and returns the element at the end of the list.
+Function list_pop$(elements$(), sz)
+  sz = sz - 1
+  If sz >= 0 Then list_pop$ = elements$(sz) Else list_pop$ = Chr$(&h7F)
+End Function
+
+' Appends an element to the end of the list.
+Sub list_push(elements$(), sz, s$)
+  elements$(sz) = s$
+  sz = sz + 1
+End Sub
+
+' Prints the contents of the list.
+Sub list_dump(elements$(), sz)
+  Local i
+  For i = 0 To sz - 1
+    Print "[" Str$(i) "] " elements$(i)
+  Next i
+  Print "END"
+End Sub
+' END:       #Include "../common/list.inc" -------------------------------------
+' BEGIN:     #Include "../common/map.inc" --------------------------------------
+' Copyright (c) 2020 Thomas Hugo Williams
+
+' Initialises the keys and values.
+Sub map_init(keys$(), values$(), num_elements)
+  Local sz = num_elements ' don't want to change num_elements
+  map_clear(keys$(), values$(), sz)
+End Sub
+
+' Clears the keys and values and resets the size.
+Sub map_clear(keys$(), values$(), sz)
+  Local i
+  For i = 0 To sz - 1
+    keys$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
+    values$(i) = Chr$(0)
+  Next i
+  sz = 0
+End Sub
+
+' Adds a key/value pair.
+Sub map_put(keys$(), values$(), sz, k$, v$)
+  Local i = set_get(keys$(), sz, k$)
+  If i <> -1 Then values$(i) = v$ : Exit Sub
+  keys$(sz) = k$
+  values$(sz) = v$
+  sz = sz + 1
+  If sz > 1 Then
+    If keys$(sz - 1) < keys$(sz - 2) Then map_sort(keys$(), values$(), sz)
+  EndIf
+End Sub
+
+' Resorts the keys and values.
+Sub map_sort(keys$(), values$(), sz)
+  Local i, idx(sz - 1), k$(sz - 1), v$(sz - 1)
+
+  For i = 0 To sz - 1
+    k$(i) = keys$(i)
+    v$(i) = values$(i)
+  Next i
+
+  Sort k$(), idx()
+
+  For i = 0 To sz - 1
+    keys$(i) = k$(i)
+    values$(i) = v$(idx(i))
+  Next i
+End Sub
+
+' Gets the value corresponding to a key, or Chr$(0) if the key is not present.
+Function map_get$(keys$(), values$(), sz, k$)
+  Local i = set_get(keys$(), sz, k$)
+  If i > -1 Then map_get$ = values$(i) Else map_get$ = Chr$(0)
+End Function
+
+' Removes a key/value pair.
+Sub map_remove(keys$(), values$(), sz, k$)
+  Local i = set_get(keys$(), sz, k$)
+  If i > -1 Then
+    keys$(i) = Chr$(&h7F)
+    values$(i) = Chr$(0)
+    If sz > 1 Then map_sort(keys$(), values$(), sz)
+    sz = sz - 1
+  EndIf
+End Sub
+
+' Prints the contents of the map.
+Sub map_dump(keys$(), values$(), sz)
+  Local i, length
+  For i = 0 To sz - 1
+    If Len(keys$(i)) > length Then length = Len(keys$(i))
+  Next i
+  For i = 0 To sz - 1
+    Print "["; Str$(i); "] "; keys$(i); Space$(length - Len(keys$(i))); " => "; values$(i)
+  Next i
+  Print "END"
+End Sub
+
+' END:       #Include "../common/map.inc" --------------------------------------
+' BEGIN:     #Include "../common/set.inc" --------------------------------------
+' Copyright (c) 2020 Thomas Hugo Williams
+
+' Initialises the set.
+Sub set_init(set$(), num_elements)
+  Local sz = num_elements ' don't want to change num_elements
+  set_clear(set$(), sz)
+End Sub
+
+' Clears the set and resets the size.
+Sub set_clear(set$(), sz)
+  Local i
+  For i = 0 To sz - 1
+    set$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
+  Next i
+  sz = 0
+End Sub
+
+' Adds a value to the set.
+Sub set_put(set$(), sz, s$)
+  If set_get(set$(), sz, s$) <> -1  Then Exit Sub
+  set$(sz) = s$
+  sz = sz + 1
+  If sz > 1 Then
+    If set$(sz - 1) < set$(sz - 2) Then
+      Sort set$()
+    EndIf
+  EndIf
+End Sub
+
+' Gets the index of a value in the set, or -1 if not present.
+Function set_get(set$(), sz, s$)
+  Local i, lb, ub
+
+  ' Binary search of set$()
+  lb = 0
+  ub = sz - 1
+  Do
+    i = (lb + ub) \ 2
+    If s$ > set$(i) Then
+      lb = i + 1
+    ElseIf s$ < set$(i) Then
+      ub = i - 1
+    Else
+      set_get = i : Exit Function
+    EndIf
+  Loop Until ub < lb
+
+  set_get = -1
+End Function
+
+' Removes a value from the set if present.
+Sub set_remove(set$(), sz, s$)
+  Local i = set_get(set$(), sz, s$)
+  If i > -1 Then
+    set$(i) = Chr$(&h7F)
+    Sort set$()
+    sz = sz - 1
+  EndIf
+End Sub
+
+' Prints the contents of the set.
+Sub set_dump(set$(), sz)
+  Local i
+  For i = 0 To sz - 1
+    Print "["; Str$(i); "] "; set$(i)
+  Next i
+  Print "END"
+End Sub
+
+' END:       #Include "../common/set.inc" --------------------------------------
+' BEGIN:     #Include "../common/string.inc" -----------------------------------
+' Copyright (c) 2020 Thomas Hugo Williams
+
+Sub str_tokenise(s$, sep$, tokens$(), tokens_sz)
+  Local c$, i, start = 1
+  For i = 1 To Len(s$)
+    c$ = Mid$(s$, i, 1)
+    If Instr(sep$, c$) > 0 Then
+      tokens$(tokens_sz) = Mid$(s$, start, i - start)
+      tokens_sz = tokens_sz + 1
+      start = i + 1
+    EndIf
+  Next i
+
+  If i > start Then
+    tokens$(tokens_sz) = Mid$(s$, start, i - start)
+    tokens_sz = tokens_sz + 1
+  EndIf
+End Sub
+
+Function str_join$(tokens$(), tokens_sz, ch$)
+  Local i
+  For i = 0 To tokens_sz - 1
+    If i > 0 Then str_join$ = str_join$ + ch$
+    str_join$ = str_join$ + tokens$(i)
+  Next i
+End Function
+
+' END:       #Include "../common/string.inc" -----------------------------------
 
 Dim num_files = 0
 ' We ignore the 0'th element in these.
@@ -1260,25 +1441,6 @@ Sub open_file(f$)
   file_stack$(num_files) = f2$
   cout(Space$(1 + num_files * 2))
 End Sub
-
-Function fi_get_parent$(f$)
-  Local ch$, p
-
-  p = Len(f$)
-  Do
-    ch$ = Chr$(Peek(Var f$, p))
-    If (ch$ = "/") Or (ch$ = "\") Then Exit Do
-    p = p - 1
-  Loop Until p = 0
-
-  If p > 0 Then fi_get_parent$ = Left$(f$, p)
-End Function
-
-Function fi_exists(f$)
-  Local s$ = Dir$(f$, File)
-  If s$ = "" Then s$ = Dir$(f$, Dir)
-  fi_exists = s$ <> ""
-End Function
 
 Sub close_file()
   Close #num_files
@@ -1337,7 +1499,7 @@ Sub main()
     s$ = read_line$()
     If op_format_only Then
       lx_parse_basic(s$)
-      If lx_error$ <> "" Then cerror(lx_error$)
+      If err$ <> "" Then cerror(err$)
     Else
       transpile(s$)
     EndIf
@@ -1365,5 +1527,5 @@ End Sub
 
 main()
 End
-' END:       #Include "src/main.bas" -------------------------------------------
+' END:       #Include "main.bas" -----------------------------------------------
 
