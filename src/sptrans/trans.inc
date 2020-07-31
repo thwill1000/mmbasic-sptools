@@ -28,10 +28,8 @@ map_init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
 ' Set to name of file after processing #Include
 Dim tr_include$
 
-Sub transpile(s$)
+Sub transpile()
   tr_include$ = ""
-  lx_parse_basic(s$)
-  If err$ <> "" Then Exit Sub
 
   If lx_token_lc$(0) = "'!endif" Then
     process_endif()

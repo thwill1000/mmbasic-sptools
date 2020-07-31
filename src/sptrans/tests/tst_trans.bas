@@ -32,10 +32,9 @@ End Sub
 
 Function test_replace()
   map_clear(replace$(), with$(), replace_sz)
-  transpile("'!replace x      y")
-  transpile("'!replace &hFFFF z")
-
-  transpile("Dim x = &hFFFF ' comment")
+  lx_parse_basic("'!replace x      y") : transpile()
+  lx_parse_basic("'!replace &hFFFF z") : transpile()
+  lx_parse_basic("Dim x = &hFFFF ' comment") : transpile()
 
   expect_tokens(5)
   expect_tk(0, TK_KEYWORD, "Dim")

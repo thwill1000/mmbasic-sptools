@@ -77,11 +77,11 @@ Sub main()
   t = Timer
   Do
     cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
+
     s$ = in_readln$()
-    If op_format_only Then
-      lx_parse_basic(s$)
-    Else
-      transpile(s$)
+    lx_parse_basic(s$)
+    If err$ = "" Then
+      If Not op_format_only Then transpile()
       If tr_include$ <> "" Then open_include()
     EndIf
     If err$ <> "" Then cerror(err$)
