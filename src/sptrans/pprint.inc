@@ -18,40 +18,10 @@ TK_COLOUR$(TK_KEYWORD) = VT100_CYAN
 TK_COLOUR$(TK_SYMBOL) = VT100_WHITE
 TK_COLOUR$(TK_DIRECTIVE) = VT100_RED
 
-Dim pp_count
 Dim pp_previous = 0 ' 0 : previous line was empty
                     ' 1 : previous line was comment
                     ' 2 : previous line had content
-Dim pp_file_num = -1
 Dim pp_indent_lvl
-
-Sub pp_open(f$)
-  If f$ <> "" Then
-    pp_file_num = 10
-    Open f$ For Output As #pp_file_num
-  EndIf
-
-  If op_format_only = 0 Then
-    pp_inc_line()
-    pp_attrib(TK_COLOUR$(TK_COMMENT))
-    pp_out("' Transpiled on " + DateTime$(Now)) : pp_endl()
-    pp_attrib(VT100_RESET)
-    pp_inc_line()
-    pp_endl()
-  EndIf
-End Sub
-
-Sub pp_close()
-  If pp_file_num > -1 Then Close #pp_file_num
-End Sub
-
-Sub pp_inc_line()
-  pp_count = pp_count + 1
-  If pp_file_num = -1 Then
-    pp_attrib(VT100_WHITE)
-    pp_out(Format$(pp_count, "%-4g") + ": ")
-  EndIf
-End Sub
 
 Sub pp_print_line()
   Local i, t$, u$
@@ -67,10 +37,8 @@ Sub pp_print_line()
     EndIf
   EndIf
 
-  pp_inc_line()
-
   ' Nothing more to do for empty lines.
-  If lx_num = 0 Then pp_previous = 0 : pp_endl() : Exit Sub
+  If lx_num = 0 Then pp_previous = 0 : out_endl() : Exit Sub
 
   For i = 0 To lx_num - 1
 
@@ -87,7 +55,7 @@ Sub pp_print_line()
     ' If the 'empty-lines' option is 'single|1' and previous printed line
     ' had content and the line starts with {Function|Sub} then print empty line.
     If op_empty_lines = 1 And pp_previous = 2 Then
-      If i = 0 And Instr(" sub function ", t$) > 0 Then pp_endl() : pp_inc_line()
+      If i = 0 And Instr(" sub function ", t$) > 0 Then out_endl()
     EndIf
 
     ' Tokens requiring us to decrease the indent level before printing them.
@@ -104,16 +72,16 @@ Sub pp_print_line()
     If i = 0 Then
       If op_indent_sz = -1 Then
         ' Use existing indentation.
-        pp_out(Space$(lx_start(0) - 1))
+        out_print(Space$(lx_start(0) - 1))
       ElseIf pp_indent_lvl > 0 Then
         ' Use automatic indentation.
-        pp_out(Space$(pp_indent_lvl * op_indent_sz))
+        out_print(Space$(pp_indent_lvl * op_indent_sz))
       EndIf
     EndIf
 
     ' Output the token with a trailing space where required.
-    pp_attrib(TK_COLOUR$(lx_type(i)))
-    pp_out(lx_token$(i) + Space$(pp_num_spaces(i)))
+    If op_colour Then out_print(TK_COLOUR$(lx_type(i)))
+    out_print(lx_token$(i) + Space$(pp_num_spaces(i)))
 
     ' Tokens requiring us to increase the indent level after printing them.
     If t$ = " do " Then
@@ -143,8 +111,8 @@ Sub pp_print_line()
 
   Next i
 
-  pp_attrib(VT100_RESET)
-  pp_endl()
+  If op_colour Then out_print(VT100_RESET)
+  out_endl()
   If lx_type(0) = TK_COMMENT Then pp_previous = 1 Else pp_previous = 2
 
   ' If the 'empty-lines' option is 'single|1' and the line ends with
@@ -152,7 +120,7 @@ Sub pp_print_line()
   If op_empty_lines = 1 Then
     If Instr(" function sub ", t$) > 0 Then
       u$ = lx_token_lc$(lx_num - 2)
-      If u$ = "end" Then pp_inc_line() : pp_endl() : pp_previous = 0
+      If u$ = "end" Then out_endl() : pp_previous = 0
     EndIf
   EndIf
 
@@ -237,18 +205,3 @@ Function pp_num_spaces(i)
   End Select
 End Function
 
-Sub pp_attrib(c$)
-  If pp_file_num < 0 And op_colour > 0 Then pp_out(c$)
-End Sub
-
-Sub pp_out(s$)
-  If pp_file_num < 0 Then
-    Print s$;
-  Else
-    Print #pp_file_num, s$;
-  EndIf
-End Sub
-
-Sub pp_endl()
-  If pp_file_num < 0 Then Print Else Print #pp_file_num
-End Sub

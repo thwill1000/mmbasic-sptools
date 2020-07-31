@@ -9,6 +9,7 @@ Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 
 #Include "lexer.inc"
 #Include "options.inc"
+#Include "output.inc"
 #Include "pprint.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
@@ -34,7 +35,10 @@ Sub open_file(f$)
   cout(Chr$(13)) ' CR
 
   If in_files_sz > 0 Then
-    If Not fi_is_absolute(f$) Then f2$ = fi_get_parent$(in_files$(0)) + "/"
+    If Not fi_is_absolute(f$) Then
+      f2$ = fi_get_parent$(in_files$(0))
+      If f2$ <> "" Then f2$ = f2$ + "/"
+    EndIf
   EndIf
   f2$ = f2$ + f$
 
@@ -52,12 +56,12 @@ Sub close_file()
 End Sub
 
 Sub cendl()
-  If pp_file_num = -1 Then Exit Sub
+  If mbt_out$ = "" Then Exit Sub
   Print
 End Sub
 
 Sub cout(s$)
-  If pp_file_num = -1 Then Exit Sub
+  If mbt_out$ = "" Then Exit Sub
   Print s$;
 End Sub
 
@@ -88,13 +92,23 @@ Sub main()
     If fi_exists(mbt_out$)) Then
       Print "mbt: file '" + mbt_out$ + "' already exists, please delete it first" : End
     EndIf
+    op_colour = 0
   EndIf
 
   Cls
 
   lx_load_keywords(RESOURCES_DIR$ + "\keywords.txt")
 
-  pp_open(mbt_out$)
+  out_open(mbt_out$)
+
+  If Not op_format_only Then
+    If op_colour Then out_print(TK_COLOUR$(TK_COMMENT))
+    out_print("' Transpiled on " + DateTime$(Now))
+    If op_colour Then out_print(VT100_RESET)
+    out_endl()
+    out_endl()
+  EndIf
+
   cout("Transpiling from '" + mbt_in$ + "' to '" + mbt_out$ + "' ...") : cendl()
   open_file(mbt_in$)
 
@@ -126,7 +140,7 @@ Sub main()
   Print
   Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
 
-  pp_close()
+  out_close()
 
 End Sub
 
