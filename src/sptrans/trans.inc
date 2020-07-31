@@ -27,15 +27,21 @@ map_init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
 
 Sub transpile(s$)
   lx_parse_basic(s$)
-  If err$ <> "" Then cerror(err$)
+  If err$ <> "" Then Exit Sub
 
-  If lx_token_lc$(0) = "'!endif" Then process_endif()
+  If lx_token_lc$(0) = "'!endif" Then
+    process_endif()
+    If err$ <> "" Then Exit Sub
+  EndIf
 
   add_comments()
   apply_replacements()
-  If err$ <> "" Then cerror(err$)
+  If err$ <> "" Then Exit Sub
 
-  If lx_token_lc$(0) = "#include" Then process_include()
+  If lx_token_lc$(0) = "#include" Then
+    process_include()
+    If err$ <> "" Then Exit Sub
+  EndIf
 
   If lx_type(0) <> TK_DIRECTIVE Then Exit Sub
 
@@ -49,14 +55,17 @@ Sub transpile(s$)
   ElseIf t$ = "!replace"      Then : process_replace()
   ElseIf t$ = "!set"          Then : process_set()
   ElseIf t$ = "!spacing"      Then : process_spacing()
-  Else : cerror("Unknown directive: " + Mid$(t$, 2))
+  Else : err$ = "unknown " + Mid$(t$, 2) + " directive"
   EndIf
+
+  If err$ <> "" Then Exit Sub
 
   lx_parse_basic("' PROCESSED: " + Mid$(lx_line$, lx_start(0) + 1))
 End Sub
 
 Sub process_endif()
   update_num_comments(- pop_if())
+  If err$ <> "" Then Exit Sub
   lx_parse_basic("' PROCESSED: " + Mid$(lx_line$, lx_start(0) + 1))
 End Sub
 
@@ -67,7 +76,7 @@ End Sub
 
 Function pop_if()
   Local i = in_files_sz - 1
-  If if_stack_sz(i) = 0 Then Error "If directive stack is empty"
+  If if_stack_sz(i) = 0 Then err$ = "unmatched !endif" : Exit Function
   if_stack_sz(i) = if_stack_sz(i) - 1
   pop_if = if_stack(i, if_stack_sz(i))
 End Function
@@ -96,32 +105,33 @@ Sub apply_replacements()
       lx_parse_basic(s$)
       ' TODO: at the moment this can't change the number of tokens, but when it
       '       can this will need looking at closer.
+      If err$ <> "" Then Exit Sub
     EndIf
   Next i
 End Sub
 
 Sub process_clear()
-  Local t$ = lx_token_lc$(1)
-  If lx_num <> 2 Or t$ = "" Then
-    cerror("Syntax error: !clear directive expects a <flag> argument")
-  EndIf
-  If set_get(flags$(), flags_sz, t$) < 0 Then
+  If lx_num < 2 Then err$ = "expects a <flag> argument"
+  If lx_num > 2 Then err$ = "has too many arguments"
+  Local t$
+  If err$ = "" Then
+    t$ = lx_token_lc$(1)
     ' TODO: Is this really the behaviour we want?
-    cerror("Error: flag '" + t$ + "' is not set")
+    If set_get(flags$(), flags_sz, t$) < 0 Then err$ = "flag '" + t$ + "' is not set"
   EndIf
-  set_remove(flags$(), flags_sz, t$)
+  If err$ = "" Then set_remove(flags$(), flags_sz, t$)
+  If err$ <> "" Then err$ = "!clear directive " + err$
 End Sub
 
 Sub process_comments()
-  If lx_num > 2 Then cerror("Syntax error: !comments directive has too many arguments")
-  op_set_comments(lx_token_lc$(1))
-  If err$ <> "" Then cerror("Syntax error: !comments directive " + err$)
+  If lx_num > 2 Then err$ = "has too many arguments"
+  If err$ = "" Then op_set_comments(lx_token_lc$(1))
+  If err$ <> "" Then err$ = "!comments directive " + err$
 End Sub
 
 Sub process_if()
-  Local invert, is_set, t$
-
-  t$ = lx_token_lc$(1)
+  Local invert
+  Local t$ = lx_token_lc$(1)
 
   If lx_num = 2 Then
     ' Do nothing
@@ -129,16 +139,19 @@ Sub process_if()
     If t$ = "not" Then
       invert = 1
     Else
-      t$ = "Syntax error: " + lx_directive$(0) + " directive followed by unexpected token {"
-      t$ = t$ + lx_token$(1) + "}"
-      cerror(t$)
+      err$ = "followed by unexpected token {" + lx_token$(1) + "}"
     EndIf
   Else
-    cerror("Syntax error: " + lx_directive$(0) + " directive with invalid arguments")
+    err$ = "has too many arguments"
+  EndIf
+
+  If err$ <> "" Then
+    err$ = lx_directive$(0) + " directive " + err$
+    Exit Sub
   EndIf
 
   Local x = set_get(flags$(), flags_sz, t$) > -1
-  If invert Then x = Not is_set
+  If invert Then x = Not x
 
   If lx_directive$(0) = "!comment_if" Then
     push_if(x)
@@ -159,47 +172,48 @@ Sub push_if(x)
 End Sub
 
 Sub process_empty_lines()
-  If lx_num > 2 Then cerror("Syntax error: !empty-lines directive has too many arguments")
-  op_set_empty_lines(lx_token_lc$(1))
-  If err$ <> "" Then cerror("Syntax error: !empty-lines directive " + err$)
+  If lx_num > 2 Then err$ = "has too many arguments"
+  If err$ = "" Then op_set_empty_lines(lx_token_lc$(1))
+  If err$ <> "" Then err$ = "!empty-lines directive " + err$
 End Sub
 
 Sub process_include()
   If lx_num <> 2 Or lx_type(1) <> TK_STRING Then
-    cerror("Syntax error: #Include expects a <file> argument")
+    err$ = "#Include expects a <file> argument"
+    Exit Sub
   EndIf
   in_open(lx_string$(1))
-  If err$ <> "" Then cerror(err$)
+  If err$ <> "" Then Exit Sub
   lx_parse_basic("' BEGIN:     " + lx_line$ + " " + String$(66 - Len(lx_line$), "-"))
 End Sub
 
 Sub process_indent()
-  If lx_num > 2 Then cerror("Syntax error: !indent directive has too many arguments")
-  op_set_indent_sz(lx_token_lc$(1))
-  If err$ <> "" Then cerror("Syntax error: !indent directive " + err$)
+  If lx_num > 2 Then err$ = "has too many arguments"
+  If err$ = "" Then op_set_indent_sz(lx_token_lc$(1))
+  If err$ <> "" Then err$ = "!indent directive " + err$
 End Sub
 
 Sub process_replace()
-  If lx_num <> 3 Then
-    cerror("Syntax error: !replace directive expects <from> and <to> argumentss")
-  EndIf
-  map_put(replace$(), with$(), replace_sz, lx_token_lc$(1), lx_token_lc$(2))
+  If lx_num < 3 Then err$ = "expects <from> and <to> arguments"
+  If lx_num > 3 Then err$ = "has too many arguments"
+  If err$ = "" Then map_put(replace$(), with$(), replace_sz, lx_token_lc$(1), lx_token_lc$(2))
+  If err$ <> "" Then err$ = "!replace directive " + err$
 End Sub
 
 Sub process_set()
-  Local t$ = lx_token_lc$(1)
-  If lx_num <> 2 Or t$ = "" Then
-    cerror("Syntax error: !set directive expects <flag> argument")
+  If lx_num < 2 Then err$ = "expects <flag> argument"
+  If lx_num > 2 Then err$ = "has too many arguments"
+  Local t$
+  If err$ = "" Then
+    t$ = lx_token_lc$(1)
+    If set_get(flags$(), flags_sz, t$) > -1 Then err$ = "flag '" + t$ + "' is already set"
   EndIf
-  If set_get(flags$(), flags_sz, t$) > -1 Then
-    cerror("Error: flag '" + t$ + "' is already set")
-  EndIf
-  set_put(flags$(), flags_sz, t$)
+  If err$ = "" Then set_put(flags$(), flags_sz, t$)
+  If err$ <> "" Then err$ = "!set directive " + err$
 End Sub
 
 Sub process_spacing()
-  If lx_num > 2 Then cerror("Syntax error: !spacing directive has too many arguments")
-  op_set_spacing(lx_token_lc$(1))
-  If err$ <> "" Then cerror("Syntax error: !spacing directive " + err$)
+  If lx_num > 2 Then err$ = " has too many arguments")
+  If err$ = "" Then op_set_spacing(lx_token_lc$(1))
+  If err$ <> "" Then err$ = "!spacing directive " + err$
 End Sub
-

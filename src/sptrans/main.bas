@@ -80,10 +80,10 @@ Sub main()
     s$ = in_readln$()
     If op_format_only Then
       lx_parse_basic(s$)
-      If err$ <> "" Then cerror(err$)
     Else
       transpile(s$)
     EndIf
+    If err$ <> "" Then cerror(err$)
     pp_print_line()
 
     If Eof(#in_files_sz) Then
@@ -92,7 +92,9 @@ Sub main()
         s$ = s$ + in_files$(in_files_sz - 1) + Chr$(34) + " "
         s$ = s$ + String$(80 - Len(s$), "-")
         transpile(s$)
+        If err$ <> "" Then cerror(err$)
         pp_print_line()
+        If err$ <> "" Then cerror(err$)
       EndIf
       in_close()
       cout(Chr$(8) + " " + Chr$(13) + Space$(1 + in_files_sz * 2))
