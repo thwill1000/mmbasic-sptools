@@ -1,11 +1,16 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Const MAX_NUM_IFS = 10
+Dim num_comments(MAX_NUM_FILES - 1)
 
-' We ignore the 0'th element in these.
-Dim num_comments(MAX_NUM_FILES)
-Dim num_ifs(MAX_NUM_FILES)
-Dim if_stack(MAX_NUM_FILES, MAX_NUM_IFS)
+' For each source file we maintain a stack of currently open !if directives.
+' If 'i' is the base-0 index of the source file then
+'   if_stack(i, if_stack_sz - 1)
+'     = +1  : if the current !if directive incremented 'num_comments'
+'     = -1  : if the current !if directive decremented 'num_comments'
+'     = 0   : if the current !if directive is inactive
+Const MAX_NUM_IFS = 10
+Dim if_stack(MAX_NUM_FILES - 1, MAX_NUM_IFS - 1)
+Dim if_stack_sz(MAX_NUM_FILES - 1)
 
 ' The set of active flags.
 Const MAX_NUM_FLAGS = 10
@@ -56,17 +61,19 @@ Sub process_endif()
 End Sub
 
 Sub update_num_comments(x)
-  num_comments(num_files) = num_comments(num_files) + x
+  Local i = in_files_sz - 1
+  num_comments(i) = num_comments(i) + x
 End Sub
 
 Function pop_if()
-  If num_ifs(num_files) = 0 Then Error "If directive stack is empty"
-  pop_if = if_stack(num_files, num_ifs(num_files))
-  num_ifs(num_files) = num_ifs(num_files) - 1
+  Local i = in_files_sz - 1
+  If if_stack_sz(i) = 0 Then Error "If directive stack is empty"
+  if_stack_sz(i) = if_stack_sz(i) - 1
+  pop_if = if_stack(i, if_stack_sz(i))
 End Function
 
 Sub add_comments()
-  Local nc = num_comments(num_files)
+  Local nc = num_comments(in_files_sz - 1)
   If nc > 0 Then
     lx_parse_basic(String$(nc, "'") + " " + lx_line$)
   ElseIf nc < 0 Then
@@ -145,9 +152,10 @@ Sub process_if()
 End Sub
 
 Sub push_if(x)
-  If num_ifs(num_files) = MAX_NUM_IFS Then Error "Too many if directives"
-  num_ifs(num_files) = num_ifs(num_files) + 1
-  if_stack(num_files, num_ifs(num_files)) = x
+  Local i = in_files_sz - 1
+  If if_stack_sz(i) = MAX_NUM_IFS Then Error "Too many if directives"
+  if_stack(i, if_stack_sz(i)) = x
+  if_stack_sz(i) = if_stack_sz(i) + 1
 End Sub
 
 Sub process_empty_lines()

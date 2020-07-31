@@ -5,7 +5,7 @@ Option Default Integer
 
 Dim err$
 Const MAX_NUM_FILES = 5
-Dim num_files = 1
+Dim in_files_sz = 1
 
 #Include "../lexer.inc"
 #Include "../trans.inc"

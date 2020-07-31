@@ -18,9 +18,11 @@ Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 #Include "../common/set.inc"
 #Include "../common/string.inc"
 
-Dim num_files = 0
-' We ignore the 0'th element in these.
-Dim file_stack$(MAX_NUM_FILES) Length 40
+' Stack of open input source files.
+Dim in_files$(MAX_NUM_FILES - 1)
+Dim in_files_sz
+list_init(in_files$(), MAX_NUM_FILES)
+
 Dim cur_line_no(MAX_NUM_FILES)
 Dim mbt_in$     ' input filepath
 Dim mbt_out$    ' output filepath
@@ -31,24 +33,22 @@ Sub open_file(f$)
 
   cout(Chr$(13)) ' CR
 
-  If num_files > 0 Then
-    f2$ = fi_get_parent$(file_stack$(1)) + f$
-  Else
-    f2$ = f$
+  If in_files_sz > 0 Then
+    If Not fi_is_absolute(f$) Then f2$ = fi_get_parent$(in_files$(0)) + "/"
   EndIf
+  f2$ = f2$ + f$
 
   If Not fi_exists(f2$) Then cerror("#Include file '" + f2$ + "' not found")
-  cout(Space$(num_files * 2) + f2$) : cendl()
-  num_files = num_files + 1
-  Open f2$ For Input As #num_files
-  file_stack$(num_files) = f2$
-  cout(Space$(1 + num_files * 2))
+  cout(Space$(in_files_sz * 2) + f2$) : cendl()
+  list_push(in_files$(), in_files_sz, f2$)
+  Open f2$ For Input As #in_files_sz
+  cout(Space$(1 + in_files_sz * 2))
 End Sub
 
 Sub close_file()
-  Close #num_files
-  num_files = num_files - 1
-  cout(Chr$(8) + " " + Chr$(13) + Space$(1 + num_files * 2))
+  Close #in_files_sz
+  Local s$ = list_pop$(in_files$(), in_files_sz)
+  cout(Chr$(8) + " " + Chr$(13) + Space$(1 + in_files_sz * 2))
 End Sub
 
 Sub cendl()
@@ -62,16 +62,18 @@ Sub cout(s$)
 End Sub
 
 Sub cerror(msg$)
+  Local i = in_files_sz - 1
   Print
-  Print "[" + file_stack$(num_files) + ":" + Str$(cur_line_no(num_files)) + "] Error: " + msg$
+  Print "[" + in_files$(i) + ":" + Str$(cur_line_no(i)) + "] Error: " + msg$
   End
 End Sub
 
 Function read_line$()
   Local s$
-  Line Input #num_files, s$
+  Line Input #in_files_sz, s$
   read_line$ = s$
-  cur_line_no(num_files) = cur_line_no(num_files) + 1
+  Local i = in_files_sz - 1
+  cur_line_no(i) = cur_line_no(i) + 1
 End Function
 
 Sub main()
@@ -98,7 +100,7 @@ Sub main()
 
   t = Timer
   Do
-    cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(num_files) \ 8) Mod 4) + 1, 1))
+    cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
     s$ = read_line$()
     If op_format_only Then
       lx_parse_basic(s$)
@@ -108,10 +110,10 @@ Sub main()
     EndIf
     pp_print_line()
 
-    If Eof(#num_files) Then
-      If num_files > 1 Then
+    If Eof(#in_files_sz) Then
+      If in_files_sz > 1 Then
         s$ = "' END:       #Include " + Chr$(34)
-        s$ = s$ + file_stack$(num_files) + Chr$(34) + " "
+        s$ = s$ + in_files$(in_files_sz - 1) + Chr$(34) + " "
         s$ = s$ + String$(80 - Len(s$), "-")
         transpile(s$)
         pp_print_line()
@@ -119,7 +121,7 @@ Sub main()
       close_file()
     EndIf
 
-  Loop Until num_files = 0
+  Loop Until in_files_sz = 0
 
   Print
   Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
