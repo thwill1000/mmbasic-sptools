@@ -168,7 +168,8 @@ Sub process_include()
   If lx_num <> 2 Or lx_type(1) <> TK_STRING Then
     cerror("Syntax error: #Include expects a <file> argument")
   EndIf
-  open_file(lx_string$(1))
+  in_open(lx_string$(1))
+  If err$ <> "" Then cerror(err$)
   lx_parse_basic("' BEGIN:     " + lx_line$ + " " + String$(66 - Len(lx_line$), "-"))
 End Sub
 
