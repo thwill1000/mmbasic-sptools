@@ -82,21 +82,15 @@ Sub main()
       lx_parse_basic(s$)
     Else
       transpile(s$)
+      If tr_include$ <> "" Then open_include()
     EndIf
     If err$ <> "" Then cerror(err$)
+
     pp_print_line()
 
     If Eof(#in_files_sz) Then
-      If in_files_sz > 1 Then
-        s$ = "' END:       #Include " + Chr$(34)
-        s$ = s$ + in_files$(in_files_sz - 1) + Chr$(34) + " "
-        s$ = s$ + String$(80 - Len(s$), "-")
-        transpile(s$)
-        If err$ <> "" Then cerror(err$)
-        pp_print_line()
-        If err$ <> "" Then cerror(err$)
-      EndIf
-      in_close()
+      If in_files_sz > 1 Then close_include() Else in_close()
+      If err$ <> "" Then cerror(err$)
       cout(Chr$(8) + " " + Chr$(13) + Space$(1 + in_files_sz * 2))
     EndIf
 
@@ -107,6 +101,21 @@ Sub main()
 
   out_close()
 
+End Sub
+
+Sub open_include()
+  Local s$ = lx_line$
+  s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
+  lx_parse_basic(s$)
+  If err$ = "" Then in_open(tr_include$)
+End Sub
+
+Sub close_include()
+  Local s$ = "#Include " + Chr$(34) + in_files$(in_files_sz - 1) + Chr$(34)
+  s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
+  lx_parse_basic(s$)
+  If err$ = "" Then pp_print_line()
+  If err$ = "" Then in_close()
 End Sub
 
 main()

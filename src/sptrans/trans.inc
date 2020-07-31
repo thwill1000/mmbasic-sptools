@@ -25,7 +25,11 @@ Dim with$(MAX_NUM_REPLACEMENTS - 1) Length 50
 Dim replace_sz
 map_init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
 
+' Set to name of file after processing #Include
+Dim tr_include$
+
 Sub transpile(s$)
+  tr_include$ = ""
   lx_parse_basic(s$)
   If err$ <> "" Then Exit Sub
 
@@ -180,11 +184,9 @@ End Sub
 Sub process_include()
   If lx_num <> 2 Or lx_type(1) <> TK_STRING Then
     err$ = "#Include expects a <file> argument"
-    Exit Sub
+  Else
+    tr_include$ = lx_string$(1)
   EndIf
-  in_open(lx_string$(1))
-  If err$ <> "" Then Exit Sub
-  lx_parse_basic("' BEGIN:     " + lx_line$ + " " + String$(66 - Len(lx_line$), "-"))
 End Sub
 
 Sub process_indent()
