@@ -3,8 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Dim err$
-
 #Include "../options.inc"
 #Include "../../common/common.inc"
 #Include "../../common/list.inc"
@@ -26,7 +24,6 @@ run_tests()
 End
 
 Sub setup_test()
-  err$ = ""
   op_init()
 End Sub
 

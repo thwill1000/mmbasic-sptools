@@ -3,8 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Dim err$
-
 #Include "../common.inc"
 #Include "../list.inc"
 #Include "../set.inc"
@@ -23,7 +21,6 @@ run_tests()
 End
 
 Sub setup_test()
-  err$ = ""
 End Sub
 
 Sub teardown_test()

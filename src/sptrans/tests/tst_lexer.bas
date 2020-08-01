@@ -3,8 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Dim err$
-
 #Include "../lexer.inc"
 #Include "../../common/common.inc"
 #Include "../../common/list.inc"
@@ -39,7 +37,6 @@ run_tests()
 End
 
 Sub setup_test()
-  err$ = ""
 End Sub
 
 Sub teardown_test()

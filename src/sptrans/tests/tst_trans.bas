@@ -3,7 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Dim err$
 Const MAX_NUM_FILES = 5
 Dim in_files_sz = 1
 
@@ -24,7 +23,6 @@ run_tests()
 End
 
 Sub setup_test()
-  err$ = ""
 End Sub
 
 Sub teardown_test()

@@ -14,13 +14,12 @@ Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 #Include "pprint.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
+#Include "../common/common.inc"
 #Include "../common/file.inc"
 #Include "../common/list.inc"
 #Include "../common/map.inc"
 #Include "../common/set.inc"
 #Include "../common/string.inc"
-
-Dim err$ ' global error message / flag
 
 Sub cendl()
   If op_outfile$ <> "" Then Print

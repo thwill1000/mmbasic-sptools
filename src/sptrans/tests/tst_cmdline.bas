@@ -3,8 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Dim err$
-
 #Include "../cmdline.inc"
 #Include "../lexer.inc"
 #Include "../options.inc"
@@ -36,7 +34,6 @@ run_tests()
 End
 
 Sub setup_test()
-  err$ = ""
   op_init()
 End Sub
 

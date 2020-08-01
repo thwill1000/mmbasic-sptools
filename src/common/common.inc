@@ -1,5 +1,8 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+' Global error variable.
+Dim err$
+
 Sub check_included(s$)
   Local x
   On Error Skip 1

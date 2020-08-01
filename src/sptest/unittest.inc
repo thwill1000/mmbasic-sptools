@@ -84,6 +84,7 @@ Sub run_tests()
     ut_asserts_count = 0
     list_clear(ut_failures$(), ut_failures_sz)
 
+    err$ = ""
     setup_test()
     _ = Eval(ut_tests$(i) + "()")
     teardown_test()
