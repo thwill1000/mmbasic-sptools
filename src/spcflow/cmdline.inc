@@ -70,7 +70,7 @@ Sub cl_usage()
 End Sub
 
 Sub cl_version()
-  Print "spcflow (SP tools) Release 1b1 for Colour Maximite 2, MMBasic 5.05"
+  Print "spcflow (SP tools) Release 1b2 for Colour Maximite 2, MMBasic 5.05"
   Print "Copyright (c) 2020 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-release=1b1
-release_dir="mbt-r$release"
-base="$release_dir/mbt"
+release=1b2
+release_dir="sptools-r$release"
+base="$release_dir/sptools"
 
 mkdir -p $base
 mkdir -p $base/resources
@@ -14,8 +14,8 @@ cp README.md $base
 cp mbt.bas $base
 cp -R resources/* $base/resources
 cp -R src/* $base/src
-cp docs/mbt.pdf $base
+cp docs/sptools.pdf $base
 
 cd $release_dir
-zip -r ../$release_dir.zip mbt
+zip -r ../$release_dir.zip sptools
 cd .

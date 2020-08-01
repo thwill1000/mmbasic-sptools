@@ -4,7 +4,7 @@ Option Explicit On
 Option Default Integer
 
 Const MAX_NUM_FILES = 5
-Const INSTALL_DIR$ = "\mbt"
+Const INSTALL_DIR$ = "\sptools"
 Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)

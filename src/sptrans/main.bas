@@ -4,7 +4,7 @@ Option Explicit On
 Option Default Integer
 
 Const MAX_NUM_FILES = 5
-Const INSTALL_DIR$ = "\mbt"
+Const INSTALL_DIR$ = "\sptools"
 Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
@@ -45,11 +45,11 @@ Sub main()
   op_init()
 
   cl_parse(Mm.CmdLine$)
-  If err$ <> "" Then Print "mbt: "; err$ : Print : cl_usage() : End
+  If err$ <> "" Then Print "sptrans: "; err$ : Print : cl_usage() : End
 
   If op_outfile$ <> "" Then
     If fi_exists(op_outfile$)) Then
-      Print "mbt: file '" op_outfile$ "' already exists, please delete it first" : End
+      Print "sptrans: file '" op_outfile$ "' already exists, please delete it first" : End
     EndIf
     op_colour = 0
   EndIf

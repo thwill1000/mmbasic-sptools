@@ -14,7 +14,7 @@ Dim in_files_sz = 1
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
 
-lx_load_keywords("\mbt\resources\keywords.txt")
+lx_load_keywords("\sptools\resources\keywords.txt")
 
 add_test("test_replace")
 

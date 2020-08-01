@@ -67,9 +67,9 @@ End Sub
 Sub cl_usage()
   Local in$ = Chr$(34) + "input file" + Chr$(34)
   Local out$ = Chr$(34) + "output file" + Chr$(34)
-  Print "Usage: RUN "; Chr$(34); "mbt.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
+  Print "Usage: RUN "; Chr$(34); "sptrans.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
   Print
-  Print "Transcompiles the given "; in$; " flattening any #Include hierarchy and processing"
+  Print "Transcompile the given "; in$; " flattening any #Include hierarchy and processing"
   Print "any !directives encountered. The transpiled output is written to the "; out$; ", or"
   Print "the console if unspecified. By using the --format-only option it can also be used as"
   Print "a simple BASIC code formatter."
@@ -98,8 +98,7 @@ Sub cl_usage()
 End Sub
 
 Sub cl_version()
-  Print "mbt: an MMBasic transcompiler and code-formatter"
-  Print "Release 1b1 for Colour Maximite 2, MMBasic 5.05"
+  Print "sptrans (SP tools) Release 1b2 for Colour Maximite 2, MMBasic 5.05"
   Print "Copyright (c) 2020 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"
