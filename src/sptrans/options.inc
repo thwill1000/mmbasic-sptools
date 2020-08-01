@@ -15,6 +15,8 @@ Dim op_spacing      ' -1    : preserve spacing
                     '  0    : omit all unnecessary (non-indent) spaces
                     '  1    : space compactly
                     '  2    : space generously
+Dim op_infile$      ' input file/path
+Dim op_outfile$     ' output file/path, empty for output to console
 
 Sub op_init()
   op_colour = 0
@@ -23,6 +25,8 @@ Sub op_init()
   op_format_only = 0
   op_indent_sz = -1
   op_spacing = -1
+  op_infile$ = ""
+  op_outfile$ = ""
 End Sub
 
 ' Sets the value for an option.
@@ -40,6 +44,8 @@ Sub op_set(name$, value$)
     Case "indent"      : op_set_indent_sz(v$)
     Case "no-comments" : op_set_no_comments(v$)
     Case "spacing"     : op_set_spacing(v$)
+    Case "infile"      : op_set_infile(v$)
+    Case "outfile"     : op_set_outfile(v$)
     Case Else
       err$ = "unknown option: " + name$
   End Select
@@ -111,4 +117,12 @@ Sub op_set_spacing(value$)
     Case Else
       err$ = "expects 'on|minimal|compact|generous' argument"
   End Select
+End Sub
+
+Sub op_set_infile(value$)
+  op_infile$ = value$
+End Sub
+
+Sub op_set_outfile(value$)
+  op_outfile$ = value$
 End Sub

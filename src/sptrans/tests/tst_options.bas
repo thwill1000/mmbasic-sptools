@@ -17,7 +17,9 @@ add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_indent")
 add_test("test_spacing")
-'add_test("test_unknown")
+add_test("test_infile")
+add_test("test_outfile")
+add_test("test_unknown")
 
 run_tests()
 
@@ -283,3 +285,26 @@ Function test_spacing()
   assert_error("expects 'on|minimal|compact|generous' argument")
 End Function
 
+Function test_infile()
+  assert_string_equals("", op_infile$)
+
+  err$ = ""
+  op_set("infile", "foo.bas")
+  assert_no_error()
+  assert_string_equals("foo.bas", op_infile$)
+End Function
+
+Function test_outfile()
+  assert_string_equals("", op_outfile$)
+
+  err$ = ""
+  op_set("outfile", "foo.bas")
+  assert_no_error()
+  assert_string_equals("foo.bas", op_outfile$)
+End Function
+
+Function test_unknown()
+  err$ = ""
+  op_set("unknown", "foo")
+  assert_error("unknown option: unknown")
+End Function

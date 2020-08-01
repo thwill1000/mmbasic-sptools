@@ -4,8 +4,6 @@ Option Explicit On
 Option Default Integer
 
 Dim err$
-Dim mbt_in$
-Dim mbt_out$
 
 #Include "../cmdline.inc"
 #Include "../lexer.inc"
@@ -40,8 +38,6 @@ End
 Sub setup_test()
   err$ = ""
   op_init()
-  mbt_in$ = ""
-  mbt_out$ = ""
 End Sub
 
 Sub teardown_test()
@@ -57,7 +53,7 @@ Function test_input_file()
   cl_parse(input_file$)
 
   assert_no_error()
-  assert_string_equals("input.bas", mbt_in$)
+  assert_string_equals("input.bas", op_infile$)
 End Function
 
 Function test_unquoted_input_file()
@@ -156,8 +152,8 @@ Function test_output_file()
   cl_parse(input_file$ + " " + output_file$)
 
   assert_no_error()
-  assert_string_equals("input.bas", mbt_in$)
-  assert_string_equals("output.bas", mbt_out$)
+  assert_string_equals("input.bas", op_infile$)
+  assert_string_equals("output.bas", op_outfile$)
 End Function
 
 Function test_unquoted_output_file()
@@ -183,8 +179,8 @@ Function test_everything()
 
   assert_no_error()
   assert_equals(1, op_format_only)
-  assert_string_equals("input.bas", mbt_in$)
-  assert_string_equals("output.bas", mbt_out$)
+  assert_string_equals("input.bas", op_infile$)
+  assert_string_equals("output.bas", op_outfile$)
   assert_equals(1, op_colour)
   assert_equals(0, op_comments)
   assert_equals(1, op_empty_lines)

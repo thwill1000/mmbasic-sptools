@@ -20,18 +20,14 @@ Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 #Include "../common/set.inc"
 #Include "../common/string.inc"
 
-Dim mbt_in$  ' input filepath
-Dim mbt_out$ ' output filepath
-Dim err$     ' global error message / flag
+Dim err$ ' global error message / flag
 
 Sub cendl()
-  If mbt_out$ = "" Then Exit Sub
-  Print
+  If op_outfile$ <> "" Then Print
 End Sub
 
 Sub cout(s$)
-  If mbt_out$ = "" Then Exit Sub
-  Print s$;
+  If op_outfile$ <> "" Then Print s$;
 End Sub
 
 Sub cerror(msg$)
@@ -49,9 +45,9 @@ Sub main()
   cl_parse(Mm.CmdLine$)
   If err$ <> "" Then Print "mbt: "; err$ : Print : cl_usage() : End
 
-  If mbt_out$ <> "" Then
-    If fi_exists(mbt_out$)) Then
-      Print "mbt: file '" + mbt_out$ + "' already exists, please delete it first" : End
+  If op_outfile$ <> "" Then
+    If fi_exists(op_outfile$)) Then
+      Print "mbt: file '" op_outfile$ "' already exists, please delete it first" : End
     EndIf
     op_colour = 0
   EndIf
@@ -60,7 +56,7 @@ Sub main()
 
   lx_load_keywords(RESOURCES_DIR$ + "\keywords.txt")
 
-  out_open(mbt_out$)
+  out_open(op_outfile$)
 
   If Not op_format_only Then
     If op_colour Then out_print(TK_COLOUR$(TK_COMMENT))
@@ -70,8 +66,8 @@ Sub main()
     out_endl()
   EndIf
 
-  cout("Transpiling from '" + mbt_in$ + "' to '" + mbt_out$ + "' ...") : cendl()
-  in_open(mbt_in$)
+  cout("Transpiling from '" + op_infile$ + "' to '" + op_outfile$ + "' ...") : cendl()
+  in_open(op_infile$)
   If err$ <> "" Then cerror(err$)
 
   t = Timer

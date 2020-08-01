@@ -32,12 +32,12 @@ Sub cl_parse(s$)
 
   If i >= lx_num Then err$ = "no input file specified" : Exit Sub
   If lx_type(i) <> TK_STRING Then err$ = "input file name must be quoted" : Exit Sub
-  mbt_in$ = lx_string$(i)
+  op_set("infile", lx_string$(i))
   i = i + 1
 
   If i >= lx_num Then Exit Sub
   If lx_type(i) <> TK_STRING Then err$ = "output file name must be quoted" : Exit Sub
-  mbt_out$ = lx_string$(i)
+  op_set("outfile", lx_string$(i))
   i = i + 1
 
   If i <> lx_num Then err$ = "unexpected argument '" + lx_token$(i) + "'"
