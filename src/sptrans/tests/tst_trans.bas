@@ -8,7 +8,7 @@ Dim in_files_sz = 1
 
 #Include "../lexer.inc"
 #Include "../trans.inc"
-#Include "../../common/common.inc"
+#Include "../../common/error.inc"
 #Include "../../common/list.inc"
 #Include "../../common/map.inc"
 #Include "../../common/set.inc"

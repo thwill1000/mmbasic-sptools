@@ -3,7 +3,7 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../common.inc"
+#Include "../error.inc"
 #Include "../list.inc"
 #Include "../set.inc"
 #Include "../string.inc"
