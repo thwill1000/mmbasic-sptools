@@ -8,9 +8,7 @@ list_init(in_files$(), MAX_NUM_FILES)
 Dim cur_line_no(MAX_NUM_FILES)
 
 Sub in_open(f$)
-  Local f2$, p
-
-  cout(Chr$(13)) ' CR
+  Local f2$
 
   If in_files_sz > 0 Then
     If Not fi_is_absolute(f$) Then
@@ -20,14 +18,11 @@ Sub in_open(f$)
   EndIf
   f2$ = f2$ + f$
 
-  If Not fi_exists(f2$) Then
-    err$ = "#Include file '" + f2$ + "' not found"
-    Exit Sub
+  If Not fi_exists(f2$) Then err$ = "#Include file '" + f2$ + "' not found"
+  If err$ = "" Then
+    list_push(in_files$(), in_files_sz, f2$)
+    Open f2$ For Input As #in_files_sz
   EndIf
-  cout(Space$(in_files_sz * 2) + f2$) : cendl()
-  list_push(in_files$(), in_files_sz, f2$)
-  Open f2$ For Input As #in_files_sz
-  cout(Space$(1 + in_files_sz * 2))
 End Sub
 
 Sub in_close()

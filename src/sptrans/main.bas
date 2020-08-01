@@ -6,6 +6,9 @@ Option Default Integer
 Const MAX_NUM_FILES = 5
 Const INSTALL_DIR$ = "\mbt"
 Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
+Const BS$ = Chr$(8)
+Const CR$ = Chr$(13)
+Const QU$ = Chr$(34)
 
 #Include "input.inc"
 #Include "lexer.inc"
@@ -68,10 +71,12 @@ Sub main()
   cout("Transpiling from '" + op_infile$ + "' to '" + op_outfile$ + "' ...") : cendl()
   in_open(op_infile$)
   If err$ <> "" Then cerror(err$)
+  cout(in_files$(0)) : cendl()
+  cout("   ")
 
   t = Timer
   Do
-    cout(Chr$(8) + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
+    cout(BS$ + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
 
     s$ = in_readln$()
     lx_parse_basic(s$)
@@ -86,7 +91,7 @@ Sub main()
     If Eof(#in_files_sz) Then
       If in_files_sz > 1 Then close_include() Else in_close()
       If err$ <> "" Then cerror(err$)
-      cout(Chr$(8) + " " + Chr$(13) + Space$(1 + in_files_sz * 2))
+      cout(BS$ + " " + CR$ + Space$(1 + in_files_sz * 2))
     EndIf
 
   Loop Until in_files_sz = 0
@@ -103,10 +108,15 @@ Sub open_include()
   s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
   lx_parse_basic(s$)
   If err$ = "" Then in_open(tr_include$)
+  If err$ = "" Then
+    Local i = in_files_sz
+    cout(CR$ + Space$((i - 1) * 2) + in_files$(i - 1)) : cendl()
+    cout(" " + Space$(i * 2))
+  EndIf
 End Sub
 
 Sub close_include()
-  Local s$ = "#Include " + Chr$(34) + in_files$(in_files_sz - 1) + Chr$(34)
+  Local s$ = "#Include " + QU$ + in_files$(in_files_sz - 1) + QU$
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
   lx_parse_basic(s$)
   If err$ = "" Then pp_print_line()
