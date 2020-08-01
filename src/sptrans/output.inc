@@ -22,13 +22,13 @@ Sub out_print(s$)
   Else
     out_num_lines = out_num_lines + 1
     out_append = 1
-    out_print(Format$(out_num_lines, "%-4g") + ": ")
+    If out_file_num = 0 Then out_print(Format$(out_num_lines, "%-4g") + ": ")
     out_print(s$)
   EndIf
 End Sub
 
 Sub out_endl()
-  If out_append = 0 Then out_print() ' to print a line number
+  If out_append = 0 Then out_print() ' to print a line number if necessary
   If out_file_num = 0 Then Print Else Print #out_file_num
   out_append = 0
 End Sub
