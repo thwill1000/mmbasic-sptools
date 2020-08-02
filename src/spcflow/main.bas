@@ -11,6 +11,7 @@ Const CR$ = Chr$(13)
 Const QU$ = Chr$(34)
 
 #Include "cmdline.inc"
+#Include "process.inc"
 #Include "options.inc"
 #Include "../common/error.inc"
 #Include "../common/file.inc"
@@ -23,11 +24,13 @@ Const QU$ = Chr$(34)
 #Include "../sptrans/output.inc"
 
 Sub cendl()
-  If op_outfile$ <> "" Then Print
+'  If op_outfile$ <> "" Then Print
+  Print
 End Sub
 
 Sub cout(s$)
-  If op_outfile$ <> "" Then Print s$;
+'  If op_outfile$ <> "" Then Print s$;
+  Print s$;
 End Sub
 
 Sub cerror(msg$)
@@ -38,8 +41,6 @@ Sub cerror(msg$)
 End Sub
 
 Sub main()
-  Local s$, t
-
   op_init()
 
   cl_parse(Mm.CmdLine$)
@@ -61,24 +62,39 @@ Sub main()
 
   cout("Generating language flowgraph from '" + op_infile$ + "' to '" + op_outfile$ + "' ...")
   cendl()
-  in_open(op_infile$)
-  If err$ <> "" Then cerror(err$)
-  cout(in_files$(0)) : cendl()
-  cout("   ")
 
-  t = Timer
-  Do
-    cout(BS$ + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
+  Local t = Timer
+  Local pass
+  For pass = 1 To 2
+    Print "PASS" pass
 
-    s$ = in_readln$()
-    lx_parse_basic(s$)
-    If lx_token_lc$(0) = "#include" Then handle_include()
+    in_open(op_infile$)
     If err$ <> "" Then cerror(err$)
+    cout(in_files$(0)) : cendl()
+    cout("   ")
 
-    If Eof(#in_files_sz) Then handle_eof()
-    If err$ <> "" Then cerror(err$)
+    Do
+      cout(BS$ + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
 
-  Loop Until in_files_sz = 0
+      lx_parse_basic(in_readln$())
+      If lx_token_lc$(0) = "#include" Then handle_include()
+      If err$ <> "" Then cerror(err$)
+
+      process(pass)
+      If err$ <> "" Then cerror(err$)
+
+      If Eof(#in_files_sz) Then handle_eof()
+      If err$ <> "" Then cerror(err$)
+
+    Loop Until in_files_sz = 0
+
+    Print
+    If pass = 1 Then create_subs_map()
+    If pass = 1 Then map_dump(subs_k$(), subs_v$(), subs_sz)
+'    If pass = 2 Then set_dump(calls$(), calls_sz)
+  Next pass
+
+  generate()
 
   Print
   Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")

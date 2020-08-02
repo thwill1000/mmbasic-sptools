@@ -22,6 +22,7 @@ Sub in_open(f$)
   If err$ = "" Then
     list_push(in_files$(), in_files_sz, f2$)
     Open f2$ For Input As #in_files_sz
+    cur_line_no(in_files_sz - 1) = 0
   EndIf
 End Sub
 
