@@ -1,1 +1,1 @@
-Execute "run " + Chr$(34)+"src/spcflow/main.bas" + Chr$(34) + ", " + Mm.CmdLine$
+Execute "run " + Chr$(34)+"src/spflow/main.bas" + Chr$(34) + ", " + Mm.CmdLine$

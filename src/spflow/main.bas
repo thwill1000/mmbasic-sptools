@@ -44,11 +44,11 @@ Sub main()
   op_init()
 
   cl_parse(Mm.CmdLine$)
-  If err$ <> "" Then Print "spcflow: "; err$ : Print : cl_usage() : End
+  If err$ <> "" Then Print "spflow: "; err$ : Print : cl_usage() : End
 
   If op_outfile$ <> "" Then
     If fi_exists(op_outfile$)) Then
-      Print "spcflow: file '" op_outfile$ "' already exists, please delete it first" : End
+      Print "spflow: file '" op_outfile$ "' already exists, please delete it first" : End
     EndIf
   EndIf
 

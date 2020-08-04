@@ -61,7 +61,7 @@ End Sub
 Sub cl_usage()
   Local in$ = Chr$(34) + "input file" + Chr$(34)
   Local out$ = Chr$(34) + "output file" + Chr$(34)
-  Print "Usage: RUN "; Chr$(34); "spcflow.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
+  Print "Usage: RUN "; Chr$(34); "spflow.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
   Print
   Print "Generate an MMBasic language flowgraph for the " + in$
   Print
@@ -70,7 +70,7 @@ Sub cl_usage()
 End Sub
 
 Sub cl_version()
-  Print "spcflow (SP tools) Release 1b2 for Colour Maximite 2, MMBasic 5.05"
+  Print "spflow (SP tools) Release 1b2 for Colour Maximite 2, MMBasic 5.05"
   Print "Copyright (c) 2020 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"
