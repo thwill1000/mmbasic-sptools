@@ -13,6 +13,7 @@ Const QU$ = Chr$(34)
 #Include "cmdline.inc"
 #Include "process.inc"
 #Include "options.inc"
+#Include "treegen.inc"
 #Include "../common/error.inc"
 #Include "../common/file.inc"
 #Include "../common/list.inc"
@@ -94,7 +95,7 @@ Sub main()
     If pass = 2 Then pass2_completed()
   Next pass
 
-  generate()
+  treegen()
 
   Print
   Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
