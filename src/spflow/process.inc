@@ -125,32 +125,32 @@ End Sub
 ' Called during pass 2 when an END keyword followed by
 ' CSUB, FUNCTION or SUB is processed.
 Sub pass2_sub_end()
-  Local i, v$
+  ' Record calls made from the current sub in the workspace.
+  append_calls_to_work(current_sub$, current_calls$(), current_calls_sz)
 
-  ' Append ...
-  v$ = map_get$(subs_k$(), subs_v$(), subs_sz, LCase$(current_sub$))
-  v$ = v$ + "," + Str$(LLen(work%()) + 1)
-  map_put(subs_k$(), subs_v$(), subs_sz, LCase$(current_sub$), v$)
-
-  For i = 0 To current_calls_sz - 1
-    LongString Append work%(), current_calls$(i) + ","
-  Next i
-  LongString Append work%(), Chr$(0) + ","
-
-  ' Clear the set for when we process the next sub.
+  ' Clear the 'current_calls' set for when we process the next sub.
   set_clear(current_calls$(), current_calls_sz)
 End Sub
 
-' Called when pass 2 has completed ...
-Sub pass2_completed()
-  Local i
+' Appends a set of calls made by 'sub_name' to the workspace.
+Sub append_calls_to_work(sub_name$, calls$(), calls_sz)
+  Local i, v$
 
-  ' Copy global_calls$() -> current_calls$() so we can use pass2_sub_end()
-  ' to add its contents to work%()
-  current_sub$ = GLOBAL_SCOPE$
-  For i = 0 To global_calls_sz - 1
-    current_calls$(i) = global_calls$(i)
+  ' Update the value in the 'subs' map to include a field pointing to the current
+  ' position in work%()
+  v$ = map_get$(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$))
+  v$ = v$ + "," + Str$(LLen(work%()) + 1)
+  map_put(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$), v$)
+
+  ' Append comma-separated list of called subroutines, terminated by NULL element.
+  For i = 0 To calls_sz - 1
+    LongString Append work%(), calls$(i) + ","
   Next i
-  current_calls_sz = global_calls_sz
-  pass2_sub_end()
+  LongString Append work%(), Chr$(0) + ","
+End Sub
+
+' Called when pass 2 has completed.
+Sub pass2_completed()
+  ' Record calls made from the global scope in the workspace.
+  append_calls_to_work(GLOBAL_SCOPE$, global_calls$(), global_calls_sz)
 End Sub
