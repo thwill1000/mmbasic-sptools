@@ -61,7 +61,9 @@ Sub main()
 
   out_open(op_outfile$)
 
-  cout("Generating language flowgraph from '" + op_infile$ + "' to '" + op_outfile$ + "' ...")
+  cout("Generating MMBasic flowgraph from '" + op_infile$ + "'")
+  If op_outfile$ <> "" Then cout(" to '" + op_outfile$ + "'")
+  cout(" ...")
   cendl()
 
   Local t = Timer

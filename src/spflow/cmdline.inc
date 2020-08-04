@@ -13,7 +13,9 @@ Sub cl_parse(s$)
 
   Do While i < lx_num And err$ = "" And lx_type(i) = TK_OPTION
     Select Case lx_option$(i)
+      Case "b", "brief"   : cl_parse_no_arg("brief", i)
       Case "h", "help"    : cl_usage() : End
+      Case "no-files"     : cl_parse_no_arg("no-files", i)
       Case "v", "version" : cl_version() : End
       Case Else:
         err$ = "option '" + lx_token$(i) + "' is unknown"
@@ -63,9 +65,13 @@ Sub cl_usage()
   Local out$ = Chr$(34) + "output file" + Chr$(34)
   Print "Usage: RUN "; Chr$(34); "spflow.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
   Print
-  Print "Generate an MMBasic language flowgraph for the " + in$
+  Print "Generate an MMBasic flowgraph for the " + in$
   Print
+  Print "  -b, --brief    output the expanded subgraph for each subroutine only"
+  Print "                 once, subsequent calls reference the output line "
+  Print "                 containing the original expansion"
   Print "  -h, --help     display this help and exit"
+  Print "  --no-files     omit filenames and line numbers from the output"
   Print "  -v, --version  output version information and exit"
 End Sub
 
