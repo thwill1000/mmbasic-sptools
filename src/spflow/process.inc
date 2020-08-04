@@ -15,7 +15,7 @@ Sub process(pass)
 
   For i = 0 To lx_num - 1
 
-    If InStr(" csub function sub ", " " + lx_token_lc$(i) + " ") Then
+    If InStr(" cfunction csub function sub ", " " + lx_token_lc$(i) + " ") Then
       If i > 0 Then
         If lx_token_lc$(i - 1) = "end" Then
           If pass = 2 Then pass2_sub_end()
@@ -33,7 +33,7 @@ Sub process(pass)
   Next i
 End Sub
 
-' Called during pass 1 when a CSUB, FUNCTION or SUB keyword
+' Called during pass 1 when a CFUNCTION, CSUB, FUNCTION or SUB keyword
 ' followed by and identifier is processed.
 '
 ' @param  i  the index of the keyword token.
@@ -107,7 +107,7 @@ End Sub
 Sub pass2_identifier(i)
   Local id$ = lx_token_lc$(i)
 
-  ' If the 'id' is not in the 'subs' map then not a csub/function/sub.
+  ' If the 'id' is not in the 'subs' map then not a function or subroutine.
   If map_get$(subs_k$(), subs_v$(), subs_sz, id$) = Chr$(0) Then Exit Sub
 
   ' Ignore if the 'id' matches the name of the current sub.
@@ -123,7 +123,7 @@ Sub pass2_identifier(i)
 End Sub
 
 ' Called during pass 2 when an END keyword followed by
-' CSUB, FUNCTION or SUB is processed.
+' CFUNCTION, CSUB, FUNCTION or SUB is processed.
 Sub pass2_sub_end()
   ' Record calls made from the current sub in the workspace.
   append_calls_to_work(current_sub$, current_calls$(), current_calls_sz)
