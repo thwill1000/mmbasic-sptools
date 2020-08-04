@@ -1,10 +1,5 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-'Const MAX_NUM_CALLS = 10000
-'Dim calls$(MAX_NUM_CALLS - 1) Length 65
-'Dim calls_sz = 0
-'set_init(calls$(), MAX_NUM_CALLS)
-
 Const GLOBAL_SCOPE$ = "*GLOBAL*"
 
 ' 1 MB of workspace should be more than enough for even the most convoluted mess.
