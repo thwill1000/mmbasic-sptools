@@ -125,6 +125,10 @@ End Sub
 ' Called during pass 2 when an END keyword followed by
 ' CFUNCTION, CSUB, FUNCTION or SUB is processed.
 Sub pass2_sub_end()
+  If current_sub$ = GLOBAL_SCOPE$ Then
+    err$ = "unexpected state; is subroutine name in 'keywords.txt'?"
+    Exit Sub
+  EndIf
   ' Record calls made from the current sub in the workspace.
   append_calls_to_work(current_sub$, current_calls$(), current_calls_sz)
 

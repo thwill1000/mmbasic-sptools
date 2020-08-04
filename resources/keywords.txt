@@ -317,7 +317,7 @@ rl
 rlandscape
 rmdir
 rnd
-rp
+'rp
 rportrait
 rtc
 run
