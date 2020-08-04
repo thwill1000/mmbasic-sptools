@@ -89,9 +89,9 @@ Sub main()
     Loop Until in_files_sz = 0
 
     Print
-    If pass = 1 Then create_subs_map()
-    If pass = 1 Then map_dump(subs_k$(), subs_v$(), subs_sz)
-'    If pass = 2 Then set_dump(calls$(), calls_sz)
+    If pass = 1 Then pass1_completed()
+'    If pass = 1 Then map_dump(subs_k$(), subs_v$(), subs_sz)
+    If pass = 2 Then pass2_completed()
   Next pass
 
   generate()
