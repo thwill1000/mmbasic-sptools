@@ -68,6 +68,7 @@ Sub main()
 
   Local t = Timer
   Local pass
+  Local s$
   For pass = 1 To 2
     Print "PASS" pass
 
@@ -79,22 +80,37 @@ Sub main()
     Do
       cout(BS$ + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
 
-      lx_parse_basic(in_readln$())
+      s$ = in_readln$()
+      If pass = 1 Then
+        ' In pass 1 we are only interested in #include and the start and end of
+        ' subroutine and function declarations.
+        ' Note: the duplicated LCase$() calls incur no significant performance
+        '       penalty.
+        If InStr(LCase$(s$), "function") Then Goto process
+        If InStr(LCase$(s$), "sub") Then Goto process
+        If InStr(LCase$(s$), "#include") Then Goto process
+        Goto skip
+      EndIf
+process:
+      lx_parse_basic(s$)
       If lx_token_lc$(0) = "#include" Then handle_include()
       If err$ <> "" Then cerror(err$)
 
       process(pass)
       If err$ <> "" Then cerror(err$)
-
+skip:
       If Eof(#in_files_sz) Then handle_eof()
       If err$ <> "" Then cerror(err$)
 
     Loop Until in_files_sz = 0
 
     Print
-    If pass = 1 Then pass1_completed()
-'    If pass = 1 Then map_dump(subs_k$(), subs_v$(), subs_sz)
-    If pass = 2 Then pass2_completed()
+
+    Select Case pass
+      Case 1 : pass1_completed()
+      Case 2 : pass2_completed()
+      Case Else : Error
+    End Select
   Next pass
 
   treegen()
