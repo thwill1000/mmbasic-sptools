@@ -5,24 +5,31 @@ Dim tg_call_stack$(TG_CALL_STACK_MAX - 1) Length 40
 Dim tg_call_stack_sz
 list_init(tg_call_stack$(), TG_CALL_STACK_MAX)
 
-Sub treegen(name$)
-  If name$ = "" Then treegen(GLOBAL_SCOPE$) : Exit Sub
-
+Sub treegen()
   ' Line number in the output
-  Static line_num = 0
+  Dim tg_line_num = 0
 
   ' Elements of this array are the line number in the output where the
   ' first call to the corresponding element of subs_k$ occurs.
-  Static first_call(subs_sz - 1)
+  Dim tg_first_call(subs_sz - 1)
 
-  line_num = line_num + 1
-  Local i = set_get(subs_k$(), subs_sz, LCase$(name$))
-  Local brief = first_call(i)
-  If brief = 0 Then first_call(i) = line_num
+  tg_subtree(GLOBAL_SCOPE$)
 
-  Local indent$ = Space$(tg_call_stack_sz * 2)
-  Local v$ = subs_v$(i)
-  Print Format$(line_num, "%5g") " " indent$ Field$(v$, 1, ",");
+  ' TODO: handle orphan subroutines
+  '       - those that can't be reached from global scope.
+End Sub
+
+Sub tg_subtree(name$)
+  Local brief, i, indent$, v$
+
+  i = set_get(subs_k$(), subs_sz, LCase$(name$))
+  brief = tg_first_call(i)
+  tg_line_num = tg_line_num + 1
+  If brief = 0 Then tg_first_call(i) = tg_line_num
+
+  indent$ = Space$(tg_call_stack_sz * 2)
+  v$ = subs_v$(i)
+  Print Format$(tg_line_num, "%5g") " " indent$ Field$(v$, 1, ",");
   If name$ <> GLOBAL_SCOPE$ Then Print "()";
   If Not op_no_files Then Print " <" Field$(v$, 2, ",") ":" Field$(v$, 3, ",") ">";
 
@@ -30,7 +37,7 @@ Sub treegen(name$)
 '  If i Then Print : Print indent$ "        (recursive: see " Str$(i) ")" : Exit Sub
   If i Then Print ": [recursive, see " Str$(i) "]" : Exit Sub
 
-  list_push(tg_call_stack$(), tg_call_stack_sz, LCase$(name$) + "," + Str$(line_num))
+  list_push(tg_call_stack$(), tg_call_stack_sz, LCase$(name$) + "," + Str$(tg_line_num))
 
   Local s = Val(Field$(v$, 4, ","))
   Local p = LInStr(work%(), ",", s)
@@ -42,7 +49,7 @@ Sub treegen(name$)
     Else
       Print ":"
       For i = 1 To 1 Step 0
-        treegen(ch$)
+        tg_subtree(ch$)
         s = p + 1
         p = LInStr(work%(), ",", s)
         ch$ = LGetStr$(work%(), s, p - s)
