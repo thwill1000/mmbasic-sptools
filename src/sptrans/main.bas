@@ -58,6 +58,9 @@ Sub main()
 
   lx_load_keywords(RESOURCES_DIR$ + "\keywords.txt")
 
+  ' No line numbers when output to file.
+  If op_outfile$ <> "" Then out_line_num_fmt$ = ""
+
   out_open(op_outfile$)
 
   If Not op_format_only Then

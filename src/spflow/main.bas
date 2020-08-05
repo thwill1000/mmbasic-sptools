@@ -115,7 +115,7 @@ skip:
 
   treegen()
 
-  Print
+  If op_outfile$ = "" Then Print
   Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
 
   out_close()

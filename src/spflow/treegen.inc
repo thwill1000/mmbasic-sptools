@@ -7,11 +7,13 @@ list_init(tg_call_stack$(), TG_CALL_STACK_MAX)
 
 Sub treegen()
   ' Line number in the output
-  Dim tg_line_num = 0
+'  Dim tg_line_num = 0
 
   ' Elements of this array are the line number in the output where the
   ' first call to the corresponding element of subs_k$ occurs.
   Dim tg_first_call(subs_sz - 1)
+
+  out_line_num_fmt$ = "%5g "
 
   tg_subtree(GLOBAL_SCOPE$)
 
@@ -24,20 +26,19 @@ Sub tg_subtree(name$)
 
   i = set_get(subs_k$(), subs_sz, LCase$(name$))
   brief = tg_first_call(i)
-  tg_line_num = tg_line_num + 1
-  If brief = 0 Then tg_first_call(i) = tg_line_num
+  If brief = 0 Then tg_first_call(i) = out_line_num + 1
 
   indent$ = Space$(tg_call_stack_sz * 2)
   v$ = subs_v$(i)
-  Print Format$(tg_line_num, "%5g") " " indent$ Field$(v$, 1, ",");
-  If name$ <> GLOBAL_SCOPE$ Then Print "()";
-  If Not op_no_files Then Print " <" Field$(v$, 2, ",") ":" Field$(v$, 3, ",") ">";
+  out_print(indent$ + Field$(v$, 1, ","))
+  If name$ <> GLOBAL_SCOPE$ Then out_print("()")
+  If Not op_no_files Then out_print(" <" + Field$(v$, 2, ",") + ":" + Field$(v$, 3, ",") + ">")
 
   i = tg_is_recursive(name$)
 '  If i Then Print : Print indent$ "        (recursive: see " Str$(i) ")" : Exit Sub
-  If i Then Print ": [recursive, see " Str$(i) "]" : Exit Sub
+  If i Then out_println(": [recursive, see " + Str$(i) + "]") : Exit Sub
 
-  list_push(tg_call_stack$(), tg_call_stack_sz, LCase$(name$) + "," + Str$(tg_line_num))
+  list_push(tg_call_stack$(), tg_call_stack_sz, LCase$(name$) + "," + Str$(out_line_num))
 
   Local s = Val(Field$(v$, 4, ","))
   Local p = LInStr(work%(), ",", s)
@@ -45,9 +46,9 @@ Sub tg_subtree(name$)
 
   If ch$ <> Chr$(0) Then
     If brief * op_brief Then
-      Print ": [see " Str$(brief) "]"
+      out_println(": [see " + Str$(brief) + "]")
     Else
-      Print ":"
+      out_println(":")
       For i = 1 To 1 Step 0
         tg_subtree(ch$)
         s = p + 1
@@ -57,7 +58,7 @@ Sub tg_subtree(name$)
       Next i
     EndIf
   Else
-    Print
+    out_println()
   EndIf
 
   ch$ = list_pop$(tg_call_stack$(), tg_call_stack_sz)
