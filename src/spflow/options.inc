@@ -16,21 +16,18 @@ End Sub
 '
 ' If name$ or value$ are invalid then sets err$.
 Sub op_set(name$, value$)
-  Local n$ = LCase$(name$)
-  Local v$ = LCase$(value$)
-
-  Select Case n$
-    Case "brief"    : op_set_brief(v$)
-    Case "infile"   : op_set_infile(v$)
-    Case "no-files" : op_set_no_files(v$)
-    Case "outfile"  : op_set_outfile(v$)
+  Select Case LCase$(name$)
+    Case "brief"    : op_set_brief(value$)
+    Case "infile"   : op_set_infile(value$)
+    Case "no-files" : op_set_no_files(value$)
+    Case "outfile"  : op_set_outfile(value$)
     Case Else
       err$ = "unknown option: " + name$
   End Select
 End Sub
 
 Sub op_set_brief(v$)
-  Select Case v$
+  Select Case LCase$(v$)
     Case "default", "off", "0", "" : op_brief = 0
     Case "on", "1"                 : op_brief = 1
     Case Else
@@ -43,7 +40,7 @@ Sub op_set_infile(v$)
 End Sub
 
 Sub op_set_no_files(v$)
-  Select Case v$
+  Select Case LCase$(v$)
     Case "default", "off", "0", "" : op_no_files = 0
     Case "on", "1"                 : op_no_files = 1
     Case Else
