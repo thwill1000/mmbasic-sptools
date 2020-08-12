@@ -25,12 +25,10 @@ Const QU$ = Chr$(34)
 #Include "../sptrans/output.inc"
 
 Sub cendl()
-'  If op_outfile$ <> "" Then Print
   Print
 End Sub
 
 Sub cout(s$)
-'  If op_outfile$ <> "" Then Print s$;
   Print s$;
 End Sub
 
@@ -42,6 +40,8 @@ Sub cerror(msg$)
 End Sub
 
 Sub main()
+  Local s$
+
   op_init()
 
   cl_parse(Mm.CmdLine$)
@@ -49,11 +49,11 @@ Sub main()
 
   If op_outfile$ <> "" Then
     If fi_exists(op_outfile$)) Then
-      Print "spflow: file '" op_outfile$ "' already exists, please delete it first" : End
+      Line Input "Overwrite existing '" + op_outfile$ + "' [y|N] ? ", s$
+      If LCase$(s$) <> "y" Then Print "CANCELLED" : End
+      Print
     EndIf
   EndIf
-
-  Cls
 
   ' TODO: sort out dynamic determination of RESOURCES_DIR$
   '       and also look for file in current program directory.
@@ -65,10 +65,10 @@ Sub main()
   If op_outfile$ <> "" Then cout(" to '" + op_outfile$ + "'")
   cout(" ...")
   cendl()
+  cendl()
 
   Local t = Timer
   Local pass
-  Local s$
   For pass = 1 To 2
     Print "PASS" pass
 

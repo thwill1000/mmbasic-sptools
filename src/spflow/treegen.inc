@@ -6,8 +6,6 @@ Dim tg_call_stack_sz
 list_init(tg_call_stack$(), TG_CALL_STACK_MAX)
 
 Sub treegen()
-  ' Line number in the output
-'  Dim tg_line_num = 0
 
   ' Elements of this array are the line number in the output where the
   ' first call to the corresponding element of subs_k$ occurs.
