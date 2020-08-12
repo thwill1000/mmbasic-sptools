@@ -49,12 +49,12 @@ Sub main()
 
   If op_outfile$ <> "" Then
     If fi_exists(op_outfile$)) Then
-      Print "sptrans: file '" op_outfile$ "' already exists, please delete it first" : End
+      Line Input "Overwrite existing '" + op_outfile$ + "' [y|N] ? ", s$
+      If LCase$(s$) <> "y" Then Print "CANCELLED" : End
+      Print
     EndIf
     op_colour = 0
   EndIf
-
-  Cls
 
   lx_load_keywords(RESOURCES_DIR$ + "\keywords.txt")
 
