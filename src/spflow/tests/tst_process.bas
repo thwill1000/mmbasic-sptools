@@ -18,8 +18,9 @@ in_files$(0) = "input.bas"
 Dim in_line_num(1)
 
 add_test("test_simple_sub")
+add_test("test_simple_fn")
 add_test("test_self_recursive_sub")
-'add_test("test_self_recursive_fn")
+add_test("test_self_recursive_fn")
 
 run_tests()
 
@@ -70,15 +71,16 @@ Function test_simple_sub()
 
 End Function
 
-Function test_self_recursive_sub()
-  Local lines$(3)
-  lines$(1) = "Sub foo()"
-  lines$(2) = "  foo()
-  lines$(3) = "End Sub"
+Function test_simple_fn()
+  Local lines$(7)
+  lines$(1) = "Function foo()"
+  lines$(2) = "  foo = 2"
+  lines$(3) = "End Function"
+  lines$(4) = "a = foo()"
 
   Local pass
   For pass = 1 To 2
-    For in_line_num(0) = 1 To 3
+    For in_line_num(0) = 1 To 4
       lx_parse_basic(lines$(in_line_num(0)))
       process(pass)
     Next in_line_num(0)
@@ -92,9 +94,72 @@ Function test_self_recursive_sub()
   assert_string_equals("foo,input.bas,1,0", subs_v$(1))
 
   ' Check the contents of 'all_calls()'.
+  assert_equals(3, all_calls_sz)
+  assert_equals(-1, all_calls(0)) ' foo() calls nothing
+  assert_equals( 1, all_calls(1)) ' *global* calls foo()
+  assert_equals(-1, all_calls(2))
+
+End Function
+
+Function test_self_recursive_sub()
+  Local lines$(4)
+  lines$(1) = "Sub foo()"
+  lines$(2) = "  foo()
+  lines$(3) = "End Sub"
+  lines$(4) = "foo()"
+
+  Local pass
+  For pass = 1 To 2
+    For in_line_num(0) = 1 To 4
+      lx_parse_basic(lines$(in_line_num(0)))
+      process(pass)
+    Next in_line_num(0)
+    pass_completed(pass)
+  Next pass
+
+  ' Check the contents of the 'subs' map.
+  assert_string_equals("*global*", subs_k$(0))
+  assert_string_equals("*GLOBAL*,input.bas,1,2", subs_v$(0))
+  assert_string_equals("foo", subs_k$(1))
+  assert_string_equals("foo,input.bas,1,0", subs_v$(1))
+
+  ' Check the contents of 'all_calls()'.
+  assert_equals(4, all_calls_sz)
+  assert_equals(1, all_calls(0))
+  assert_equals(-1, all_calls(1))
+  assert_equals(1, all_calls(2))
+  assert_equals(-1, all_calls(3))
 
 End Function
 
 Function test_self_recursive_fn()
+  Local lines$(4)
+  lines$(1) = "Function foo()"
+  lines$(2) = "  foo = foo()
+  lines$(3) = "End Function"
+  lines$(4) = "a = foo()"
+
+  Local pass
+  For pass = 1 To 2
+    For in_line_num(0) = 1 To 4
+      lx_parse_basic(lines$(in_line_num(0)))
+      process(pass)
+    Next in_line_num(0)
+    pass_completed(pass)
+  Next pass
+
+  ' Check the contents of the 'subs' map.
+  assert_string_equals("*global*", subs_k$(0))
+  assert_string_equals("*GLOBAL*,input.bas,1,2", subs_v$(0))
+  assert_string_equals("foo", subs_k$(1))
+  assert_string_equals("foo,input.bas,1,0", subs_v$(1))
+
+  ' Check the contents of 'all_calls()'.
+  assert_equals(4, all_calls_sz)
+  assert_equals(1, all_calls(0))
+  assert_equals(-1, all_calls(1))
+  assert_equals(1, all_calls(2))
+  assert_equals(-1, all_calls(3))
+
 End Function
 

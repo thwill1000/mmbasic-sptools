@@ -42,11 +42,11 @@ Dim current_sub$ = GLOBAL_SCOPE$
 
 Sub pr_init()
   map_init(subs_k$(), subs_v$(), MAX_NUM_SUBS + 1)
+  subs_sz = 0
 
-  ' Hacky way to clear integer arrays.
-  LongString Clear current_calls()
-  LongString Clear global_calls()
-  LongString Clear all_calls()
+  Math Set 0, current_calls()
+  Math Set 0, global_calls()
+  Math Set 0, all_calls()
 
   all_calls_sz = 0
 End Sub
@@ -114,9 +114,15 @@ Sub pass2_identifier(i)
   Local idx = set_get(subs_k$(), subs_sz, id$)
   If idx = -1 Then Exit Sub
 
-  ' Ignore if the 'id' matches the name of the current sub.
-  ' TODO: handle recursive calls.
-  If id$ = current_sub$ Then Exit Sub
+  ' Ignore 'id' preceded by function/sub.
+  If i > 0 Then
+    If InStr(" cfunction csub function sub ", " " + lx_token_lc$(i - 1) + " ") Then Exit Sub
+  EndIf
+
+  ' Ignore 'id' followed by =
+  If i < lx_num - 1 Then
+    If lx_token$(i + 1) = "=" Then Exit Sub
+  EndIf
 
   ' Set flag in the appropriate calls array.
   If current_sub$ = GLOBAL_SCOPE$ Then
@@ -145,6 +151,9 @@ End Sub
 ' Appends the set of calls 'calls()' made by 'sub_name' to 'all_calls()'
 Sub append_calls(sub_name$, calls())
   Local i, v$
+
+'  Print sub_name$
+'  For i = 0 To 5 : Print "[" i "] : " calls(i) : Next i
 
   ' Update the value in the 'subs' map to include a field pointing to the current
   ' position in all_calls().
