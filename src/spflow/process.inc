@@ -1,14 +1,50 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
 Const GLOBAL_SCOPE$ = "*GLOBAL*"
+Const MAX_NUM_SUBS = 1000
 
-' 1 MB of workspace should be more than enough for even the most convoluted mess.
-Dim work%(1024 * 1024 / 8 - 1)
+' Map of all the declared subroutines created by pass 1.
+'
+' Entries are of the form:
+'   "LNAME" => "NAME,FILE,LINE,INDEX"
+'
+'   where:
+'     LNAME : lower-case subroutine name
+'     NAME  : actual subroutine name
+'     FILE  : file declaring the subroutine
+'     LINE  : line of file declaring the subroutine
+'     INDEX : index into calls%() - this element is only appended to the value
+'             at the end of pass 2
+'
+' When pass 1 ends an entry is added to represent the global scope:
+'   "global*" > "*GLOBAL*,NAME,1,INDEX"
+Dim subs_k$(MAX_NUM_SUBS - 1) Length 32
+Dim subs_v$(MAX_NUM_SUBS - 1) Length 64
+Dim subs_sz
 
+' Used by pass 2 to record the set of subroutines called from the global scope.
+Dim global_calls$(MAX_NUM_SUBS - 1) Length 32
+Dim global_calls_sz
+
+' Used by pass 2 to record the set of subroutines called from the subroutine
+' currently being processed.
+Dim current_calls$(MAX_NUM_SUBS - 1) Length 32
+Dim current_calls_sz
+
+' Populated during pass 2. For each subroutine S in 'subs' this contains a comma
+' separated, alphabetically sorted list of the lower-case names of subroutines
+' that are called by S, each list is terminated by an empty element.
+Dim calls%(MAX_NUM_SUBS * 256)
+
+' Name of subroutine currently being processed.
 Dim current_sub$ = GLOBAL_SCOPE$
-Dim num_subs
-Dim sub_name_len = Len(GLOBAL_SCOPE$)
-Dim sub_def_len
+
+Sub pr_init()
+  map_init(subs_k$(), subs_v$(), MAX_NUM_SUBS)
+  set_init(global_calls$(), MAX_NUM_SUBS)
+  set_init(current_calls$(), MAX_NUM_SUBS)
+  LongString Clear calls%()
+End Sub
 
 Sub process(pass)
   Local i
@@ -38,67 +74,29 @@ End Sub
 '
 ' @param  i  the index of the keyword token.
 Sub pass1_sub_begin(i)
-  num_subs = num_subs + 1
-  sub_name_len = Max(sub_name_len, Len(current_sub$))
   Local s$ = current_sub$ + "," + in_files$(in_files_sz - 1)
-  s$ = s$ + "," + Str$(cur_line_no(in_files_sz - 1))
-  sub_def_len = Max(sub_def_len, Len(s$))
-  LongString Append work%(), s$ + ","
+  s$ = s$ + "," + Str$(in_line_num(in_files_sz - 1))
+  map_put(subs_k$(), subs_v$(), subs_sz, LCase$(current_sub$), s$)
 End Sub
 
-' Called when pass 1 has completed to initialise the data-structures for pass 2.
+Sub pass_completed(pass)
+  Select Case pass
+    Case 1 : pass1_completed()
+    Case 2 : pass2_completed()
+    Case Else : Error
+  End Select
+End Sub
+
 Sub pass1_completed()
-  init_subs_map()
-  init_global_calls_set()
-  init_current_calls_set()
-
-  LongString Clear work%()
-End Sub
-
-' Process work%() to create the 'subs' map,
-' with entries of the form:
-'   lower case subroutine name => actual name, file, line num
-'
-' Also contains an entry:
-'   *global* => *GLOBAL*, main file, 1
-Sub init_subs_map()
-  Local k$, p, s, v$
-
-  sub_def_len = sub_def_len + 10
-  Dim subs_k$(num_subs) Length sub_name_len
-  Dim subs_v$(num_subs) Length sub_def_len
-  Dim subs_sz
-  map_init(subs_k$(), subs_v$(), num_subs + 1)
-  k$ = LCase$(GLOBAL_SCOPE$)
-  v$ = GLOBAL_SCOPE$ + "," + in_files$(0) + ",1"
+  ' Add map entry for the global scope.
+  Local k$ = LCase$(GLOBAL_SCOPE$)
+  Local v$ = GLOBAL_SCOPE$ + "," + in_files$(0) + ",1"
   map_put(subs_k$(), subs_v$(), subs_sz, k$, v$)
-
-  s = 1
-  Do
-    p = LInStr(work%(), ",", s)
-    k$ = LGetStr$(work%(), s, p - s)
-    v$ = k$
-    s = p + 1
-    p = LInStr(work%(), ",", s)
-    v$ = v$ + "," + LGetStr$(work%(), s, p - s)
-    s = p + 1
-    p = LInStr(work%(), ",", s)
-    v$ = v$ + "," + LGetStr$(work%(), s, p - s)
-    s = p + 1
-    map_put(subs_k$(), subs_v$(), subs_sz, LCase$(k$), v$)
-  Loop Until s >= LLen(work%())
 End Sub
 
-Sub init_global_calls_set()
-  Dim global_calls$(subs_sz - 1) Length sub_name_len
-  Dim global_calls_sz
-  set_init(global_calls$(), subs_sz)
-End Sub
-
-Sub init_current_calls_set()
-  Dim current_calls$(subs_sz - 1) Length sub_name_len
-  Dim current_calls_sz
-  set_init(current_calls$(), subs_sz)
+Sub pass2_completed()
+  ' Record calls made from the global scope in the workspace.
+  append_calls_to_work(GLOBAL_SCOPE$, global_calls$(), global_calls_sz)
 End Sub
 
 ' Called during pass 2 when a TK_IDENTIFIER is processed.
@@ -129,32 +127,28 @@ Sub pass2_sub_end()
     err$ = "unexpected state; is subroutine name in 'keywords.txt'?"
     Exit Sub
   EndIf
-  ' Record calls made from the current sub in the workspace.
+
+  ' Record 'current_calls' set in 'calls%()'
   append_calls_to_work(current_sub$, current_calls$(), current_calls_sz)
 
-  ' Clear the 'current_calls' set for when we process the next sub.
+  ' Clear 'current_calls' set for processing the next subroutine.
   set_clear(current_calls$(), current_calls_sz)
 End Sub
 
-' Appends a set of calls made by 'sub_name' to the workspace.
-Sub append_calls_to_work(sub_name$, calls$(), calls_sz)
+' Appends the set of calls 'c$()' made by 'sub_name' to 'calls%()'
+Sub append_calls_to_work(sub_name$, c$(), c_sz)
   Local i, v$
 
   ' Update the value in the 'subs' map to include a field pointing to the current
-  ' position in work%()
+  ' position in calls%()
   v$ = map_get$(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$))
-  v$ = v$ + "," + Str$(LLen(work%()) + 1)
+  v$ = v$ + "," + Str$(LLen(calls%()) + 1)
   map_put(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$), v$)
 
-  ' Append comma-separated list of called subroutines, terminated by NULL element.
-  For i = 0 To calls_sz - 1
-    LongString Append work%(), calls$(i) + ","
+  ' Append comma-separated list of called subroutines, terminated by empty element.
+  For i = 0 To c_sz - 1
+    LongString Append calls%(), c$(i) + ","
   Next i
-  LongString Append work%(), Chr$(0) + ","
+  LongString Append calls%(), ","
 End Sub
 
-' Called when pass 2 has completed.
-Sub pass2_completed()
-  ' Record calls made from the global scope in the workspace.
-  append_calls_to_work(GLOBAL_SCOPE$, global_calls$(), global_calls_sz)
-End Sub

@@ -3,7 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Const MAX_NUM_FILES = 5
 Const INSTALL_DIR$ = "\sptools"
 Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 Const BS$ = Chr$(8)
@@ -35,7 +34,7 @@ End Sub
 Sub cerror(msg$)
   Local i = in_files_sz - 1
   Print
-  Print "[" + in_files$(i) + ":" + Str$(cur_line_no(i)) + "] Error: " + msg$
+  Print "[" + in_files$(i) + ":" + Str$(in_line_num(i)) + "] Error: " + msg$
   End
 End Sub
 
@@ -43,6 +42,7 @@ Sub main()
   Local s$
 
   op_init()
+  pr_init()
 
   cl_parse(Mm.CmdLine$)
   If err$ <> "" Then Print "spflow: "; err$ : Print : cl_usage() : End
@@ -78,7 +78,7 @@ Sub main()
     cout("   ")
 
     Do
-      cout(BS$ + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
+      cout(BS$ + Mid$("\|/-", ((in_line_num(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
 
       s$ = in_readln$()
       If pass = 1 Then
@@ -106,11 +106,7 @@ skip:
 
     Print
 
-    Select Case pass
-      Case 1 : pass1_completed()
-      Case 2 : pass2_completed()
-      Case Else : Error
-    End Select
+    pass_completed(pass)
   Next pass
 
   treegen()

@@ -39,10 +39,11 @@ Sub tg_subtree(name$)
   list_push(tg_call_stack$(), tg_call_stack_sz, LCase$(name$) + "," + Str$(out_line_num))
 
   Local s = Val(Field$(v$, 4, ","))
-  Local p = LInStr(work%(), ",", s)
-  Local ch$ = LGetStr$(work%(), s, p - s)
+  Local p = LInStr(calls%(), ",", s)
+  Local ch$
 
-  If ch$ <> Chr$(0) Then
+  If p > s Then
+    ch$ = LGetStr$(calls%(), s, p - s)
     If brief * op_brief Then
       out_println(": [see " + Str$(brief) + "]")
     Else
@@ -50,9 +51,9 @@ Sub tg_subtree(name$)
       For i = 1 To 1 Step 0
         tg_subtree(ch$)
         s = p + 1
-        p = LInStr(work%(), ",", s)
-        ch$ = LGetStr$(work%(), s, p - s)
-        If ch$ = Chr$(0) Then Exit For
+        p = LInStr(calls%(), ",", s)
+        If p = s Then Exit For
+        ch$ = LGetStr$(calls%(), s, p - s)
       Next i
     EndIf
   Else

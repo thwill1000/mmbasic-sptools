@@ -3,7 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Const MAX_NUM_FILES = 5
 Const INSTALL_DIR$ = "\sptools"
 Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 Const BS$ = Chr$(8)
@@ -35,7 +34,7 @@ End Sub
 Sub cerror(msg$)
   Local i = in_files_sz - 1
   Print
-  Print "[" + in_files$(i) + ":" + Str$(cur_line_no(i)) + "] Error: " + msg$
+  Print "[" + in_files$(i) + ":" + Str$(in_line_num(i)) + "] Error: " + msg$
   End
 End Sub
 
@@ -79,7 +78,7 @@ Sub main()
 
   t = Timer
   Do
-    cout(BS$ + Mid$("\|/-", ((cur_line_no(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
+    cout(BS$ + Mid$("\|/-", ((in_line_num(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
 
     s$ = in_readln$()
     lx_parse_basic(s$)
