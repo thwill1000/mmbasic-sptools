@@ -20,7 +20,7 @@ Sub treegen()
 End Sub
 
 Sub tg_subtree(name$)
-  Local brief, i, indent$, v$
+  Local brief, i, j, indent$, v$
 
   i = set_get(subs_k$(), subs_sz, LCase$(name$))
   brief = tg_first_call(i)
@@ -38,29 +38,24 @@ Sub tg_subtree(name$)
 
   list_push(tg_call_stack$(), tg_call_stack_sz, LCase$(name$) + "," + Str$(out_line_num))
 
-  Local s = Val(Field$(v$, 4, ","))
-  Local p = LInStr(calls%(), ",", s)
-  Local ch$
+  i = Val(Field$(v$, 4, ","))
 
-  If p > s Then
-    ch$ = LGetStr$(calls%(), s, p - s)
+  If all_calls(i) > -1 Then
     If brief * op_brief Then
       out_println(": [see " + Str$(brief) + "]")
     Else
       out_println(":")
-      For i = 1 To 1 Step 0
-        tg_subtree(ch$)
-        s = p + 1
-        p = LInStr(calls%(), ",", s)
-        If p = s Then Exit For
-        ch$ = LGetStr$(calls%(), s, p - s)
-      Next i
+      For j = 1 To 1 Step 0
+        If all_calls(i) = -1 Then Exit For
+        tg_subtree(subs_k$(all_calls(i)))
+        i = i + 1
+      Next j
     EndIf
   Else
     out_println()
   EndIf
 
-  ch$ = list_pop$(tg_call_stack$(), tg_call_stack_sz)
+  v$ = list_pop$(tg_call_stack$(), tg_call_stack_sz)
 End Sub
 
 Function tg_is_recursive(name$)

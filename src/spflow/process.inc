@@ -13,8 +13,8 @@ Const MAX_NUM_SUBS = 1000
 '     NAME  : actual subroutine name
 '     FILE  : file declaring the subroutine
 '     LINE  : line of file declaring the subroutine
-'     INDEX : index into calls%() - this element is only appended to the value
-'             at the end of pass 2
+'     INDEX : index into all_calls() - this element is only appended to the
+'             value at the end of pass 2
 '
 ' When pass 1 ends an entry is added to represent the global scope:
 '   "global*" > "*GLOBAL*,NAME,1,INDEX"
@@ -23,30 +23,32 @@ Dim subs_v$(MAX_NUM_SUBS) Length 64
 Dim subs_sz
 
 ' Used by pass 2:
-'   global_calls%(i) = 1 if the global scope calls subroutine 'i'.
-Dim global_calls%(MAX_NUM_SUBS)
+'   global_calls(i) = 1 if the global scope calls subroutine 'i'.
+Dim global_calls(MAX_NUM_SUBS)
 
 ' Used by pass 2:
-'   current_calls%(i) = 1 if the current subroutine calls subroutine 'i'.
-Dim current_calls%(MAX_NUM_SUBS)
+'   current_calls(i) = 1 if the current subroutine calls subroutine 'i'.
+Dim current_calls(MAX_NUM_SUBS)
 
-' Populated during pass 2. For each subroutine S in 'subs' this contains a comma
-' separated, alphabetically sorted list of the lower-case names of subroutines
-' that are called by S, each list is terminated by an empty element.
-Dim calls%(MAX_NUM_SUBS * 256)
+' Populated during pass 2. For each subroutine S in 'subs' this contains a
+' sequence of elements whose values are indexes into 'subs' that correspond
+' to the subroutines called by S. Each sequence is terminated by an element
+' with value -1.
+Dim all_calls(MAX_NUM_SUBS * 20)
+Dim all_calls_sz = 0
 
 ' Name of subroutine currently being processed.
 Dim current_sub$ = GLOBAL_SCOPE$
 
 Sub pr_init()
-  Local i
   map_init(subs_k$(), subs_v$(), MAX_NUM_SUBS + 1)
-  For i = 0 To MAX_NUM_SUBS
-    current_calls%(i) = 0
-    global_calls%(i) = 0
-  Next i
 
-  LongString Clear calls%()
+  ' Hacky way to clear integer arrays.
+  LongString Clear current_calls()
+  LongString Clear global_calls()
+  LongString Clear all_calls()
+
+  all_calls_sz = 0
 End Sub
 
 Sub process(pass)
@@ -99,7 +101,7 @@ End Sub
 
 Sub pass2_completed()
   ' Record 'global_calls' in 'all_calls'.
-  append_calls(GLOBAL_SCOPE$, global_calls%())
+  append_calls(GLOBAL_SCOPE$, global_calls())
 End Sub
 
 ' Called during pass 2 when a TK_IDENTIFIER is processed.
@@ -118,9 +120,9 @@ Sub pass2_identifier(i)
 
   ' Set flag in the appropriate calls array.
   If current_sub$ = GLOBAL_SCOPE$ Then
-    global_calls%(idx) = 1
+    global_calls(idx) = 1
   Else
-    current_calls%(idx) = 1
+    current_calls(idx) = 1
   EndIf
 End Sub
 
@@ -133,26 +135,27 @@ Sub pass2_sub_end()
   EndIf
 
   ' Record 'current_calls' in 'all_calls'.
-  append_calls(current_sub$, current_calls%())
+  append_calls(current_sub$, current_calls())
 
   ' Clear 'current_calls' set for processing the next subroutine.
   Local i
-  For i = 0 To MAX_NUM_SUBS : current_calls%(i) = 0 : Next i
+  For i = 0 To MAX_NUM_SUBS : current_calls(i) = 0 : Next i
 End Sub
 
-' Appends the set of calls 'c%()' made by 'sub_name' to 'calls%()'
-Sub append_calls(sub_name$, c%())
+' Appends the set of calls 'calls()' made by 'sub_name' to 'all_calls()'
+Sub append_calls(sub_name$, calls())
   Local i, v$
 
   ' Update the value in the 'subs' map to include a field pointing to the current
-  ' position in calls%()
+  ' position in all_calls().
   v$ = map_get$(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$))
-  v$ = v$ + "," + Str$(LLen(calls%()) + 1)
+  v$ = v$ + "," + Str$(all_calls_sz)
   map_put(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$), v$)
 
-  ' Append comma-separated list of called subroutines, terminated by empty element.
+  ' Append indexes of non-zero elements to all_calls().
   For i = 0 To MAX_NUM_SUBS
-    If c%(i) Then LongString Append calls%(), subs_k$(i) + ","
+    If calls(i) Then all_calls(all_calls_sz) = i : all_calls_sz = all_calls_sz + 1
   Next i
-  LongString Append calls%(), ","
+  all_calls(all_calls_sz) = -1
+  all_calls_sz = all_calls_sz + 1
 End Sub
