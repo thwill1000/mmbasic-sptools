@@ -2,7 +2,25 @@ ChangeLog
 ---------
 
 Release 1b2:
- - TODO
+ - The package has been renamed to "SP Tools" and the GitHub address changed
+   correspondingly: https://github.com/thwill1000/sptools
+
+   It currently consists of 3 programs:
+
+     spflow  - Generates graph of function/subroutine dependencies for MMBasic.
+
+     sptest  - Unit-test framework for MMBasic,
+               rudimentary at the moment and requires Option Base 0.
+
+     sptrans - Transpiler and code-formatter for MMBasic.
+
+   See https://github.com/thwill1000/sptools/blob/master/README.md for more
+   details.
+
+ - sptrans: Increased maximum number of tokens supported per line from
+            50 => 100.
+ - sptrans: Added support for identifiers with ! or % suffixes; $ was already
+            supported.
 
 Release 1b1:
  - Initial public beta.
