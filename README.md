@@ -9,14 +9,11 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 ## Installation
 
 1. Download the latest release:
-    - https://github.com/thwill1000/mmbasic-transpiler/releases/download/r1b1/mbt-r1b1.zip
-    - or clone/download the latest work in progress: https://github.com/thwill1000/mmbasic-transpiler
+    - https://github.com/thwill1000/sptools/releases/download/r1b2/mbt-r1b2.zip
+    - or clone/download the latest work in progress: https://github.com/thwill1000/sptools
 
-2. Extract all the files to ```\mbt\```
-    - to run from a different directory you need to edit the ```INSTALL_DIR$``` constant near the top of ```mbt.bas```.
-
-3. Run `mbt` with:
-    - ```RUN "\mbt\mbt.bas", [OPTION]... "input file" ["output file"]```
+2. Extract all the files to ```/sptools/```
+    - if you install in a different directory then you need to edit the value of ```SPT_INSTALL_DIR$``` in ```/src/common/sptools.inc```.
 
 ## Function/subroutine dependency generator 'spflow'
 
@@ -276,4 +273,3 @@ More information can be found on the official Colour Maximite 2 website at http:
 The author can be contacted via:
  - https://github.com as user "thwill1000"
  - https://www.thebackshed.com/forum/index.php as user "thwill"
-
