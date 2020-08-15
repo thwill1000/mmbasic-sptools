@@ -1,12 +1,28 @@
-# MMBasic Transpiler
+# SP Tools
 
-A transcompiler and code-formatter for MMBasic 5.05 running on the [Colour Maximite 2](http://geoffg.net/maximite.html).
+Development tools for MMBasic running on the [Colour Maximite 2](http://geoffg.net/maximite.html).
 
 Written in MMBasic 5.05 by Thomas Hugo Williams in 2020.
 
 You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> but if you use it then perhaps you would like to buy me a coffee? [![paypal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T5F7BZ5NZFF66&source=url)
 
-**Features**
+## Installation
+
+1. Download the latest release:
+    - https://github.com/thwill1000/mmbasic-transpiler/releases/download/r1b1/mbt-r1b1.zip
+    - or clone/download the latest work in progress: https://github.com/thwill1000/mmbasic-transpiler
+
+2. Extract all the files to ```\mbt\```
+    - to run from a different directory you need to edit the ```INSTALL_DIR$``` constant near the top of ```mbt.bas```.
+
+3. Run `mbt` with:
+    - ```RUN "\mbt\mbt.bas", [OPTION]... "input file" ["output file"]```
+
+## Function/subroutine dependency generator 'spflow'
+
+## Transpiler and code-formatter 'sptrans'
+
+### Features
 
 * Flattens #Include hierarchies
      * useful for moving code from the CMM2 to other MMBasic flavours that currently do not support #Include.
@@ -23,19 +39,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
      * useful for improving performance by inlining constants and shortening identifiers.
      * currently only supports a 1 → 1 mapping.
 
-## How do I run it?
-
-1. Download the latest release:
-    - https://github.com/thwill1000/mmbasic-transpiler/releases/download/r1b1/mbt-r1b1.zip
-    - or clone/download the latest work in progress: https://github.com/thwill1000/mmbasic-transpiler
-
-2. Extract all the files to ```\mbt\```
-    - to run from a different directory you need to edit the ```INSTALL_DIR$``` constant near the top of ```mbt.bas```.
-
-3. Run `mbt` with:
-    - ```RUN "\mbt\mbt.bas", [OPTION]... "input file" ["output file"]```
-
-**Examples**
+### Examples
         
 &nbsp;&nbsp;&nbsp;&nbsp;Use the program to transpile itself:
 
@@ -49,7 +53,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", -f --indent=2 --spacing=generous "old.bas" "new.bas"```
 
-## Command-line options
+### Command-line options
 
 * ```-C, --colour```
     * Use VT100 control codes to syntax highlight the output.
@@ -86,7 +90,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 * ```-v, --version```
     * Display version information and then exit.
 
-## Directives
+### Directives
 
 Directives can be added to the MMBasic code to control the behaviour of the transpiler:
 * They all begin ```'!``` with the leading single-quote meaning that the MMBasic interpreter will ignore them if the untranspiled code is ```RUN```.
@@ -94,11 +98,11 @@ Directives can be added to the MMBasic code to control the behaviour of the tran
 * By convention if a file just contains directives, comments and #Include I give it the ".mbt" file-extension.
     * This is not enforced and the transpiler does not care what file-extension its input or output file has.
 
-### Directives that control formatting of transpiled code
+#### Directives that control formatting of transpiled code
 
 *Where present these directives override any formatting specified by the command-line options.*
 
-#### '!comments {on | off}
+##### '!comments {on | off}
 
 Controls the inclusion of comments in the transpiled output, e.g.
 
@@ -112,7 +116,7 @@ Controls the inclusion of comments in the transpiled output, e.g.
 
 The default setting is ```on``` unless the ```--no-comments``` command-line option is used.
 
-#### '!empty-lines {on | off | single}
+##### '!empty-lines {on | off | single}
 
 Controls the inclusion of empty lines in the transpiled output:
 * ```off``` - do not include empty lines.
@@ -123,7 +127,7 @@ e.g. ```'!empty-lines single```
 
 The default setting is ```on``` unless the ```--empty-lines``` command-line option is used.
 
-#### '!indent {on | \<number\>}
+##### '!indent {on | \<number\>}
 
 Controls the code indentation of the transpiled output:
 * ```on``` - use existing indentation.
@@ -133,7 +137,7 @@ e.g. ```'!indent 2```
 
 The default setting is ```on``` unless the ```--indent``` command-line option is used.
 
-#### '!spacing {on | minimal | compact | generous}
+##### '!spacing {on | minimal | compact | generous}
 
 Controls the spacing between tokens in the the transpiled output:
 * ```on``` - use existing spacing.
@@ -160,21 +164,21 @@ e.g. ```'!spacing compact```
 
 The default setting is ```on``` unless the ```--spacing``` command-line option is used.
 
-### Directives that control conditional (un)commenting of code
+#### Directives that control conditional (un)commenting of code
 
-#### !set \<flag\>
+##### !set \<flag\>
 
 Sets \<flag\> for use with the ```'!comment_if``` and ```'!uncomment_if``` directives.
 
 e.g. ```'!set foo```
 
-#### !clear \<flag\>
+##### !clear \<flag\>
 
 Clears \<flag\>.
 
 e.g. ```'!clear foo```
 
-#### !comment_if \<flag\>
+##### !comment_if \<flag\>
 
 If \<flag\> is set then the transpiler will comment out all the following lines until the next ```'!end_if```, e.g.
 ```vba
@@ -186,7 +190,7 @@ Print "including this one,"
 Print "but not this one."
 ```
 
-#### !uncomment_if \<flag\>
+##### !uncomment_if \<flag\>
 
 If \<flag\> is set then the transpiler will remove **one** comment character from all the following lines until the next ```'!end_if```, e.g.
 ```vba
@@ -199,15 +203,15 @@ If \<flag\> is set then the transpiler will remove **one** comment character fro
 'Print "and this one will not be affected."
 ```
 
-#### '!endif
+##### '!endif
 
 Ends a ```'!comment_if``` or ```'!uncomment_if``` block.
 
 e.g. ```'!endif```
 
-### Directives that control replacement of tokens
+#### Directives that control replacement of tokens
 
-#### '!replace \<to\> \<from\>
+##### '!replace \<to\> \<from\>
 
 Tells the transpiler to replace **one** token with another, e.g.
 
@@ -226,32 +230,38 @@ Dim pear = 30
 Print "Goodbye, world!"
 ```
 
-## Known Issues
+### Known Issues
 
  1. Does not recognise `REM` statements as being comments.
  2. Automatic indenting does not handle multiple statement lines correctly.
      * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
  3. Innumerable other bugs that I am not aware of.
 
+## Unit-test framework 'sptest'
+
 ## FAQ
 
-**1. Why didn't you just copy the design of the C preprocessor like FreeBASIC does ?**
+### 1. sptrans
+
+**1.1 Why didn't you just copy the design of the C preprocessor like FreeBASIC does ?**
 
  1. The current design was chosen so that a file annotated with !directives is still a valid MMBasic file for at least one flavour of MMBasic (currently MMBasic 5.05 on the CMM2) that can be RUN without first running the transpiler over it.
 
  2. Because that would be a lot more work.
 
-**2. When is it getting C preprocessor style macro support ?**
+**1.2. When is it getting C preprocessor style macro support ?**
 
 Not yet ;-)
 
-**3. Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
+### 2. General
+
+**2.1 Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
 
 My next goal (after rewriting the auto-indent code) is to use the transpiler to help port itself to Pi-cromite and MMBasic for DOS.
 
 I do not intend to support the original Colour Maximite or Mono Maximite as the MMBasic 4.5 that these run is missing a number of important features that the code relies on.
 
-**4. What is the Colour Maximite 2 ?**
+**2.2 What is the Colour Maximite 2 ?**
 
 The Colour Maximite 2 is a small self contained "Boot to BASIC" computer inspired by the home computers of the early 80's such as the Tandy TRS-80, Commodore 64 and Apple II.
 
@@ -261,7 +271,7 @@ The power of the ARM processor means it is capable of running BASIC at speeds co
 
 More information can be found on the official Colour Maximite 2 website at http://geoffg.net/maximite.html
 
-**5. How do I contact the author ?**
+**2.3 How do I contact the author ?**
 
 The author can be contacted via:
  - https://github.com as user "thwill1000"
