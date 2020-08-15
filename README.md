@@ -6,7 +6,22 @@ Written in MMBasic 5.05 by Thomas Hugo Williams in 2020.
 
 You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> but if you use it then perhaps you would like to buy me a coffee? [![paypal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T5F7BZ5NZFF66&source=url)
 
-## Installation
+## Contents
+
+1. Installation
+2. ```spflow``` - Function/Subroutine dependency generator
+3. ```sptrans```- Transpiler and code-formatter<br>
+ 3.1. Features<br>
+ 3.2. Examples<br>
+ 3.3. Command-line options<br>
+ 3.4. Transpiler directives<br>
+ 3.5. Known issues
+4. ```sptest``` - Unit-test framework
+5. FAQ<br>
+ 5.1. General<br>
+ 5.2. ```sptrans```
+
+## 1. Installation
 
 1. Download the latest release:
     - https://github.com/thwill1000/sptools/releases/download/r1b2/mbt-r1b2.zip
@@ -15,11 +30,11 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 2. Extract all the files to ```/sptools/```
     - if you install in a different directory then you need to edit the value of ```SPT_INSTALL_DIR$``` in ```/src/common/sptools.inc```.
 
-## Function/subroutine dependency generator 'spflow'
+## 2. Function/subroutine dependency generator 'spflow'
 
-## Transpiler and code-formatter 'sptrans'
+## 3. Transpiler and code-formatter 'sptrans'
 
-### Features
+### 3.1. Features
 
 * Flattens #Include hierarchies
      * useful for moving code from the CMM2 to other MMBasic flavours that currently do not support #Include.
@@ -36,21 +51,21 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
      * useful for improving performance by inlining constants and shortening identifiers.
      * currently only supports a 1 → 1 mapping.
 
-### Examples
+### 3.2. Examples
         
 &nbsp;&nbsp;&nbsp;&nbsp;Use the program to transpile itself:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\mbt\src\mbt_cm2.mbt" "mbt_new.bas"```
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/sptrans.bas", "/sptools/src/sptrans/main.bas" "out.bas"```
  
 &nbsp;&nbsp;&nbsp;&nbsp;Or transpile Z-MIM (https://github.com/thwill1000/zmim):
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", "\zmim\src\zmim_cm2.mbt" "\zmim_new.bas"```
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/sptrans.bas", "/zmim/src/zmim_cm2.mbt" "/zmim_new.bas"```
 
 &nbsp;&nbsp;&nbsp;&nbsp;Or just reformat a file:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "\mbt\mbt.bas", -f --indent=2 --spacing=generous "old.bas" "new.bas"```
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/sptrans.bas", -f --indent=2 --spacing=generous "in.bas" "out.bas"```
 
-### Command-line options
+### 3.3. Command-line options
 
 * ```-C, --colour```
     * Use VT100 control codes to syntax highlight the output.
@@ -87,7 +102,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 * ```-v, --version```
     * Display version information and then exit.
 
-### Directives
+### 3.4. Transpiler directives
 
 Directives can be added to the MMBasic code to control the behaviour of the transpiler:
 * They all begin ```'!``` with the leading single-quote meaning that the MMBasic interpreter will ignore them if the untranspiled code is ```RUN```.
@@ -95,7 +110,7 @@ Directives can be added to the MMBasic code to control the behaviour of the tran
 * By convention if a file just contains directives, comments and #Include I give it the ".mbt" file-extension.
     * This is not enforced and the transpiler does not care what file-extension its input or output file has.
 
-#### Directives that control formatting of transpiled code
+#### 3.4.1. Directives that control formatting of transpiled code
 
 *Where present these directives override any formatting specified by the command-line options.*
 
@@ -161,7 +176,7 @@ e.g. ```'!spacing compact```
 
 The default setting is ```on``` unless the ```--spacing``` command-line option is used.
 
-#### Directives that control conditional (un)commenting of code
+#### 3.4.2. Directives that control conditional (un)commenting of code
 
 ##### !set \<flag\>
 
@@ -206,7 +221,7 @@ Ends a ```'!comment_if``` or ```'!uncomment_if``` block.
 
 e.g. ```'!endif```
 
-#### Directives that control replacement of tokens
+#### 3.4.3. Directives that control replacement of tokens
 
 ##### '!replace \<to\> \<from\>
 
@@ -227,38 +242,26 @@ Dim pear = 30
 Print "Goodbye, world!"
 ```
 
-### Known Issues
+### 3.5 Known Issues
 
  1. Does not recognise `REM` statements as being comments.
  2. Automatic indenting does not handle multiple statement lines correctly.
      * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
  3. Innumerable other bugs that I am not aware of.
 
-## Unit-test framework 'sptest'
+## 4. Unit-test framework 'sptest'
 
-## FAQ
+## 5. FAQ
 
-### 1. sptrans
+### 5.1 General
 
-**1.1 Why didn't you just copy the design of the C preprocessor like FreeBASIC does ?**
-
- 1. The current design was chosen so that a file annotated with !directives is still a valid MMBasic file for at least one flavour of MMBasic (currently MMBasic 5.05 on the CMM2) that can be RUN without first running the transpiler over it.
-
- 2. Because that would be a lot more work.
-
-**1.2. When is it getting C preprocessor style macro support ?**
-
-Not yet ;-)
-
-### 2. General
-
-**2.1 Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?**
+#### 5.1.1 Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?
 
 My next goal (after rewriting the auto-indent code) is to use the transpiler to help port itself to Pi-cromite and MMBasic for DOS.
 
 I do not intend to support the original Colour Maximite or Mono Maximite as the MMBasic 4.5 that these run is missing a number of important features that the code relies on.
 
-**2.2 What is the Colour Maximite 2 ?**
+#### 5.1.2 What is the Colour Maximite 2 ?
 
 The Colour Maximite 2 is a small self contained "Boot to BASIC" computer inspired by the home computers of the early 80's such as the Tandy TRS-80, Commodore 64 and Apple II.
 
@@ -268,8 +271,20 @@ The power of the ARM processor means it is capable of running BASIC at speeds co
 
 More information can be found on the official Colour Maximite 2 website at http://geoffg.net/maximite.html
 
-**2.3 How do I contact the author ?**
+#### 5.1.3 How do I contact the author ?
 
 The author can be contacted via:
  - https://github.com as user "thwill1000"
  - https://www.thebackshed.com/forum/index.php as user "thwill"
+
+### 5.2. sptrans
+
+#### 5.2.1 Why didn't you just copy the design of the C preprocessor like FreeBASIC does ?
+
+ 1. The current design was chosen so that a file annotated with !directives is still a valid MMBasic file for at least one flavour of MMBasic (currently MMBasic 5.05 on the CMM2) that can be RUN without first running the transpiler over it.
+
+ 2. Because that would be a lot more work.
+
+#### 5.2.2. When is it getting C preprocessor style macro support ?
+
+Not yet ;-)
