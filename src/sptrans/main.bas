@@ -3,8 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Const INSTALL_DIR$ = "\sptools"
-Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
 Const QU$ = Chr$(34)
@@ -21,6 +19,7 @@ Const QU$ = Chr$(34)
 #Include "../common/list.inc"
 #Include "../common/map.inc"
 #Include "../common/set.inc"
+#Include "../common/sptools.inc"
 #Include "../common/string.inc"
 
 Sub cendl()
@@ -55,7 +54,7 @@ Sub main()
     op_colour = 0
   EndIf
 
-  lx_load_keywords(RESOURCES_DIR$ + "\keywords.txt")
+  lx_load_keywords(SPT_RESOURCES_DIR$ + "/keywords.txt")
 
   ' No line numbers when output to file.
   If op_outfile$ <> "" Then out_line_num_fmt$ = ""

@@ -3,8 +3,6 @@
 Option Explicit On
 Option Default Integer
 
-Const INSTALL_DIR$ = "\sptools"
-Const RESOURCES_DIR$ = INSTALL_DIR$ + "\resources"
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
 Const QU$ = Chr$(34)
@@ -18,6 +16,7 @@ Const QU$ = Chr$(34)
 #Include "../common/list.inc"
 #Include "../common/map.inc"
 #Include "../common/set.inc"
+#Include "../common/sptools.inc"
 #Include "../common/string.inc"
 #Include "../sptrans/input.inc"
 #Include "../sptrans/lexer.inc"
@@ -55,9 +54,7 @@ Sub main()
     EndIf
   EndIf
 
-  ' TODO: sort out dynamic determination of RESOURCES_DIR$
-  '       and also look for file in current program directory.
-  lx_load_keywords(RESOURCES_DIR$ + "\keywords.txt")
+  lx_load_keywords(SPT_RESOURCES_DIR$ + "/keywords.txt")
 
   out_open(op_outfile$)
 

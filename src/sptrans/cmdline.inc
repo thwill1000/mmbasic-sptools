@@ -98,7 +98,7 @@ Sub cl_usage()
 End Sub
 
 Sub cl_version()
-  Print "sptrans (SP tools) Release 1b2 for Colour Maximite 2, MMBasic 5.05"
+  Print "sptrans " + SPT_VERSION$
   Print "Copyright (c) 2020 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"
