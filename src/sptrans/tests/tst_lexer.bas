@@ -106,13 +106,15 @@ Function test_hexadecimal_literals()
 End Function
 
 Function test_identifiers()
-  lx_parse_basic("xx s$ foo.bar wom.bat$")
+  lx_parse_basic("xx s$ foo.bar wom.bat$ a! b%")
 
-  expect_success(4)
+  expect_success(6)
   expect_tk(0, TK_IDENTIFIER, "xx")
   expect_tk(1, TK_IDENTIFIER, "s$")
   expect_tk(2, TK_IDENTIFIER, "foo.bar")
   expect_tk(3, TK_IDENTIFIER, "wom.bat$")
+  expect_tk(4, TK_IDENTIFIER, "a!")
+  expect_tk(5, TK_IDENTIFIER, "b%")
 End Function
 
 Function test_integer_literals()

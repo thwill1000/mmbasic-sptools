@@ -213,7 +213,7 @@ Sub lx_parse_keyword()
 
   lx_advance()
   lx_advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
-  If lx_char$ = "$" Then lx_advance()
+  If InStr("$!%", lx_char$) Then lx_advance()
   If lx_is_keyword(Mid$(lx_line$, start, lx_pos - start)) Then
     lx_store(TK_KEYWORD, start, lx_pos - start)
   Else
