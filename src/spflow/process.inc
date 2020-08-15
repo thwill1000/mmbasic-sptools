@@ -114,14 +114,14 @@ Sub pass2_identifier(i)
   Local idx = set_get(subs_k$(), subs_sz, id$)
   If idx = -1 Then Exit Sub
 
-  ' Ignore 'id' preceded by function/sub.
-  If i > 0 Then
-    If InStr(" cfunction csub function sub ", " " + lx_token_lc$(i - 1) + " ") Then Exit Sub
-  EndIf
-
   ' Ignore 'id' followed by =
   If i < lx_num - 1 Then
     If lx_token$(i + 1) = "=" Then Exit Sub
+  EndIf
+
+  ' Ignore 'id' preceded by function/sub.
+  If i > 0 Then
+    If InStr(" cfunction csub function sub ", " " + lx_token_lc$(i - 1) + " ") Then Exit Sub
   EndIf
 
   ' Set flag in the appropriate calls array.

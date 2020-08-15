@@ -30,7 +30,11 @@ Sub tg_subtree(name$)
   v$ = subs_v$(i)
   out_print(indent$ + Field$(v$, 1, ","))
   If name$ <> GLOBAL_SCOPE$ Then out_print("()")
-  If Not op_no_files Then out_print(" <" + Field$(v$, 2, ",") + ":" + Field$(v$, 3, ",") + ">")
+  If Not op_no_files Then
+    out_print(" <")
+    If in_line_num(1) > 0 Then out_print(Field$(v$, 2, ",") + ":")
+    out_print(Field$(v$, 3, ",") + ">")
+  EndIf
 
   i = tg_is_recursive(name$)
 '  If i Then Print : Print indent$ "        (recursive: see " Str$(i) ")" : Exit Sub
