@@ -15,7 +15,7 @@ Sub cl_parse(s$)
     Select Case lx_option$(i)
       Case "b", "brief"   : cl_parse_no_arg("brief", i)
       Case "h", "help"    : cl_usage() : End
-      Case "no-files"     : cl_parse_no_arg("no-files", i)
+      Case "no-location"  : cl_parse_no_arg("no-location", i)
       Case "v", "version" : cl_version() : End
       Case Else:
         err$ = "option '" + lx_token$(i) + "' is unknown"
@@ -71,7 +71,7 @@ Sub cl_usage()
   Print "                 once, subsequent calls reference the output line "
   Print "                 containing the original expansion"
   Print "  -h, --help     display this help and exit"
-  Print "  --no-files     omit filenames and line numbers from the output"
+  Print "  --no-location  omit filenames and line numbers from the output"
   Print "  -v, --version  output version information and exit"
 End Sub
 

@@ -10,7 +10,7 @@ Option Default Integer
 #Include "../../sptest/unittest.inc"
 
 add_test("test_brief")
-add_test("test_no_files")
+add_test("test_no_location")
 add_test("test_infile")
 add_test("test_outfile")
 add_test("test_unknown")
@@ -63,10 +63,10 @@ Function test_brief()
   assert_error("expects 'on|off' argument")
 End Function
 
-Function test_no_files()
+Function test_no_location()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, op_no_files)
+  assert_equals(0, op_no_location)
 
   elements$(0) = "on"
   elements$(1) = "1"
@@ -74,10 +74,10 @@ Function test_no_files()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_no_files = 999
-    op_set("no-files", elements$(i))
+    op_no_location = 999
+    op_set("no-location", elements$(i))
     assert_no_error()
-    assert_equals(1, op_no_files)
+    assert_equals(1, op_no_location)
     i = i + 1
   Loop
 
@@ -89,14 +89,14 @@ Function test_no_files()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_brief = 999
-    op_set("no-files", elements$(i))
+    op_no_location = 999
+    op_set("no-location", elements$(i))
     assert_no_error()
-    assert_equals(0, op_no_files)
+    assert_equals(0, op_no_location)
     i = i + 1
   Loop
 
-  op_set("no-files", "foo")
+  op_set("no-location", "foo")
   assert_error("expects 'on|off' argument")
 End Function
 

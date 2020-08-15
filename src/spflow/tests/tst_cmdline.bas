@@ -20,7 +20,7 @@ add_test("test_unquoted_input_file")
 add_test("test_output_file")
 add_test("test_unquoted_output_file")
 add_test("test_brief")
-add_test("test_no_files")
+add_test("test_no_location")
 add_test("test_unknown_option")
 add_test("test_too_many_arguments")
 
@@ -77,13 +77,13 @@ Function test_brief()
   assert_error("option '-b' does not expect argument")
 End Function
 
-Function test_no_files()
-  cl_parse("--no-files " + input_file$)
+Function test_no_location()
+  cl_parse("--no-location " + input_file$)
   assert_no_error()
-  assert_equals(1, op_no_files)
+  assert_equals(1, op_no_location)
 
-  cl_parse("--no-files=1 " + input_file$)
-  assert_error("option '--no-files' does not expect argument")
+  cl_parse("--no-location=1 " + input_file$)
+  assert_error("option '--no-location' does not expect argument")
 End Function
 
 Function test_unknown_option()
