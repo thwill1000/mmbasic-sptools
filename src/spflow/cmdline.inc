@@ -13,6 +13,7 @@ Sub cl_parse(s$)
 
   Do While i < lx_num And err$ = "" And lx_type(i) = TK_OPTION
     Select Case lx_option$(i)
+      Case "A", "all"     : cl_parse_no_arg("all", i)
       Case "b", "brief"   : cl_parse_no_arg("brief", i)
       Case "h", "help"    : cl_usage() : End
       Case "no-location"  : cl_parse_no_arg("no-location", i)
@@ -67,8 +68,10 @@ Sub cl_usage()
   Print
   Print "Generate an MMBasic flowgraph for the " + in$
   Print
+  Print "  -A, --all      produce graphs for all subroutines, even those"
+  Print "                 unreachable from the global scope"
   Print "  -b, --brief    output the expanded subgraph for each subroutine only"
-  Print "                 once, subsequent calls reference the output line "
+  Print "                 once, subsequent calls reference the output line"
   Print "                 containing the original expansion"
   Print "  -h, --help     display this help and exit"
   Print "  --no-location  omit filenames and line numbers from the output"

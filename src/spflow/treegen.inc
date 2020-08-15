@@ -5,18 +5,14 @@ Dim tg_call_stack$(TG_CALL_STACK_MAX - 1) Length 40
 Dim tg_call_stack_sz
 list_init(tg_call_stack$(), TG_CALL_STACK_MAX)
 
+' Elements of this array are the line number in the output where the
+' first call to the corresponding element of subs_k$ occurs.
+Dim tg_first_call(MAX_NUM_SUBS)
+
 Sub treegen()
-
-  ' Elements of this array are the line number in the output where the
-  ' first call to the corresponding element of subs_k$ occurs.
-  Dim tg_first_call(subs_sz - 1)
-
   out_line_num_fmt$ = "%5g "
-
   tg_subtree(GLOBAL_SCOPE$)
-
-  ' TODO: handle orphan subroutines
-  '       - those that can't be reached from global scope.
+  If op_all Then tg_orphans()
 End Sub
 
 Sub tg_subtree(name$)
@@ -38,7 +34,7 @@ Sub tg_subtree(name$)
 
   i = tg_is_recursive(name$)
 '  If i Then Print : Print indent$ "        (recursive: see " Str$(i) ")" : Exit Sub
-  If i Then out_println(": [recursive, see " + Str$(i) + "]") : Exit Sub
+  If i Then out_println(" [recursive, see " + Str$(i) + "]") : Exit Sub
 
   list_push(tg_call_stack$(), tg_call_stack_sz, LCase$(name$) + "," + Str$(out_line_num))
 
@@ -46,9 +42,9 @@ Sub tg_subtree(name$)
 
   If all_calls(i) > -1 Then
     If brief * op_brief Then
-      out_println(": [see " + Str$(brief) + "]")
+      out_println(" [see " + Str$(brief) + "]")
     Else
-      out_println(":")
+      out_println()
       For j = 1 To 1 Step 0
         If all_calls(i) = -1 Then Exit For
         tg_subtree(subs_k$(all_calls(i)))
@@ -71,3 +67,13 @@ Function tg_is_recursive(name$)
     EndIf
   Next i
 End Function
+
+Sub tg_orphans()
+  Local i
+  For i = 0 To subs_sz - 1
+    If tg_first_call(i) = 0 Then
+      out_println()
+      tg_subtree(subs_k$(i))
+    EndIf
+  Next i
+End Sub

@@ -19,6 +19,7 @@ add_test("test_input_file")
 add_test("test_unquoted_input_file")
 add_test("test_output_file")
 add_test("test_unquoted_output_file")
+add_test("test_all")
 add_test("test_brief")
 add_test("test_no_location")
 add_test("test_unknown_option")
@@ -66,6 +67,15 @@ Function test_unquoted_output_file()
   cl_parse(input_file$ + " output.bas")
 
   assert_error("output file name must be quoted")
+End Function
+
+Function test_all()
+  cl_parse("--all " + input_file$)
+  assert_no_error()
+  assert_equals(1, op_all)
+
+  cl_parse("-A=1 " + input_file$)
+  assert_error("option '-A' does not expect argument")
 End Function
 
 Function test_brief()

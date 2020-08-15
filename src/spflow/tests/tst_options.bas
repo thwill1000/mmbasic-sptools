@@ -9,6 +9,7 @@ Option Default Integer
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
 
+add_test("test_all")
 add_test("test_brief")
 add_test("test_no_location")
 add_test("test_infile")
@@ -25,6 +26,43 @@ End Sub
 
 Sub teardown_test()
 End Sub
+
+Function test_all()
+  Local elements$(10) Length 10, i
+
+  assert_equals(0, op_all)
+
+  elements$(0) = "on"
+  elements$(1) = "1"
+  elements$(2) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    err$ = ""
+    op_all = 999
+    op_set("all", elements$(i))
+    assert_no_error()
+    assert_equals(1, op_all)
+    i = i + 1
+  Loop
+
+  elements$(0) = "off"
+  elements$(1) = "0"
+  elements$(2) = "default"
+  elements$(3) = ""
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    err$ = ""
+    op_all = 999
+    op_set("all", elements$(i))
+    assert_no_error()
+    assert_equals(0, op_all)
+    i = i + 1
+  Loop
+
+  op_set("all", "foo")
+  assert_error("expects 'on|off' argument")
+End Function
 
 Function test_brief()
   Local elements$(10) Length 10, i
