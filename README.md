@@ -9,7 +9,11 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 ## Contents
 
 1. Installation
-2. ```spflow``` - Function/Subroutine dependency generator
+2. ```spflow``` - Function/Subroutine dependency generator<br>
+ 2.1 Features<br>
+ 2.2. Examples<br>
+ 2.3. Command-line options<br>
+ 2.4. Known issues
 3. ```sptrans```- Transpiler and code-formatter<br>
  3.1. Features<br>
  3.2. Examples<br>
@@ -17,6 +21,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
  3.4. Transpiler directives<br>
  3.5. Known issues
 4. ```sptest``` - Unit-test framework
+ 4.1. Known issues
 5. FAQ<br>
  5.1. General<br>
  5.2. ```sptrans```
@@ -30,26 +35,31 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 2. Extract all the files to ```/sptools/```
     - if you install in a different directory then you need to edit the value of ```SPT_INSTALL_DIR$``` in ```/src/common/sptools.inc```.
 
-## 2. Function/subroutine dependency generator 'spflow'
+## 2. ```spflow``` - Function/subroutine dependency generator
 
+### 2.4. Known issues
+
+1. ```spflow``` cannot determine that an identifier refers to a function or subroutine (and thus include calls to it in its output) unless it finds a corresponding ```Function id``` or ```Sub id``` declaration. This is different to ```cflow``` where C functions calls can be recognised uniquely by their syntax, whereas MMBasic function calls are syntactically indistinguishable from array variable access.
+    * this limitation makes running ```spflow``` on a ".inc" file of dubious utility.
+ 
 ## 3. Transpiler and code-formatter 'sptrans'
 
 ### 3.1. Features
 
 * Flattens #Include hierarchies
-     * useful for moving code from the CMM2 to other MMBasic flavours that currently do not support #Include.
-     * supports multiple levels of #Include and does not require the files to have ".inc" file-extension
-         * MMBasic 5.05 on the CMM2 only supports a single level of #Include, i.e. a ".bas" file can #Include one or more ".inc" files and that's it.
- * Configurable code reformatting
-     * automatic indentation.
-     * automatic update of spacing between tokens.
-     * remove comments.
-     * remove empty-lines.
- * Conditional commenting/uncommenting of code sections
-     * useful for supporting multiple MMBasic flavours from a single source-tree.
- * Configurable token replacement
-     * useful for improving performance by inlining constants and shortening identifiers.
-     * currently only supports a 1 → 1 mapping.
+    * useful for moving code from the CMM2 to other MMBasic flavours that currently do not support #Include.
+    * supports multiple levels of #Include and does not require the files to have ".inc" file-extension
+        * MMBasic 5.05 on the CMM2 only supports a single level of #Include, i.e. a ".bas" file can #Include one or more ".inc" files and that's it.
+* Configurable code reformatting
+    * automatic indentation.
+    * automatic update of spacing between tokens.
+    * remove comments.
+    * remove empty-lines.
+* Conditional commenting/uncommenting of code sections
+    * useful for supporting multiple MMBasic flavours from a single source-tree.
+* Configurable token replacement
+    * useful for improving performance by inlining constants and shortening identifiers.
+    * currently only supports a 1 → 1 mapping.
 
 ### 3.2. Examples
         
@@ -242,13 +252,12 @@ Dim pear = 30
 Print "Goodbye, world!"
 ```
 
-### 3.5 Known Issues
+### 3.5 Known issues
 
- 1. Does not recognise `REM` statements as being comments.
- 2. Automatic indenting does not handle multiple statement lines correctly.
-     * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
- 3. Innumerable other bugs that I am not aware of.
-
+1. Does not recognise `REM` statements as being comments.
+2. Automatic indenting does not handle multiple statement lines correctly.
+    * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
+ 
 ## 4. Unit-test framework 'sptest'
 
 ## 5. FAQ
