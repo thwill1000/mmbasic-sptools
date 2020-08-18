@@ -38,6 +38,8 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 2. Extract all the files to ```/sptools/```
     - if you install in a different directory then you need to edit the value of ```SPT_INSTALL_DIR$``` in ```/src/common/sptools.inc```.
 
+<div style="page-break-after: always;"></div>
+
 ## 2. ```spflow``` - Function/subroutine dependency generator
 
 ### 2.1. Features
