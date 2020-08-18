@@ -329,7 +329,7 @@ Print "Goodbye, world!"
 1. Does not recognise `REM` statements as being comments.
 2. Automatic indenting does not handle multiple statement lines correctly.
     * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
-3. Automatic spacing is a bit ropey for ```compact``` and ```spacious`` options.
+3. Automatic spacing is a bit ropey for ```compact``` and ```spacious``` options.
  
 ## 4. ```sptest``` -  Unit-test framework
 
