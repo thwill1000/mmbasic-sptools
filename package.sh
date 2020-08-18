@@ -11,7 +11,9 @@ mkdir -p $base/src
 cp ChangeLog $base
 cp LICENSE $base
 cp README.md $base
-cp mbt.bas $base
+cp spflow.bas $base
+cp sptest.bas $base
+cp sptrans.bas $base
 cp -R resources/* $base/resources
 cp -R src/* $base/src
 cp docs/sptools.pdf $base
