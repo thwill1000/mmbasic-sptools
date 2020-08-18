@@ -10,9 +10,11 @@ Release 1b2:
      spflow  - Generates graph of function/subroutine dependencies for MMBasic.
 
      sptest  - Unit-test framework for MMBasic,
-               rudimentary at the moment and requires Option Base 0.
+               * rudimentary at the moment and requires Option Base 0.
 
      sptrans - Transpiler and code-formatter for MMBasic.
+               * code-formatting is ropey as I've found out trying to use it
+                 on the "Welcome Tape" project.
 
    See https://github.com/thwill1000/sptools/blob/master/README.md for more
    details.
