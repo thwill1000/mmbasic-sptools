@@ -65,7 +65,7 @@ bar()
 foo()
 ```
 
-**Then:**
+Then ```spflow``` outputs:
 ```
 > RUN "/sptools/spflow.bas", "example.bas"```
 Generating MMBasic flowgraph from 'example.bas' ...
@@ -90,13 +90,7 @@ Time taken = 0.3 s
 
 ### 2.2 Usage
 
-&nbsp;&nbsp;&nbsp;&nbsp;Run the program on itself writing the output to the console:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/spflow.bas", "/sptools/src/spflow/main.bas"```
-
-&nbsp;&nbsp;&nbsp;&nbsp;Run the program on [Z-MIM](https://github.com/thwill1000/zmim) writing output that only includes each subgraph once to ```out.txt```:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/spflow.bas", --brief "/zmim/src/zmim.bas" "out.txt"```
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/spflow.bas", [OPTION]... "input file" ["output file"]```
 
 ### 2.3 Command-line options
 
