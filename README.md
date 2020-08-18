@@ -20,8 +20,11 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
  3.3. Command-line options<br>
  3.4. Transpiler directives<br>
  3.5. Known issues
-4. ```sptest``` - Unit-test framework
- 4.1. Known issues
+4. ```sptest``` - Unit-test framework<br>
+ 4.1. Features<br>
+ 4.2. Examples<br>
+ 4.3. Command-line options<br>
+ 4.4. Known issues
 5. FAQ<br>
  5.1. General<br>
  5.2. ```sptrans```
@@ -37,12 +40,33 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 
 ## 2. ```spflow``` - Function/subroutine dependency generator
 
+### 2.1 Features
+
+### 2.2 Examples
+
+### 2.3 Command-line options
+
+* ```-A, --all```
+    * Produce graphs for all functions/subroutines, even those unreachable from the global scope.
+
+* ```-b, --brief```
+    * Output the expanded subgraph for each subroutine only once, subsequent calls reference the output line containing the original expansion.
+
+* ```-h, --help```
+    * Display basic help information, including a description of these options, and then exit.
+
+* ```--no-location```
+    * Omit filenames and line numbers for each function/subroutine declaration from the output.
+
+* ```-v, --version```
+    * Display version information and then exit.
+
 ### 2.4. Known issues
 
-1. ```spflow``` cannot determine that an identifier refers to a function or subroutine (and thus include calls to it in its output) unless it finds a corresponding ```Function id``` or ```Sub id``` declaration. This is different to ```cflow``` where C functions calls can be recognised uniquely by their syntax, whereas MMBasic function calls are syntactically indistinguishable from array variable access.
+1. ```spflow``` cannot determine that an identifier refers to a function/subroutine (and thus include calls to it in its output) unless it finds a corresponding ```Function id``` or ```Sub id``` declaration. This is different to ```cflow``` where C functions calls can be recognised uniquely by their syntax, whereas MMBasic function calls are syntactically indistinguishable from array variable access.
     * this limitation makes running ```spflow``` on a ".inc" file of dubious utility.
  
-## 3. Transpiler and code-formatter 'sptrans'
+## 3. ```sptrans``` - Transpiler and code-formatter
 
 ### 3.1. Features
 
@@ -258,7 +282,17 @@ Print "Goodbye, world!"
 2. Automatic indenting does not handle multiple statement lines correctly.
     * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
  
-## 4. Unit-test framework 'sptest'
+## 4. ```sptest``` -  Unit-test framework
+
+### 4.1. Features
+
+### 4.2. Examples
+
+### 4.3. Command-line options
+
+The ```sptest``` program current has no command-line options or arguments.
+
+### 4.4. Known issues
 
 ## 5. FAQ
 
