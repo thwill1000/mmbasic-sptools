@@ -90,6 +90,8 @@ example.bas
 Time taken = 0.3 s
 ```
 
+<div style="page-break-after: always;"></div>
+
 ### 2.2. Usage
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/spflow.bas", [OPTION]... "input file" ["output file"]```
@@ -115,7 +117,9 @@ Time taken = 0.3 s
 
 1. ```spflow``` cannot determine that an identifier refers to a function/subroutine (and thus include calls to it in its output) unless it finds a corresponding ```Function id``` or ```Sub id``` declaration. This is different to ```cflow``` where C functions calls can be recognised uniquely by their syntax, whereas MMBasic function calls are syntactically indistinguishable from array variable access.
     * this limitation makes running ```spflow``` on a ".inc" file of dubious utility.
- 
+
+<div style="page-break-after: always;"></div>
+
 ## 3. ```sptrans``` - Transpiler and code-formatter
 
 ### 3.1. Features
@@ -185,6 +189,8 @@ Time taken = 0.3 s
 
 * ```-v, --version```
     * Display version information and then exit.
+
+<div style="page-break-after: always;"></div>
 
 ### 3.4. Transpiler directives
 
@@ -274,6 +280,8 @@ Clears \<flag\>.
 
 e.g. ```'!clear foo```
 
+<div style="page-break-after: always;"></div>
+
 ##### !comment_if \<flag\>
 
 If \<flag\> is set then the transpiler will comment out all the following lines until the next ```'!end_if```, e.g.
@@ -332,7 +340,9 @@ Print "Goodbye, world!"
 2. Automatic indenting does not handle multiple statement lines correctly.
     * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
 3. Automatic spacing is a bit ropey for ```compact``` and ```spacious``` options.
- 
+
+<div style="page-break-after: always;"></div>
+
 ## 4. ```sptest``` -  Unit-test framework
 
 ### 4.1. Features
@@ -358,6 +368,8 @@ The ```sptest``` program current has no command-line options or arguments.
 ### 4.4. Known issues
 
 1. The routines in ```unittest.inc``` and the other code it depends on in ```src\common``` all currently require the code being tested to use ```Option Base 0``` for arrays.
+
+<div style="page-break-after: always;"></div>
 
 ## 5. FAQ
 
