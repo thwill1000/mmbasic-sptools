@@ -11,18 +11,18 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 1. Installation
 2. ```spflow``` - Function/Subroutine dependency generator<br>
  2.1 Features<br>
- 2.2. Examples<br>
+ 2.2. Usage<br>
  2.3. Command-line options<br>
  2.4. Known issues
 3. ```sptrans```- Transpiler and code-formatter<br>
  3.1. Features<br>
- 3.2. Examples<br>
+ 3.2. Usage<br>
  3.3. Command-line options<br>
  3.4. Transpiler directives<br>
  3.5. Known issues
 4. ```sptest``` - Unit-test framework<br>
  4.1. Features<br>
- 4.2. Examples<br>
+ 4.2. Usage<br>
  4.3. Command-line options<br>
  4.4. Known issues
 5. FAQ<br>
@@ -42,7 +42,61 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 
 ### 2.1 Features
 
-### 2.2 Examples
+```spflow``` analyses an MMBasic ".bas" file and its ".inc" dependencies and prints a graph, charting control flow within the program; it tries to emulate the behaviour of [GNU cflow](https://www.gnu.org/software/cflow).
+
+e.g. Given these files:
+
+**foo.inc:**
+```
+Sub foo()
+  foo()
+End Sub
+```
+
+**example.bas:**
+```
+#Include "foo.inc"
+
+Sub bar()
+  foo
+End Sub
+
+bar()
+foo()
+```
+
+**Then:**
+```
+> RUN "/sptools/spflow.bas", "example.bas"```
+Generating MMBasic flowgraph from 'example.bas' ...
+
+PASS 1
+example.bas
+  foo.inc
+
+PASS 2
+example.bas
+  foo.inc
+
+    1 *GLOBAL* <example.bas:1>
+    2   bar() <example.bas:3>
+    3     foo() <foo.inc:1>
+    4       foo() <foo.inc:1> [recursive, see 3]
+    5   foo() <foo.inc:1>
+    6     foo() <foo.inc:1> [recursive, see 5]
+
+Time taken = 0.3 s
+```
+
+### 2.2 Usage
+
+&nbsp;&nbsp;&nbsp;&nbsp;Run the program on itself writing the output to the console:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/spflow.bas", "/sptools/src/spflow/main.bas"```
+
+&nbsp;&nbsp;&nbsp;&nbsp;Run the program on [Z-MIM](https://github.com/thwill1000/zmim) writing output that only includes each subgraph once to ```out.txt```:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/spflow.bas", --brief "/zmim/src/zmim.bas" "out.txt"```
 
 ### 2.3 Command-line options
 
@@ -85,13 +139,13 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
     * useful for improving performance by inlining constants and shortening identifiers.
     * currently only supports a 1 → 1 mapping.
 
-### 3.2. Examples
+### 3.2. Usage
         
 &nbsp;&nbsp;&nbsp;&nbsp;Use the program to transpile itself:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/sptrans.bas", "/sptools/src/sptrans/main.bas" "out.bas"```
  
-&nbsp;&nbsp;&nbsp;&nbsp;Or transpile Z-MIM (https://github.com/thwill1000/zmim):
+&nbsp;&nbsp;&nbsp;&nbsp;Or transpile [Z-MIM](https://github.com/thwill1000/zmim):
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/sptrans.bas", "/zmim/src/zmim_cm2.mbt" "/zmim_new.bas"```
 
@@ -294,15 +348,17 @@ The ```sptest``` program current has no command-line options or arguments.
 
 ### 4.4. Known issues
 
+1. The routines in ```unittest.inc``` and the other code it depends on ```src\common``` all currently require the code being tested to use ```Option Base 0``` for arrays.
+
 ## 5. FAQ
 
 ### 5.1 General
 
 #### 5.1.1 Will you be supporting the original Colour Maximite / Mono Maximite / Pi-cromite / MMBasic for DOS ?
 
-My next goal (after rewriting the auto-indent code) is to use the transpiler to help port itself to Pi-cromite and MMBasic for DOS.
+I do not intend to support the original Colour Maximite or Mono Maximite as the MMBasic 4.5 that these run is missing a number of important features that the code relies on. It is also questionable whether they have sufficient memory to run ```spflow``` which uses significant in-memory data-structures.
 
-I do not intend to support the original Colour Maximite or Mono Maximite as the MMBasic 4.5 that these run is missing a number of important features that the code relies on.
+Pi-cromite and MMBasic for DOS ports are in theory possible, especially if their respective MMBasic implementations get some of the CMM2 updates, however I do not currently have the time to work on them, please feel free to contribute your own changes ;-)
 
 #### 5.1.2 What is the Colour Maximite 2 ?
 
