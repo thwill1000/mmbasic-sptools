@@ -10,7 +10,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 
 1. Installation
 2. ```spflow``` - Function/Subroutine dependency generator<br>
- 2.1 Features<br>
+ 2.1. Features<br>
  2.2. Usage<br>
  2.3. Command-line options<br>
  2.4. Known issues
@@ -40,7 +40,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 
 ## 2. ```spflow``` - Function/subroutine dependency generator
 
-### 2.1 Features
+### 2.1. Features
 
 ```spflow``` analyses an MMBasic ".bas" file and its ".inc" dependencies and prints a graph, charting control flow within the program; it tries to emulate the behaviour of [GNU cflow](https://www.gnu.org/software/cflow).
 
@@ -67,7 +67,7 @@ foo()
 
 Then ```spflow``` outputs:
 ```
-> RUN "/sptools/spflow.bas", "example.bas"```
+> RUN "/sptools/spflow.bas", "example.bas"
 Generating MMBasic flowgraph from 'example.bas' ...
 
 PASS 1
@@ -88,11 +88,11 @@ example.bas
 Time taken = 0.3 s
 ```
 
-### 2.2 Usage
+### 2.2. Usage
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/spflow.bas", [OPTION]... "input file" ["output file"]```
 
-### 2.3 Command-line options
+### 2.3. Command-line options
 
 * ```-A, --all```
     * Produce graphs for all functions/subroutines, even those unreachable from the global scope.
@@ -324,17 +324,30 @@ Dim pear = 30
 Print "Goodbye, world!"
 ```
 
-### 3.5 Known issues
+### 3.5. Known issues
 
 1. Does not recognise `REM` statements as being comments.
 2. Automatic indenting does not handle multiple statement lines correctly.
     * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
+3. Automatic spacing is a bit ropey for ```compact``` and ```spacious`` options.
  
 ## 4. ```sptest``` -  Unit-test framework
 
 ### 4.1. Features
 
-### 4.2. Examples
+Implements rudimentary [xUnit](https://en.wikipedia.org/wiki/XUnit) style unit-testing for MMBasic.
+
+See the contents of ```/sptools/src/sptest/common/tests``` to see it being used in practice.
+
+### 4.2. Usage
+
+Run all the ```tst_*.bas``` files in the ```tests/``` sub-directory of the current working-directory:
+
+&nbsp;&nbsp;&nbsp;&nbsp;```RUN "/sptools/sptest.bas"```
+
+Notes:
+1. If ```tests/``` does not exist then this will run all the ```tst*.bas``` files in the current working-directory.
+2. Relies on each ```tst_*.bas``` file calling ```run_tests()``` as this is what chains the file execution together.
 
 ### 4.3. Command-line options
 
@@ -342,7 +355,7 @@ The ```sptest``` program current has no command-line options or arguments.
 
 ### 4.4. Known issues
 
-1. The routines in ```unittest.inc``` and the other code it depends on ```src\common``` all currently require the code being tested to use ```Option Base 0``` for arrays.
+1. The routines in ```unittest.inc``` and the other code it depends on in ```src\common``` all currently require the code being tested to use ```Option Base 0``` for arrays.
 
 ## 5. FAQ
 
