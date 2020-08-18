@@ -68,7 +68,7 @@ Sub cl_usage()
   Print
   Print "Generate an MMBasic flowgraph for the " + in$
   Print
-  Print "  -A, --all      produce graphs for all subroutines, even those"
+  Print "  -A, --all      produce graphs for all functions/subroutines, even those"
   Print "                 unreachable from the global scope"
   Print "  -b, --brief    output the expanded subgraph for each subroutine only"
   Print "                 once, subsequent calls reference the output line"
