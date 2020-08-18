@@ -32,7 +32,7 @@ You can do what you like with this code subject to the [LICENSE](LICENSE),<br/> 
 ## 1. Installation
 
 1. Download the latest release:
-    - https://github.com/thwill1000/sptools/releases/download/r1b2/mbt-r1b2.zip
+    - https://github.com/thwill1000/sptools/releases/download/r1b2/sptools-r1b2.zip
     - or clone/download the latest work in progress: https://github.com/thwill1000/sptools
 
 2. Extract all the files to ```/sptools/```
