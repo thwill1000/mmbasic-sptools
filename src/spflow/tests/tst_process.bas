@@ -6,6 +6,7 @@ Option Default Integer
 #Include "../options.inc"
 #Include "../process.inc"
 #Include "../../common/error.inc"
+#Include "../../common/file.inc"
 #Include "../../common/list.inc"
 #Include "../../common/map.inc"
 #Include "../../common/set.inc"

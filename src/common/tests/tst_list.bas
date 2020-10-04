@@ -4,6 +4,7 @@ Option Explicit On
 Option Default Integer
 
 #Include "../error.inc"
+#Include "../file.inc"
 #Include "../list.inc"
 #Include "../set.inc"
 #Include "../../sptest/unittest.inc"

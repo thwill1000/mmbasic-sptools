@@ -5,6 +5,7 @@ Option Default Integer
 
 #Include "../lexer.inc"
 #Include "../../common/error.inc"
+#Include "../../common/file.inc"
 #Include "../../common/list.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"

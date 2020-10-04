@@ -17,7 +17,7 @@ Const QU$ = Chr$(34)
 #Include "../common/map.inc"
 #Include "../common/set.inc"
 #Include "../common/sptools.inc"
-#Include "../common/string.inc"
+#Include "../common/strings.inc"
 #Include "../sptrans/input.inc"
 #Include "../sptrans/lexer.inc"
 #Include "../sptrans/output.inc"
@@ -47,7 +47,7 @@ Sub main()
   If err$ <> "" Then Print "spflow: "; err$ : Print : cl_usage() : End
 
   If op_outfile$ <> "" Then
-    If fi_exists(op_outfile$)) Then
+    If fil.exists%(op_outfile$)) Then
       Line Input "Overwrite existing '" + op_outfile$ + "' [y|N] ? ", s$
       If LCase$(s$) <> "y" Then Print "CANCELLED" : End
       Print

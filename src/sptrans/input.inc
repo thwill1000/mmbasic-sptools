@@ -12,14 +12,14 @@ Sub in_open(f$)
   Local f2$
 
   If in_files_sz > 0 Then
-    If Not fi_is_absolute(f$) Then
-      f2$ = fi_get_parent$(in_files$(0))
+    If Not fil.is_absolute%(f$) Then
+      f2$ = fil.get_parent$(in_files$(0))
       If f2$ <> "" Then f2$ = f2$ + "/"
     EndIf
   EndIf
   f2$ = f2$ + f$
 
-  If Not fi_exists(f2$) Then err$ = "#Include file '" + f2$ + "' not found"
+  If Not fil.exists%(f2$) Then err$ = "#Include file '" + f2$ + "' not found"
   If err$ = "" Then
     list_push(in_files$(), in_files_sz, f2$)
     Open f2$ For Input As #in_files_sz

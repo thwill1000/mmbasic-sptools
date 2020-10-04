@@ -19,7 +19,7 @@ Const MAX_NUM_SUBS = 1000
 ' When pass 1 ends an entry is added to represent the global scope:
 '   "global*" > "*GLOBAL*,NAME,1,INDEX"
 Dim subs_k$(MAX_NUM_SUBS) Length 32
-Dim subs_v$(MAX_NUM_SUBS) Length 64
+Dim subs_v$(MAX_NUM_SUBS)
 Dim subs_sz
 
 ' Used by pass 2:

@@ -1,5 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+check_included("file")
 check_included("list")
 check_included("set")
 
@@ -133,7 +134,7 @@ Sub run_next_test_file()
   ' Lookup the index of the current file and run the next one.
   ' Note that if the current file was "sptest.bas" then the lookup returns -1
   ' and thus the first "tst_*.bas" file will be run.
-  Local current$ = fi_current_name$()
+  Local current$ = fil.get_name$(Mm.Info$(Current))
   i = set_get(test_files$(), test_files_sz, current$)
   If i < test_files_sz - 1 Then
     If old$ = "" Then f$ = "" Else f$ = "tests/"
@@ -141,12 +142,3 @@ Sub run_next_test_file()
     Execute "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
   EndIf
 End Sub
-
-Function fi_current_name$()
-  Local i
-  Local f$ = Mm.Info$(Current) ' full path
-  For i = Len(f$) To 1 Step -1
-    If Mid$(f$, i, 1) = "/" Then Exit For
-  Next i
-  fi_current_name$ = Mid$(f$, i + 1)
-End Function
