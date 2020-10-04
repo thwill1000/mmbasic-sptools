@@ -16,7 +16,7 @@ Dim lx_keywords$(LX_MAX_KEYWORDS - 1) Length 20
 Dim lx_keywords_sz = 0
 set_init(lx_keywords$(), LX_MAX_KEYWORDS)
 
-Const LX_MAX_TOKENS = 100
+Const LX_MAX_TOKENS = 255 ' In theory every character may be a separate token.
 Dim lx_type(LX_MAX_TOKENS - 1)
 Dim lx_start(LX_MAX_TOKENS - 1)
 Dim lx_len(LX_MAX_TOKENS - 1)
@@ -109,7 +109,7 @@ Sub lx_parse_number()
     ElseIf lx_next_char$ = "o" Then
       lx_parse_octal()
     Else
-      Then err$ = "Unknown literal type &" + lx_next_char$ : Exit Sub
+      err$ = "Unknown literal type &" + lx_next_char$ : Exit Sub
     EndIf
   EndIf
 End Sub
