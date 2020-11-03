@@ -1,22 +1,13 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Const VT100_RED = Chr$(27) + "[31m"
-Const VT100_GREEN = Chr$(27) + "[32m"
-Const VT100_YELLOW = Chr$(27) + "[33m"
-Const VT100_BLUE = Chr$(27) + "[34m"
-Const VT100_MAGENTA = Chr$(27) + "[35m"
-Const VT100_CYAN = Chr$(27) + "[36m"
-Const VT100_WHITE = Chr$(27) + "[37m"
-Const VT100_RESET = Chr$(27) + "[0m"
-
 Dim TK_COLOUR$(7)
-TK_COLOUR$(TK_IDENTIFIER) = VT100_WHITE
-TK_COLOUR$(TK_NUMBER) = VT100_GREEN
-TK_COLOUR$(TK_COMMENT) = VT100_YELLOW
-TK_COLOUR$(TK_STRING) = VT100_MAGENTA
-TK_COLOUR$(TK_KEYWORD) = VT100_CYAN
-TK_COLOUR$(TK_SYMBOL) = VT100_WHITE
-TK_COLOUR$(TK_DIRECTIVE) = VT100_RED
+TK_COLOUR$(TK_IDENTIFIER) = vt100.colour$("white")
+TK_COLOUR$(TK_NUMBER)     = vt100.colour$("green")
+TK_COLOUR$(TK_COMMENT)    = vt100.colour$("yellow")
+TK_COLOUR$(TK_STRING)     = vt100.colour$("magenta")
+TK_COLOUR$(TK_KEYWORD)    = vt100.colour$("cyan")
+TK_COLOUR$(TK_SYMBOL)     = vt100.colour$("white")
+TK_COLOUR$(TK_DIRECTIVE)  = vt100.colour$("red")
 
 Dim pp_previous = 0 ' 0 : previous line was empty
                     ' 1 : previous line was comment
@@ -111,7 +102,7 @@ Sub pp_print_line()
 
   Next i
 
-  If op_colour Then out_print(VT100_RESET)
+  If op_colour Then out_print(vt100.colour$("reset"))
   out_endl()
   If lx_type(0) = TK_COMMENT Then pp_previous = 1 Else pp_previous = 2
 
@@ -204,4 +195,3 @@ Function pp_num_spaces(i)
       End Select
   End Select
 End Function
-

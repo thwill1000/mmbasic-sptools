@@ -21,6 +21,7 @@ Const QU$ = Chr$(34)
 #Include "../common/set.inc"
 #Include "../common/sptools.inc"
 #Include "../common/strings.inc"
+#Include "../common/vt100.inc"
 
 Sub cendl()
   If op_outfile$ <> "" Then Print
@@ -66,7 +67,7 @@ Sub main()
   If Not op_format_only Then
     If op_colour Then out_print(TK_COLOUR$(TK_COMMENT))
     out_print("' Transpiled on " + DateTime$(Now))
-    If op_colour Then out_print(VT100_RESET)
+    If op_colour Then out_print(vt100.colour$("reset"))
     out_endl()
     out_endl()
   EndIf
