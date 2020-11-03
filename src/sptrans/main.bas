@@ -45,6 +45,8 @@ Sub main()
   cl_parse(Mm.CmdLine$)
   If err$ <> "" Then Print "sptrans: "; err$ : Print : cl_usage() : End
 
+  If Not fil.exists%(op_infile$) Then Print "sptrans: input file '" op_infile$ "' not found." : End
+
   If op_outfile$ <> "" Then
     If fil.exists%(op_outfile$)) Then
       Line Input "Overwrite existing '" + op_outfile$ + "' [y|N] ? ", s$
