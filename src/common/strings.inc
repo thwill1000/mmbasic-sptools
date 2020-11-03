@@ -3,6 +3,15 @@
 
 Function check_strings_included() : check_strings_included = 1 : End Function
 
+Function str.centre$(s$, x%)
+  If Len(s$) < x% Then
+    str.centre$ = Space$((x% - Len(s$)) \ 2) + s$
+    str.centre$ = str.centre$ + Space$(x% - Len(str.centre$))
+  Else
+    str.centre$ = s$
+  EndIf
+End Function
+
 Sub str.tokenise(s$, sep$, tokens$(), tokens_sz%)
   Local c$, i%, start% = 1
   For i% = 1 To Len(s$)
@@ -26,6 +35,11 @@ Function str.join$(tokens$(), tokens_sz%, ch$)
     If i% > 0 Then str.join$ = str.join$ + ch$
     str.join$ = str.join$ + tokens$(i%)
   Next i%
+End Function
+
+Function str.lpad$(s$, x%)
+  str.lpad$ = s$
+  If Len(s$) < x% Then str.lpad$ = Space$(x% - Len(s$)) + s$
 End Function
 
 ' Returns the next space separated token from a string.
@@ -58,9 +72,6 @@ Function str.next_token$(s$)
 End Function
 
 Function str.rpad$(s$, x%)
-  If Len(s$) < x% Then
-    str.rpad$ = s$ + Space$(x% - Len(s$))
-  Else
-    str.rpad$ = s$
-  EndIf
+  str.rpad$ = s$
+  If Len(s$) < x% Then str.rpad$ = s$ + Space$(x% - Len(s$))
 End Function
