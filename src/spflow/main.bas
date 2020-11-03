@@ -46,6 +46,8 @@ Sub main()
   cl_parse(Mm.CmdLine$)
   If err$ <> "" Then Print "spflow: "; err$ : Print : cl_usage() : End
 
+  If Not fil.exists%(op_infile$)) Then Print "spflow: input file '" op_infile$ "' not found." : End
+
   If op_outfile$ <> "" Then
     If fil.exists%(op_outfile$)) Then
       Line Input "Overwrite existing '" + op_outfile$ + "' [y|N] ? ", s$
