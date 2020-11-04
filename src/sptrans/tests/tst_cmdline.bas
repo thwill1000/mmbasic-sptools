@@ -35,153 +35,153 @@ run_tests()
 End
 
 Sub setup_test()
-  op_init()
+  opt.init()
 End Sub
 
 Sub teardown_test()
 End Sub
 
 Function test_no_input_file()
-  cl_parse("-f")
+  cli.parse("-f")
 
   assert_error("no input file specified")
 End Function
 
 Function test_input_file()
-  cl_parse(input_file$)
+  cli.parse(input_file$)
 
   assert_no_error()
-  assert_string_equals("input.bas", op_infile$)
+  assert_string_equals("input.bas", opt.infile$)
 End Function
 
 Function test_unquoted_input_file()
-  cl_parse("input.bas")
+  cli.parse("input.bas")
 
   assert_error("input file name must be quoted")
 End Function
 
 Function test_colour()
-  cl_parse("--colour " + input_file$)
+  cli.parse("--colour " + input_file$)
   assert_no_error()
-  assert_equals(1, op_colour)
+  assert_equals(1, opt.colour)
 
-  cl_parse("-C=1 " + input_file$)
+  cli.parse("-C=1 " + input_file$)
   assert_error("option '-C' does not expect argument")
 End Function
 
 Function test_no_comments()
-  op_comments = 999
-  cl_parse("--no-comments " + input_file$)
+  opt.comments = 999
+  cli.parse("--no-comments " + input_file$)
   assert_no_error()
-  assert_equals(0, op_comments)
+  assert_equals(0, opt.comments)
 
-  op_comments = 999
-  cl_parse("-n " + input_file$)
+  opt.comments = 999
+  cli.parse("-n " + input_file$)
   assert_no_error()
-  assert_equals(0, op_comments)
+  assert_equals(0, opt.comments)
 
-  cl_parse("--no-comments=1" + input_file$)
+  cli.parse("--no-comments=1" + input_file$)
   assert_error("option '--no-comments' does not expect argument")
 End Function
 
 Function test_empty_lines()
-  cl_parse("--empty-lines=0 " + input_file$)
+  cli.parse("--empty-lines=0 " + input_file$)
   assert_no_error()
-  assert_equals(0, op_empty_lines)
+  assert_equals(0, opt.empty_lines)
 
-  cl_parse("--empty-lines=1 " + input_file$)
+  cli.parse("--empty-lines=1 " + input_file$)
   assert_no_error()
-  assert_equals(1, op_empty_lines)
+  assert_equals(1, opt.empty_lines)
 
-  cl_parse("--empty-lines " + input_file$)
+  cli.parse("--empty-lines " + input_file$)
   assert_error("option '--empty-lines' expects {0|1} argument")
 
-  cl_parse("--empty-lines=3" + input_file$)
+  cli.parse("--empty-lines=3" + input_file$)
   assert_error("option '--empty-lines' expects {0|1} argument")
 End Function
 
 Function test_format_only()
-  cl_parse("--format-only " + input_file$)
+  cli.parse("--format-only " + input_file$)
   assert_no_error()
-  assert_equals(1, op_format_only)
+  assert_equals(1, opt.format_only)
 
-  cl_parse("-f=1 " + input_file$)
+  cli.parse("-f=1 " + input_file$)
   assert_error("option '-f' does not expect argument")
 End Function
 
 Function test_indent()
-  cl_parse("--indent=0 " + input_file$)
+  cli.parse("--indent=0 " + input_file$)
   assert_no_error()
-  assert_equals(0, op_indent_sz)
+  assert_equals(0, opt.indent_sz)
 
-  cl_parse("--indent=1 " + input_file$)
+  cli.parse("--indent=1 " + input_file$)
   assert_no_error()
-  assert_equals(1, op_indent_sz)
+  assert_equals(1, opt.indent_sz)
 
-  cl_parse("--indent " + input_file$)
+  cli.parse("--indent " + input_file$)
   assert_error("option '--indent' expects <number> argument")
 
-  cl_parse("--indent=3 " + input_file$)
+  cli.parse("--indent=3 " + input_file$)
   assert_no_error()
-  assert_equals(3, op_indent_sz)
+  assert_equals(3, opt.indent_sz)
 End Function
 
 Function test_spacing()
-  cl_parse("--spacing=0 " + input_file$)
+  cli.parse("--spacing=0 " + input_file$)
   assert_no_error()
-  assert_equals(0, op_spacing)
+  assert_equals(0, opt.spacing)
 
-  cl_parse("--spacing=1 " + input_file$)
+  cli.parse("--spacing=1 " + input_file$)
   assert_no_error()
-  assert_equals(1, op_spacing)
+  assert_equals(1, opt.spacing)
 
-  cl_parse("--spacing=2 " + input_file$)
+  cli.parse("--spacing=2 " + input_file$)
   assert_no_error()
-  assert_equals(2, op_spacing)
+  assert_equals(2, opt.spacing)
 
-  cl_parse("--spacing " + input_file$)
+  cli.parse("--spacing " + input_file$)
   assert_error("option '--spacing' expects {0|1|2} argument")
 
-  cl_parse("--spacing=3 " + input_file$)
+  cli.parse("--spacing=3 " + input_file$)
   assert_error("option '--spacing' expects {0|1|2} argument")
 End Function
 
 Function test_output_file()
-  cl_parse(input_file$ + " " + output_file$)
+  cli.parse(input_file$ + " " + output_file$)
 
   assert_no_error()
-  assert_string_equals("input.bas", op_infile$)
-  assert_string_equals("output.bas", op_outfile$)
+  assert_string_equals("input.bas", opt.infile$)
+  assert_string_equals("output.bas", opt.outfile$)
 End Function
 
 Function test_unquoted_output_file()
-  cl_parse(input_file$ + " output.bas")
+  cli.parse(input_file$ + " output.bas")
 
   assert_error("output file name must be quoted")
 End Function
 
 Function test_unknown_option()
-  cl_parse("--wombat " + input_file$)
+  cli.parse("--wombat " + input_file$)
 
   assert_error("option '--wombat' is unknown")
 End Function
 
 Function test_too_many_arguments()
-  cl_parse(input_file$ + " " + output_file$ + " wombat")
+  cli.parse(input_file$ + " " + output_file$ + " wombat")
 
   assert_error("unexpected argument 'wombat'")
 End Function
 
 Function test_everything()
-  cl_parse("-f -C -e=1 -i=2 -s=0 -n " + input_file$ + " " + output_file$)
+  cli.parse("-f -C -e=1 -i=2 -s=0 -n " + input_file$ + " " + output_file$)
 
   assert_no_error()
-  assert_equals(1, op_format_only)
-  assert_string_equals("input.bas", op_infile$)
-  assert_string_equals("output.bas", op_outfile$)
-  assert_equals(1, op_colour)
-  assert_equals(0, op_comments)
-  assert_equals(1, op_empty_lines)
-  assert_equals(2, op_indent_sz)
-  assert_equals(0, op_spacing)
+  assert_equals(1, opt.format_only)
+  assert_string_equals("input.bas", opt.infile$)
+  assert_string_equals("output.bas", opt.outfile$)
+  assert_equals(1, opt.colour)
+  assert_equals(0, opt.comments)
+  assert_equals(1, opt.empty_lines)
+  assert_equals(2, opt.indent_sz)
+  assert_equals(0, opt.spacing)
 End Function

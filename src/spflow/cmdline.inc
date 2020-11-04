@@ -3,23 +3,23 @@
 ' Parses command-line 's$'.
 '
 ' Sets 'err$' if it encounters an error.
-Sub cl_parse(s$)
+Sub cli.parse(s$)
   Local i = 0, o$
 
-  lx_parse_command_line(s$)
+  lx.parse_command_line(s$)
   If err$ <> "" Then Exit Sub
 
   ' Process options.
 
-  Do While i < lx_num And err$ = "" And lx_type(i) = TK_OPTION
-    Select Case lx_option$(i)
-      Case "A", "all"     : cl_parse_no_arg("all", i)
-      Case "b", "brief"   : cl_parse_no_arg("brief", i)
-      Case "h", "help"    : cl_usage() : End
-      Case "no-location"  : cl_parse_no_arg("no-location", i)
-      Case "v", "version" : cl_version() : End
+  Do While i < lx.num And err$ = "" And lx.type(i) = TK_OPTION
+    Select Case lx.option$(i)
+      Case "A", "all"     : cli.parse_no_arg("all", i)
+      Case "b", "brief"   : cli.parse_no_arg("brief", i)
+      Case "h", "help"    : cli.usage() : End
+      Case "no-location"  : cli.parse_no_arg("no-location", i)
+      Case "v", "version" : cli.version() : End
       Case Else:
-        err$ = "option '" + lx_token$(i) + "' is unknown"
+        err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select
   Loop
 
@@ -27,41 +27,41 @@ Sub cl_parse(s$)
 
   ' Process arguments.
 
-  If i >= lx_num Then err$ = "no input file specified" : Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "input file name must be quoted" : Exit Sub
-  op_set("infile", lx_string$(i))
+  If i >= lx.num Then err$ = "no input file specified" : Exit Sub
+  If lx.type(i) <> TK_STRING Then err$ = "input file name must be quoted" : Exit Sub
+  opt.set("infile", lx.string$(i))
   i = i + 1
 
-  If i >= lx_num Then Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "output file name must be quoted" : Exit Sub
-  op_set("outfile", lx_string$(i))
+  If i >= lx.num Then Exit Sub
+  If lx.type(i) <> TK_STRING Then err$ = "output file name must be quoted" : Exit Sub
+  opt.set("outfile", lx.string$(i))
   i = i + 1
 
-  If i <> lx_num Then err$ = "unexpected argument '" + lx_token$(i) + "'"
+  If i <> lx.num Then err$ = "unexpected argument '" + lx.token$(i) + "'"
 End Sub
 
 ' Parses an option with an argument.
-Sub cl_parse_arg(option$, i, arg$)
-  If lx_token$(i + 1) <> "=" Or lx_token$(i + 2) = "" Then
+Sub cli.parse_arg(option$, i, arg$)
+  If lx.token$(i + 1) <> "=" Or lx.token$(i + 2) = "" Then
     err$ = "missing argument"
   Else
-    op_set(option$, lx_token$(i + 2))
+    opt.set(option$, lx.token$(i + 2))
   EndIf
-  If err$ <> "" Then err$ = "option '" + lx_token$(i) + "' expects " + arg$ + " argument"
+  If err$ <> "" Then err$ = "option '" + lx.token$(i) + "' expects " + arg$ + " argument"
   i = i + 3
 End Sub
 
 ' Parses an option without an argument.
-Sub cl_parse_no_arg(option$, i)
-  If lx_token$(i + 1) = "=" Then
-    err$ = "option '" + lx_token$(i) + "' does not expect argument"
+Sub cli.parse_no_arg(option$, i)
+  If lx.token$(i + 1) = "=" Then
+    err$ = "option '" + lx.token$(i) + "' does not expect argument"
   Else
-    op_set(option$, "on")
+    opt.set(option$, "on")
   EndIf
   i = i + 1
 End Sub
 
-Sub cl_usage()
+Sub cli.usage()
   Local in$ = Chr$(34) + "input file" + Chr$(34)
   Local out$ = Chr$(34) + "output file" + Chr$(34)
   Print "Usage: RUN "; Chr$(34); "spflow.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
@@ -78,7 +78,7 @@ Sub cl_usage()
   Print "  -v, --version  output version information and exit"
 End Sub
 
-Sub cl_version()
+Sub cli.version()
   Print "spflow " + SPT_VERSION$
   Print "Copyright (c) 2020 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."

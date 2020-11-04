@@ -22,7 +22,7 @@ run_tests()
 End
 
 Sub setup_test()
-  op_init()
+  opt.init()
 End Sub
 
 Sub teardown_test()
@@ -31,7 +31,7 @@ End Sub
 Function test_all()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, op_all)
+  assert_equals(0, opt.all)
 
   elements$(0) = "on"
   elements$(1) = "1"
@@ -39,10 +39,10 @@ Function test_all()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_all = 999
-    op_set("all", elements$(i))
+    opt.all = 999
+    opt.set("all", elements$(i))
     assert_no_error()
-    assert_equals(1, op_all)
+    assert_equals(1, opt.all)
     i = i + 1
   Loop
 
@@ -54,21 +54,21 @@ Function test_all()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_all = 999
-    op_set("all", elements$(i))
+    opt.all = 999
+    opt.set("all", elements$(i))
     assert_no_error()
-    assert_equals(0, op_all)
+    assert_equals(0, opt.all)
     i = i + 1
   Loop
 
-  op_set("all", "foo")
+  opt.set("all", "foo")
   assert_error("expects 'on|off' argument")
 End Function
 
 Function test_brief()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, op_brief)
+  assert_equals(0, opt.brief)
 
   elements$(0) = "on"
   elements$(1) = "1"
@@ -76,10 +76,10 @@ Function test_brief()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_brief = 999
-    op_set("brief", elements$(i))
+    opt.brief = 999
+    opt.set("brief", elements$(i))
     assert_no_error()
-    assert_equals(1, op_brief)
+    assert_equals(1, opt.brief)
     i = i + 1
   Loop
 
@@ -91,21 +91,21 @@ Function test_brief()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_brief = 999
-    op_set("brief", elements$(i))
+    opt.brief = 999
+    opt.set("brief", elements$(i))
     assert_no_error()
-    assert_equals(0, op_brief)
+    assert_equals(0, opt.brief)
     i = i + 1
   Loop
 
-  op_set("brief", "foo")
+  opt.set("brief", "foo")
   assert_error("expects 'on|off' argument")
 End Function
 
 Function test_no_location()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, op_no_location)
+  assert_equals(0, opt.no_location)
 
   elements$(0) = "on"
   elements$(1) = "1"
@@ -113,10 +113,10 @@ Function test_no_location()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_no_location = 999
-    op_set("no-location", elements$(i))
+    opt.no_location = 999
+    opt.set("no-location", elements$(i))
     assert_no_error()
-    assert_equals(1, op_no_location)
+    assert_equals(1, opt.no_location)
     i = i + 1
   Loop
 
@@ -128,37 +128,37 @@ Function test_no_location()
   i = 0
   Do While elements$(i) <> Chr$(0)
     err$ = ""
-    op_no_location = 999
-    op_set("no-location", elements$(i))
+    opt.no_location = 999
+    opt.set("no-location", elements$(i))
     assert_no_error()
-    assert_equals(0, op_no_location)
+    assert_equals(0, opt.no_location)
     i = i + 1
   Loop
 
-  op_set("no-location", "foo")
+  opt.set("no-location", "foo")
   assert_error("expects 'on|off' argument")
 End Function
 
 Function test_infile()
-  assert_string_equals("", op_infile$)
+  assert_string_equals("", opt.infile$)
 
   err$ = ""
-  op_set("infile", "foo.bas")
+  opt.set("infile", "foo.bas")
   assert_no_error()
-  assert_string_equals("foo.bas", op_infile$)
+  assert_string_equals("foo.bas", opt.infile$)
 End Function
 
 Function test_outfile()
-  assert_string_equals("", op_outfile$)
+  assert_string_equals("", opt.outfile$)
 
   err$ = ""
-  op_set("outfile", "foo.bas")
+  opt.set("outfile", "foo.bas")
   assert_no_error()
-  assert_string_equals("foo.bas", op_outfile$)
+  assert_string_equals("foo.bas", opt.outfile$)
 End Function
 
 Function test_unknown()
   err$ = ""
-  op_set("unknown", "foo")
+  opt.set("unknown", "foo")
   assert_error("unknown option: unknown")
 End Function

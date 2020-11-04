@@ -19,7 +19,7 @@ Function fil.get_canonical$(f$)
   Local sz% = 20
   Local elements$(sz% - 1) Length 40
 
-  list_init(elements$(), sz%)
+  list.init(elements$(), sz%)
 
   If fil.is_absolute%(f$) Then
     If Instr(UCase$(f$), "A:") = 1 Then
@@ -35,10 +35,10 @@ Function fil.get_canonical$(f$)
 
   Do While i% < sz%
     If elements$(i%) = "." Then
-      list_remove(elements$(), sz%, i%)
+      list.remove(elements$(), sz%, i%)
     ElseIf elements$(i%) = ".." Then
-      list_remove(elements$(), sz, i%)
-      list_remove(elements$(), sz, i% - 1)
+      list.remove(elements$(), sz, i%)
+      list.remove(elements$(), sz, i% - 1)
       i% = i% - 1
     Else
       i% = i% + 1

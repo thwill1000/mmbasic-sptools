@@ -3,26 +3,26 @@
 ' Parses command-line 's$'.
 '
 ' Sets 'err$' if it encounters an error.
-Sub cl_parse(s$)
+Sub cli.parse(s$)
   Local i = 0, o$
 
-  lx_parse_command_line(s$)
+  lx.parse_command_line(s$)
   If err$ <> "" Then Exit Sub
 
   ' Process options.
 
-  Do While i < lx_num And err$ = "" And lx_type(i) = TK_OPTION
-    Select Case lx_option$(i)
-      Case "C", "colour"      : cl_parse_no_arg("colour", i)
-      Case "e", "empty-lines" : cl_parse_arg("empty-lines", i, "{0|1}")
-      Case "f", "format-only" : cl_parse_no_arg("format-only", i)
-      Case "i", "indent"      : cl_parse_arg("indent", i, "<number>")
-      Case "h", "help"        : cl_usage() : End
-      Case "n", "no-comments" : cl_parse_no_arg("no-comments", i)
-      Case "s", "spacing"     : cl_parse_arg("spacing", i, "{0|1|2}")
-      Case "v", "version"     : cl_version() : End
+  Do While i < lx.num And err$ = "" And lx.type(i) = TK_OPTION
+    Select Case lx.option$(i)
+      Case "C", "colour"      : cli.parse_no_arg("colour", i)
+      Case "e", "empty-lines" : cli.parse_arg("empty-lines", i, "{0|1}")
+      Case "f", "format-only" : cli.parse_no_arg("format-only", i)
+      Case "i", "indent"      : cli.parse_arg("indent", i, "<number>")
+      Case "h", "help"        : cli.usage() : End
+      Case "n", "no-comments" : cli.parse_no_arg("no-comments", i)
+      Case "s", "spacing"     : cli.parse_arg("spacing", i, "{0|1|2}")
+      Case "v", "version"     : cli.version() : End
       Case Else:
-        err$ = "option '" + lx_token$(i) + "' is unknown"
+        err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select
   Loop
 
@@ -30,41 +30,41 @@ Sub cl_parse(s$)
 
   ' Process arguments.
 
-  If i >= lx_num Then err$ = "no input file specified" : Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "input file name must be quoted" : Exit Sub
-  op_set("infile", lx_string$(i))
+  If i >= lx.num Then err$ = "no input file specified" : Exit Sub
+  If lx.type(i) <> TK_STRING Then err$ = "input file name must be quoted" : Exit Sub
+  opt.set("infile", lx.string$(i))
   i = i + 1
 
-  If i >= lx_num Then Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "output file name must be quoted" : Exit Sub
-  op_set("outfile", lx_string$(i))
+  If i >= lx.num Then Exit Sub
+  If lx.type(i) <> TK_STRING Then err$ = "output file name must be quoted" : Exit Sub
+  opt.set("outfile", lx.string$(i))
   i = i + 1
 
-  If i <> lx_num Then err$ = "unexpected argument '" + lx_token$(i) + "'"
+  If i <> lx.num Then err$ = "unexpected argument '" + lx.token$(i) + "'"
 End Sub
 
 ' Parses an option with an argument.
-Sub cl_parse_arg(option$, i, arg$)
-  If lx_token$(i + 1) <> "=" Or lx_token$(i + 2) = "" Then
+Sub cli.parse_arg(option$, i, arg$)
+  If lx.token$(i + 1) <> "=" Or lx.token$(i + 2) = "" Then
     err$ = "missing argument"
   Else
-    op_set(option$, lx_token$(i + 2))
+    opt.set(option$, lx.token$(i + 2))
   EndIf
-  If err$ <> "" Then err$ = "option '" + lx_token$(i) + "' expects " + arg$ + " argument"
+  If err$ <> "" Then err$ = "option '" + lx.token$(i) + "' expects " + arg$ + " argument"
   i = i + 3
 End Sub
 
 ' Parses an option without an argument.
-Sub cl_parse_no_arg(option$, i)
-  If lx_token$(i + 1) = "=" Then
-    err$ = "option '" + lx_token$(i) + "' does not expect argument"
+Sub cli.parse_no_arg(option$, i)
+  If lx.token$(i + 1) = "=" Then
+    err$ = "option '" + lx.token$(i) + "' does not expect argument"
   Else
-    op_set(option$, "on")
+    opt.set(option$, "on")
   EndIf
   i = i + 1
 End Sub
 
-Sub cl_usage()
+Sub cli.usage()
   Local in$ = Chr$(34) + "input file" + Chr$(34)
   Local out$ = Chr$(34) + "output file" + Chr$(34)
   Print "Usage: RUN "; Chr$(34); "sptrans.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
@@ -97,7 +97,7 @@ Sub cl_usage()
   Print "the corresponding directives in source files, unless --format-only is also specified."
 End Sub
 
-Sub cl_version()
+Sub cli.version()
   Print "sptrans " + SPT_VERSION$
   Print "Copyright (c) 2020 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."

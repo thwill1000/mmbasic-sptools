@@ -1,65 +1,65 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Dim op_all
-Dim op_brief
-Dim op_no_location
-Dim op_infile$      ' input file/path
-Dim op_outfile$     ' output file/path, empty for output to console
+Dim opt.all
+Dim opt.brief
+Dim opt.no_location
+Dim opt.infile$      ' input file/path
+Dim opt.outfile$     ' output file/path, empty for output to console
 
-Sub op_init()
-  op_all = 0
-  op_brief = 0
-  op_no_location = 0
-  op_infile$ = ""
-  op_outfile$ = ""
+Sub opt.init()
+  opt.all = 0
+  opt.brief = 0
+  opt.no_location = 0
+  opt.infile$ = ""
+  opt.outfile$ = ""
 End Sub
 
 ' Sets the value for an option.
 '
 ' If name$ or value$ are invalid then sets err$.
-Sub op_set(name$, value$)
+Sub opt.set(name$, value$)
   Select Case LCase$(name$)
-    Case "all"         : op_set_all(value$)
-    Case "brief"       : op_set_brief(value$)
-    Case "infile"      : op_set_infile(value$)
-    Case "no-location" : op_set_no_location(value$)
-    Case "outfile"     : op_set_outfile(value$)
+    Case "all"         : opt.set_all(value$)
+    Case "brief"       : opt.set_brief(value$)
+    Case "infile"      : opt.set_infile(value$)
+    Case "no-location" : opt.set_no_location(value$)
+    Case "outfile"     : opt.set_outfile(value$)
     Case Else
       err$ = "unknown option: " + name$
   End Select
 End Sub
 
-Sub op_set_all(v$)
+Sub opt.set_all(v$)
   Select Case LCase$(v$)
-    Case "default", "off", "0", "" : op_all = 0
-    Case "on", "1"                 : op_all = 1
+    Case "default", "off", "0", "" : opt.all = 0
+    Case "on", "1"                 : opt.all = 1
     Case Else
       err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
-Sub op_set_brief(v$)
+Sub opt.set_brief(v$)
   Select Case LCase$(v$)
-    Case "default", "off", "0", "" : op_brief = 0
-    Case "on", "1"                 : op_brief = 1
+    Case "default", "off", "0", "" : opt.brief = 0
+    Case "on", "1"                 : opt.brief = 1
     Case Else
       err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
-Sub op_set_infile(v$)
-  op_infile$ = v$
+Sub opt.set_infile(v$)
+  opt.infile$ = v$
 End Sub
 
-Sub op_set_no_location(v$)
+Sub opt.set_no_location(v$)
   Select Case LCase$(v$)
-    Case "default", "off", "0", "" : op_no_location = 0
-    Case "on", "1"                 : op_no_location = 1
+    Case "default", "off", "0", "" : opt.no_location = 0
+    Case "on", "1"                 : opt.no_location = 1
     Case Else
       err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
-Sub op_set_outfile(v$)
-  op_outfile$ = v$
+Sub opt.set_outfile(v$)
+  opt.outfile$ = v$
 End Sub

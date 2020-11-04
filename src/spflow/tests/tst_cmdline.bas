@@ -31,80 +31,80 @@ run_tests()
 End
 
 Sub setup_test()
-  op_init()
+  opt.init()
 End Sub
 
 Sub teardown_test()
 End Sub
 
 Function test_no_input_file()
-  cl_parse("")
+  cli.parse("")
 
   assert_error("no input file specified")
 End Function
 
 Function test_input_file()
-  cl_parse(input_file$)
+  cli.parse(input_file$)
 
   assert_no_error()
-  assert_string_equals("input.bas", op_infile$)
+  assert_string_equals("input.bas", opt.infile$)
 End Function
 
 Function test_unquoted_input_file()
-  cl_parse("input.bas")
+  cli.parse("input.bas")
 
   assert_error("input file name must be quoted")
 End Function
 
 Function test_output_file()
-  cl_parse(input_file$ + " " + output_file$)
+  cli.parse(input_file$ + " " + output_file$)
 
   assert_no_error()
-  assert_string_equals("input.bas", op_infile$)
-  assert_string_equals("output.bas", op_outfile$)
+  assert_string_equals("input.bas", opt.infile$)
+  assert_string_equals("output.bas", opt.outfile$)
 End Function
 
 Function test_unquoted_output_file()
-  cl_parse(input_file$ + " output.bas")
+  cli.parse(input_file$ + " output.bas")
 
   assert_error("output file name must be quoted")
 End Function
 
 Function test_all()
-  cl_parse("--all " + input_file$)
+  cli.parse("--all " + input_file$)
   assert_no_error()
-  assert_equals(1, op_all)
+  assert_equals(1, opt.all)
 
-  cl_parse("-A=1 " + input_file$)
+  cli.parse("-A=1 " + input_file$)
   assert_error("option '-A' does not expect argument")
 End Function
 
 Function test_brief()
-  cl_parse("--brief " + input_file$)
+  cli.parse("--brief " + input_file$)
   assert_no_error()
-  assert_equals(1, op_brief)
+  assert_equals(1, opt.brief)
 
-  cl_parse("-b=1 " + input_file$)
+  cli.parse("-b=1 " + input_file$)
   assert_error("option '-b' does not expect argument")
 End Function
 
 Function test_no_location()
-  cl_parse("--no-location " + input_file$)
+  cli.parse("--no-location " + input_file$)
   assert_no_error()
-  assert_equals(1, op_no_location)
+  assert_equals(1, opt.no_location)
 
-  cl_parse("--no-location=1 " + input_file$)
+  cli.parse("--no-location=1 " + input_file$)
   assert_error("option '--no-location' does not expect argument")
 End Function
 
 Function test_unknown_option()
-  cl_parse("--wombat " + input_file$)
+  cli.parse("--wombat " + input_file$)
 
   assert_error("option '--wombat' is unknown")
 End Function
 
 Function test_too_many_arguments()
-  cl_parse(input_file$ + " " + output_file$ + " wombat")
+  cli.parse(input_file$ + " " + output_file$ + " wombat")
 
   assert_error("unexpected argument 'wombat'")
 End Function

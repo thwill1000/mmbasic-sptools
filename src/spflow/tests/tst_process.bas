@@ -13,10 +13,10 @@ Option Default Integer
 #Include "../../sptest/unittest.inc"
 #Include "../../sptrans/lexer.inc"
 
-Dim in_files$(1)
-Dim in_files_sz = 1
-in_files$(0) = "input.bas"
-Dim in_line_num(1)
+Dim in.files$(1)
+Dim in.files_sz = 1
+in.files$(0) = "input.bas"
+Dim in.line_num(1)
 
 add_test("test_simple_sub")
 add_test("test_simple_fn")
@@ -28,8 +28,8 @@ run_tests()
 End
 
 Sub setup_test()
-  op_init()
-  pr_init()
+  opt.init()
+  pro.init()
 End Sub
 
 Sub teardown_test()
@@ -47,10 +47,10 @@ Function test_simple_sub()
 
   Local pass
   For pass = 1 To 2
-    For in_line_num(0) = 1 To 7
-      lx_parse_basic(lines$(in_line_num(0)))
+    For in.line_num(0) = 1 To 7
+      lx.parse_basic(lines$(in.line_num(0)))
       process(pass)
-    Next in_line_num(0)
+    Next in.line_num(0)
     pass_completed(pass)
   Next pass
 
@@ -81,10 +81,10 @@ Function test_simple_fn()
 
   Local pass
   For pass = 1 To 2
-    For in_line_num(0) = 1 To 4
-      lx_parse_basic(lines$(in_line_num(0)))
+    For in.line_num(0) = 1 To 4
+      lx.parse_basic(lines$(in.line_num(0)))
       process(pass)
-    Next in_line_num(0)
+    Next in.line_num(0)
     pass_completed(pass)
   Next pass
 
@@ -105,16 +105,16 @@ End Function
 Function test_self_recursive_sub()
   Local lines$(4)
   lines$(1) = "Sub foo()"
-  lines$(2) = "  foo()
+  lines$(2) = "  foo()"
   lines$(3) = "End Sub"
   lines$(4) = "foo()"
 
   Local pass
   For pass = 1 To 2
-    For in_line_num(0) = 1 To 4
-      lx_parse_basic(lines$(in_line_num(0)))
+    For in.line_num(0) = 1 To 4
+      lx.parse_basic(lines$(in.line_num(0)))
       process(pass)
-    Next in_line_num(0)
+    Next in.line_num(0)
     pass_completed(pass)
   Next pass
 
@@ -136,16 +136,16 @@ End Function
 Function test_self_recursive_fn()
   Local lines$(4)
   lines$(1) = "Function foo()"
-  lines$(2) = "  foo = foo()
+  lines$(2) = "  foo = foo()"
   lines$(3) = "End Function"
   lines$(4) = "a = foo()"
 
   Local pass
   For pass = 1 To 2
-    For in_line_num(0) = 1 To 4
-      lx_parse_basic(lines$(in_line_num(0)))
+    For in.line_num(0) = 1 To 4
+      lx.parse_basic(lines$(in.line_num(0)))
       process(pass)
-    Next in_line_num(0)
+    Next in.line_num(0)
     pass_completed(pass)
   Next pass
 
@@ -163,4 +163,3 @@ Function test_self_recursive_fn()
   assert_equals(-1, all_calls(3))
 
 End Function
-

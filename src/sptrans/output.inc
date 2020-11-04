@@ -1,41 +1,41 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Dim out_append = 0
-Dim out_file_num = 0
-Dim out_line_num = 0
-Dim out_line_num_fmt$ = "%-5g "
+Dim out.append = 0
+Dim out.file_num = 0
+Dim out.line_num = 0
+Dim out.line_num_fmt$ = "%-5g "
 
-Sub out_open(f$)
+Sub out.open(f$)
   If f$ <> "" Then
-    out_file_num = 10
-    Open f$ For Output As #out_file_num
+    out.file_num = 10
+    Open f$ For Output As #out.file_num
   EndIf
 End Sub
 
-Sub out_close()
-  If out_file_num > 0 Then Close #out_file_num
-  out_file_num = 0
+Sub out.close()
+  If out.file_num > 0 Then Close #out.file_num
+  out.file_num = 0
 End Sub
 
-Sub out_print(s$)
-  If out_append Then
-    If out_file_num = 0 Then Print s$; Else Print #out_file_num, s$;
+Sub out.print(s$)
+  If out.append Then
+    If out.file_num = 0 Then Print s$; Else Print #out.file_num, s$;
   Else
-    out_line_num = out_line_num + 1
-    out_append = 1
-    If out_line_num_fmt$ <> "" Then out_print(Format$(out_line_num, out_line_num_fmt$))
-    out_print(s$)
+    out.line_num = out.line_num + 1
+    out.append = 1
+    If out.line_num_fmt$ <> "" Then out.print(Format$(out.line_num, out.line_num_fmt$))
+    out.print(s$)
   EndIf
 End Sub
 
-Sub out_endl()
-  If out_append = 0 Then out_print() ' to print a line number if necessary
-  If out_file_num = 0 Then Print Else Print #out_file_num
-  out_append = 0
+Sub out.endl()
+  If out.append = 0 Then out.print() ' to print a line number if necessary
+  If out.file_num = 0 Then Print Else Print #out.file_num
+  out.append = 0
 End Sub
 
-Sub out_println(s$)
-  out_print(s$)
-  out_endl()
+Sub out.println(s$)
+  out.print(s$)
+  out.endl()
 End Sub
 

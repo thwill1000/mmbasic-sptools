@@ -3,13 +3,13 @@
 Function check_set_included() : End Function
 
 ' Initialises the set.
-Sub set_init(set$(), num_elements)
+Sub set.init(set$(), num_elements)
   Local sz = num_elements ' don't want to change num_elements
-  set_clear(set$(), sz)
+  set.clear(set$(), sz)
 End Sub
 
 ' Clears the set and resets the size.
-Sub set_clear(set$(), sz)
+Sub set.clear(set$(), sz)
   Local i
   For i = 0 To sz - 1
     set$(i) = Chr$(&h7F) ' so empty elements are at the end when sorted
@@ -18,8 +18,8 @@ Sub set_clear(set$(), sz)
 End Sub
 
 ' Adds a value to the set.
-Sub set_put(set$(), sz, s$)
-  If set_get(set$(), sz, s$) <> -1  Then Exit Sub
+Sub set.put(set$(), sz, s$)
+  If set.get(set$(), sz, s$) <> -1  Then Exit Sub
   set$(sz) = s$
   sz = sz + 1
   If sz > 1 Then
@@ -30,7 +30,7 @@ Sub set_put(set$(), sz, s$)
 End Sub
 
 ' Gets the index of a value in the set, or -1 if not present.
-Function set_get(set$(), sz, s$)
+Function set.get(set$(), sz, s$)
   Local i, lb, ub
 
   ' Binary search of set$()
@@ -43,16 +43,16 @@ Function set_get(set$(), sz, s$)
     ElseIf s$ < set$(i) Then
       ub = i - 1
     Else
-      set_get = i : Exit Function
+      set.get = i : Exit Function
     EndIf
   Loop Until ub < lb
 
-  set_get = -1
+  set.get = -1
 End Function
 
 ' Removes a value from the set if present.
-Sub set_remove(set$(), sz, s$)
-  Local i = set_get(set$(), sz, s$)
+Sub set.remove(set$(), sz, s$)
+  Local i = set.get(set$(), sz, s$)
   If i > -1 Then
     set$(i) = Chr$(&h7F)
     Sort set$()
@@ -61,7 +61,7 @@ Sub set_remove(set$(), sz, s$)
 End Sub
 
 ' Prints the contents of the set.
-Sub set_dump(set$(), sz)
+Sub set.dump(set$(), sz)
   Local i
   For i = 0 To sz - 1
     Print "["; Str$(i); "] "; set$(i)

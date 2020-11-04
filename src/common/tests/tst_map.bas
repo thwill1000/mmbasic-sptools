@@ -34,7 +34,7 @@ Function test_init()
   Local my_keys$(19)
   Local my_values$(19)
 
-  map_init(my_keys$(), my_values$(), 20)
+  map.init(my_keys$(), my_values$(), 20)
 
   For i = 0 To 19
     assert_string_equals(Chr$(&h7F), my_keys$(i))
@@ -47,11 +47,11 @@ Function test_put()
   Local my_values$(19)
   Local my_map_sz = 0
 
-  map_init(my_keys$(), my_values$(), 20)
+  map.init(my_keys$(), my_values$(), 20)
 
-  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
+  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
+  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
+  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
 
   assert_equals(3, my_map_sz)
   assert_string_equals("aaa", my_keys$(0))
@@ -67,14 +67,14 @@ Function test_put_given_already_present()
   Local my_values$(19)
   Local my_map_sz = 0
 
-  map_init(my_keys$(), my_values$(), 20)
-  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
+  map.init(my_keys$(), my_values$(), 20)
+  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
+  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
+  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
 
-  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar2")
-  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat2")
-  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb2")
+  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar2")
+  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat2")
+  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb2")
 
   assert_equals(3, my_map_sz)
   assert_string_equals("aaa", my_keys$(0))
@@ -90,15 +90,15 @@ Function test_get()
   Local my_values$(19)
   Local my_map_sz = 0
 
-  map_init(my_keys$(), my_values$(), 20)
-  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
+  map.init(my_keys$(), my_values$(), 20)
+  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
+  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
+  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
 
-  assert_string_equals("bar", map_get$(my_keys$(), my_values$(), my_map_sz, "foo"))
-  assert_string_equals("bat", map_get$(my_keys$(), my_values$(), my_map_sz, "wom"))
-  assert_string_equals("bbb", map_get$(my_keys$(), my_values$(), my_map_sz, "aaa"))
-  assert_string_equals(Chr$(0), map_get$(my_keys$(), my_values$(), my_map_sz, "unknown"))
+  assert_string_equals("bar", map.get$(my_keys$(), my_values$(), my_map_sz, "foo"))
+  assert_string_equals("bat", map.get$(my_keys$(), my_values$(), my_map_sz, "wom"))
+  assert_string_equals("bbb", map.get$(my_keys$(), my_values$(), my_map_sz, "aaa"))
+  assert_string_equals(Chr$(0), map.get$(my_keys$(), my_values$(), my_map_sz, "unknown"))
 End Function
 
 Function test_remove()
@@ -106,12 +106,12 @@ Function test_remove()
   Local my_values$(19)
   Local my_map_sz = 0
 
-  map_init(my_keys$(), my_values$(), 20)
-  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
+  map.init(my_keys$(), my_values$(), 20)
+  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
+  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
+  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
 
-  map_remove(my_keys$(), my_values$(), my_map_sz, "wom")
+  map.remove(my_keys$(), my_values$(), my_map_sz, "wom")
 
   assert_equals(2, my_map_sz)
   assert_string_equals("aaa", my_keys$(0))
@@ -121,7 +121,7 @@ Function test_remove()
   assert_string_equals(Chr$(&h7F), my_keys$(2))
   assert_string_equals(Chr$(0), my_values$(2))
 
-  map_remove(my_keys$(), my_values$(), my_map_sz, "aaa")
+  map.remove(my_keys$(), my_values$(), my_map_sz, "aaa")
 
   assert_equals(1, my_map_sz)
   assert_string_equals("foo", my_keys$(0))
@@ -129,7 +129,7 @@ Function test_remove()
   assert_string_equals(Chr$(&h7F), my_keys$(1))
   assert_string_equals(Chr$(0), my_values$(1))
 
-  map_remove(my_keys$(), my_values$(), my_map_sz, "foo")
+  map.remove(my_keys$(), my_values$(), my_map_sz, "foo")
 
   assert_equals(0, my_map_sz)
   assert_string_equals(Chr$(&h7F), my_keys$(0))
@@ -142,12 +142,12 @@ Function test_clear()
   Local my_values$(19)
   Local my_map_sz = 0
 
-  map_init(my_keys$(), my_values$(), 20)
-  map_put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map_put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map_put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
+  map.init(my_keys$(), my_values$(), 20)
+  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
+  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
+  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
 
-  map_clear(my_keys$(), my_values$(), my_map_sz)
+  map.clear(my_keys$(), my_values$(), my_map_sz)
 
   assert_equals(0, my_map_sz)
   For i = 0 To 19
