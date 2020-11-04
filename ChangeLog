@@ -1,6 +1,13 @@
 ChangeLog
 ---------
 
+Release 1b3:
+ - Changed maximum number of tokens supported per line from 100 => 255.
+ - Fixed bug where internal error was reported when input file was not found.
+ - Added additional utility code to 'src/common'.
+ - Changed naming standard for all code to use a '.' instead of an '_' to
+   separate the 'package' prefix from the function/subroutine/variable name.
+
 Release 1b2:
  - The package has been renamed to "SP Tools" and the GitHub address changed
    correspondingly: https://github.com/thwill1000/sptools
@@ -19,10 +26,8 @@ Release 1b2:
    See https://github.com/thwill1000/sptools/blob/master/README.md for more
    details.
 
- - sptrans: Increased maximum number of tokens supported per line from
-            50 => 100.
- - sptrans: Added support for identifiers with ! or % suffixes; $ was already
-            supported.
+ - Increased maximum number of tokens supported per line from 50 => 100.
+ - Added support for identifiers with ! or % suffixes; $ was already supported.
 
 Release 1b1:
  - Initial public beta.
