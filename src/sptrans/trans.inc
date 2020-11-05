@@ -72,19 +72,19 @@ Sub process_endif()
 End Sub
 
 Sub update_num_comments(x)
-  Local i = in.files_sz - 1
+  Local i = in.num_open_files% - 1
   num_comments(i) = num_comments(i) + x
 End Sub
 
 Function popt.if()
-  Local i = in.files_sz - 1
+  Local i = in.num_open_files% - 1
   If if_stack_sz(i) = 0 Then err$ = "unmatched !endif" : Exit Function
   if_stack_sz(i) = if_stack_sz(i) - 1
   popt.if = if_stack(i, if_stack_sz(i))
 End Function
 
 Sub add_comments()
-  Local nc = num_comments(in.files_sz - 1)
+  Local nc = num_comments(in.num_open_files% - 1)
   If nc > 0 Then
     lx.parse_basic(String$(nc, "'") + " " + lx.line$)
   ElseIf nc < 0 Then
@@ -167,7 +167,7 @@ Sub process_if()
 End Sub
 
 Sub push_if(x)
-  Local i = in.files_sz - 1
+  Local i = in.num_open_files% - 1
   If if_stack_sz(i) = MAX_NUM_IFS Then Error "Too many if directives"
   if_stack(i, if_stack_sz(i)) = x
   if_stack_sz(i) = if_stack_sz(i) + 1

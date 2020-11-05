@@ -7,10 +7,6 @@ Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
 Const QU$ = Chr$(34)
 
-#Include "cmdline.inc"
-#Include "process.inc"
-#Include "options.inc"
-#Include "treegen.inc"
 #Include "../common/error.inc"
 #Include "../common/file.inc"
 #Include "../common/list.inc"
@@ -21,6 +17,10 @@ Const QU$ = Chr$(34)
 #Include "../sptrans/input.inc"
 #Include "../sptrans/lexer.inc"
 #Include "../sptrans/output.inc"
+#Include "cmdline.inc"
+#Include "process.inc"
+#Include "options.inc"
+#Include "treegen.inc"
 
 Sub cendl()
   Print
@@ -31,7 +31,7 @@ Sub cout(s$)
 End Sub
 
 Sub cerror(msg$)
-  Local i = in.files_sz - 1
+  Local i = in.num_open_files% - 1
   Print
   Print "[" + in.files$(i) + ":" + Str$(in.line_num(i)) + "] Error: " + msg$
   End
@@ -44,7 +44,7 @@ Sub main()
   pro.init()
 
   cli.parse(Mm.CmdLine$)
-  If err$ <> "" Then Print "spflow: "; err$ : Print : cl_usage() : End
+  If err$ <> "" Then Print "spflow: " err$ : Print : cli.usage() : End
 
   If Not fil.exists%(opt.infile$)) Then
     Print "spflow: input file '" opt.infile$ "' not found."
@@ -52,7 +52,7 @@ Sub main()
   EndIf
 
   If opt.outfile$ <> "" Then
-    If fil.exists%(op_outfile$)) Then
+    If fil.exists%(opt.outfile$)) Then
       Line Input "Overwrite existing '" + opt.outfile$ + "' [y|N] ? ", s$
       If LCase$(s$) <> "y" Then Print "CANCELLED" : End
       Print
@@ -80,7 +80,7 @@ Sub main()
     cout("   ")
 
     Do
-      cout(BS$ + Mid$("\|/-", ((in.line_num(in.files_sz - 1) \ 8) Mod 4) + 1, 1))
+      cout(BS$ + Mid$("\|/-", ((in.line_num(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
       s$ = in.readln$()
       If pass = 1 Then
@@ -101,10 +101,10 @@ process:
       process(pass)
       If err$ <> "" Then cerror(err$)
 skip:
-      If Eof(#in.files_sz) Then handle_eof()
+      If Eof(#in.num_open_files%) Then handle_eof()
       If err$ <> "" Then cerror(err$)
 
-    Loop Until in.files_sz = 0
+    Loop Until in.num_open_files% = 0
 
     Print
 
@@ -126,7 +126,7 @@ Sub handle_include()
   If lx.num > 2 Then err$ = "#Include has too many arguments"
   If err$ = "" Then in.open(lx.string$(1))
   If err$ = "" Then
-    Local i = in.files_sz
+    Local i = in.num_open_files%
     cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
     cout(" " + Space$(i * 2))
   EndIf
@@ -134,7 +134,7 @@ End Sub
 
 Sub handle_eof()
   in.close()
-  If err$ = "" Then cout(BS$ + " " + CR$ + Space$(1 + in.files_sz * 2))
+  If err$ = "" Then cout(BS$ + " " + CR$ + Space$(1 + in.num_open_files% * 2))
 End Sub
 
 main()

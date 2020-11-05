@@ -1,9 +1,9 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Const TG.CALL_STACK_MAX = 50
-Dim tg.call_stack$(TG.CALL_STACK_MAX - 1) Length 40
-Dim tg.call_stack_sz
-list.init(tg.call_stack$(), TG.CALL_STACK_MAX)
+'Const TG.CALL_STACK_MAX = 50
+Dim tg.call_stack$(list.new%(50)) Length 40
+'Dim tg.call_stack_sz
+list.init(tg.call_stack$())
 
 ' Elements of this array are the line number in the output where the
 ' first call to the corresponding element of subs_k$ occurs.
@@ -22,7 +22,7 @@ Sub tg.subtree(name$)
   brief = tg.first_call(i)
   If brief = 0 Then tg.first_call(i) = out.line_num + 1
 
-  indent$ = Space$(tg.call_stack_sz * 2)
+  indent$ = Space$(list.size%(tg.call_stack$()) * 2)
   v$ = subs_v$(i)
   out.print(indent$ + Field$(v$, 1, ","))
   If name$ <> GLOBAL_SCOPE$ Then out.print("()")
@@ -36,7 +36,7 @@ Sub tg.subtree(name$)
 '  If i Then Print : Print indent$ "        (recursive: see " Str$(i) ")" : Exit Sub
   If i Then out.println(" [recursive, see " + Str$(i) + "]") : Exit Sub
 
-  list.push(tg.call_stack$(), tg.call_stack_sz, LCase$(name$) + "," + Str$(out.line_num))
+  list.push(tg.call_stack$(), LCase$(name$) + "," + Str$(out.line_num))
 
   i = Val(Field$(v$, 4, ","))
 
@@ -55,12 +55,13 @@ Sub tg.subtree(name$)
     out.println()
   EndIf
 
-  v$ = list.pop$(tg.call_stack$(), tg.call_stack_sz)
+  v$ = list.pop$(tg.call_stack$())
 End Sub
 
 Function tg.is_recursive(name$)
   Local i
-  For i = 0 To tg.call_stack_sz - 1
+  Local sz = list.size%(tg.call_stack$())
+  For i = 0 To sz - 1
     If Field$(tg.call_stack$(i), 1, ",")  = LCase$(name$) Then
       tg.is_recursive = Val(Field$(tg.call_stack$(i), 2, ","))
       Exit Function

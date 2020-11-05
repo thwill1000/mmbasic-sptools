@@ -12,28 +12,24 @@ Function str.centre$(s$, x%)
   EndIf
 End Function
 
-Sub str.tokenise(s$, sep$, tokens$(), tokens_sz%)
+Sub str.tokenise(s$, sep$, lst$())
   Local c$, i%, start% = 1
   For i% = 1 To Len(s$)
     c$ = Mid$(s$, i%, 1)
     If Instr(sep$, c$) > 0 Then
-      tokens$(tokens_sz%) = Mid$(s$, start%, i% - start%)
-      tokens_sz% = tokens_sz% + 1
+      list.add(lst$(), Mid$(s$, start%, i% - start%))
       start% = i% + 1
     EndIf
   Next i%
 
-  If i% > start% Then
-    tokens$(tokens_sz%) = Mid$(s$, start%, i% - start%)
-    tokens_sz% = tokens_sz% + 1
-  EndIf
+  If i% > start% Then list.add(lst$(), Mid$(s$, start%, i% - start%))
 End Sub
 
-Function str.join$(tokens$(), tokens_sz%, ch$)
-  Local i%
-  For i% = 0 To tokens_sz% - 1
+Function str.join$(lst$(), ch$)
+  Local i%, sz% = list.size%(lst$())
+  For i% = 0 To sz% - 1
     If i% > 0 Then str.join$ = str.join$ + ch$
-    str.join$ = str.join$ + tokens$(i%)
+    str.join$ = str.join$ + lst$(i%)
   Next i%
 End Function
 

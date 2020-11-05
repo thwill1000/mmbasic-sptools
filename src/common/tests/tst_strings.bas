@@ -34,12 +34,20 @@ Function test_centre()
 End Function
 
 Function test_join()
-  Local elements$(3) = ("one", "two", "three", "four")
+  Local elements$(list.new%(4))
 
-  assert_string_equals("one,two,three,four", str.join$(elements$(), 4, ","))
-  assert_string_equals("one, two, three, four", str.join$(elements$(), 4, ", "))
-  assert_string_equals("", str.join$(elements$(), 0, ","))
-  assert_string_equals("one", str.join$(elements$(), 1, ","))
+  assert_string_equals("", str.join$(elements$(), ","))
+
+  list.add(elements$(), "one")
+
+  assert_string_equals("one", str.join$(elements$(), ","))
+
+  list.add(elements$(), "two")
+  list.add(elements$(), "three")
+  list.add(elements$(), "four")
+
+  assert_string_equals("one,two,three,four", str.join$(elements$(), ","))
+  assert_string_equals("one, two, three, four", str.join$(elements$(), ", ")) 
 End Function
 
 Function test_lpad()
@@ -63,11 +71,11 @@ Function test_rpad()
 End Function
 
 Function test_tokenise()
-  Local elements$(19), sz
+  Local elements$(list.new%(20))
 
-  str.tokenise("one,two,three,four", ",", elements$(), sz)
+  str.tokenise("one,two,three,four", ",", elements$())
 
-  assert_equals(4, sz)
+  assert_equals(4, list.size%(elements$()))
   assert_string_equals("one", elements$(0))
   assert_string_equals("two", elements$(1))
   assert_string_equals("three", elements$(2))

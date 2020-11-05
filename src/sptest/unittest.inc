@@ -4,17 +4,15 @@ check_included("file")
 check_included("list")
 check_included("set")
 
-Dim ut.tests_sz = 100
-Dim ut.tests$(ut.tests_sz - 1) Length 40
-Dim ut.failures_sz = 100
-Dim ut.failures$(ut.failures_sz - 1)
+Dim ut.tests$(list.new%(100)) Length 40
+Dim ut.failures$(list.new%(100))
 Dim ut.asserts_count
 
-list.init(ut.tests$(), ut.tests_sz)
-list.init(ut.failures$(), ut.failures_sz)
+list.init(ut.tests$())
+list.init(ut.failures$())
 
 Sub add_test(test$)
-  list.add(ut.tests$(), ut.tests_sz, test$)
+  list.add(ut.tests$(), test$)
 End Sub
 
 Sub fail(msg$)
@@ -28,7 +26,7 @@ Sub assert_true(z, msg$)
 End Sub
 
 Sub ut.add_failure(msg$)
-  list.add(ut.failures$(), ut.failures_sz, Str$(ut.asserts_count) + ": " + msg$)
+  list.add(ut.failures$(), Str$(ut.asserts_count) + ": " + msg$)
 End Sub
 
 Sub assert_equals(expected As Integer, actual As Integer)
@@ -76,25 +74,27 @@ Sub assert_error(expected$)
 End Sub
 
 Sub run_tests()
-  Local i, j, _
+  Local i, j, num_failures%, num_tests%, _
 
   Print Mm.Info$(Current)
-  For i = 0 To ut.tests_sz - 1
+  num_tests% = list.size%(ut.tests$())
+  For i = 0 To num_tests% - 1
     Print "  " + ut.tests$(i); ":"; Space$(35 - Len(ut.tests$(i)));
 
     ut.asserts_count = 0
-    list.clear(ut.failures$(), ut.failures_sz)
+    list.clear(ut.failures$())
 
     err$ = ""
     setup_test()
     _ = Eval(ut.tests$(i) + "()")
     teardown_test()
 
-    If ut.failures_sz = 0 Then
+    num_failures% = list.size%(ut.failures$())
+    If num_failures% = 0 Then
       Print "PASS ("; Str$(ut.asserts_count); "/"; Str$(ut.asserts_count); ")"
-    Else If ut.failures_sz > 0 Then
-      Print "FAIL ("; Str$(ut.failures_sz); "/"; Str$(ut.asserts_count); ")"
-      For j = 0 To ut.failures_sz - 1
+    Else If num_failures% > 0 Then
+      Print "FAIL ("; Str$(num_failures%); "/"; Str$(ut.asserts_count); ")"
+      For j = 0 To num_failures% - 1
         Print "  "; ut.failures$(j)
       Next j
     EndIf

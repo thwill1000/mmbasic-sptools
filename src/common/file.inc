@@ -16,36 +16,36 @@ End Function
 ' Gets the canonical path for file/directory 'f$'.
 Function fil.get_canonical$(f$)
   Local i%
-  Local sz% = 20
-  Local elements$(sz% - 1) Length 40
+  Local elements$(list.new%(20)) Length 40
 
-  list.init(elements$(), sz%)
+  list.init(elements$())
 
   If fil.is_absolute%(f$) Then
     If Instr(UCase$(f$), "A:") = 1 Then
-      str.tokenise(f$, "/\", elements$(), sz%)
+      str.tokenise(f$, "/\", elements$())
     Else
-      str.tokenise("A:" + f$, "/\", elements$(), sz%)
+      str.tokenise("A:" + f$, "/\", elements$())
     EndIf
   Else
-    str.tokenise(Cwd$ + "/" + f$, "/\", elements$(), sz%)
+    str.tokenise(Cwd$ + "/" + f$, "/\", elements$())
   EndIf
 
   elements$(0) = "A:"
 
-  Do While i% < sz%
+  Local num_elements% = list.size%(elements$())
+  Do While i% < num_elements%
     If elements$(i%) = "." Then
-      list.remove(elements$(), sz%, i%)
+      list.remove(elements$(), i%)
     ElseIf elements$(i%) = ".." Then
-      list.remove(elements$(), sz, i%)
-      list.remove(elements$(), sz, i% - 1)
+      list.remove(elements$(), i%)
+      list.remove(elements$(), i% - 1)
       i% = i% - 1
     Else
       i% = i% + 1
     EndIf
   Loop
 
-  fil.get_canonical$ = str.join$(elements$(), sz%, "/")
+  fil.get_canonical$ = str.join$(elements$(), "/")
 End Function
 
 ' Gets the name of file/directory 'f$' minus any path information.

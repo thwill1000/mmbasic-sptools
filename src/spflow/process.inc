@@ -79,8 +79,8 @@ End Sub
 '
 ' @param  i  the index of the keyword token.
 Sub pass1_sub_begin(i)
-  Local s$ = current_sub$ + "," + in.files$(in.files_sz - 1)
-  s$ = s$ + "," + Str$(in.line_num(in.files_sz - 1))
+  Local s$ = current_sub$ + "," + in.files$(in.num_open_files% - 1)
+  s$ = s$ + "," + Str$(in.line_num(in.num_open_files% - 1))
   map.put(subs_k$(), subs_v$(), subs_sz, LCase$(current_sub$), s$)
 End Sub
 
