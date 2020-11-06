@@ -13,10 +13,8 @@ Dim if_stack(MAX_NUM_FILES - 1, MAX_NUM_IFS - 1)
 Dim if_stack_sz(MAX_NUM_FILES - 1)
 
 ' The set of active flags.
-Const MAX_NUM_FLAGS = 10
-Dim flags$(MAX_NUM_FLAGS - 1)
-Dim flags_sz = 0
-set.init(flags$(), MAX_NUM_FLAGS)
+Dim flags$(set.new%(10))
+set.init(flags$())
 
 ' The map of replacements.
 Const MAX_NUM_REPLACEMENTS = 200
@@ -119,9 +117,9 @@ Sub process_clear()
   If err$ = "" Then
     t$ = lx.token_lc$(1)
     ' TODO: Is this really the behaviour we want?
-    If set.get(flags$(), flags_sz, t$) < 0 Then err$ = "flag '" + t$ + "' is not set"
+    If set.get%(flags$(), t$) < 0 Then err$ = "flag '" + t$ + "' is not set"
   EndIf
-  If err$ = "" Then set.remove(flags$(), flags_sz, t$)
+  If err$ = "" Then set.remove(flags$(), t$)
   If err$ <> "" Then err$ = "!clear directive " + err$
 End Sub
 
@@ -152,7 +150,7 @@ Sub process_if()
     Exit Sub
   EndIf
 
-  Local x = set.get(flags$(), flags_sz, t$) > -1
+  Local x = set.get%(flags$(), t$) > -1
   If invert Then x = Not x
 
   If lx.directive$(0) = "!comment_if" Then
@@ -206,9 +204,9 @@ Sub process_set()
   Local t$
   If err$ = "" Then
     t$ = lx.token_lc$(1)
-    If set.get(flags$(), flags_sz, t$) > -1 Then err$ = "flag '" + t$ + "' is already set"
+    If set.get%(flags$(), t$) > -1 Then err$ = "flag '" + t$ + "' is already set"
   EndIf
-  If err$ = "" Then set.put(flags$(), flags_sz, t$)
+  If err$ = "" Then set.put(flags$(), t$)
   If err$ <> "" Then err$ = "!set directive " + err$
 End Sub
 

@@ -11,10 +11,8 @@ Const TK_DIRECTIVE = 7
 Const TK_OPTION = 8
 '!endif
 
-Const LX.MAX_KEYWORDS = 1000
-Dim lx.keywords$(LX.MAX_KEYWORDS - 1) Length 20
-Dim lx.keywords_sz = 0
-set.init(lx.keywords$(), LX.MAX_KEYWORDS)
+Dim lx.keywords$(set.new%(1000)) Length 20
+set.init(lx.keywords$())
 
 Const LX_MAX_TOKENS = 255 ' In theory every character may be a separate token.
 Dim lx.type(LX_MAX_TOKENS - 1)
@@ -35,7 +33,7 @@ Sub lx.load_keywords(f$)
   Do
     Line Input #1, s$
     If Len(s$) > 0 And Left$(s$, 1) <> "'" Then
-      set.put(lx.keywords$(), lx.keywords_sz, LCase$(s$))
+      set.put(lx.keywords$(), LCase$(s$))
     EndIf
   Loop While Not Eof(#1)
 
@@ -222,7 +220,7 @@ Sub lx.parse_keyword()
 End Sub
 
 Function lx.is_keyword(t$)
-  lx.is_keyword = set.get(lx.keywords$(), lx.keywords_sz, LCase$(t$)) > -1
+  lx.is_keyword = set.get%(lx.keywords$(), LCase$(t$)) > -1
 End Function
 
 Sub lx.parse_symbol()

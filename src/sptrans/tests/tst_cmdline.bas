@@ -3,14 +3,14 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../cmdline.inc"
-#Include "../lexer.inc"
-#Include "../options.inc"
 #Include "../../common/error.inc"
 #Include "../../common/file.inc"
 #Include "../../common/list.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
+#Include "../cmdline.inc"
+#Include "../lexer.inc"
+#Include "../options.inc"
 
 Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)
 Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)

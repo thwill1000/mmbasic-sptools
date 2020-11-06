@@ -111,7 +111,7 @@ Sub pass2_identifier(i)
   Local id$ = lx.token_lc$(i)
 
   ' If the 'id' is not in the 'subs' map then not a function or subroutine.
-  Local idx = set.get(subs_k$(), subs_sz, id$)
+  Local idx = map.get_key_index%(subs_k$(), subs_sz, id$)
   If idx = -1 Then Exit Sub
 
   ' Ignore 'id' followed by =

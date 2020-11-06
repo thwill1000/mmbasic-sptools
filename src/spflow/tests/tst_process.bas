@@ -14,7 +14,7 @@ Option Default Integer
 #Include "../../sptrans/lexer.inc"
 
 Dim in.files$(1)
-Dim in.files_sz = 1
+Dim in.num_open_files = 1
 in.files$(0) = "input.bas"
 Dim in.line_num(1)
 

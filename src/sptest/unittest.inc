@@ -105,12 +105,10 @@ Sub run_tests()
 End Sub
 
 Sub run_next_test_file()
-  Const MAX_NUM_TEST_FILES = 20
-  Local test_files$(MAX_NUM_TEST_FILES - 1) Length 40
-  Local test_files_sz = 0
+  Local test_files$(set.new%(20)) Length 40
   Local f$, i, old$
 
-  set.init(test_files$(), MAX_NUM_TEST_FILES)
+  set.init(test_files$())
 
   ' If there is a "tests/" directory then we look there for "tst_*" files,
   ' otherwise we look in the current working directory.
@@ -120,13 +118,13 @@ Sub run_next_test_file()
   ' Get alphabetic list of all "tst_*.bas" files.
   f$ = Dir$("tst*.bas", All)
   Do While f$ <> ""
-    set.put(test_files$(), test_files_sz, f$)
+    set.put(test_files$(), f$)
     f$ = Dir$()
   Loop
 
   If old$ <> "" Then ChDir old$
 
-  If test_files_sz = 0 Then
+  If set.size%(test_files$()) = 0 Then
     Print "No tests found"
     Exit Sub
   EndIf
@@ -135,8 +133,8 @@ Sub run_next_test_file()
   ' Note that if the current file was "sptest.bas" then the lookup returns -1
   ' and thus the first "tst_*.bas" file will be run.
   Local current$ = fil.get_name$(Mm.Info$(Current))
-  i = set.get(test_files$(), test_files_sz, current$)
-  If i < test_files_sz - 1 Then
+  i = set.get%(test_files$(), current$)
+  If i < set.size%(test_files$()) - 1 Then
     If old$ = "" Then f$ = "" Else f$ = "tests/"
     f$ = f$ + test_files$(i + 1)
     Execute "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"

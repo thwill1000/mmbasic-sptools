@@ -1,8 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-'Const TG.CALL_STACK_MAX = 50
 Dim tg.call_stack$(list.new%(50)) Length 40
-'Dim tg.call_stack_sz
 list.init(tg.call_stack$())
 
 ' Elements of this array are the line number in the output where the
@@ -18,7 +16,7 @@ End Sub
 Sub tg.subtree(name$)
   Local brief, i, j, indent$, v$
 
-  i = set.get(subs_k$(), subs_sz, LCase$(name$))
+  i = map.get_key_index%(subs_k$(), subs_sz, LCase$(name$))
   brief = tg.first_call(i)
   If brief = 0 Then tg.first_call(i) = out.line_num + 1
 
