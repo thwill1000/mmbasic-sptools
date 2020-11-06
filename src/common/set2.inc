@@ -1,0 +1,114 @@
+' Copyright (c) 2020 Thomas Hugo Williams
+
+Function check_set2_included() : End Function
+
+' Used as the value for elements beyond the size of the set.
+' Note: the length of the strings in the array holding the set must be at least 8 characters.
+Const set2.NULL$ = String$(8, Chr$(&h7F))
+
+' Gets the upper-bound that should be used to dimension an array to hold a set
+' of the given capacity, irrespective of OPTION BASE.
+'
+' e.g. To create a string array that can be used as a set of 10 elements:
+'        Dim my_set$(set2.new%(10))
+Function set2.new%(capacity%)
+  set2.new% = capacity% + Mm.Info(Option Base)
+End Function
+
+' Gets the capacity of the set.
+Function set2.capacity%(set$())
+  set2.capacity% = Bound(set$(), 1) - Bound(set$(), 0)
+End Function
+
+' Initialises the set.
+Sub set2.init(set$())
+  Local base% = Bound(set$(), 0)
+  Local top% = Bound(set$(), 1)
+  Local i%
+  For i% = base% To top% : set$(i%) = set2.NULL$ : Next
+  set$(top%) = "0"
+End Sub
+
+' Clears the set and resets its size to 0.
+Sub set2.clear(set$())
+  Local base% = Bound(set$(), 0)
+  Local top% = Bound(set$(), 1)
+  Local sz% = Val(set$(top%))
+  Local i%
+  For i% = base% To sz% + base% - 1 : set$(i%) = set2.NULL$ : Next
+  set$(top%) = "0"
+End Sub
+
+' Prints the contents of the set.
+Sub set2.dump(set$())
+  Local base% = Bound(set$(), 0)
+  Local top% = Bound(set$(), 1)
+  Local sz% = Val(set$(top%))
+  Local i%
+  For i% = base% To base% + sz% - 1 : Print "[" Str$(i%) "] " set$(i%) : Next
+  Print "END"
+End Sub
+
+' Gets the index of a value in the set, or -1 if not present.
+Function set2.get%(set$(), s$)
+  Local base% = Bound(set$(), 0)
+  Local sz% = Val(set$(Bound(set$(), 1)))
+  Local i%, lb%, ub%
+
+  ' Binary search of set$()
+  lb% = base%
+  ub% = base% + sz% - 1
+  Do
+    i% = (lb% + ub%) \ 2
+    If s$ > set$(i%) Then
+      lb% = i% + 1
+    ElseIf s$ < set$(i%) Then
+      ub% = i% - 1
+    Else
+      set2.get% = i% : Exit Function
+    EndIf
+  Loop Until ub% < lb%
+
+  set2.get% = -1
+End Function
+
+' Adds a value to the set.
+Sub set2.put(set$(), s$)
+  If set2.get%(set$(), s$) <> -1  Then Exit Sub
+
+  Local base% = Bound(set$(), 0)
+  Local top% = Bound(set$(), 1)
+  Local sz% = Val(set$(top%))
+
+  If sz% = top% - base% Then Error "set full"
+
+  set$(sz% + base%) = s$
+  sz% = sz% + 1
+  set$(top%) = Str$(sz%)
+
+  If sz% <= 1 Then Exit Sub
+  If set$(sz% + base% - 1) >= set$(sz% + base% - 2) Then Exit Sub
+
+  set$(top%) = set2.NULL$
+  Sort set$()
+  set$(top%) = Str$(sz%)
+End Sub
+
+' Removes a value from the set if present.
+Sub set2.remove(set$(), s$)
+  Local i% = set2.get%(set$(), s$)
+  If i% = -1 Then Exit Sub
+
+  Local top% = Bound(set$(), 1)
+  Local sz% = Val(set$(top%))
+  set$(i%) = set2.NULL$
+  set$(top%) = set2.NULL$
+  Sort set$()
+  set$(top%) = Str$(sz% - 1)
+  EndIf
+End Sub
+
+' Gets the size of the set.
+Function set2.size%(set$())
+  set2.size% = Val(set$(Bound(set$(), 1)))
+End Function
