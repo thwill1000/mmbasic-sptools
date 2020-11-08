@@ -18,9 +18,7 @@ Const MAX_NUM_SUBS = 1000
 '
 ' When pass 1 ends an entry is added to represent the global scope:
 '   "global*" > "*GLOBAL*,NAME,1,INDEX"
-Dim subs_k$(MAX_NUM_SUBS) Length 32
-Dim subs_v$(MAX_NUM_SUBS)
-Dim subs_sz
+Dim subs$(map.new%(MAX_NUM_SUBS)) Length 255
 
 ' Used by pass 2:
 '   global_calls(i) = 1 if the global scope calls subroutine 'i'.
@@ -41,8 +39,7 @@ Dim all_calls_sz = 0
 Dim current_sub$ = GLOBAL_SCOPE$
 
 Sub pro.init()
-  map.init(subs_k$(), subs_v$(), MAX_NUM_SUBS + 1)
-  subs_sz = 0
+  map.init(subs$())
 
   Math Set 0, current_calls()
   Math Set 0, global_calls()
@@ -81,7 +78,7 @@ End Sub
 Sub pass1_sub_begin(i)
   Local s$ = current_sub$ + "," + in.files$(in.num_open_files% - 1)
   s$ = s$ + "," + Str$(in.line_num(in.num_open_files% - 1))
-  map.put(subs_k$(), subs_v$(), subs_sz, LCase$(current_sub$), s$)
+  map.put(subs$(), LCase$(current_sub$), s$)
 End Sub
 
 Sub pass_completed(pass)
@@ -96,7 +93,7 @@ Sub pass1_completed()
   ' Add map entry for the global scope.
   Local k$ = LCase$(GLOBAL_SCOPE$)
   Local v$ = GLOBAL_SCOPE$ + "," + in.files$(0) + ",1"
-  map.put(subs_k$(), subs_v$(), subs_sz, k$, v$)
+  map.put(subs$(), k$, v$)
 End Sub
 
 Sub pass2_completed()
@@ -111,7 +108,7 @@ Sub pass2_identifier(i)
   Local id$ = lx.token_lc$(i)
 
   ' If the 'id' is not in the 'subs' map then not a function or subroutine.
-  Local idx = map.get_key_index%(subs_k$(), subs_sz, id$)
+  Local idx = map.get_key_index%(subs$(), id$)
   If idx = -1 Then Exit Sub
 
   ' Ignore 'id' followed by =
@@ -157,9 +154,9 @@ Sub append_calls(sub_name$, calls())
 
   ' Update the value in the 'subs' map to include a field pointing to the current
   ' position in all_calls().
-  v$ = map.get$(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$))
+  v$ = map.get$(subs$(), LCase$(sub_name$))
   v$ = v$ + "," + Str$(all_calls_sz)
-  map.put(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$), v$)
+  map.put(subs$(), LCase$(sub_name$), v$)
 
   ' Append indexes of non-zero elements to all_calls().
   For i = 0 To MAX_NUM_SUBS

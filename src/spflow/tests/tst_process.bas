@@ -55,12 +55,10 @@ Function test_simple_sub()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_string_equals("*global*", subs_k$(0))
-  assert_string_equals("*GLOBAL*,input.bas,1,3", subs_v$(0))
-  assert_string_equals("bar", subs_k$(1))
-  assert_string_equals("bar,input.bas,4,2", subs_v$(1))
-  assert_string_equals("foo", subs_k$(2))
-  assert_string_equals("foo,input.bas,1,0", subs_v$(2))
+  assert_equals(3, map.size%(subs$()))
+  assert_string_equals("*GLOBAL*,input.bas,1,3", map.get$(subs$(), "*global*"))
+  assert_string_equals("bar,input.bas,4,2", map.get$(subs$(), "bar"))
+  assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
   assert_equals(5, all_calls_sz)
@@ -89,10 +87,9 @@ Function test_simple_fn()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_string_equals("*global*", subs_k$(0))
-  assert_string_equals("*GLOBAL*,input.bas,1,1", subs_v$(0))
-  assert_string_equals("foo", subs_k$(1))
-  assert_string_equals("foo,input.bas,1,0", subs_v$(1))
+  assert_equals(2, map.size%(subs$()))
+  assert_string_equals("*GLOBAL*,input.bas,1,1", map.get$(subs$(), "*global*"))
+  assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
   assert_equals(3, all_calls_sz)
@@ -119,10 +116,9 @@ Function test_self_recursive_sub()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_string_equals("*global*", subs_k$(0))
-  assert_string_equals("*GLOBAL*,input.bas,1,2", subs_v$(0))
-  assert_string_equals("foo", subs_k$(1))
-  assert_string_equals("foo,input.bas,1,0", subs_v$(1))
+  assert_equals(2, map.size%(subs$()))
+  assert_string_equals("*GLOBAL*,input.bas,1,2", map.get$(subs$(), "*global*"))
+  assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
   assert_equals(4, all_calls_sz)
@@ -150,10 +146,9 @@ Function test_self_recursive_fn()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_string_equals("*global*", subs_k$(0))
-  assert_string_equals("*GLOBAL*,input.bas,1,2", subs_v$(0))
-  assert_string_equals("foo", subs_k$(1))
-  assert_string_equals("foo,input.bas,1,0", subs_v$(1))
+  assert_equals(2, map.size%(subs$()))
+  assert_string_equals("*GLOBAL*,input.bas,1,2", map.get$(subs$(), "*global*"))
+  assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
   assert_equals(4, all_calls_sz)

@@ -17,11 +17,8 @@ Dim flags$(set.new%(10))
 set.init(flags$())
 
 ' The map of replacements.
-Const MAX_NUM_REPLACEMENTS = 200
-Dim replace$(MAX_NUM_REPLACEMENTS - 1) Length 50
-Dim with$(MAX_NUM_REPLACEMENTS - 1) Length 50
-Dim replace_sz
-map.init(replace$(), with$(), MAX_NUM_REPLACEMENTS)
+Dim replace$(map.new%(200))
+map.init(replace$())
 
 ' Set to name of file after processing #Include
 Dim tr_include$
@@ -95,12 +92,12 @@ End Sub
 
 ' Applies replacements to the currently parsed line, lx.line$.
 Sub apply_replacements()
-  If replace_sz = 0 Then Exit Sub
+  If map.size%(replace$()) = 0 Then Exit Sub
 
   Local i, r$, s$
   For i = 0 TO lx.num - 1
-    r$ = map.get$(replace$(), with$(), replace_sz, lx.token_lc$(i))
-    If r$ <> Chr$(0) Then
+    r$ = map.get$(replace$(), lx.token_lc$(i))
+    If r$ <> map.NULL$ Then
       s$ = Left$(lx.line$, lx.start(i) - 1) + r$ + Mid$(lx.line$, lx.start(i) + lx.len(i))
       lx.parse_basic(s$)
       ' TODO: at the moment this can't change the number of tokens, but when it
@@ -194,7 +191,7 @@ End Sub
 Sub process_replace()
   If lx.num < 3 Then err$ = "expects <from> and <to> arguments"
   If lx.num > 3 Then err$ = "has too many arguments"
-  If err$ = "" Then map.put(replace$(), with$(), replace_sz, lx.token_lc$(1), lx.token_lc$(2))
+  If err$ = "" Then map.put(replace$(), lx.token_lc$(1), lx.token_lc$(2))
   If err$ <> "" Then err$ = "!replace directive " + err$
 End Sub
 

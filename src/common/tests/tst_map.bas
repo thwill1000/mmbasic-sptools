@@ -11,13 +11,17 @@ Option Default Integer
 #Include "../../sptest/unittest.inc"
 
 add_test("test_init")
-add_test("test_put")
-add_test("test_put_given_already_present")
-add_test("test_get")
-add_test("test_remove")
 add_test("test_clear")
-
-' TODO: add tests for case-sensitivity.
+add_test("test_clear_given_empty")
+add_test("test_clear_given_full")
+add_test("test_get")
+add_test("test_put")
+add_test("test_put_given_full")
+add_test("test_put_given_present")
+add_test("test_remove")
+add_test("test_remove_given_absent")
+add_test("test_remove_given_empty")
+add_test("test_remove_given_full")
 
 run_tests()
 
@@ -30,128 +34,206 @@ Sub teardown_test()
 End Sub
 
 Function test_init()
-  Local i
-  Local my_keys$(19)
-  Local my_values$(19)
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
 
-  map.init(my_keys$(), my_values$(), 20)
-
-  For i = 0 To 19
-    assert_string_equals(Chr$(&h7F), my_keys$(i))
-    assert_string_equals(Chr$(0), my_values$(i))
-  Next i
-End Function
-
-Function test_put()
-  Local my_keys$(19)
-  Local my_values$(19)
-  Local my_map_sz = 0
-
-  map.init(my_keys$(), my_values$(), 20)
-
-  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
-
-  assert_equals(3, my_map_sz)
-  assert_string_equals("aaa", my_keys$(0))
-  assert_string_equals("bbb", my_values$(0))
-  assert_string_equals("foo", my_keys$(1))
-  assert_string_equals("bar", my_values$(1))
-  assert_string_equals("wom", my_keys$(2))
-  assert_string_equals("bat", my_values$(2))
-End Function
-
-Function test_put_given_already_present()
-  Local my_keys$(19)
-  Local my_values$(19)
-  Local my_map_sz = 0
-
-  map.init(my_keys$(), my_values$(), 20)
-  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
-
-  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar2")
-  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat2")
-  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb2")
-
-  assert_equals(3, my_map_sz)
-  assert_string_equals("aaa", my_keys$(0))
-  assert_string_equals("bbb2", my_values$(0))
-  assert_string_equals("foo", my_keys$(1))
-  assert_string_equals("bar2", my_values$(1))
-  assert_string_equals("wom", my_keys$(2))
-  assert_string_equals("bat2", my_values$(2))
-End Function
-
-Function test_get()
-  Local my_keys$(19)
-  Local my_values$(19)
-  Local my_map_sz = 0
-
-  map.init(my_keys$(), my_values$(), 20)
-  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
-
-  assert_string_equals("bar", map.get$(my_keys$(), my_values$(), my_map_sz, "foo"))
-  assert_string_equals("bat", map.get$(my_keys$(), my_values$(), my_map_sz, "wom"))
-  assert_string_equals("bbb", map.get$(my_keys$(), my_values$(), my_map_sz, "aaa"))
-  assert_string_equals(Chr$(0), map.get$(my_keys$(), my_values$(), my_map_sz, "unknown"))
-End Function
-
-Function test_remove()
-  Local my_keys$(19)
-  Local my_values$(19)
-  Local my_map_sz = 0
-
-  map.init(my_keys$(), my_values$(), 20)
-  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
-
-  map.remove(my_keys$(), my_values$(), my_map_sz, "wom")
-
-  assert_equals(2, my_map_sz)
-  assert_string_equals("aaa", my_keys$(0))
-  assert_string_equals("bbb", my_values$(0))
-  assert_string_equals("foo", my_keys$(1))
-  assert_string_equals("bar", my_values$(1))
-  assert_string_equals(Chr$(&h7F), my_keys$(2))
-  assert_string_equals(Chr$(0), my_values$(2))
-
-  map.remove(my_keys$(), my_values$(), my_map_sz, "aaa")
-
-  assert_equals(1, my_map_sz)
-  assert_string_equals("foo", my_keys$(0))
-  assert_string_equals("bar", my_values$(0))
-  assert_string_equals(Chr$(&h7F), my_keys$(1))
-  assert_string_equals(Chr$(0), my_values$(1))
-
-  map.remove(my_keys$(), my_values$(), my_map_sz, "foo")
-
-  assert_equals(0, my_map_sz)
-  assert_string_equals(Chr$(&h7F), my_keys$(0))
-  assert_string_equals(Chr$(0), my_values$(0))
+  Local i%
+  For i% = 0 To 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  assert_string_equals("0", my_map$(40));
+  assert_equals(0, map.size%(my_map$()));
+  assert_equals(20, map.capacity%(my_map$()));
 End Function
 
 Function test_clear()
-  Local i
-  Local my_keys$(19)
-  Local my_values$(19)
-  Local my_map_sz = 0
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
 
-  map.init(my_keys$(), my_values$(), 20)
-  map.put(my_keys$(), my_values$(), my_map_sz, "foo", "bar")
-  map.put(my_keys$(), my_values$(), my_map_sz, "wom", "bat")
-  map.put(my_keys$(), my_values$(), my_map_sz, "aaa", "bbb")
+  map.put(my_map$(), "foo", "bar")
+  map.put(my_map$(), "wom", "bat")
+  map.put(my_map$(), "aaa", "bbb")
 
-  map.clear(my_keys$(), my_values$(), my_map_sz)
+  map.clear(my_map$())
 
-  assert_equals(0, my_map_sz)
-  For i = 0 To 19
-    assert_string_equals(Chr$(&h7F), my_keys$(i))
-    assert_string_equals(Chr$(0), my_values$(i))
-  Next i
+  Local i%
+  For i% = 0 To 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  assert_string_equals("0", my_map$(40));
+  assert_equals(0, map.size%(my_map$()));
+End Function
+
+Function test_clear_given_empty()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+
+  map.clear(my_map$())
+
+  Local i%
+  For i% = 0 To 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  assert_string_equals("0", my_map$(40));
+  assert_equals(0, map.size%(my_map$()));
+End Function
+
+Function test_clear_given_full()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+  Local i%
+  For i% = 0 To 19 : map.put(my_map$(), "key" + Str$(i%), "value" + Str$(i%)) : Next
+
+  map.clear(my_map$())
+
+  For i% = 0 To 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  assert_string_equals("0", my_map$(40));
+  assert_equals(0, map.size%(my_map$()));
+End Function
+
+Function test_get()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+
+  map.put(my_map$(), "foo", "bar")
+  map.put(my_map$(), "wom", "bat")
+  map.put(my_map$(), "aaa", "bbb")
+
+  assert_string_equals("bar", map.get$(my_map$(), "foo"))
+  assert_string_equals("bat", map.get$(my_map$(), "wom"))
+  assert_string_equals("bbb", map.get$(my_map$(), "aaa"))
+  assert_string_equals(map.NULL$, map.get$(my_map$(), "unknown"))
+End Function
+
+Function test_put()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+
+  map.put(my_map$(), "foo", "bar")
+  map.put(my_map$(), "wom", "bat")
+  map.put(my_map$(), "aaa", "bbb")
+
+  assert_equals(3, map.size%(my_map$()))
+  assert_string_equals("aaa", my_map$(0))
+  assert_string_equals("bbb", my_map$(0 + 20))
+  assert_string_equals("foo", my_map$(1))
+  assert_string_equals("bar", my_map$(1 + 20))
+  assert_string_equals("wom", my_map$(2))
+  assert_string_equals("bat", my_map$(2 + 20))
+End Function
+
+Function test_put_given_full()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+  Local i%
+  For i% = 0 To 19 : map.put(my_map$(), "key" + Str$(i%), "value" + Str$(i%)) : Next
+
+  ' Assert reports 'map full' error.
+  On Error Ignore
+  map.put(my_map$(), "too many", "value"))
+  assert_true(InStr(Mm.ErrMsg$, "map full") > 0, "Assert failed, expected error not thrown")
+  On Error Abort
+  assert_equals(20, map.size%(my_map$()))
+
+  ' Unless the key already exists.
+  map.put(my_map$(), "key15", "value")
+  assert_string_equals("value", map.get$(my_map$(), "key15"))
+  assert_equals(20, map.size%(my_map$()))
+End Function
+
+Function test_put_given_present()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+
+  map.put(my_map$(), "foo", "bar")
+  map.put(my_map$(), "wom", "bat")
+  map.put(my_map$(), "aaa", "bbb")
+
+  map.put(my_map$(), "foo", "bar2")
+  map.put(my_map$(), "wom", "bat2")
+  map.put(my_map$(), "aaa", "bbb2")
+
+  assert_equals(3, map.size%(my_map$()))
+  assert_string_equals("aaa",  my_map$(0))
+  assert_string_equals("bbb2", my_map$(0 + 20))
+  assert_string_equals("foo",  my_map$(1))
+  assert_string_equals("bar2", my_map$(1 + 20))
+  assert_string_equals("wom",  my_map$(2))
+  assert_string_equals("bat2", my_map$(2 + 20))
+End Function
+
+Function test_remove()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+
+  map.put(my_map$(), "foo", "bar")
+  map.put(my_map$(), "wom", "bat")
+  map.put(my_map$(), "aaa", "bbb")
+
+  map.remove(my_map$(), "wom")
+
+  assert_equals(2, map.size%(my_map$()))
+  assert_string_equals("aaa",      my_map$(0))
+  assert_string_equals("bbb",      my_map$(0 + 20))
+  assert_string_equals("foo",      my_map$(1))
+  assert_string_equals("bar",      my_map$(1 + 20))
+  assert_string_equals(map.NULL$, my_map$(2))
+  assert_string_equals(map.NULL$, my_map$(2 + 20))
+
+  map.remove(my_map$(), "aaa")
+
+  assert_equals(1, map.size%(my_map$()))
+  assert_string_equals("foo", my_map$(0))
+  assert_string_equals("bar", my_map$(0 + 20))
+  assert_string_equals(map.NULL$, my_map$(1))
+  assert_string_equals(map.NULL$, my_map$(1 + 20))
+
+  map.remove(my_map$(), "foo")
+
+  assert_equals(0, map.size%(my_map$()))
+  assert_string_equals(map.NULL$, my_map$(0))
+  assert_string_equals(map.NULL$, my_map$(0 + 20))
+End Function
+
+Function test_remove_given_absent()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+  map.put(my_map$(), "foo", "bar")
+  map.put(my_map$(), "wom", "bat")
+  map.put(my_map$(), "aaa", "bbb")
+
+  map.remove(my_map$(), "absent")
+
+  assert_equals(3, map.size%(my_map$()))
+  assert_string_equals("aaa", my_map$(0))
+  assert_string_equals("bbb", my_map$(0 + 20))
+  assert_string_equals("foo", my_map$(1))
+  assert_string_equals("bar", my_map$(1 + 20))
+  assert_string_equals("wom", my_map$(2))
+  assert_string_equals("bat", my_map$(2 + 20))
+End Function
+
+Function test_remove_given_empty()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+
+  map.remove(my_map$(), "absent")
+
+  Local i%
+  For i% = 0 To 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  assert_string_equals("0", my_map$(40));
+  assert_equals(0, map.size%(my_map$()));
+End Function
+
+Function test_remove_given_full()
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+  Local i%
+  For i% = 0 To 19 : map.put(my_map$(), "key" + Str$(i%), "value" + Str$(i%)) : Next
+
+  map.remove(my_map$(), "key15")
+
+  For i% = 0 To 19
+    If i% <> 15 Then
+      assert_string_equals("value" + Str$(i%), map.get$(my_map$(), "key" + Str$(i%)))
+    Else
+      assert_string_equals(map.NULL$, map.get$(my_map$(), "key" + Str$(i%)))
+    EndIf
+  Next
+  assert_string_equals("19", my_map$(40));
+  assert_equals(19, map.size%(my_map$()));
 End Function

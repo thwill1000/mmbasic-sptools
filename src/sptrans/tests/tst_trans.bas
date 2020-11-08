@@ -30,7 +30,7 @@ Sub teardown_test()
 End Sub
 
 Function test_replace()
-  map.clear(replace$(), with$(), replace_sz)
+  map.clear(replace$())
   lx.parse_basic("'!replace x      y") : transpile()
   lx.parse_basic("'!replace &hFFFF z") : transpile()
   lx.parse_basic("Dim x = &hFFFF ' comment") : transpile()

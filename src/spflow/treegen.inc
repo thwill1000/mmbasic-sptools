@@ -16,12 +16,12 @@ End Sub
 Sub tg.subtree(name$)
   Local brief, i, j, indent$, v$
 
-  i = map.get_key_index%(subs_k$(), subs_sz, LCase$(name$))
+  i = map.get_key_index%(subs$(), LCase$(name$))
   brief = tg.first_call(i)
   If brief = 0 Then tg.first_call(i) = out.line_num + 1
 
   indent$ = Space$(list.size%(tg.call_stack$()) * 2)
-  v$ = subs_v$(i)
+  v$ = subs$(i + MAX_NUM_SUBS)
   out.print(indent$ + Field$(v$, 1, ","))
   If name$ <> GLOBAL_SCOPE$ Then out.print("()")
   If Not opt.no_location Then
@@ -31,7 +31,6 @@ Sub tg.subtree(name$)
   EndIf
 
   i = tg.is_recursive(name$)
-'  If i Then Print : Print indent$ "        (recursive: see " Str$(i) ")" : Exit Sub
   If i Then out.println(" [recursive, see " + Str$(i) + "]") : Exit Sub
 
   list.push(tg.call_stack$(), LCase$(name$) + "," + Str$(out.line_num))
@@ -45,7 +44,7 @@ Sub tg.subtree(name$)
       out.println()
       For j = 1 To 1 Step 0
         If all_calls(i) = -1 Then Exit For
-        tg.subtree(subs_k$(all_calls(i)))
+        tg.subtree(subs$(all_calls(i)))
         i = i + 1
       Next j
     EndIf
@@ -69,10 +68,11 @@ End Function
 
 Sub tg.orphans()
   Local i
-  For i = 0 To subs_sz - 1
+  Local ub% = map.size%(subs$()) - 1
+  For i = 0 To ub%
     If tg.first_call(i) = 0 Then
       out.println()
-      tg.subtree(subs_k$(i))
+      tg.subtree(subs$(i))
     EndIf
   Next i
 End Sub
