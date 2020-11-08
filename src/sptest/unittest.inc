@@ -73,12 +73,22 @@ Sub assert_error(expected$)
   EndIf
 End Sub
 
+Sub assert_raw_error(expected$)
+  ut.asserts_count = ut.asserts_count + 1
+  If InStr(Mm.ErrMsg$, expected$) < 1 Then
+    Local s$ = "Expected Error " + Chr$(34) + expected$ + Chr$(34)
+    s$ = s$ + ", but actually " + Chr$(34) + Mid$(Mm.ErrMsg$, 3) + Chr$(34)
+    ut.add_failure(s$)
+  EndIf
+End Sub
+
 Sub run_tests()
-  Local i, j, num_failures%, num_tests%, _
+  Local base% = Mm.Info(Option Base)
+  Local i, j, num_failures%, ub%, _
 
   Print Mm.Info$(Current)
-  num_tests% = list.size%(ut.tests$())
-  For i = 0 To num_tests% - 1
+  ub% = base% + list.size%(ut.tests$()) - 1
+  For i = base% To ub%
     Print "  " + ut.tests$(i); ":"; Space$(35 - Len(ut.tests$(i)));
 
     ut.asserts_count = 0
@@ -94,7 +104,7 @@ Sub run_tests()
       Print "PASS ("; Str$(ut.asserts_count); "/"; Str$(ut.asserts_count); ")"
     Else If num_failures% > 0 Then
       Print "FAIL ("; Str$(num_failures%); "/"; Str$(ut.asserts_count); ")"
-      For j = 0 To num_failures% - 1
+      For j = base% To base% + num_failures% - 1
         Print "  "; ut.failures$(j)
       Next j
     EndIf
