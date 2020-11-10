@@ -36,7 +36,7 @@ Sub map.clear(mp$())
   Local off% = (ub% - lb%) \ 2
   Local sz% = Val(mp$(ub%))
   Local i%
-  For i% = lb% To sz% + lb% - 1
+  For i% = lb% To lb% + sz% - 1
     mp$(i%) = map.NULL$
     mp$(i% + off%) = map.NULL$
   Next
@@ -79,7 +79,7 @@ Function map.get_key_index%(mp$(), k$)
 
   ' Binary search of keys.
   ub% = lb% + sz% - 1
-  Do
+  Do While ub% >= lb%
     i% = (lb% + ub%) \ 2
     If k$ > mp$(i%) Then
       lb% = i% + 1
@@ -88,7 +88,7 @@ Function map.get_key_index%(mp$(), k$)
     Else
       map.get_key_index% = i% : Exit Function
     EndIf
-  Loop Until ub% < lb%
+  Loop
 
   map.get_key_index% = -1
 End Function
@@ -106,11 +106,11 @@ Sub map.put(mp$(), k$, v$)
   If sz% = off% Then Error "map full" : Exit Sub
 
   sz% = sz% + 1
-  mp$(sz% + lb% - 1) = k$
-  mp$(sz% + off% - 1) = v$
+  mp$(lb% + sz% - 1) = k$
+  mp$(lb% + sz% + off% - 1) = v$
   mp$(ub%) = Str$(sz%)
   If sz% > 1 Then
-    If k$ < mp$(sz% + lb% - 2) Then map.sort(mp$())
+    If k$ < mp$(lb% + sz% - 2) Then map.sort(mp$())
   EndIf
 End Sub
 
