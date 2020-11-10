@@ -1,7 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
 Option Explicit On
-Option Default Integer
+Option Default None
 
 If InStr(Mm.CmdLine$, "--base=1") Then
   Option Base 1

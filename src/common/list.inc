@@ -1,6 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Function check_list_included() : End Function
+Function check_list_included%() : End Function
 
 ' Used as the value for elements beyond the size of the list.
 Const list.NULL$ = String$(4, Chr$(&h7F))

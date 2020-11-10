@@ -6,7 +6,7 @@ check_included("set")
 
 Dim ut.tests$(list.new%(100)) Length 40
 Dim ut.failures$(list.new%(100))
-Dim ut.asserts_count
+Dim ut.asserts_count%
 
 list.init(ut.tests$())
 list.init(ut.failures$())
@@ -16,39 +16,39 @@ Sub add_test(test$)
 End Sub
 
 Sub fail(msg$)
-  ut.asserts_count = ut.asserts_count + 1
+  ut.asserts_count% = ut.asserts_count% + 1
   ut.add_failure(msg$)
 End Sub
 
-Sub assert_true(z, msg$)
-  ut.asserts_count = ut.asserts_count + 1
-  If Not z Then ut.add_failure(msg$)
+Sub assert_true(z%, msg$)
+  ut.asserts_count% = ut.asserts_count% + 1
+  If Not z% Then ut.add_failure(msg$)
 End Sub
 
 Sub ut.add_failure(msg$)
-  list.add(ut.failures$(), Str$(ut.asserts_count) + ": " + msg$)
+  list.add(ut.failures$(), Str$(ut.asserts_count%) + ": " + msg$)
 End Sub
 
-Sub assert_equals(expected As Integer, actual As Integer)
-  ut.asserts_count = ut.asserts_count + 1
-  If expected <> actual Then
-    Local s$ = "Assert equals failed, expected " + Str$(expected)
-    s$ = s$ + " but actually " + Str$(actual)
+Sub assert_equals(expected%, actual%)
+  ut.asserts_count% = ut.asserts_count% + 1
+  If expected% <> actual% Then
+    Local s$ = "Assert equals failed, expected " + Str$(expected%)
+    s$ = s$ + " but actually " + Str$(actual%)
     ut.add_failure(s$)
   EndIf
 End Sub
 
-Sub assert_float_equals(expected As Float, actual As float)
-  ut.asserts_count = ut.asserts_count + 1
-  If expected <> actual Then
-    Local s$ = "Assert equals failed, expected " + Str$(expected)
-    s$ = s$ + " but actually " + Str$(actual)
+Sub assert_float_equals(expected!, actual!)
+  ut.asserts_count% = ut.asserts_count% + 1
+  If expected! <> actual! Then
+    Local s$ = "Assert equals failed, expected " + Str$(expected!)
+    s$ = s$ + " but actually " + Str$(actual!)
     ut.add_failure(s$)
   EndIf
 End Sub
 
 Sub assert_string_equals(expected$, actual$)
-  ut.asserts_count = ut.asserts_count + 1
+  ut.asserts_count% = ut.asserts_count% + 1
   If expected$ <> actual$ Then
     Local s$ = "Assert equals failed, expected " + Chr$(34) + expected$ + Chr$(34)
     s$ = s$ + " but actually " + Chr$(34) + actual$ + Chr$(34)
@@ -57,7 +57,7 @@ Sub assert_string_equals(expected$, actual$)
 End Sub
 
 Sub assert_no_error()
-  ut.asserts_count = ut.asserts_count + 1
+  ut.asserts_count% = ut.asserts_count% + 1
   If err$ <> "" Then
     Local s$ = "Expected no error, but actually " + Chr$(34) + err$ + Chr$(34)
     ut.add_failure(s$)
@@ -65,7 +65,7 @@ Sub assert_no_error()
 End Sub
 
 Sub assert_error(expected$)
-  ut.asserts_count = ut.asserts_count + 1
+  ut.asserts_count% = ut.asserts_count% + 1
   If err$ <> expected$ Then
     Local s$ = "Expected Error " + Chr$(34) + expected$ + Chr$(34)
     s$ = s$ + ", but actually " + Chr$(34) + err$ + Chr$(34)
@@ -74,7 +74,7 @@ Sub assert_error(expected$)
 End Sub
 
 Sub assert_raw_error(expected$)
-  ut.asserts_count = ut.asserts_count + 1
+  ut.asserts_count% = ut.asserts_count% + 1
   If InStr(Mm.ErrMsg$, expected$) < 1 Then
     Local s$ = "Expected Error " + Chr$(34) + expected$ + Chr$(34)
     s$ = s$ + ", but actually " + Chr$(34) + Mid$(Mm.ErrMsg$, 3) + Chr$(34)
@@ -86,32 +86,32 @@ End Sub
 '                  should run itself again appending 'repeat$' to its command line.
 Sub run_tests(repeat$)
   Local base% = Mm.Info(Option Base)
-  Local i, j, num_failures%, ub%, _
+  Local i%, j%, num_failures%, ub%
 
   Print Mm.Info$(Current) + " " + Mm.CmdLine$
   ub% = base% + list.size%(ut.tests$()) - 1
-  For i = base% To ub%
-    Print "  " + ut.tests$(i); ":"; Space$(35 - Len(ut.tests$(i)));
+  For i% = base% To ub%
+    Print "  " + ut.tests$(i%); ":"; Space$(35 - Len(ut.tests$(i%)));
 
-    ut.asserts_count = 0
+    ut.asserts_count% = 0
     list.clear(ut.failures$())
 
     err$ = ""
     setup_test()
-    Call ut.tests$(i)
+    Call ut.tests$(i%)
     teardown_test()
 
     num_failures% = list.size%(ut.failures$())
     If num_failures% = 0 Then
-      Print "PASS ("; Str$(ut.asserts_count); "/"; Str$(ut.asserts_count); ")"
+      Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")"
     Else If num_failures% > 0 Then
-      Print "FAIL ("; Str$(num_failures%); "/"; Str$(ut.asserts_count); ")"
-      For j = base% To base% + num_failures% - 1
+      Print "FAIL ("; Str$(num_failures%); "/"; Str$(ut.asserts_count%); ")"
+      For j% = base% To base% + num_failures% - 1
         Print "  "; ut.failures$(j)
-      Next j
+      Next j%
     EndIf
 
-  Next i
+  Next i%
 
   If repeat$ <> "" Then
     run_same_test_file(repeat$)
@@ -156,12 +156,12 @@ Sub run_next_test_file()
   ' Lookup the index of the current file and run the next one.
   ' Note that if the current file was "sptest.bas" then the lookup returns -1
   ' and thus the first "tst_*.bas" file will be run.
-  Local i = set.get%(test_files$(), fil.get_name$(Mm.Info$(Current)))
+  Local i% = set.get%(test_files$(), fil.get_name$(Mm.Info$(Current)))
 
   ' This was the last test.
-  If i >= Mm.Info(Option Base) + set.size%(test_files$()) - 1 Then Exit Sub
+  If i% >= Mm.Info(Option Base) + set.size%(test_files$()) - 1 Then Exit Sub
 
   If old$ = "" Then f$ = "" Else f$ = "tests/"
-  f$ = f$ + test_files$(i + 1)
+  f$ = f$ + test_files$(i% + 1)
   Execute "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
 End Sub

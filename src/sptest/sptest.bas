@@ -1,7 +1,8 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+Option Base 0
+Option Default None
 Option Explicit On
-Option Default Integer
 
 #Include "../common/error.inc"
 #Include "../common/file.inc"

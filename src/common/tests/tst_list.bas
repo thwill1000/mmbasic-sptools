@@ -1,7 +1,7 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
 Option Explicit On
-Option Default Integer
+Option Default None
 
 If InStr(Mm.CmdLine$, "--base=1") Then
   Option Base 1
@@ -41,9 +41,9 @@ Sub test_init()
 
   assert_equals(20, list.capacity%(my_list$()))
   assert_equals(0, list.size%(my_list$()))
-  Local i
-  For i = base% To base% + 19
-    assert_string_equals(list.NULL$, my_list$(i))
+  Local i%
+  For i% = base% To base% + 19
+    assert_string_equals(list.NULL$, my_list$(i%))
   Next
 End Sub
 
@@ -73,9 +73,9 @@ Sub test_clear()
   list.clear(my_list$())
 
   assert_equals(0, list.size%(my_list$()))
-  Local i
-  For i = base% To base% + 19
-    assert_string_equals(list.NULL$, my_list$(i))
+  Local i%
+  For i% = base% To base% + 19
+    assert_string_equals(list.NULL$, my_list$(i%))
   Next
 
   assert_equals(20, list.capacity%(my_list$()))

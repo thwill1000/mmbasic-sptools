@@ -1,6 +1,6 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
-Function check_set_included() : End Function
+Function check_set_included%() : End Function
 
 ' Used as the value for elements beyond the size of the set.
 ' Note: the length of the strings in the array holding the set must be at least 8 characters.

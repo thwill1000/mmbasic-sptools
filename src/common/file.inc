@@ -3,7 +3,7 @@
 
 Const FIL.PROG_DIR$ = fil.get_parent$(Mm.Info$(Current))
 
-Function check_file_included() : check_file_included = 1 : End Function
+Function check_file_included%() : End Function
 
 ' Does the file/directory 'f$' exist?
 '
