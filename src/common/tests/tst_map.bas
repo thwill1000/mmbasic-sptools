@@ -29,7 +29,7 @@ add_test("test_remove_given_absent")
 add_test("test_remove_given_empty")
 add_test("test_remove_given_full")
 
-run_tests()
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 

@@ -19,7 +19,7 @@ EndIf
 add_test("test_firmware_version")
 add_test("test_pseudo")
 
-run_tests()
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 

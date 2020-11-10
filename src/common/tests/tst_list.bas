@@ -26,9 +26,7 @@ add_test("test_remove")
 add_test("test_set")
 add_test("test_sort")
 
-run_tests()
-
-End
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 Sub setup_test()
 End Sub

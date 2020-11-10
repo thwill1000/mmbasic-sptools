@@ -26,7 +26,7 @@ add_test("test_put_given_present")
 add_test("test_put_given_full")
 add_test("test_remove")
 
-run_tests()
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 

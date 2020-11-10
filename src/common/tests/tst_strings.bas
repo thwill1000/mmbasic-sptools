@@ -23,7 +23,7 @@ add_test("test_next_token")
 add_test("test_rpad")
 add_test("test_tokenise")
 
-run_tests()
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 

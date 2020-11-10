@@ -82,11 +82,13 @@ Sub assert_raw_error(expected$)
   EndIf
 End Sub
 
-Sub run_tests()
+' @param  repeat$  if this is not empty then after running the test suite the program
+'                  should run itself again appending 'repeat$' to its command line.
+Sub run_tests(repeat$)
   Local base% = Mm.Info(Option Base)
   Local i, j, num_failures%, ub%, _
 
-  Print Mm.Info$(Current)
+  Print Mm.Info$(Current) + " " + Mm.CmdLine$
   ub% = base% + list.size%(ut.tests$()) - 1
   For i = base% To ub%
     Print "  " + ut.tests$(i); ":"; Space$(35 - Len(ut.tests$(i)));
@@ -111,12 +113,24 @@ Sub run_tests()
 
   Next i
 
-  If Mm.CmdLine$ = "--all" Then run_next_test_file()
+  If repeat$ <> "" Then
+    run_same_test_file(repeat$)
+  ElseIf InStr(Mm.CmdLine$, "--all") Then
+    run_next_test_file()
+  EndIf
+End Sub
+
+' Runs the current test file again appending 'cmd$' to its command line.
+Sub run_same_test_file(cmd$)
+  Local tgt$ = "Run " + Chr$(34) + Mm.Info(Current) + Chr$(34) + ", "
+  If Mm.CmdLine$ <> "" Then tgt$ = tgt$ + Mm.CmdLine$ + " "
+  tgt$ = tgt$ + cmd$
+  Execute tgt$
 End Sub
 
 Sub run_next_test_file()
   Local test_files$(set.new%(20)) Length 40
-  Local f$, i, old$
+  Local f$, old$
 
   set.init(test_files$())
 
@@ -142,11 +156,12 @@ Sub run_next_test_file()
   ' Lookup the index of the current file and run the next one.
   ' Note that if the current file was "sptest.bas" then the lookup returns -1
   ' and thus the first "tst_*.bas" file will be run.
-  Local current$ = fil.get_name$(Mm.Info$(Current))
-  i = set.get%(test_files$(), current$)
-  If i < set.size%(test_files$()) - 1 Then
-    If old$ = "" Then f$ = "" Else f$ = "tests/"
-    f$ = f$ + test_files$(i + 1)
-    Execute "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
-  EndIf
+  Local i = set.get%(test_files$(), fil.get_name$(Mm.Info$(Current)))
+
+  ' This was the last test.
+  If i >= Mm.Info(Option Base) + set.size%(test_files$()) - 1 Then Exit Sub
+
+  If old$ = "" Then f$ = "" Else f$ = "tests/"
+  f$ = f$ + test_files$(i + 1)
+  Execute "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
 End Sub
