@@ -15,8 +15,8 @@ End Function
 
 ' Gets the canonical path for file/directory 'f$'.
 Function fil.get_canonical$(f$)
-  Local i%
   Local elements$(list.new%(20)) Length 40
+  Local lb% = Bound(elements$(), 0)
 
   list.init(elements$())
 
@@ -30,10 +30,11 @@ Function fil.get_canonical$(f$)
     str.tokenise(Cwd$ + "/" + f$, "/\", elements$())
   EndIf
 
-  elements$(0) = "A:"
+  elements$(lb%) = "A:"
 
   Local num_elements% = list.size%(elements$())
-  Do While i% < num_elements%
+  Local i% = lb%
+  Do While i% < lb% + num_elements%
     If elements$(i%) = "." Then
       list.remove(elements$(), i%)
     ElseIf elements$(i%) = ".." Then

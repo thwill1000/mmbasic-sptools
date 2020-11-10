@@ -26,9 +26,11 @@ Sub str.tokenise(s$, sep$, lst$())
 End Sub
 
 Function str.join$(lst$(), ch$)
-  Local i%, sz% = list.size%(lst$())
-  For i% = 0 To sz% - 1
-    If i% > 0 Then str.join$ = str.join$ + ch$
+  Local lb% = Bound(lst$(), 0)
+  Local sz% = list.size%(lst$())
+  Local i%
+  For i% = lb% To lb% + sz% - 1
+    If i% > lb% Then str.join$ = str.join$ + ch$
     str.join$ = str.join$ + lst$(i%)
   Next i%
 End Function

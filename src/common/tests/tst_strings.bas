@@ -3,6 +3,12 @@
 Option Explicit On
 Option Default Integer
 
+If InStr(Mm.CmdLine$, "--base=1") Then
+  Option Base 1
+Else
+  Option Base 0
+EndIf
+
 #Include "../error.inc"
 #Include "../file.inc"
 #Include "../list.inc"
@@ -71,14 +77,15 @@ Function test_rpad()
 End Function
 
 Function test_tokenise()
+  Local base% = Mm.Info(Option Base)
   Local elements$(list.new%(20))
 
   str.tokenise("one,two,three,four", ",", elements$())
 
   assert_equals(4, list.size%(elements$()))
-  assert_string_equals("one", elements$(0))
-  assert_string_equals("two", elements$(1))
-  assert_string_equals("three", elements$(2))
-  assert_string_equals("four",  elements$(3))
-  assert_string_equals("", elements$(4))
+  assert_string_equals("one",   elements$(base% + 0))
+  assert_string_equals("two",   elements$(base% + 1))
+  assert_string_equals("three", elements$(base% + 2))
+  assert_string_equals("four",  elements$(base% + 3))
+  assert_string_equals("",      elements$(base% + 4))
 End Function

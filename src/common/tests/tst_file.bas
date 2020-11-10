@@ -3,6 +3,12 @@
 Option Explicit On
 Option Default Integer
 
+If InStr(Mm.CmdLine$, "--base=1") Then
+  Option Base 1
+Else
+  Option Base 0
+EndIf
+
 #Include "../error.inc"
 #Include "../file.inc"
 #Include "../list.inc"

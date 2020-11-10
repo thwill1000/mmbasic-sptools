@@ -3,6 +3,12 @@
 Option Explicit On
 Option Default Integer
 
+If InStr(Mm.CmdLine$, "--base=1") Then
+  Option Base 1
+Else
+  Option Base 0
+EndIf
+
 #Include "../error.inc"
 #Include "../file.inc"
 #Include "../list.inc"
@@ -31,12 +37,13 @@ Function test_firmware_version()
 End Function
 
 Function test_pseudo()
+  Local base% = Mm.Info(Option Base)
   Local x% = sys.pseudo%(-7) ' seed the random number generator.
 
   ' Assert that first 10 generated values are as expected.
   Local i%
-  Local expected%(9) = (6,4,4,7,10,2,10,10,3,4)
-  For i% = 0 To 9
+  Local expected%(base% + 9) = (6,4,4,7,10,2,10,10,3,4)
+  For i% = base% To base% + 9
     assert_equals(expected%(i%), sys.pseudo%(10))
   Next
 
@@ -47,7 +54,7 @@ Function test_pseudo()
     count%(x%) = count%(x%) + 1
   Next
 
-  assert_equals(0, count%(0))
+  If base% = 0 Then assert_equals(0, count%(0))
   For i% = 1 To 10
     assert_equals(1, count%(i%) > 0)
   Next
