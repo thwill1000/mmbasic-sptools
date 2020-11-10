@@ -22,43 +22,43 @@ End Function
 
 ' Initialises the set.
 Sub set.init(set$())
-  Local base% = Bound(set$(), 0)
-  Local top% = Bound(set$(), 1)
+  Local lb% = Bound(set$(), 0)
+  Local ub% = Bound(set$(), 1)
   Local i%
-  For i% = base% To top% : set$(i%) = set.NULL$ : Next
-  set$(top%) = "0"
+  For i% = lb% To ub% : set$(i%) = set.NULL$ : Next
+  set$(ub%) = "0"
 End Sub
 
 ' Clears the set and resets its size to 0.
 Sub set.clear(set$())
-  Local base% = Bound(set$(), 0)
-  Local top% = Bound(set$(), 1)
-  Local sz% = Val(set$(top%))
+  Local lb% = Bound(set$(), 0)
+  Local ub% = Bound(set$(), 1)
+  Local sz% = Val(set$(ub%))
   Local i%
-  For i% = base% To sz% + base% - 1 : set$(i%) = set.NULL$ : Next
-  set$(top%) = "0"
+  For i% = lb% To lb% + sz% - 1 : set$(i%) = set.NULL$ : Next
+  set$(ub%) = "0"
 End Sub
 
 ' Prints the contents of the set.
 Sub set.dump(set$())
-  Local base% = Bound(set$(), 0)
-  Local top% = Bound(set$(), 1)
-  Local sz% = Val(set$(top%))
+  Local lb% = Bound(set$(), 0)
+  Local ub% = Bound(set$(), 1)
+  Local sz% = Val(set$(ub%))
   Local i%
-  For i% = base% To base% + sz% - 1 : Print "[" Str$(i%) "] " set$(i%) : Next
+  For i% = lb% To lb% + sz% - 1 : Print "[" Str$(i%) "] " set$(i%) : Next
   Print "END"
 End Sub
 
 ' Gets the index of a value in the set, or -1 if not present.
 Function set.get%(set$(), s$)
-  Local base% = Bound(set$(), 0)
-  Local sz% = Val(set$(Bound(set$(), 1)))
-  Local i%, lb%, ub%
+  Local lb% = Bound(set$(), 0)
+  Local ub% = Bound(set$(), 1)
+  Local sz% = Val(set$(ub%))
+  Local i%
 
   ' Binary search of set$()
-  lb% = base%
-  ub% = base% + sz% - 1
-  Do
+  ub% = lb% + sz% - 1
+  Do While ub% >= lb%
     i% = (lb% + ub%) \ 2
     If s$ > set$(i%) Then
       lb% = i% + 1
@@ -67,7 +67,7 @@ Function set.get%(set$(), s$)
     Else
       set.get% = i% : Exit Function
     EndIf
-  Loop Until ub% < lb%
+  Loop ' Until ub% < lb%
 
   set.get% = -1
 End Function
@@ -76,22 +76,22 @@ End Function
 Sub set.put(set$(), s$)
   If set.get%(set$(), s$) <> -1  Then Exit Sub
 
-  Local base% = Bound(set$(), 0)
-  Local top% = Bound(set$(), 1)
-  Local sz% = Val(set$(top%))
+  Local lb% = Bound(set$(), 0)
+  Local ub% = Bound(set$(), 1)
+  Local sz% = Val(set$(ub%))
 
-  If sz% = top% - base% Then Error "set full"
+  If sz% = ub% - lb% Then Error "set full"
 
-  set$(sz% + base%) = s$
+  set$(lb% + sz%) = s$
   sz% = sz% + 1
-  set$(top%) = Str$(sz%)
+  set$(ub%) = Str$(sz%)
 
   If sz% <= 1 Then Exit Sub
-  If set$(sz% + base% - 1) >= set$(sz% + base% - 2) Then Exit Sub
+  If set$(lb% + sz% - 1) >= set$(lb% + sz% - 2) Then Exit Sub
 
-  set$(top%) = set.NULL$
+  set$(ub%) = set.NULL$
   Sort set$()
-  set$(top%) = Str$(sz%)
+  set$(ub%) = Str$(sz%)
 End Sub
 
 ' Removes a value from the set if present.
@@ -99,12 +99,12 @@ Sub set.remove(set$(), s$)
   Local i% = set.get%(set$(), s$)
   If i% = -1 Then Exit Sub
 
-  Local top% = Bound(set$(), 1)
-  Local sz% = Val(set$(top%))
+  Local ub% = Bound(set$(), 1)
+  Local sz% = Val(set$(ub%))
   set$(i%) = set.NULL$
-  set$(top%) = set.NULL$
+  set$(ub%) = set.NULL$
   Sort set$()
-  set$(top%) = Str$(sz% - 1)
+  set$(ub%) = Str$(sz% - 1)
   EndIf
 End Sub
 

@@ -3,6 +3,12 @@
 Option Explicit On
 Option Default Integer
 
+If InStr(Mm.CmdLine$, "--base=1") Then
+  Option Base 1
+Else
+  Option Base 0
+EndIf
+
 #Include "../error.inc"
 #Include "../file.inc"
 #Include "../list.inc"
@@ -31,13 +37,12 @@ Sub teardown_test()
 End Sub
 
 Function test_init()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
   Local i%
-  For i% = 0 To 19
-    assert_string_equals(set.NULL$, my_set$(i%))
-  Next
+  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
 End Function
 
 Function test_capacity()
@@ -48,6 +53,7 @@ Function test_capacity()
 End Function
 
 Function test_clear()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
@@ -58,10 +64,11 @@ Function test_clear()
 
   assert_equals(0, set.size%(my_set$()))
   Local i%
-  For i% = 0 To 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
+  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
 End Function
 
 Function test_clear_given_empty()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
@@ -69,36 +76,39 @@ Function test_clear_given_empty()
 
   assert_equals(0, set.size%(my_set$()))
   Local i%
-  For i% = 0 To 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
+  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
 End Function
 
 Function test_clear_given_full()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
   Local i%
-  For i% = 0 To 19 : set.put(my_set$(), "item" + Str$(i%)) : Next
+  For i% = base% To base% + 19 : set.put(my_set$(), "item" + Str$(i%)) : Next
   assert_equals(20, set.size%(my_set$()))
 
   set.clear(my_set$())
 
   assert_equals(0, set.size%(my_set$()))
-  For i% = 0 To 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
+  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
 End Function
 
 Function test_get()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
   set.put(my_set$(), "foo")
   set.put(my_set$(), "bar")
 
-  assert_equals( 0, set.get%(my_set$(), "bar"))
-  assert_equals( 1, set.get%(my_set$(), "foo"))
+  assert_equals(base% + 0, set.get%(my_set$(), "bar"))
+  assert_equals(base% + 1, set.get%(my_set$(), "foo"))
   assert_equals(-1, set.get%(my_set$(), "wombat"))
 End Function
 
 Function test_put()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
@@ -106,16 +116,17 @@ Function test_put()
   set.put(my_set$(), "bar")
 
   assert_equals(2, set.size%(my_set$()))
-  assert_string_equals("bar", my_set$(0))
-  assert_string_equals("foo", my_set$(1))
+  assert_string_equals("bar", my_set$(base% + 0))
+  assert_string_equals("foo", my_set$(base% + 1))
 End Function
 
 Function test_put_given_full()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
   Local i%
-  For i% = 0 To 19 : set.put(my_set$(), "item" + Str$(i%)) : Next
+  For i% = base% To base% + 19 : set.put(my_set$(), "item" + Str$(i%)) : Next
   assert_equals(20, set.size%(my_set$()))
 
   On Error Ignore
@@ -125,6 +136,7 @@ Function test_put_given_full()
 End Function
 
 Function test_put_given_present()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
@@ -135,11 +147,12 @@ Function test_put_given_present()
   set.put(my_set$(), "bar")
 
   assert_equals(2, set.size%(my_set$()))
-  assert_string_equals("bar", my_set$(0))
-  assert_string_equals("foo", my_set$(1))
+  assert_string_equals("bar", my_set$(base% + 0))
+  assert_string_equals("foo", my_set$(base% + 1))
 End Function
 
 Function test_remove()
+  Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
@@ -149,7 +162,7 @@ Function test_remove()
   set.remove(my_set$(), "bar")
 
   assert_equals(1, set.size%(my_set$()))
-  assert_equals(0, set.get%(my_set$(), "foo"))
+  assert_equals(base% + 0, set.get%(my_set$(), "foo"))
   assert_equals(-1, set.get%(my_set$(), "bar"))
 
   set.remove(my_set$(), "foo")
