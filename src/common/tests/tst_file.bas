@@ -32,7 +32,7 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_get_parent()
+Sub test_get_parent()
   assert_string_equals("", fil.get_parent$("foo.bas"))
   assert_string_equals("test", fil.get_parent$("test/foo.bas"))
   assert_string_equals("test", fil.get_parent$("test\foo.bas"))
@@ -40,9 +40,9 @@ Function test_get_parent()
   assert_string_equals("A:\test", fil.get_parent$("A:\test\foo.bas"))
   assert_string_equals("..", fil.get_parent$("../foo.bas"))
   assert_string_equals("..", fil.get_parent$("..\foo.bas"))
-End Function
+End Sub
 
-Function test_get_name()
+Sub test_get_name()
   assert_string_equals("foo.bas", fil.get_name$("foo.bas"))
   assert_string_equals("foo.bas", fil.get_name$("test/foo.bas"))
   assert_string_equals("foo.bas", fil.get_name$("test\foo.bas"))
@@ -50,9 +50,9 @@ Function test_get_name()
   assert_string_equals("foo.bas", fil.get_name$("A:\test\foo.bas"))
   assert_string_equals("foo.bas", fil.get_name$("../foo.bas"))
   assert_string_equals("foo.bas", fil.get_name$("..\foo.bas"))
-End Function
+End Sub
 
-Function test_get_canonical()
+Sub test_get_canonical()
   Local base$ = Cwd$
   assert_string_equals(base$ + "/foo.bas", fil.get_canonical$("foo.bas"))
   assert_string_equals(base$ + "/dir/foo.bas", fil.get_canonical$("dir/foo.bas"))
@@ -67,16 +67,16 @@ Function test_get_canonical()
   assert_string_equals(base$ + "/foo.bas", fil.get_canonical$("dir\..\foo.bas"))
   assert_string_equals(base$ + "/dir/foo.bas", fil.get_canonical$("dir/./foo.bas"))
   assert_string_equals(base$ + "/dir/foo.bas", fil.get_canonical$("dir\.\foo.bas"))
-End Function
+End Sub
 
-Function test_exists()
+Sub test_exists()
   Local f$ = Mm.Info$(Current)
   assert_equals(1, fil.exists%(f$))
   assert_equals(1, fil.exists%(fil.get_parent$(f$) + "/foo/../" + fil.get_name$(f$)))
   assert_equals(0, fil.exists%(fil.get_parent$(f$) + "/foo/" + fil.get_name$(f$)))
-End Function
+End Sub
 
-Function test_is_absolute()
+Sub test_is_absolute()
   assert_equals(0, fil.is_absolute%("foo.bas"))
   assert_equals(0, fil.is_absolute%("dir/foo.bas"))
   assert_equals(0, fil.is_absolute%("dir\foo.bas"))
@@ -90,4 +90,4 @@ Function test_is_absolute()
   assert_equals(0, fil.is_absolute%("dir\..\foo.bas"))
   assert_equals(0, fil.is_absolute%("dir/./foo.bas"))
   assert_equals(0, fil.is_absolute%("dir\.\foo.bas"))
-End Function
+End Sub

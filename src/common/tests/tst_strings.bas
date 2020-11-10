@@ -33,13 +33,13 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_centre()
+Sub test_centre()
   assert_string_equals("     hello     ", str.centre$("hello", 15))
   assert_string_equals("     hello      ", str.centre$("hello", 16))
   assert_string_equals("hello", str.centre$("hello", 2))
-End Function
+End Sub
 
-Function test_join()
+Sub test_join()
   Local elements$(list.new%(4))
 
   assert_string_equals("", str.join$(elements$(), ","))
@@ -54,14 +54,14 @@ Function test_join()
 
   assert_string_equals("one,two,three,four", str.join$(elements$(), ","))
   assert_string_equals("one, two, three, four", str.join$(elements$(), ", ")) 
-End Function
+End Sub
 
-Function test_lpad()
+Sub test_lpad()
   assert_string_equals("     hello", str.lpad$("hello", 10))
   assert_string_equals("hello", str.lpad$("hello", 2))
-End Function
+End Sub
 
-Function test_next_token()
+Sub test_next_token()
   Local s$ = "  foo    bar wombat$  "
 
   assert_string_equals("foo", str.next_token$(s$))
@@ -69,14 +69,14 @@ Function test_next_token()
   assert_string_equals("wombat$", str.next_token$(s$))
   assert_string_equals("", str.next_token$(s$))
   assert_string_equals("", s$)
-End Function
+End Sub
 
-Function test_rpad()
+Sub test_rpad()
   assert_string_equals("hello     ", str.rpad$("hello", 10))
   assert_string_equals("hello", str.rpad$("hello", 2))
-End Function
+End Sub
 
-Function test_tokenise()
+Sub test_tokenise()
   Local base% = Mm.Info(Option Base)
   Local elements$(list.new%(20))
 
@@ -88,4 +88,4 @@ Function test_tokenise()
   assert_string_equals("three", elements$(base% + 2))
   assert_string_equals("four",  elements$(base% + 3))
   assert_string_equals("",      elements$(base% + 4))
-End Function
+End Sub

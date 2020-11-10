@@ -29,7 +29,7 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_replace()
+Sub test_replace()
   map.clear(replace$())
   lx.parse_basic("'!replace x      y") : transpile()
   lx.parse_basic("'!replace &hFFFF z") : transpile()
@@ -42,7 +42,7 @@ Function test_replace()
   expect_tk(3, TK_IDENTIFIER, "z")
   expect_tk(4, TK_COMMENT, "' comment")
   assert_string_equals("Dim y = z ' comment", lx.line$)
-End Function
+End Sub
 
 Sub expect_tokens(num)
   assert_no_error()

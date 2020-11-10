@@ -43,16 +43,16 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_tokenise()
+Sub test_tokenise()
   lx.tokenise("  foo    bar/wom " + Chr$(34) + "bat" + Chr$(34) + "   ")
 
   expect_success(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar/wom")
   expect_tk(2, TK_IDENTIFIER, Chr$(34) + "bat" + Chr$(34))
-End Function
+End Sub
 
-Function test_binary_literals()
+Sub test_binary_literals()
   lx.parse_basic("&b1001001")
 
   expect_success(1)
@@ -63,16 +63,16 @@ Function test_binary_literals()
   expect_success(2)
   expect_tk(0, TK_NUMBER, "&B01")
   expect_tk(1, TK_NUMBER, "23456789")
-End Function
+End Sub
 
-Function test_comments()
+Sub test_comments()
   lx.parse_basic("' This is a comment")
 
   expect_success(1)
   expect_tk(0, TK_COMMENT, "' This is a comment");
-End Function
+End Sub
 
-Function test_directives()
+Sub test_directives()
   lx.parse_basic("'!comment_if foo")
 
   expect_success(2)
@@ -83,17 +83,17 @@ Function test_directives()
   expect_success(2)
   expect_tk(0, TK_DIRECTIVE, "'!empty-lines")
   expect_tk(1, TK_KEYWORD, "off")
-End Function
+End Sub
 
-Function test_includes()
+Sub test_includes()
   lx.parse_basic("#Include " + Chr$(34) + "foo.inc" + Chr$(34))
 
   expect_success(2)
   expect_tk(0, TK_KEYWORD, "#Include")
   expect_tk(1, TK_STRING, Chr$(34) + "foo.inc" + Chr$(34))
-End Function
+End Sub
 
-Function test_hexadecimal_literals()
+Sub test_hexadecimal_literals()
   lx.parse_basic("&hABCDEF")
 
   expect_success(1)
@@ -104,9 +104,9 @@ Function test_hexadecimal_literals()
   expect_success(2)
   expect_tk(0, TK_NUMBER, "&Habcdef")
   expect_tk(1, TK_IDENTIFIER, "ghijklmn")
-End Function
+End Sub
 
-Function test_identifiers()
+Sub test_identifiers()
   lx.parse_basic("xx s$ foo.bar wom.bat$ a! b%")
 
   expect_success(6)
@@ -116,16 +116,16 @@ Function test_identifiers()
   expect_tk(3, TK_IDENTIFIER, "wom.bat$")
   expect_tk(4, TK_IDENTIFIER, "a!")
   expect_tk(5, TK_IDENTIFIER, "b%")
-End Function
+End Sub
 
-Function test_integer_literals()
+Sub test_integer_literals()
   lx.parse_basic("421")
 
   expect_success(1)
   expect_tk(0, TK_NUMBER, "421")
-End Function
+End Sub
 
-Function test_keywords()
+Sub test_keywords()
   lx.parse_basic("For Next Do Loop Chr$")
 
   expect_success(5)
@@ -140,9 +140,9 @@ Function test_keywords()
   expect_tk(0, TK_KEYWORD, "#gps")
   expect_tk(1, TK_KEYWORD, "@")
   expect_tk(2, TK_KEYWORD, "YELLOW")
-End Function
+End Sub
 
-Function test_octal_literals()
+Sub test_octal_literals()
   lx.parse_basic("&O1234")
 
   expect_success(1)
@@ -153,9 +153,9 @@ Function test_octal_literals()
   expect_success(2)
   expect_tk(0, TK_NUMBER, "&O1234567")
   expect_tk(1, TK_NUMBER, "89")
-End Function
+End Sub
 
-Function test_real_literals()
+Sub test_real_literals()
   lx.parse_basic("3.421")
 
   expect_success(1)
@@ -180,22 +180,22 @@ Function test_real_literals()
 
   expect_success(1)
   expect_tk(0, TK_NUMBER, ".3421")
-End Function
+End Sub
 
-Function test_string_literals()
+Sub test_string_literals()
   lx.parse_basic(Chr$(34) + "This is a string" + Chr$(34))
 
   expect_success(1)
   expect_tk(0, TK_STRING, Chr$(34) + "This is a string" + Chr$(34))
-End Function
+End Sub
 
-Function test_string_no_closing_quote()
+Sub test_string_no_closing_quote()
   lx.parse_basic(Chr$(34) + "String literal with no closing quote")
 
   assert_error("No closing quote")
-End Function
+End Sub
 
-Function test_symbols()
+Sub test_symbols()
   lx.parse_basic("a=b/c*d\e<=f=<g>=h=>i:j;k,l<m>n")
 
   expect_success(27)
@@ -244,37 +244,37 @@ Function test_symbols()
   expect_tk(3, TK_SYMBOL, "+")
   expect_tk(4, TK_NUMBER, "1")
 
-End Function
+End Sub
 
-Function test_get_number()
+Sub test_get_number()
   lx.parse_basic("1 2 3.14 3.14e-15")
   assert_float_equals(1, lx.number(0))
   assert_float_equals(2, lx.number(1))
   assert_float_equals(3.14, lx.number(2))
   assert_float_equals(3.14e-15, lx.number(3))
-End Function
+End Sub
 
-Function test_get_string()
+Sub test_get_string()
   lx.parse_basic(Chr$(34) + "foo" + Chr$(34) + " " + Chr$(34) + "wom bat" + Chr$(34))
   assert_string_equals("foo", lx.string$(0))
   assert_string_equals("wom bat", lx.string$(1))
-End Function
+End Sub
 
-Function test_get_directive()
+Sub test_get_directive()
   lx.parse_basic("'!foo '!bar '!wombat")
   assert_string_equals("!foo", lx.directive$(0))
   assert_string_equals("!bar", lx.directive$(1))
   assert_string_equals("!wombat", lx.directive$(2))
-End Function
+End Sub
 
-Function test_get_token_lc()
+Sub test_get_token_lc()
   lx.parse_basic("FOO '!BAR 1E7")
   assert_string_equals("foo", lx.token_lc$(0))
   assert_string_equals("'!bar", lx.token_lc$(1))
   assert_string_equals("1e7", lx.token_lc$(2))
-End Function
+End Sub
 
-Function test_parse_command_line()
+Sub test_parse_command_line()
   lx.parse_command_line("--foo -bar /wombat")
   assert_string_equals("--foo", lx.token_lc$(0))
   assert_string_equals("foo", lx.option$(0))
@@ -294,9 +294,9 @@ Function test_parse_command_line()
 
   lx.parse_command_line("--foo@ bar")
   assert_error("Illegal command-line option format: --foo@")
-End Function
+End Sub
 
-Function test_old_tokens_cleared()
+Sub test_old_tokens_cleared()
   Local i
 
   lx.parse_basic("Dim s$(20) Length 20")
@@ -309,7 +309,7 @@ Function test_old_tokens_cleared()
     assert_equals(0, lx.start(i))
     assert_equals(0, lx.len(i))
   Next i
-End Function
+End Sub
 
 Sub expect_success(num)
   assert_no_error()

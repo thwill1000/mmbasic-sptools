@@ -98,7 +98,7 @@ Sub run_tests(repeat$)
 
     err$ = ""
     setup_test()
-    _ = Eval(ut.tests$(i) + "()")
+    Call ut.tests$(i)
     teardown_test()
 
     num_failures% = list.size%(ut.failures$())

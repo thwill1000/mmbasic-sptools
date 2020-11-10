@@ -28,7 +28,7 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_all()
+Sub test_all()
   Local elements$(10) Length 10, i
 
   assert_equals(0, opt.all)
@@ -63,9 +63,9 @@ Function test_all()
 
   opt.set("all", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_brief()
+Sub test_brief()
   Local elements$(10) Length 10, i
 
   assert_equals(0, opt.brief)
@@ -100,9 +100,9 @@ Function test_brief()
 
   opt.set("brief", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_no_location()
+Sub test_no_location()
   Local elements$(10) Length 10, i
 
   assert_equals(0, opt.no_location)
@@ -137,28 +137,28 @@ Function test_no_location()
 
   opt.set("no-location", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_infile()
+Sub test_infile()
   assert_string_equals("", opt.infile$)
 
   err$ = ""
   opt.set("infile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.infile$)
-End Function
+End Sub
 
-Function test_outfile()
+Sub test_outfile()
   assert_string_equals("", opt.outfile$)
 
   err$ = ""
   opt.set("outfile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.outfile$)
-End Function
+End Sub
 
-Function test_unknown()
+Sub test_unknown()
   err$ = ""
   opt.set("unknown", "foo")
   assert_error("unknown option: unknown")
-End Function
+End Sub

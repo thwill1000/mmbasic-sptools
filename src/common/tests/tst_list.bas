@@ -34,7 +34,7 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_init()
+Sub test_init()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -45,9 +45,9 @@ Function test_init()
   For i = base% To base% + 19
     assert_string_equals(list.NULL$, my_list$(i))
   Next
-End Function
+End Sub
 
-Function test_add()
+Sub test_add()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -60,9 +60,9 @@ Function test_add()
   assert_string_equals("bar", my_list$(base% + 1))
 
   assert_equals(20, list.capacity%(my_list$()))
-End Function
+End Sub
 
-Function test_clear()
+Sub test_clear()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -79,9 +79,9 @@ Function test_clear()
   Next
 
   assert_equals(20, list.capacity%(my_list$()))
-End Function
+End Sub
 
-Function test_get()
+Sub test_get()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -99,9 +99,9 @@ Function test_get()
   Local s$ = list.get$(my_list$(), base% + 3)
   assert_raw_error("index out of bounds: " + Str$(base% + 3))
   On Error Abort
-End Function
+End Sub
 
-Function test_insert()
+Sub test_insert()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -130,9 +130,9 @@ Function test_insert()
   assert_string_equals("snafu", my_list$(base% + 4))
 
   assert_equals(20, list.capacity%(my_list$()))
-End Function
+End Sub
 
-Function test_pop()
+Sub test_pop()
   Local my_list$(list.new%(20))
   list.init(my_list$())
   list.add(my_list$(), "foo")
@@ -148,9 +148,9 @@ Function test_pop()
   assert_equals(0, list.size%(my_list$()))
 
   assert_equals(20, list.capacity%(my_list$()))
-End Function
+End Sub
 
-Function test_push()
+Sub test_push()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -163,9 +163,9 @@ Function test_push()
   assert_string_equals("bar", my_list$(base% + 1))
 
   assert_equals(20, list.capacity%(my_list$()))
-End Function
+End Sub
 
-Function test_remove()
+Sub test_remove()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -197,9 +197,9 @@ Function test_remove()
   assert_string_equals(list.NULL$, my_list$(base% + 0))
 
   assert_equals(20, list.capacity%(my_list$()))
-End Function
+End Sub
 
-Function test_set()
+Sub test_set()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -221,9 +221,9 @@ Function test_set()
   list.set(my_list$(), base% + 3, "33")
   assert_raw_error("index out of bounds: " + Str$(base% + 3))
   On Error Abort
-End Function
+End Sub
 
-Function test_sort()
+Sub test_sort()
   Local base% = Mm.Info(Option Base)
   Local my_list$(list.new%(20))
   list.init(my_list$())
@@ -240,4 +240,4 @@ Function test_sort()
   assert_string_equals("bb", my_list$(base% + 1))
   assert_string_equals("cc", my_list$(base% + 2))
   assert_string_equals("dd", my_list$(base% + 3))
-End Function
+End Sub

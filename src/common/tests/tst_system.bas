@@ -29,14 +29,14 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_firmware_version()
+Sub test_firmware_version()
   assert_equals(50605, sys.firmware_version%("5.06.05"))
   assert_equals(50600, sys.firmware_version%("5.06"))
 '  assert_equals(50506, sys.firmware_version%())
   assert_equals(12345678, sys.firmware_version%("12.34.5.678"))
-End Function
+End Sub
 
-Function test_pseudo()
+Sub test_pseudo()
   Local base% = Mm.Info(Option Base)
   Local x% = sys.pseudo%(-7) ' seed the random number generator.
 
@@ -47,7 +47,7 @@ Function test_pseudo()
     assert_equals(expected%(i%), sys.pseudo%(10))
   Next
 
-  ' Assert that calling the function 1000 times generates each number 1..10 at least once.
+  ' Assert that calling the Sub 1000 times generates each number 1..10 at least once.
   Local count%(10)
   For i% = 1 To 1000
     x% = sys.pseudo%(10)
@@ -58,4 +58,4 @@ Function test_pseudo()
   For i% = 1 To 10
     assert_equals(1, count%(i%) > 0)
   Next
-End Function
+End Sub

@@ -36,23 +36,23 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_init()
+Sub test_init()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
   Local i%
   For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
-End Function
+End Sub
 
-Function test_capacity()
+Sub test_capacity()
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
   assert_equals(20, set.capacity%(my_set$()))
-End Function
+End Sub
 
-Function test_clear()
+Sub test_clear()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -65,9 +65,9 @@ Function test_clear()
   assert_equals(0, set.size%(my_set$()))
   Local i%
   For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
-End Function
+End Sub
 
-Function test_clear_given_empty()
+Sub test_clear_given_empty()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -77,9 +77,9 @@ Function test_clear_given_empty()
   assert_equals(0, set.size%(my_set$()))
   Local i%
   For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
-End Function
+End Sub
 
-Function test_clear_given_full()
+Sub test_clear_given_full()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -92,9 +92,9 @@ Function test_clear_given_full()
 
   assert_equals(0, set.size%(my_set$()))
   For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
-End Function
+End Sub
 
-Function test_get()
+Sub test_get()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -105,9 +105,9 @@ Function test_get()
   assert_equals(base% + 0, set.get%(my_set$(), "bar"))
   assert_equals(base% + 1, set.get%(my_set$(), "foo"))
   assert_equals(-1, set.get%(my_set$(), "wombat"))
-End Function
+End Sub
 
-Function test_put()
+Sub test_put()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -118,9 +118,9 @@ Function test_put()
   assert_equals(2, set.size%(my_set$()))
   assert_string_equals("bar", my_set$(base% + 0))
   assert_string_equals("foo", my_set$(base% + 1))
-End Function
+End Sub
 
-Function test_put_given_full()
+Sub test_put_given_full()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -133,9 +133,9 @@ Function test_put_given_full()
   set.put(my_set$(), "too many")
   assert_true(InStr(Mm.ErrMsg$, "set full") > 0, "Assert failed, expected error not thrown")
   On Error Abort
-End Function
+End Sub
 
-Function test_put_given_present()
+Sub test_put_given_present()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -149,9 +149,9 @@ Function test_put_given_present()
   assert_equals(2, set.size%(my_set$()))
   assert_string_equals("bar", my_set$(base% + 0))
   assert_string_equals("foo", my_set$(base% + 1))
-End Function
+End Sub
 
-Function test_remove()
+Sub test_remove()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
@@ -170,4 +170,4 @@ Function test_remove()
   assert_equals(0, set.size%(my_set$()))
   assert_equals(-1, set.get%(my_set$(), "foo"))
   assert_equals(-1, set.get%(my_set$(), "bar"))
-End Function
+End Sub

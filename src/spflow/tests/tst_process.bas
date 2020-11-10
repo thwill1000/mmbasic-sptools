@@ -35,7 +35,7 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_simple_sub()
+Sub test_simple_sub()
   Local lines$(7)
   lines$(1) = "Sub foo()"
   lines$(2) = "  bar()"
@@ -68,13 +68,13 @@ Function test_simple_sub()
   assert_equals(2, all_calls(3))
   assert_equals(-1, all_calls(4))
 
-End Function
+End Sub
 
-Function test_simple_fn()
+Sub test_simple_fn()
   Local lines$(7)
-  lines$(1) = "Function foo()"
+  lines$(1) = "Sub foo()"
   lines$(2) = "  foo = 2"
-  lines$(3) = "End Function"
+  lines$(3) = "End Sub"
   lines$(4) = "a = foo()"
 
   Local pass
@@ -97,9 +97,9 @@ Function test_simple_fn()
   assert_equals( 1, all_calls(1)) ' *global* calls foo()
   assert_equals(-1, all_calls(2))
 
-End Function
+End Sub
 
-Function test_self_recursive_sub()
+Sub test_self_recursive_sub()
   Local lines$(4)
   lines$(1) = "Sub foo()"
   lines$(2) = "  foo()"
@@ -127,13 +127,13 @@ Function test_self_recursive_sub()
   assert_equals(1, all_calls(2))
   assert_equals(-1, all_calls(3))
 
-End Function
+End Sub
 
-Function test_self_recursive_fn()
+Sub test_self_recursive_fn()
   Local lines$(4)
-  lines$(1) = "Function foo()"
+  lines$(1) = "Sub foo()"
   lines$(2) = "  foo = foo()"
-  lines$(3) = "End Function"
+  lines$(3) = "End Sub"
   lines$(4) = "a = foo()"
 
   Local pass
@@ -157,4 +157,4 @@ Function test_self_recursive_fn()
   assert_equals(1, all_calls(2))
   assert_equals(-1, all_calls(3))
 
-End Function
+End Sub

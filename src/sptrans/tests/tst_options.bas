@@ -31,7 +31,7 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_colour()
+Sub test_colour()
   Local elements$(10) Length 10, i
 
   assert_equals(0, opt.colour)
@@ -62,9 +62,9 @@ Function test_colour()
 
   opt.set("colour", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_comments()
+Sub test_comments()
   Local elements$(10) Length 10, i
 
   assert_equals(-1, opt.comments)
@@ -98,9 +98,9 @@ Function test_comments()
 
   opt.set("comments", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_empty_lines()
+Sub test_empty_lines()
   Local elements$(10) Length 10, i
 
   assert_equals(-1, opt.empty_lines)
@@ -145,9 +145,9 @@ Function test_empty_lines()
 
   opt.set("empty-lines", "foo")
   assert_error("expects 'on|off|single' argument")
-End Function
+End Sub
 
-Function test_format_only()
+Sub test_format_only()
   Local elements$(10) Length 10, i
 
   assert_equals(0, opt.format_only)
@@ -178,9 +178,9 @@ Function test_format_only()
 
   opt.set("format-only", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_indent()
+Sub test_indent()
   Local elements$(10) Length 10, i
 
   assert_equals(-1, opt.indent_sz)
@@ -220,9 +220,9 @@ Function test_indent()
   err$ = ""
   opt.set("indent", "-2")
   assert_error("expects 'on|<number>' argument")
-End Function
+End Sub
 
-Function test_spacing()
+Sub test_spacing()
   Local elements$(10) Length 10, i
 
   assert_equals(-1, opt.spacing)
@@ -281,28 +281,28 @@ Function test_spacing()
   err$ = ""
   opt.set("spacing", "3")
   assert_error("expects 'on|minimal|compact|generous' argument")
-End Function
+End Sub
 
-Function test_infile()
+Sub test_infile()
   assert_string_equals("", opt.infile$)
 
   err$ = ""
   opt.set("infile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.infile$)
-End Function
+End Sub
 
-Function test_outfile()
+Sub test_outfile()
   assert_string_equals("", opt.outfile$)
 
   err$ = ""
   opt.set("outfile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.outfile$)
-End Function
+End Sub
 
-Function test_unknown()
+Sub test_unknown()
   err$ = ""
   opt.set("unknown", "foo")
   assert_error("unknown option: unknown")
-End Function
+End Sub

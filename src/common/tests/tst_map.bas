@@ -39,7 +39,7 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_init()
+Sub test_init()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -49,9 +49,9 @@ Function test_init()
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
   assert_equals(20, map.capacity%(my_map$()));
-End Function
+End Sub
 
-Function test_clear()
+Sub test_clear()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -66,9 +66,9 @@ Function test_clear()
   For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
-End Function
+End Sub
 
-Function test_clear_given_empty()
+Sub test_clear_given_empty()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -79,9 +79,9 @@ Function test_clear_given_empty()
   For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
-End Function
+End Sub
 
-Function test_clear_given_full()
+Sub test_clear_given_full()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -93,9 +93,9 @@ Function test_clear_given_full()
   For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
-End Function
+End Sub
 
-Function test_get()
+Sub test_get()
   Local my_map$(map.new%(20))
   map.init(my_map$())
 
@@ -107,9 +107,9 @@ Function test_get()
   assert_string_equals("bat", map.get$(my_map$(), "wom"))
   assert_string_equals("bbb", map.get$(my_map$(), "aaa"))
   assert_string_equals(map.NULL$, map.get$(my_map$(), "unknown"))
-End Function
+End Sub
 
-Function test_put()
+Sub test_put()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -125,9 +125,9 @@ Function test_put()
   assert_string_equals("bar", my_map$(base% + 1 + 20))
   assert_string_equals("wom", my_map$(base% + 2))
   assert_string_equals("bat", my_map$(base% + 2 + 20))
-End Function
+End Sub
 
-Function test_put_given_full()
+Sub test_put_given_full()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -145,9 +145,9 @@ Function test_put_given_full()
   map.put(my_map$(), "key15", "value")
   assert_string_equals("value", map.get$(my_map$(), "key15"))
   assert_equals(20, map.size%(my_map$()))
-End Function
+End Sub
 
-Function test_put_given_present()
+Sub test_put_given_present()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -167,9 +167,9 @@ Function test_put_given_present()
   assert_string_equals("bar2", my_map$(base% + 1 + 20))
   assert_string_equals("wom",  my_map$(base% + 2))
   assert_string_equals("bat2", my_map$(base% + 2 + 20))
-End Function
+End Sub
 
-Function test_remove()
+Sub test_remove()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -201,9 +201,9 @@ Function test_remove()
   assert_equals(0, map.size%(my_map$()))
   assert_string_equals(map.NULL$, my_map$(base% + 0))
   assert_string_equals(map.NULL$, my_map$(base% + 0 + 20))
-End Function
+End Sub
 
-Function test_remove_given_absent()
+Sub test_remove_given_absent()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -220,9 +220,9 @@ Function test_remove_given_absent()
   assert_string_equals("bar", my_map$(base% + 1 + 20))
   assert_string_equals("wom", my_map$(base% + 2))
   assert_string_equals("bat", my_map$(base% + 2 + 20))
-End Function
+End Sub
 
-Function test_remove_given_empty()
+Sub test_remove_given_empty()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -233,9 +233,9 @@ Function test_remove_given_empty()
   For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
-End Function
+End Sub
 
-Function test_remove_given_full()
+Sub test_remove_given_full()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -253,4 +253,4 @@ Function test_remove_given_full()
   Next
   assert_string_equals("19", my_map$(base% + 40));
   assert_equals(19, map.size%(my_map$()));
-End Function
+End Sub
