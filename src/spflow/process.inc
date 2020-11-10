@@ -51,6 +51,11 @@ End Sub
 Sub process(pass)
   Local i
 
+  ' Ignore directives.
+  If lx.num >= 1 Then
+    If lx.type(0) = TK_DIRECTIVE Then Exit Sub
+  EndIf
+
   For i = 0 To lx.num - 1
 
     If InStr(" cfunction csub function sub ", " " + lx.token_lc$(i) + " ") Then
