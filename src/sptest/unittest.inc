@@ -107,7 +107,7 @@ Sub run_tests(repeat$)
     Else If num_failures% > 0 Then
       Print "FAIL ("; Str$(num_failures%); "/"; Str$(ut.asserts_count%); ")"
       For j% = base% To base% + num_failures% - 1
-        Print "  "; ut.failures$(j)
+        Print "  "; ut.failures$(j%)
       Next j%
     EndIf
 
