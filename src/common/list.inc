@@ -85,6 +85,15 @@ Sub list.insert(lst$(), index%, s$)
   lst$(ub%) = Str$(sz% + 1)
 End Sub
 
+' Returns the element at the end of the list.
+' If the list is empty then returns list.NULL$
+Function list.peek$(lst$())
+  Local lb% = Bound(lst$(), 0)
+  Local ub% = Bound(lst$(), 1)
+  Local sz% = Val(lst$(ub%))
+  If sz% > 0 Then list.peek$ = lst$(lb% + sz% - 1) Else list.peek$ = list.NULL$
+End Function
+
 ' Removes and returns the element at the end of the list.
 ' If the list is empty then returns list.NULL$
 Function list.pop$(lst$())

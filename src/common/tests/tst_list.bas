@@ -20,6 +20,7 @@ add_test("test_add")
 add_test("test_clear")
 add_test("test_get")
 add_test("test_insert")
+add_test("test_peek")
 add_test("test_pop")
 add_test("test_push")
 add_test("test_remove")
@@ -130,6 +131,18 @@ Sub test_insert()
   assert_string_equals("snafu", my_list$(base% + 4))
 
   assert_equals(20, list.capacity%(my_list$()))
+End Sub
+
+Sub test_peek()
+  Local my_list$(list.new%(20))
+  list.init(my_list$())
+
+  assert_string_equals(list.NULL$, list.peek$(my_list$()))
+
+  list.add(my_list$(), "foo")
+  list.add(my_list$(), "bar")
+
+  assert_string_equals("bar", list.peek$(my_list$()))
 End Sub
 
 Sub test_pop()
