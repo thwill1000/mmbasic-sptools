@@ -20,9 +20,18 @@ Sub fail(msg$)
   ut.add_failure(msg$)
 End Sub
 
+Sub assert_false(z%, msg$)
+  Inc ut.asserts_count%
+  If z% Then
+    If msg$ = "" Then ut.add_failure("assert_false() failed") Else ut.add_failure(msg$)
+  EndIf
+End Sub
+
 Sub assert_true(z%, msg$)
-  ut.asserts_count% = ut.asserts_count% + 1
-  If Not z% Then ut.add_failure(msg$)
+  Inc ut.asserts_count%
+  If Not z% Then
+    If msg$ = "" Then ut.add_failure("assert_true() failed") Else ut.add_failure(msg$)
+  EndIf
 End Sub
 
 Sub ut.add_failure(msg$)
@@ -89,6 +98,7 @@ Sub run_tests(repeat$)
   Local i%, j%, num_failures%, ub%
 
   Print Mm.Info$(Current) + " " + Mm.CmdLine$
+  Local t% = Timer
   ub% = base% + list.size%(ut.tests$()) - 1
   For i% = base% To ub%
     Print "  " + ut.tests$(i%); ":"; Space$(35 - Len(ut.tests$(i%)));
@@ -112,6 +122,7 @@ Sub run_tests(repeat$)
     EndIf
 
   Next i%
+  Print "  " Str$((Timer - t%) / 1000) " s"
 
   If repeat$ <> "" Then
     run_same_test_file(repeat$)
