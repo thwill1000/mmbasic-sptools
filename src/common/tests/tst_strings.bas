@@ -1,4 +1,4 @@
-:' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020 Thomas Hugo Williams
 
 Option Explicit On
 Option Default None

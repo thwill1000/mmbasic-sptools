@@ -124,16 +124,17 @@ Sub run_tests(repeat$)
 
     If ut.is_verbose%() Then
       If num_failed_asserts% = 0 Then
-        Print vt100.colour$("green");
-        Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")"
+        ut.print_colour("green")
+        Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")";
       Else If num_failed_asserts% > 0 Then
-        Print vt100.colour$("red");
-        Print "FAIL ("; Str$(num_failed_asserts%); "/"; Str$(ut.asserts_count%); ")"
+        ut.print_colour("red")
+        Print "FAIL ("; Str$(num_failed_asserts%); "/"; Str$(ut.asserts_count%); ")";
         For j% = base% To base% + num_failed_asserts% - 1
           Print "  "; ut.failures$(j%)
         Next j%
       EndIf
-      Print vt100.colour$("reset");
+      ut.print_colour("reset")
+      Print
     EndIf
 
   Next i%
@@ -147,13 +148,14 @@ Sub run_tests(repeat$)
 
   Local num_tests% = list.size%(ut.tests$())
   If num_failed_tests% = 0 Then
-    Print vt100.colour$("green");
+    ut.print_colour("green")
     Print "PASS (" Str$(num_tests%) "/" Str$(num_tests%) ")";
   Else
-    Print vt100.colour$("red");
+    ut.print_colour("red")
     Print "FAIL (" Str$(num_failed_tests%) "/" Str$(num_tests%) ")";
   EndIf
-  Print vt100.colour$("reset")
+  ut.print_colour("reset")
+  Print
 
   If repeat$ <> "" Then
     ut.run_same(repeat$)
@@ -192,6 +194,7 @@ Sub ut.run_first()
     Print "No tests found."
     End
   Else
+    Print "Executing tests ..."
     Local cmd$ = "Run " + Chr$(34) + first$ + Chr$(34) + ", --all"
     If InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0 Then Cat cmd$, " --verbose"
     Execute cmd$
@@ -248,4 +251,20 @@ Sub ut.run_same(cmd$)
   If Mm.CmdLine$ <> "" Then tgt$ = tgt$ + Mm.CmdLine$ + " "
   tgt$ = tgt$ + cmd$
   Execute tgt$
+End Sub
+
+Sub ut.print_colour(c$)
+  Option Console Serial
+  Print vt100.colour$(c$);
+
+  ' TODO: Should really restore the previous value of "Option Console",
+  '       but currently that cannot be read.
+  Option Console Both
+
+  Select Case c$
+    Case "green" : Colour(RGB(Green))
+    Case "red"   : Colour(RGB(Red))
+    Case "reset" : Colour(RGB(White))
+    Case Else    : Error "unsupported colour: " + c$
+  End Select
 End Sub
