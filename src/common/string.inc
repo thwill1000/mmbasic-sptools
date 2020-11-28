@@ -4,7 +4,7 @@
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.requires("list")
-sys.provides("strings")
+sys.provides("string")
 If sys.err$ <> "" Then Error sys.err$
 
 Function str.centre$(s$, x%)

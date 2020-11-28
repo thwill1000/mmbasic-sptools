@@ -7,7 +7,7 @@ Option Explicit On
 #Include "../common/array.inc"
 #Include "../common/file.inc"
 #Include "../common/list.inc"
-#Include "../common/strings.inc"
+#Include "../common/string.inc"
 
 Dim f$ = fil.find$(Cwd$, Mm.CmdLine$, "all")
 Do While f$ <> ""

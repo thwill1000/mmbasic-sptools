@@ -10,7 +10,7 @@ Const QU$ = Chr$(34)
 #Include "../common/system.inc"
 #Include "../common/array.inc"
 #Include "../common/list.inc"
-#Include "../common/strings.inc"
+#Include "../common/string.inc"
 #Include "../common/file.inc"
 #Include "../common/map.inc"
 #Include "../common/set.inc"

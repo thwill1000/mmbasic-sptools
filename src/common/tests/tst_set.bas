@@ -12,7 +12,7 @@ EndIf
 #Include "../system.inc"
 #Include "../array.inc"
 #Include "../list.inc"
-#Include "../strings.inc"
+#Include "../string.inc"
 #Include "../file.inc"
 #Include "../set.inc"
 #Include "../vt100.inc"

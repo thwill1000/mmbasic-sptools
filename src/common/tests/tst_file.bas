@@ -12,7 +12,7 @@ EndIf
 #Include "../system.inc"
 #Include "../array.inc"
 #Include "../list.inc"
-#Include "../strings.inc"
+#Include "../string.inc"
 #Include "../file.inc"
 #Include "../set.inc"
 #Include "../vt100.inc"
@@ -169,25 +169,25 @@ Sub test_find_all()
     f$ = fil.find$()
   Loop
   Local i% = Mm.Info(Option Base)
-  assert_string_equals(root$,                            files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/array.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/file.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/list.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/map.inc",               files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/set.inc",               files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/sptools.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/strings.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/system.inc",            files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests",                 files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_array.bas",   files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_file.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_list.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_map.bas",     files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_set.bas",     files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_strings.bas", files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_system.bas",  files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/vt100.inc",             files$(i%)) : Inc i%
-  assert_string_equals(list.NULL$,                       files$(i%))
+  assert_string_equals(root$,                           files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/array.inc",            files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/file.inc",             files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/list.inc",             files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/map.inc",              files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/set.inc",              files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/sptools.inc",          files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/string.inc",           files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/system.inc",           files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests",                files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_array.bas",  files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_file.bas",   files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_list.bas",   files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_map.bas",    files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_set.bas",    files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_string.bas", files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_system.bas", files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/vt100.inc",            files$(i%)) : Inc i%
+  assert_string_equals(list.NULL$,                      files$(i%))
 End Sub
 
 Sub test_find_files()
@@ -202,23 +202,23 @@ Sub test_find_files()
     f$ = fil.find$()
   Loop
   Local i% = Mm.Info(Option Base)
-  assert_string_equals(root$ + "/array.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/file.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/list.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/map.inc",               files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/set.inc",               files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/sptools.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/strings.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/system.inc",            files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_array.bas",   files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_file.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_list.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_map.bas",     files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_set.bas",     files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_strings.bas", files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_system.bas",  files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/vt100.inc",             files$(i%)) : Inc i%
-  assert_string_equals(list.NULL$,                       files$(i%))
+  assert_string_equals(root$ + "/array.inc",            files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/file.inc",             files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/list.inc",             files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/map.inc",              files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/set.inc",              files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/sptools.inc",          files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/string.inc",           files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/system.inc",           files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_array.bas",  files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_file.bas",   files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_list.bas",   files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_map.bas",    files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_set.bas",    files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_string.bas", files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/tests/tst_system.bas", files$(i%)) : Inc i%
+  assert_string_equals(root$ + "/vt100.inc",            files$(i%)) : Inc i%
+  assert_string_equals(list.NULL$,                      files$(i%))
 End Sub
 
 Sub test_find_dirs()
@@ -260,14 +260,14 @@ End Sub
 Sub test_find_files_matching()
   Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
 
-  assert_string_equals(root$ + "/tests/tst_array.bas",   fil.find$(root$, "*.bas", "file"))
-  assert_string_equals(root$ + "/tests/tst_file.bas",    fil.find$())
-  assert_string_equals(root$ + "/tests/tst_list.bas",    fil.find$())
-  assert_string_equals(root$ + "/tests/tst_map.bas",     fil.find$())
-  assert_string_equals(root$ + "/tests/tst_set.bas",     fil.find$())
-  assert_string_equals(root$ + "/tests/tst_strings.bas", fil.find$())
-  assert_string_equals(root$ + "/tests/tst_system.bas",  fil.find$())
-  assert_string_equals("",                               fil.find$())
+  assert_string_equals(root$ + "/tests/tst_array.bas",  fil.find$(root$, "*.bas", "file"))
+  assert_string_equals(root$ + "/tests/tst_file.bas",   fil.find$())
+  assert_string_equals(root$ + "/tests/tst_list.bas",   fil.find$())
+  assert_string_equals(root$ + "/tests/tst_map.bas",    fil.find$())
+  assert_string_equals(root$ + "/tests/tst_set.bas",    fil.find$())
+  assert_string_equals(root$ + "/tests/tst_string.bas", fil.find$())
+  assert_string_equals(root$ + "/tests/tst_system.bas", fil.find$())
+  assert_string_equals("",                              fil.find$())
 End Sub
 
 Sub test_find_dirs_matching()
