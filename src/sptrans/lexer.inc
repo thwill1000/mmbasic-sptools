@@ -59,7 +59,7 @@ Sub lx.parse_basic(line$)
       lx.parse_symbol()
     EndIf
 
-    If err$ <> "" Then Exit Do
+    If sys.err$ <> "" Then Exit Do
   Loop
 End Sub
 
@@ -72,7 +72,7 @@ Sub lx.reset.globals(line$)
     lx.len(lx.num) = 0
   Loop
 
-  err$ = ""
+  sys.err$ = ""
   lx.line$ = line$
   lx.next_char$ = ""
   lx.pos = 0
@@ -107,7 +107,7 @@ Sub lx.parse_number()
     ElseIf lx.next_char$ = "o" Then
       lx.parse_octal()
     Else
-      err$ = "Unknown literal type &" + lx.next_char$ : Exit Sub
+      sys.err$ = "Unknown literal type &" + lx.next_char$ : Exit Sub
     EndIf
   EndIf
 End Sub
@@ -197,7 +197,7 @@ Sub lx.parse_string()
 
   lx.advance()
   lx.advance_until(Chr$(10) + Chr$(34))
-  If lx.char$ = Chr$(10) Then err$ = "No closing quote" : Exit Sub
+  If lx.char$ = Chr$(10) Then sys.err$ = "No closing quote" : Exit Sub
   lx.store(TK_STRING, start, lx.pos - start + 1)
   lx.advance()
 End Sub
@@ -284,7 +284,7 @@ End Function
 Sub lx.tokenise(line$)
   Local start = -1
 
-  err$ = ""
+  sys.err$ = ""
   lx.line$ = line$
   lx.next_char$ = ""
   lx.num = 0
@@ -327,7 +327,7 @@ Sub lx.parse_command_line(line$)
       lx.parse_symbol()
     EndIf
 
-    If err$ <> "" Then Exit Do
+    If sys.err$ <> "" Then Exit Do
   Loop
 End Sub
 
@@ -349,7 +349,7 @@ Sub lx.parse_option()
 
   If e = 1 Or InStr("= " + Chr$(10), lx.char$) < 1 Then
     If InStr("= " + Chr$(10), lx.char$) < 1 Then lx.advance()
-    err$ = "Illegal command-line option format: " + Mid$(lx.line$, start, lx.pos - start)
+    sys.err$ = "Illegal command-line option format: " + Mid$(lx.line$, start, lx.pos - start)
     Exit Sub
   EndIf
 

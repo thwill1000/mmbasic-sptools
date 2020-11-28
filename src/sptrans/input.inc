@@ -22,8 +22,8 @@ Sub in.open(f$)
   EndIf
   f2$ = f2$ + f$
 
-  If Not fil.exists%(f2$) Then err$ = "#Include file '" + f2$ + "' not found"
-  If err$ = "" Then
+  If Not fil.exists%(f2$) Then sys.err$ = "#Include file '" + f2$ + "' not found"
+  If sys.err$ = "" Then
     list.push(in.files$(), f2$)
     in.num_open_files% = list.size%(in.files$())
     Open f2$ For Input As #in.num_open_files%

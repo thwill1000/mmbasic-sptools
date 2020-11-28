@@ -9,11 +9,12 @@ Else
   Option Base 0
 EndIf
 
-#Include "../error.inc"
-#Include "../file.inc"
+#Include "../system.inc"
+#Include "../array.inc"
 #Include "../list.inc"
-#Include "../set.inc"
 #Include "../strings.inc"
+#Include "../file.inc"
+#Include "../set.inc"
 #Include "../../sptest/unittest.inc"
 
 add_test("test_centre")

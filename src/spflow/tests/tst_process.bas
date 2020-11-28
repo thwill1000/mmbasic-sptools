@@ -3,15 +3,17 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../options.inc"
-#Include "../process.inc"
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
+#Include "../../common/system.inc"
+#Include "../../common/array.inc"
 #Include "../../common/list.inc"
+#Include "../../common/strings.inc"
+#Include "../../common/file.inc"
 #Include "../../common/map.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../../sptrans/lexer.inc"
+#Include "../options.inc"
+#Include "../process.inc"
 
 Dim in.files$(1)
 Dim in.num_open_files = 1

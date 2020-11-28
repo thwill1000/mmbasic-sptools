@@ -1,7 +1,11 @@
 ' Copyright (c) 2019-20 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' For Colour Maximite 2, MMBasic 5.06
 
-Function check_strings_included() : check_strings_included = 1 : End Function
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("list")
+sys.provides("strings")
+If sys.err$ <> "" Then Error sys.err$
 
 Function str.centre$(s$, x%)
   If Len(s$) < x% Then

@@ -1,8 +1,11 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
-check_included("file")
-check_included("list")
-check_included("set")
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("file", "list", "set")
+sys.provides("unittest")
+If sys.err$ <> "" Then Error sys.err$
 
 Dim ut.tests$(list.new%(100)) Length 40
 Dim ut.failures$(list.new%(100))
@@ -15,8 +18,8 @@ Sub add_test(test$)
   list.add(ut.tests$(), test$)
 End Sub
 
-Sub fail(msg$)
-  ut.asserts_count% = ut.asserts_count% + 1
+Sub assert_fail(msg$)
+  Inc ut.asserts_count%
   ut.add_failure(msg$)
 End Sub
 
@@ -67,17 +70,17 @@ End Sub
 
 Sub assert_no_error()
   ut.asserts_count% = ut.asserts_count% + 1
-  If err$ <> "" Then
-    Local s$ = "Expected no error, but actually " + Chr$(34) + err$ + Chr$(34)
+  If sys.err$ <> "" Then
+    Local s$ = "Expected no error, but actually " + Chr$(34) + sys.err$ + Chr$(34)
     ut.add_failure(s$)
   EndIf
 End Sub
 
 Sub assert_error(expected$)
   ut.asserts_count% = ut.asserts_count% + 1
-  If err$ <> expected$ Then
+  If sys.err$ <> expected$ Then
     Local s$ = "Expected Error " + Chr$(34) + expected$ + Chr$(34)
-    s$ = s$ + ", but actually " + Chr$(34) + err$ + Chr$(34)
+    s$ = s$ + ", but actually " + Chr$(34) + sys.err$ + Chr$(34)
     ut.add_failure(s$)
   EndIf
 End Sub
@@ -106,7 +109,7 @@ Sub run_tests(repeat$)
     ut.asserts_count% = 0
     list.clear(ut.failures$())
 
-    err$ = ""
+    sys.err$ = ""
     setup_test()
     Call ut.tests$(i%)
     teardown_test()

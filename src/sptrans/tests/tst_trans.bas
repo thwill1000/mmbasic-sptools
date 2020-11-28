@@ -6,9 +6,11 @@ Option Default Integer
 Const MAX_NUM_FILES = 5
 Dim in.num_open_files = 1
 
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
+#Include "../../common/system.inc"
+#Include "../../common/array.inc"
 #Include "../../common/list.inc"
+#Include "../../common/strings.inc"
+#Include "../../common/file.inc"
 #Include "../../common/map.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"

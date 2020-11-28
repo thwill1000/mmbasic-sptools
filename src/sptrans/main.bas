@@ -7,13 +7,14 @@ Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
 Const QU$ = Chr$(34)
 
+#Include "../common/system.inc"
+#Include "../common/array.inc"
 #Include "../common/list.inc"
-#Include "../common/error.inc"
+#Include "../common/strings.inc"
 #Include "../common/file.inc"
 #Include "../common/map.inc"
 #Include "../common/set.inc"
 #Include "../common/sptools.inc"
-#Include "../common/strings.inc"
 #Include "../common/vt100.inc"
 #Include "input.inc"
 #Include "lexer.inc"
@@ -44,7 +45,7 @@ Sub main()
   opt.init()
 
   cli.parse(Mm.CmdLine$)
-  If err$ <> "" Then Print "sptrans: "; err$ : Print : cli.usage() : End
+  If sys.err$ <> "" Then Print "sptrans: "; sys.err$ : Print : cli.usage() : End
 
   If Not fil.exists%(opt.infile$) Then
     Print "sptrans: input file '" opt.infile$ "' not found."
@@ -77,7 +78,7 @@ Sub main()
 
   cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
   in.open(opt.infile$)
-  If err$ <> "" Then cerror(err$)
+  If sys.err$ <> "" Then cerror(sys.err$)
   cout(in.files$(0)) : cendl()
   cout("   ")
 
@@ -87,17 +88,17 @@ Sub main()
 
     s$ = in.readln$()
     lx.parse_basic(s$)
-    If err$ = "" Then
+    If sys.err$ = "" Then
       If Not opt.format_only Then transpile()
       If tr_include$ <> "" Then open_include()
     EndIf
-    If err$ <> "" Then cerror(err$)
+    If sys.err$ <> "" Then cerror(sys.err$)
 
     pp.print_line()
 
     If Eof(#in.num_open_files%) Then
       If in.num_open_files% > 1 Then close_include() Else in.close()
-      If err$ <> "" Then cerror(err$)
+      If sys.err$ <> "" Then cerror(sys.err$)
       cout(BS$ + " " + CR$ + Space$(1 + in.num_open_files% * 2))
     EndIf
 
@@ -114,8 +115,8 @@ Sub open_include()
   Local s$ = lx.line$
   s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
   lx.parse_basic(s$)
-  If err$ = "" Then in.open(tr_include$)
-  If err$ = "" Then
+  If sys.err$ = "" Then in.open(tr_include$)
+  If sys.err$ = "" Then
     Local i = in.num_open_files%
     cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
     cout(" " + Space$(i * 2))
@@ -126,8 +127,8 @@ Sub close_include()
   Local s$ = "#Include " + QU$ + in.files$(in.num_open_files% - 1) + QU$
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
   lx.parse_basic(s$)
-  If err$ = "" Then pp.print_line()
-  If err$ = "" Then in.close()
+  If sys.err$ = "" Then pp.print_line()
+  If sys.err$ = "" Then in.close()
 End Sub
 
 main()

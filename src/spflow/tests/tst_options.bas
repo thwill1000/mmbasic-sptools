@@ -3,12 +3,14 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../options.inc"
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
+#Include "../../common/system.inc"
+#Include "../../common/array.inc"
 #Include "../../common/list.inc"
+#Include "../../common/strings.inc"
+#Include "../../common/file.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
+#Include "../options.inc"
 
 add_test("test_all")
 add_test("test_brief")
@@ -38,7 +40,7 @@ Sub test_all()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    err$ = ""
+    sys.err$ = ""
     opt.all = 999
     opt.set("all", elements$(i))
     assert_no_error()
@@ -53,7 +55,7 @@ Sub test_all()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    err$ = ""
+    sys.err$ = ""
     opt.all = 999
     opt.set("all", elements$(i))
     assert_no_error()
@@ -75,7 +77,7 @@ Sub test_brief()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    err$ = ""
+    sys.err$ = ""
     opt.brief = 999
     opt.set("brief", elements$(i))
     assert_no_error()
@@ -90,7 +92,7 @@ Sub test_brief()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    err$ = ""
+    sys.err$ = ""
     opt.brief = 999
     opt.set("brief", elements$(i))
     assert_no_error()
@@ -112,7 +114,7 @@ Sub test_no_location()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    err$ = ""
+    sys.err$ = ""
     opt.no_location = 999
     opt.set("no-location", elements$(i))
     assert_no_error()
@@ -127,7 +129,7 @@ Sub test_no_location()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    err$ = ""
+    sys.err$ = ""
     opt.no_location = 999
     opt.set("no-location", elements$(i))
     assert_no_error()
@@ -142,7 +144,7 @@ End Sub
 Sub test_infile()
   assert_string_equals("", opt.infile$)
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("infile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.infile$)
@@ -151,14 +153,14 @@ End Sub
 Sub test_outfile()
   assert_string_equals("", opt.outfile$)
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("outfile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.outfile$)
 End Sub
 
 Sub test_unknown()
-  err$ = ""
+  sys.err$ = ""
   opt.set("unknown", "foo")
   assert_error("unknown option: unknown")
 End Sub

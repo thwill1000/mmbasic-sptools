@@ -9,12 +9,12 @@ Else
   Option Base 0
 EndIf
 
+#Include "../system.inc"
 #Include "../array.inc"
-#Include "../error.inc"
-#Include "../file.inc"
 #Include "../list.inc"
-#Include "../set.inc"
 #Include "../strings.inc"
+#Include "../file.inc"
+#Include "../set.inc"
 #Include "../../sptest/unittest.inc"
 
 add_test("test_get_parent")
@@ -170,7 +170,6 @@ Sub test_find_all()
   Local i% = Mm.Info(Option Base)
   assert_string_equals(root$,                            files$(i%)) : Inc i%
   assert_string_equals(root$ + "/array.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/error.inc",             files$(i%)) : Inc i%
   assert_string_equals(root$ + "/file.inc",              files$(i%)) : Inc i%
   assert_string_equals(root$ + "/list.inc",              files$(i%)) : Inc i%
   assert_string_equals(root$ + "/map.inc",               files$(i%)) : Inc i%
@@ -203,7 +202,6 @@ Sub test_find_files()
   Loop
   Local i% = Mm.Info(Option Base)
   assert_string_equals(root$ + "/array.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/error.inc",             files$(i%)) : Inc i%
   assert_string_equals(root$ + "/file.inc",              files$(i%)) : Inc i%
   assert_string_equals(root$ + "/list.inc",              files$(i%)) : Inc i%
   assert_string_equals(root$ + "/map.inc",               files$(i%)) : Inc i%
@@ -248,7 +246,6 @@ Sub test_find_all_matching()
     f$ = fil.find$()
   Loop
   Local i% = Mm.Info(Option Base)
-  assert_string_equals(root$ + "/error.inc",             files$(i%)) : Inc i%
   assert_string_equals(root$ + "/file.inc",              files$(i%)) : Inc i%
   assert_string_equals(root$ + "/set.inc",               files$(i%)) : Inc i%
   assert_string_equals(root$ + "/system.inc",            files$(i%)) : Inc i%

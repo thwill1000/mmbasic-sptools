@@ -7,13 +7,14 @@ Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
 Const QU$ = Chr$(34)
 
-#Include "../common/error.inc"
-#Include "../common/file.inc"
+#Include "../common/system.inc"
+#Include "../common/array.inc"
 #Include "../common/list.inc"
+#Include "../common/strings.inc"
+#Include "../common/file.inc"
 #Include "../common/map.inc"
 #Include "../common/set.inc"
 #Include "../common/sptools.inc"
-#Include "../common/strings.inc"
 #Include "../sptrans/input.inc"
 #Include "../sptrans/lexer.inc"
 #Include "../sptrans/output.inc"
@@ -44,7 +45,7 @@ Sub main()
   pro.init()
 
   cli.parse(Mm.CmdLine$)
-  If err$ <> "" Then Print "spflow: " err$ : Print : cli.usage() : End
+  If sys.err$ <> "" Then Print "spflow: " sys.err$ : Print : cli.usage() : End
 
   If Not fil.exists%(opt.infile$)) Then
     Print "spflow: input file '" opt.infile$ "' not found."
@@ -75,7 +76,7 @@ Sub main()
     Print "PASS" pass
 
     in.open(opt.infile$)
-    If err$ <> "" Then cerror(err$)
+    If sys.err$ <> "" Then cerror(sys.err$)
     cout(in.files$(0)) : cendl()
     cout("   ")
 
@@ -96,13 +97,13 @@ Sub main()
 process:
       lx.parse_basic(s$)
       If lx.token_lc$(0) = "#include" Then handle_include()
-      If err$ <> "" Then cerror(err$)
+      If sys.err$ <> "" Then cerror(sys.err$)
 
       process(pass)
-      If err$ <> "" Then cerror(err$)
+      If sys.err$ <> "" Then cerror(sys.err$)
 skip:
       If Eof(#in.num_open_files%) Then handle_eof()
-      If err$ <> "" Then cerror(err$)
+      If sys.err$ <> "" Then cerror(sys.err$)
 
     Loop Until in.num_open_files% = 0
 
@@ -121,11 +122,11 @@ skip:
 End Sub
 
 Sub handle_include()
-  If err$ <> "" Then Exit Sub
-  If lx.num < 2 Or lx.type(1) <> TK_STRING Then err$ = "#Include expects a <file> argument"
-  If lx.num > 2 Then err$ = "#Include has too many arguments"
-  If err$ = "" Then in.open(lx.string$(1))
-  If err$ = "" Then
+  If sys.err$ <> "" Then Exit Sub
+  If lx.num < 2 Or lx.type(1) <> TK_STRING Then sys.err$ = "#Include expects a <file> argument"
+  If lx.num > 2 Then sys.err$ = "#Include has too many arguments"
+  If sys.err$ = "" Then in.open(lx.string$(1))
+  If sys.err$ = "" Then
     Local i = in.num_open_files%
     cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
     cout(" " + Space$(i * 2))
@@ -134,7 +135,7 @@ End Sub
 
 Sub handle_eof()
   in.close()
-  If err$ = "" Then cout(BS$ + " " + CR$ + Space$(1 + in.num_open_files% * 2))
+  If sys.err$ = "" Then cout(BS$ + " " + CR$ + Space$(1 + in.num_open_files% * 2))
 End Sub
 
 main()

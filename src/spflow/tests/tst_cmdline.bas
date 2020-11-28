@@ -3,14 +3,16 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../cmdline.inc"
-#Include "../options.inc"
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
+#Include "../../common/system.inc"
+#Include "../../common/array.inc"
 #Include "../../common/list.inc"
+#Include "../../common/strings.inc"
+#Include "../../common/file.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../../sptrans/lexer.inc"
+#Include "../cmdline.inc"
+#Include "../options.inc"
 
 Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)
 Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)

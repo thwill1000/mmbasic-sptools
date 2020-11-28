@@ -2,16 +2,16 @@
 
 ' Parses command-line 's$'.
 '
-' Sets 'err$' if it encounters an error.
+' Sets 'sys.err$' if it encounters an error.
 Sub cli.parse(s$)
   Local i = 0, o$
 
   lx.parse_command_line(s$)
-  If err$ <> "" Then Exit Sub
+  If sys.err$ <> "" Then Exit Sub
 
   ' Process options.
 
-  Do While i < lx.num And err$ = "" And lx.type(i) = TK_OPTION
+  Do While i < lx.num And sys.err$ = "" And lx.type(i) = TK_OPTION
     Select Case lx.option$(i)
       Case "C", "colour"      : cli.parse_no_arg("colour", i)
       Case "e", "empty-lines" : cli.parse_arg("empty-lines", i, "{0|1}")
@@ -22,42 +22,42 @@ Sub cli.parse(s$)
       Case "s", "spacing"     : cli.parse_arg("spacing", i, "{0|1|2}")
       Case "v", "version"     : cli.version() : End
       Case Else:
-        err$ = "option '" + lx.token$(i) + "' is unknown"
+        sys.err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select
   Loop
 
-  If err$ <> "" Then Exit Sub
+  If sys.err$ <> "" Then Exit Sub
 
   ' Process arguments.
 
-  If i >= lx.num Then err$ = "no input file specified" : Exit Sub
-  If lx.type(i) <> TK_STRING Then err$ = "input file name must be quoted" : Exit Sub
+  If i >= lx.num Then sys.err$ = "no input file specified" : Exit Sub
+  If lx.type(i) <> TK_STRING Then sys.err$ = "input file name must be quoted" : Exit Sub
   opt.set("infile", lx.string$(i))
   i = i + 1
 
   If i >= lx.num Then Exit Sub
-  If lx.type(i) <> TK_STRING Then err$ = "output file name must be quoted" : Exit Sub
+  If lx.type(i) <> TK_STRING Then sys.err$ = "output file name must be quoted" : Exit Sub
   opt.set("outfile", lx.string$(i))
   i = i + 1
 
-  If i <> lx.num Then err$ = "unexpected argument '" + lx.token$(i) + "'"
+  If i <> lx.num Then sys.err$ = "unexpected argument '" + lx.token$(i) + "'"
 End Sub
 
 ' Parses an option with an argument.
 Sub cli.parse_arg(option$, i, arg$)
   If lx.token$(i + 1) <> "=" Or lx.token$(i + 2) = "" Then
-    err$ = "missing argument"
+    sys.err$ = "missing argument"
   Else
     opt.set(option$, lx.token$(i + 2))
   EndIf
-  If err$ <> "" Then err$ = "option '" + lx.token$(i) + "' expects " + arg$ + " argument"
+  If sys.err$ <> "" Then sys.err$ = "option '" + lx.token$(i) + "' expects " + arg$ + " argument"
   i = i + 3
 End Sub
 
 ' Parses an option without an argument.
 Sub cli.parse_no_arg(option$, i)
   If lx.token$(i + 1) = "=" Then
-    err$ = "option '" + lx.token$(i) + "' does not expect argument"
+    sys.err$ = "option '" + lx.token$(i) + "' does not expect argument"
   Else
     opt.set(option$, "on")
   EndIf

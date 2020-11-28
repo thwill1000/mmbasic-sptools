@@ -3,9 +3,11 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
+#Include "../../common/system.inc"
+#Include "../../common/array.inc"
 #Include "../../common/list.inc"
+#Include "../../common/strings.inc"
+#Include "../../common/file.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../cmdline.inc"

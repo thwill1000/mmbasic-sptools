@@ -1,6 +1,10 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
-Function check_set_included%() : End Function
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("set")
+If sys.err$ <> "" Then Error sys.err$
 
 ' Used as the value for elements beyond the size of the set.
 ' Note: the length of the strings in the array holding the set must be at least 8 characters.

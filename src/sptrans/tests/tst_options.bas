@@ -3,12 +3,14 @@
 Option Explicit On
 Option Default Integer
 
-#Include "../options.inc"
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
+#Include "../../common/system.inc"
+#Include "../../common/array.inc"
 #Include "../../common/list.inc"
+#Include "../../common/strings.inc"
+#Include "../../common/file.inc"
 #Include "../../common/set.inc"
 #Include "../../sptest/unittest.inc"
+#Include "../options.inc"
 
 add_test("test_colour")
 add_test("test_comments")
@@ -213,11 +215,11 @@ Sub test_indent()
     i = i + 1
   Loop
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("indent", "foo")
   assert_error("expects 'on|<number>' argument")
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("indent", "-2")
   assert_error("expects 'on|<number>' argument")
 End Sub
@@ -274,11 +276,11 @@ Sub test_spacing()
     i = i + 1
   Loop
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("spacing", "foo")
   assert_error("expects 'on|minimal|compact|generous' argument")
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("spacing", "3")
   assert_error("expects 'on|minimal|compact|generous' argument")
 End Sub
@@ -286,7 +288,7 @@ End Sub
 Sub test_infile()
   assert_string_equals("", opt.infile$)
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("infile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.infile$)
@@ -295,14 +297,14 @@ End Sub
 Sub test_outfile()
   assert_string_equals("", opt.outfile$)
 
-  err$ = ""
+  sys.err$ = ""
   opt.set("outfile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.outfile$)
 End Sub
 
 Sub test_unknown()
-  err$ = ""
+  sys.err$ = ""
   opt.set("unknown", "foo")
   assert_error("unknown option: unknown")
 End Sub

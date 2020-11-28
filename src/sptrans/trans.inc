@@ -28,16 +28,16 @@ Sub transpile()
 
   If lx.token_lc$(0) = "'!endif" Then
     process_endif()
-    If err$ <> "" Then Exit Sub
+    If sys.err$ <> "" Then Exit Sub
   EndIf
 
   add_comments()
   apply_replacements()
-  If err$ <> "" Then Exit Sub
+  If sys.err$ <> "" Then Exit Sub
 
   If lx.token_lc$(0) = "#include" Then
     process_include()
-    If err$ <> "" Then Exit Sub
+    If sys.err$ <> "" Then Exit Sub
   EndIf
 
   If lx.type(0) <> TK_DIRECTIVE Then Exit Sub
@@ -52,17 +52,17 @@ Sub transpile()
   ElseIf t$ = "!replace"      Then : process_replace()
   ElseIf t$ = "!set"          Then : process_set()
   ElseIf t$ = "!spacing"      Then : process_spacing()
-  Else : err$ = "unknown " + Mid$(t$, 2) + " directive"
+  Else : sys.err$ = "unknown " + Mid$(t$, 2) + " directive"
   EndIf
 
-  If err$ <> "" Then Exit Sub
+  If sys.err$ <> "" Then Exit Sub
 
   lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
 End Sub
 
 Sub process_endif()
   update_num_comments(- popt.if())
-  If err$ <> "" Then Exit Sub
+  If sys.err$ <> "" Then Exit Sub
   lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
 End Sub
 
@@ -73,7 +73,7 @@ End Sub
 
 Function popt.if()
   Local i = in.num_open_files% - 1
-  If if_stack_sz(i) = 0 Then err$ = "unmatched !endif" : Exit Function
+  If if_stack_sz(i) = 0 Then sys.err$ = "unmatched !endif" : Exit Function
   if_stack_sz(i) = if_stack_sz(i) - 1
   popt.if = if_stack(i, if_stack_sz(i))
 End Function
@@ -102,28 +102,28 @@ Sub apply_replacements()
       lx.parse_basic(s$)
       ' TODO: at the moment this can't change the number of tokens, but when it
       '       can this will need looking at closer.
-      If err$ <> "" Then Exit Sub
+      If sys.err$ <> "" Then Exit Sub
     EndIf
   Next i
 End Sub
 
 Sub process_clear()
-  If lx.num < 2 Then err$ = "expects a <flag> argument"
-  If lx.num > 2 Then err$ = "has too many arguments"
+  If lx.num < 2 Then sys.err$ = "expects a <flag> argument"
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
   Local t$
-  If err$ = "" Then
+  If sys.err$ = "" Then
     t$ = lx.token_lc$(1)
     ' TODO: Is this really the behaviour we want?
-    If set.get%(flags$(), t$) < 0 Then err$ = "flag '" + t$ + "' is not set"
+    If set.get%(flags$(), t$) < 0 Then sys.err$ = "flag '" + t$ + "' is not set"
   EndIf
-  If err$ = "" Then set.remove(flags$(), t$)
-  If err$ <> "" Then err$ = "!clear directive " + err$
+  If sys.err$ = "" Then set.remove(flags$(), t$)
+  If sys.err$ <> "" Then sys.err$ = "!clear directive " + sys.err$
 End Sub
 
 Sub process_comments()
-  If lx.num > 2 Then err$ = "has too many arguments"
-  If err$ = "" Then opt.set_comments(lx.token_lc$(1))
-  If err$ <> "" Then err$ = "!comments directive " + err$
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then opt.set_comments(lx.token_lc$(1))
+  If sys.err$ <> "" Then sys.err$ = "!comments directive " + sys.err$
 End Sub
 
 Sub process_if()
@@ -136,14 +136,14 @@ Sub process_if()
     If t$ = "not" Then
       invert = 1
     Else
-      err$ = "followed by unexpected token {" + lx.token$(1) + "}"
+      sys.err$ = "followed by unexpected token {" + lx.token$(1) + "}"
     EndIf
   Else
-    err$ = "has too many arguments"
+    sys.err$ = "has too many arguments"
   EndIf
 
-  If err$ <> "" Then
-    err$ = lx.directive$(0) + " directive " + err$
+  If sys.err$ <> "" Then
+    sys.err$ = lx.directive$(0) + " directive " + sys.err$
     Exit Sub
   EndIf
 
@@ -169,46 +169,46 @@ Sub push_if(x)
 End Sub
 
 Sub process_empty_lines()
-  If lx.num > 2 Then err$ = "has too many arguments"
-  If err$ = "" Then opt.set_empty_lines(lx.token_lc$(1))
-  If err$ <> "" Then err$ = "!empty-lines directive " + err$
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then opt.set_empty_lines(lx.token_lc$(1))
+  If sys.err$ <> "" Then sys.err$ = "!empty-lines directive " + sys.err$
 End Sub
 
 Sub process_include()
   If lx.num <> 2 Or lx.type(1) <> TK_STRING Then
-    err$ = "#Include expects a <file> argument"
+    sys.err$ = "#Include expects a <file> argument"
   Else
     tr_include$ = lx.string$(1)
   EndIf
 End Sub
 
 Sub process_indent()
-  If lx.num > 2 Then err$ = "has too many arguments"
-  If err$ = "" Then opt.set_indent_sz(lx.token_lc$(1))
-  If err$ <> "" Then err$ = "!indent directive " + err$
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then opt.set_indent_sz(lx.token_lc$(1))
+  If sys.err$ <> "" Then sys.err$ = "!indent directive " + sys.err$
 End Sub
 
 Sub process_replace()
-  If lx.num < 3 Then err$ = "expects <from> and <to> arguments"
-  If lx.num > 3 Then err$ = "has too many arguments"
-  If err$ = "" Then map.put(replace$(), lx.token_lc$(1), lx.token_lc$(2))
-  If err$ <> "" Then err$ = "!replace directive " + err$
+  If lx.num < 3 Then sys.err$ = "expects <from> and <to> arguments"
+  If lx.num > 3 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then map.put(replace$(), lx.token_lc$(1), lx.token_lc$(2))
+  If sys.err$ <> "" Then sys.err$ = "!replace directive " + sys.err$
 End Sub
 
 Sub process_set()
-  If lx.num < 2 Then err$ = "expects <flag> argument"
-  If lx.num > 2 Then err$ = "has too many arguments"
+  If lx.num < 2 Then sys.err$ = "expects <flag> argument"
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
   Local t$
-  If err$ = "" Then
+  If sys.err$ = "" Then
     t$ = lx.token_lc$(1)
-    If set.get%(flags$(), t$) > -1 Then err$ = "flag '" + t$ + "' is already set"
+    If set.get%(flags$(), t$) > -1 Then sys.err$ = "flag '" + t$ + "' is already set"
   EndIf
-  If err$ = "" Then set.put(flags$(), t$)
-  If err$ <> "" Then err$ = "!set directive " + err$
+  If sys.err$ = "" Then set.put(flags$(), t$)
+  If sys.err$ <> "" Then sys.err$ = "!set directive " + sys.err$
 End Sub
 
 Sub process_spacing()
-  If lx.num > 2 Then err$ = " has too many arguments")
-  If err$ = "" Then opt.set_spacing(lx.token_lc$(1))
-  If err$ <> "" Then err$ = "!spacing directive " + err$
+  If lx.num > 2 Then sys.err$ = " has too many arguments")
+  If sys.err$ = "" Then opt.set_spacing(lx.token_lc$(1))
+  If sys.err$ <> "" Then sys.err$ = "!spacing directive " + sys.err$
 End Sub

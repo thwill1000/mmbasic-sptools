@@ -31,7 +31,7 @@ End Sub
 
 ' Sets the value for an option.
 '
-' If name$ or value$ are invalid then sets err$.
+' If name$ or value$ are invalid then sets sys.err$.
 Sub opt.set(name$, value$)
   Select Case LCase$(name$)
     Case "colour"      : opt.set_colour(value$)
@@ -44,7 +44,7 @@ Sub opt.set(name$, value$)
     Case "infile"      : opt.set_infile(value$)
     Case "outfile"     : opt.set_outfile(value$)
     Case Else
-      err$ = "unknown option: " + name$
+      sys.err$ = "unknown option: " + name$
   End Select
 End Sub
 
@@ -53,7 +53,7 @@ Sub opt.set_colour(value$)
     Case "default", "off", "0", "" : opt.colour = 0
     Case "on", "1"                 : opt.colour = 1
     Case Else
-      err$ = "expects 'on|off' argument"
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -62,7 +62,7 @@ Sub opt.set_comments(value$)
     Case "preserve", "default", "on", "-1", "" : opt.comments = -1
     Case "none", "omit", "off", "0"            : opt.comments = 0
     Case Else
-      err$ = "expects 'on|off' argument"
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -72,7 +72,7 @@ Sub opt.set_empty_lines(value$)
     Case "none", "omit", "off", "0"            : opt.empty_lines = 0
     Case "single", "1"                         : opt.empty_lines = 1
     Case Else
-      err$ = "expects 'on|off|single' argument"
+      sys.err$ = "expects 'on|off|single' argument"
   End Select
 End Sub
 
@@ -80,7 +80,7 @@ Sub opt.set_format_only(value$)
   Select Case LCase$(value$)
     Case "default", "off", "0", "" : opt.format_only = 0
     Case "on", "1"                 : opt.format_only = 1
-    Case Else                      : err$ = "expects 'on|off' argument"
+    Case Else                      : sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -91,7 +91,7 @@ Sub opt.set_indent_sz(value$)
       If Str$(Val(value$)) = value$ And Val(value$) >= 0 Then
         opt.indent_sz = Val(value$)
       Else
-        err$= "expects 'on|<number>' argument"
+        sys.err$= "expects 'on|<number>' argument"
       EndIf
     End Select
   End Select
@@ -101,7 +101,7 @@ Sub opt.set_no_comments(value$)
   Select Case LCase$(value$)
     Case "default", "off", "0", "" : opt.comments = -1
     Case "on", "1"                 : opt.comments = 0
-    Case Else                      : err$ = "expects 'on|off' argument"
+    Case Else                      : sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -112,7 +112,7 @@ Sub opt.set_spacing(value$)
     Case "compact", "1"                        : opt.spacing = 1
     Case "generous", "2"                       : opt.spacing = 2
     Case Else
-      err$ = "expects 'on|minimal|compact|generous' argument"
+      sys.err$ = "expects 'on|minimal|compact|generous' argument"
   End Select
 End Sub
 

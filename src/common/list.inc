@@ -1,6 +1,10 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
-Function check_list_included%() : End Function
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("list")
+If sys.err$ <> "" Then Error sys.err$
 
 ' Used as the value for elements beyond the size of the list.
 Const list.NULL$ = String$(4, Chr$(&h7F))

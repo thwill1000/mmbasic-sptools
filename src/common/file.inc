@@ -1,9 +1,13 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' For Colour Maximite 2, MMBasic 5.06
+
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("array", "list", "strings")
+sys.provides("file")
+If sys.err$ <> "" Then Error sys.err$
 
 Const FIL.PROG_DIR$ = fil.get_parent$(Mm.Info$(Current))
-
-Function check_file_included%() : End Function
 
 ' Does the file/directory 'f$' exist?
 '
@@ -90,6 +94,8 @@ End Function
 ' @param   pattern$  *nix style 'shell wildcard' pattern.
 ' @param   name$     the name to test.
 ' @return  1 if the name matches the pattern otherwise 0.
+'
+' Derived from the work of Russ Cox: https://research.swtch.com/glob
 Function fil.fnmatch%(pattern$, name$)
   Local p$ = UCase$(pattern$)
   Local n$ = UCase$(name$)

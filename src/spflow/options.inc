@@ -16,7 +16,7 @@ End Sub
 
 ' Sets the value for an option.
 '
-' If name$ or value$ are invalid then sets err$.
+' If name$ or value$ are invalid then sets sys.err$.
 Sub opt.set(name$, value$)
   Select Case LCase$(name$)
     Case "all"         : opt.set_all(value$)
@@ -25,7 +25,7 @@ Sub opt.set(name$, value$)
     Case "no-location" : opt.set_no_location(value$)
     Case "outfile"     : opt.set_outfile(value$)
     Case Else
-      err$ = "unknown option: " + name$
+      sys.err$ = "unknown option: " + name$
   End Select
 End Sub
 
@@ -34,7 +34,7 @@ Sub opt.set_all(v$)
     Case "default", "off", "0", "" : opt.all = 0
     Case "on", "1"                 : opt.all = 1
     Case Else
-      err$ = "expects 'on|off' argument"
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -43,7 +43,7 @@ Sub opt.set_brief(v$)
     Case "default", "off", "0", "" : opt.brief = 0
     Case "on", "1"                 : opt.brief = 1
     Case Else
-      err$ = "expects 'on|off' argument"
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -56,7 +56,7 @@ Sub opt.set_no_location(v$)
     Case "default", "off", "0", "" : opt.no_location = 0
     Case "on", "1"                 : opt.no_location = 1
     Case Else
-      err$ = "expects 'on|off' argument"
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 

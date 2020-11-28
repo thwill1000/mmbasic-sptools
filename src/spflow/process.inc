@@ -138,7 +138,7 @@ End Sub
 ' CFUNCTION, CSUB, FUNCTION or SUB is processed.
 Sub pass2_sub_end()
   If current_sub$ = GLOBAL_SCOPE$ Then
-    err$ = "unexpected state; is subroutine name in 'keywords.txt'?"
+    sys.err$ = "unexpected state; is subroutine name in 'keywords.txt'?"
     Exit Sub
   EndIf
 

@@ -1,6 +1,11 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.05
 
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("array")
+If sys.err$ <> "" Then Error sys.err$
+
 ' Gets the upper-bound that should be used to dimension an array of the given
 ' capacity, irrespective of OPTION BASE.
 '
@@ -10,7 +15,7 @@ Function array.new%(capacity%)
   array.new% = capacity% + Mm.Info(Option Base) - 1
 End Function
 
-' Case-sensitive binary search for a value in a SORTED array.
+' Binary search for a value in a SORTED array.
 '
 ' @param  a$()    the array.
 ' @param  s$      the value to search for.

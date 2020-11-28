@@ -4,9 +4,11 @@ Option Base 0
 Option Default None
 Option Explicit On
 
-#Include "../common/error.inc"
-#Include "../common/file.inc"
+#Include "../common/system.inc"
+#Include "../common/array.inc"
 #Include "../common/list.inc"
+#Include "../common/strings.inc"
+#Include "../common/file.inc"
 #Include "../common/set.inc"
 #Include "unittest.inc"
 

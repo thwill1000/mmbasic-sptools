@@ -1,6 +1,10 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
-Function check_map_included() : End Function
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("map")
+If sys.err$ <> "" Then Error sys.err$
 
 ' Used as the value for keys/values beyond the size of the map.
 ' Note: the length of the strings in the array holding the map must be at least 8 characters.
