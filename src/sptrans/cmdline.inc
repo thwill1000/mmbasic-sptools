@@ -1,5 +1,11 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("lexer")
+sys.provides("cmdline")
+If sys.err$ <> "" Then Error sys.err$
+
 ' Parses command-line 's$'.
 '
 ' Sets 'sys.err$' if it encounters an error.

@@ -3,7 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("file", "list", "set", "vt100")
+sys.requires("file", "list", "vt100")
 sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 

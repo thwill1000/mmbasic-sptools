@@ -15,7 +15,6 @@ EndIf
 #Include "../string.inc"
 #Include "../file.inc"
 #Include "../map.inc"
-#Include "../set.inc"
 #Include "../vt100.inc"
 #Include "../../sptest/unittest.inc"
 

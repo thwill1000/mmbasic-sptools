@@ -11,8 +11,8 @@ Option Default Integer
 #Include "../../common/set.inc"
 #Include "../../common/vt100.inc"
 #Include "../../sptest/unittest.inc"
-#Include "../cmdline.inc"
 #Include "../lexer.inc"
+#Include "../cmdline.inc"
 #Include "../options.inc"
 
 Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)

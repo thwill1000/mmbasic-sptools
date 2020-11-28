@@ -1,5 +1,11 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("set")
+sys.provides("lexer")
+If sys.err$ <> "" Then Error sys.err$
+
 '!comment_if INLINE_CONSTANTS
 Const TK_IDENTIFIER = 1
 Const TK_NUMBER = 2
