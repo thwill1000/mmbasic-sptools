@@ -15,6 +15,7 @@ EndIf
 #Include "../strings.inc"
 #Include "../file.inc"
 #Include "../set.inc"
+#Include "../vt100.inc"
 #Include "../../sptest/unittest.inc"
 
 add_test("test_get_parent")

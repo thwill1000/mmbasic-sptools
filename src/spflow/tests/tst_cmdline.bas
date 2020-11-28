@@ -9,6 +9,7 @@ Option Default Integer
 #Include "../../common/strings.inc"
 #Include "../../common/file.inc"
 #Include "../../common/set.inc"
+#Include "../../common/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../../sptrans/lexer.inc"
 #Include "../cmdline.inc"

@@ -3,7 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("file", "list", "set")
+sys.requires("file", "list", "set", "vt100")
 sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -98,13 +98,18 @@ End Sub
 '                  should run itself again appending 'repeat$' to its command line.
 Sub run_tests(repeat$)
   Local base% = Mm.Info(Option Base)
-  Local i%, j%, num_failures%, ub%
+  Local i%, j%, num_failed_asserts%, num_failed_tests%, ub%
 
-  Print Mm.Info$(Current) + " " + Mm.CmdLine$
+  Local test$ = Mm.Info$(Current) + " " + Mm.CmdLine$;
+  Print test$;
   Local t% = Timer
   ub% = base% + list.size%(ut.tests$()) - 1
   For i% = base% To ub%
-    Print "  " + ut.tests$(i%); ":"; Space$(35 - Len(ut.tests$(i%)));
+
+    If ut.is_verbose%() Then
+      If i% = base% Then Print
+      Print "  " + ut.tests$(i%); ":"; Space$(35 - Len(ut.tests$(i%)));
+    EndIf
 
     ut.asserts_count% = 0
     list.clear(ut.failures$())
@@ -114,68 +119,133 @@ Sub run_tests(repeat$)
     Call ut.tests$(i%)
     teardown_test()
 
-    num_failures% = list.size%(ut.failures$())
-    If num_failures% = 0 Then
-      Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")"
-    Else If num_failures% > 0 Then
-      Print "FAIL ("; Str$(num_failures%); "/"; Str$(ut.asserts_count%); ")"
-      For j% = base% To base% + num_failures% - 1
-        Print "  "; ut.failures$(j%)
-      Next j%
+    num_failed_asserts% = list.size%(ut.failures$())
+    If num_failed_asserts% > 0 Then Inc num_failed_tests%
+
+    If ut.is_verbose%() Then
+      If num_failed_asserts% = 0 Then
+        Print vt100.colour$("green");
+        Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")"
+      Else If num_failed_asserts% > 0 Then
+        Print vt100.colour$("red");
+        Print "FAIL ("; Str$(num_failed_asserts%); "/"; Str$(ut.asserts_count%); ")"
+        For j% = base% To base% + num_failed_asserts% - 1
+          Print "  "; ut.failures$(j%)
+        Next j%
+      EndIf
+      Print vt100.colour$("reset");
     EndIf
 
   Next i%
-  Print "  " Str$((Timer - t%) / 1000) " s"
+
+  If ut.is_verbose%() Then
+    Print "  Execution time: " Str$((Timer - t%) / 1000) " s"
+    Print "  ";
+  Else
+    Print Space$(85 - Len(test$));
+  EndIf
+
+  Local num_tests% = list.size%(ut.tests$())
+  If num_failed_tests% = 0 Then
+    Print vt100.colour$("green");
+    Print "PASS (" Str$(num_tests%) "/" Str$(num_tests%) ")";
+  Else
+    Print vt100.colour$("red");
+    Print "FAIL (" Str$(num_failed_tests%) "/" Str$(num_tests%) ")";
+  EndIf
+  Print vt100.colour$("reset")
 
   If repeat$ <> "" Then
-    run_same_test_file(repeat$)
+    ut.run_same(repeat$)
   ElseIf InStr(Mm.CmdLine$, "--all") Then
-    run_next_test_file()
+    ut.run_next()
+  EndIf
+End Sub
+
+' Should verbose output be generated?
+Function ut.is_verbose%()
+  ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --all ") < 1 
+  If Not ut.is_verbose% Then ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0 
+End Function
+
+
+' First:  creates the file "/tmp/sptest.list" containing the full paths (one per line)
+'         of each sptest suite/file found by walking the file-system from the current
+'         working directory.
+' Second: executes the first sptest suite/file found.
+
+Sub ut.run_first()
+  Print "Building list of tests ..."
+  Open "/tmp/sptest.lst" For Output As #1
+  Local f$ = fil.find$(Cwd$, "*st*.bas", "file")
+  Local first$
+  Do While f$ <> ""
+    If ut.is_test_file%(f$) Then
+      Print #1, f$
+      If first$ = "" Then first$ = f$
+    EndIf
+    f$ = fil.find$()
+  Loop
+  Close #1
+
+  If first$ = "" Then
+    Print "No tests found."
+    End
+  Else
+    Local cmd$ = "Run " + Chr$(34) + first$ + Chr$(34) + ", --all"
+    If InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0 Then Cat cmd$, " --verbose"
+    Execute cmd$
+  EndIf
+End Sub
+
+Function ut.is_test_file%(f$)
+  Local name$ = fil.get_name$(f$)
+
+  ' Check name matches pattern for sptest files.
+  If fil.fnmatch%("test_*.bas", name$) Then ut.is_test_file% = 1
+  If fil.fnmatch%("tst_*.bas", name$) Then ut.is_test_file% = 1
+  If fil.fnmatch%("*_test.bas", name$) Then ut.is_test_file% = 1
+  If fil.fnmatch%("*_tst*.bas", name$) Then ut.is_test_file% = 1
+
+  If Not ut.is_test_file% Then Exit Function
+
+  ' Scan first 50 lines of file for #Include of "unittest.inc".
+  Local i%, s$
+  ut.is_test_file% = 0
+  Open f$ For Input As #2
+  For i% = 1 To 50
+    If Eof(#2) Then Exit For
+    Line Input #2, s$
+    If fil.fnmatch%("*#include*unittest.inc*", s$) Then ut.is_test_file% = 1 : Exit For
+  Next
+  Close #2
+
+End Function
+
+Sub ut.run_next()
+  Local f$
+  Open "/tmp/sptest.lst" For Input As #1
+
+  Do
+    Line Input #1, f$
+    If f$ = Mm.Info$(Current) Then Exit Do
+  Loop While Not Eof(#1)
+
+  If Eof(#1) Then
+    Close #1
+  Else
+    Line Input #1, f$
+    Close #1
+    Local cmd$ = "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
+    If ut.is_verbose%() Then Cat cmd$, " --verbose"
+    Execute cmd$
   EndIf
 End Sub
 
 ' Runs the current test file again appending 'cmd$' to its command line.
-Sub run_same_test_file(cmd$)
+Sub ut.run_same(cmd$)
   Local tgt$ = "Run " + Chr$(34) + Mm.Info(Current) + Chr$(34) + ", "
   If Mm.CmdLine$ <> "" Then tgt$ = tgt$ + Mm.CmdLine$ + " "
   tgt$ = tgt$ + cmd$
   Execute tgt$
-End Sub
-
-Sub run_next_test_file()
-  Local test_files$(set.new%(20)) Length 40
-  Local f$, old$
-
-  set.init(test_files$())
-
-  ' If there is a "tests/" directory then we look there for "tst_*" files,
-  ' otherwise we look in the current working directory.
-  f$ = Dir$("tests", Dir)
-  If f$ <> "" Then old$ = Cwd$ : ChDir f$
-
-  ' Get alphabetic list of all "tst_*.bas" files.
-  f$ = Dir$("tst*.bas", All)
-  Do While f$ <> ""
-    set.put(test_files$(), f$)
-    f$ = Dir$()
-  Loop
-
-  If old$ <> "" Then ChDir old$
-
-  If set.size%(test_files$()) = 0 Then
-    Print "No tests found"
-    Exit Sub
-  EndIf
-
-  ' Lookup the index of the current file and run the next one.
-  ' Note that if the current file was "sptest.bas" then the lookup returns -1
-  ' and thus the first "tst_*.bas" file will be run.
-  Local i% = set.get%(test_files$(), fil.get_name$(Mm.Info$(Current)))
-
-  ' This was the last test.
-  If i% >= Mm.Info(Option Base) + set.size%(test_files$()) - 1 Then Exit Sub
-
-  If old$ = "" Then f$ = "" Else f$ = "tests/"
-  f$ = f$ + test_files$(i% + 1)
-  Execute "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
 End Sub

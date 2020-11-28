@@ -13,6 +13,7 @@ Dim in.num_open_files = 1
 #Include "../../common/file.inc"
 #Include "../../common/map.inc"
 #Include "../../common/set.inc"
+#Include "../../common/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../lexer.inc"
 #Include "../trans.inc"
