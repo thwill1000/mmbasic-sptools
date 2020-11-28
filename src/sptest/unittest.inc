@@ -59,11 +59,15 @@ Sub assert_float_equals(expected!, actual!)
   EndIf
 End Sub
 
-Sub assert_string_equals(expected$, actual$)
-  ut.asserts_count% = ut.asserts_count% + 1
+Sub assert_string_equals(expected_$, actual_$)
+  Local expected$ = Chr$(34) + expected_$ + Chr$(34)
+  Local actual$ = Chr$(34) + actual_$ + Chr$(34)
+  If Len(expected_$) = 1 Then expected$ = "Chr$(" + Str$(Asc(expected_$)) + ")"
+  If Len(actual_$) = 1 Then actual$ = "Chr$(" + Str$(Asc(actual_$)) + ")"
+  Inc ut.asserts_count%
   If expected$ <> actual$ Then
-    Local s$ = "Assert equals failed, expected " + Chr$(34) + expected$ + Chr$(34)
-    s$ = s$ + " but actually " + Chr$(34) + actual$ + Chr$(34)
+    Local s$ = "Assert equals failed, expected " + expected$
+    Cat s$, " but actually " + actual$
     ut.add_failure(s$)
   EndIf
 End Sub
@@ -130,7 +134,8 @@ Sub run_tests(repeat$)
         ut.print_colour("red")
         Print "FAIL ("; Str$(num_failed_asserts%); "/"; Str$(ut.asserts_count%); ")";
         For j% = base% To base% + num_failed_asserts% - 1
-          Print "  "; ut.failures$(j%)
+          Print
+          Print "    "; ut.failures$(j%);
         Next j%
       EndIf
       ut.print_colour("reset")

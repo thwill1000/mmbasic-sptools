@@ -286,32 +286,6 @@ Function lx.number(i) As Float
   lx.number = Val(lx.token$(i))
 End Function
 
-' Performs simple space separator based tokenisation.
-Sub lx.tokenise(line$)
-  Local start = -1
-
-  sys.err$ = ""
-  lx.line$ = line$
-  lx.next_char$ = ""
-  lx.num = 0
-  lx.pos = 0
-  lx.advance()
-
-  Do While lx.char$ <> Chr$(10)
-    If lx.char$ = " " Then
-      If start > -1 Then
-        lx.store(TK_IDENTIFIER, start, lx.pos - start)
-        start = -1
-      EndIf
-    Else
-      If start = -1 Then start = lx.pos
-    EndIf
-    lx.advance()
-  Loop
-
-  If start > -1 Then lx.store(TK_IDENTIFIER, start, lx.pos - start)
-End Sub
-
 Sub lx.parse_command_line(line$)
   lx.reset.globals(line$)
   lx.advance()

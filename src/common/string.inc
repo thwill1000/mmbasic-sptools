@@ -3,7 +3,6 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("list")
 sys.provides("string")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -16,27 +15,14 @@ Function str.centre$(s$, x%)
   EndIf
 End Function
 
-Sub str.tokenise(s$, sep$, lst$())
-  Local c$, i%, start% = 1
-  For i% = 1 To Len(s$)
-    c$ = Mid$(s$, i%, 1)
-    If Instr(sep$, c$) > 0 Then
-      list.add(lst$(), Mid$(s$, start%, i% - start%))
-      start% = i% + 1
-    EndIf
-  Next i%
-
-  If i% > start% Then list.add(lst$(), Mid$(s$, start%, i% - start%))
-End Sub
-
-Function str.join$(lst$(), ch$)
-  Local lb% = Bound(lst$(), 0)
-  Local sz% = list.size%(lst$())
+Function str.join$(a$(), ch$, lb_%, num%)
+  Local lb% = Choice(lb_% = 0, Bound(a$(), 0), lb_%)
+  Local ub% = Choice(num% = 0, Bound(a$(), 1), lb% + num% - 1)
   Local i%
-  For i% = lb% To lb% + sz% - 1
-    If i% > lb% Then str.join$ = str.join$ + ch$
-    str.join$ = str.join$ + lst$(i%)
-  Next i%
+  For i% = lb% To ub%
+    If i% > lb% Then Cat str.join$, ch$
+    Cat str.join$, a$(i%)
+  Next
 End Function
 
 Function str.lpad$(s$, x%)
@@ -44,33 +30,51 @@ Function str.lpad$(s$, x%)
   If Len(s$) < x% Then str.lpad$ = Space$(x% - Len(s$)) + s$
 End Function
 
-' Returns the next space separated token from a string.
-' Any excess spaces are ignored, empty tokens are never returned
-' except when there are no tokens remaining.
+' Tokenises a string.
 '
-' @param[in, out]  on input the string,
-'                  on output the remainder of the string after the
-'                  next token has been returned.
-' @return          the next token, or the empty string if there are
-'                  no more tokens.
-Function str.next_token$(s$)
-  Local en%, st% = 1
-  Do
-    en% = InStr(st%, s$, " ")
-    If en% < 1 Then
-      str.next_token$ = Mid$(s$, st%)
-      s$ = ""
-      Exit Function
-    EndIf
+' @param   s$     string to tokenise.
+' @param   sep$   one or more token separator characters.
+'                 If empty then use space and skip empty tokens.
+' @param   skip%  1 to skip empty tokens, 0 to return them.
+' @return  the first token. To retrieve subsequent tokens call this function
+'          with no parameters, i.e. tk$ = str.next_token$().
+'          Returns sys.ASC_EM$ if there are no more tokens.
+Function str.next_token$(s_$, sep_$, skip_%)
+  Static s$, sep$, skip%, st%
 
-    If en% = st% Then
-      st% = st% + 1
+  If s_$ = "" Then
+    If sep_$ <> "" Then
+      ' Special case of the first call to next_token$() on the empty string.
+      If Not skip_% Then Exit Function
+    EndIf
+  Else
+    s$ = s_$
+    st% = 1
+    If sep_$ = "" Then
+      ' If no separator specified then use space and skip empty tokens.
+      sep$ = " " : skip% = 1
     Else
-      str.next_token$ = Mid$(s$, st%, en% - st%)
-      s$ = Mid$(s$, en%)
+      sep$ = sep_$ : skip% = skip_%
+    EndIf
+  EndIf
+
+  ' Have we already processed then entire string?
+  If st% > Len(s$) + 1 Then str.next_token$ = sys.ASC_EM$ : Exit Function
+
+  Local i%
+  For i% = st% To Len(s$)
+    If InStr(sep$, Mid$(s$, i%, 1)) > 0 Then
+      str.next_token$ = Mid$(s$, st%, i% - st%)
+      st% = i% + 1
+      If skip% And str.next_token$ = "" Then Continue For
       Exit Function
     EndIf
-  Loop
+  Next
+
+  ' Return the last token.
+  str.next_token$ = Mid$(s$, st%, i% - st%)
+  If str.next_token$ = "" And skip% Then str.next_token$ = sys.ASC_EM$
+  st% = Len(s$) + 2
 End Function
 
 Function str.rpad$(s$, x%)

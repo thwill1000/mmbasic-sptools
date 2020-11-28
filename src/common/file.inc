@@ -157,22 +157,23 @@ Function fil.fnmatch%(pattern$, name$)
 End Function
 
 ' Gets the canonical path for file/directory 'f$'.
-Function fil.get_canonical$(f$)
-  Local elements$(list.new%(20)) Length 128
-  Local lb% = Bound(elements$(), 0)
-
-  list.init(elements$())
+Function fil.get_canonical$(f_$)
+  Local f$ = f_$
 
   If fil.is_absolute%(f$) Then
-    If Instr(UCase$(f$), "A:") = 1 Then
-      str.tokenise(f$, "/\", elements$())
-    Else
-      str.tokenise("A:" + f$, "/\", elements$())
-    EndIf
+    If Instr(UCase$(f$), "A:") <> 1 Then f$ = "A:" + f$
   Else
-    str.tokenise(Cwd$ + "/" + f$, "/\", elements$())
+    f$ = Mm.Info$(Directory) + f$
   EndIf
 
+  Local elements$(list.new%(20)) Length 128
+  list.init(elements$())
+  Local lb% = Bound(elements$(), 0)
+  Local tk$ = str.next_token$(f$, "/\", 1)
+  Do While tk$ <> sys.ASC_EM$
+    list.add(elements$(), tk$)
+    tk$ = str.next_token$()
+  Loop
   elements$(lb%) = "A:"
 
   Local num_elements% = list.size%(elements$())
@@ -183,13 +184,13 @@ Function fil.get_canonical$(f$)
     ElseIf elements$(i%) = ".." Then
       list.remove(elements$(), i%)
       list.remove(elements$(), i% - 1)
-      i% = i% - 1
+      Inc i%, -1
     Else
-      i% = i% + 1
+      Inc i%
     EndIf
   Loop
 
-  fil.get_canonical$ = str.join$(elements$(), "/")
+  fil.get_canonical$ = str.join$(elements$(), "/", lb%, list.size%(elements$()))
 End Function
 
 ' Gets the name of file/directory 'f$' minus any path information.

@@ -15,7 +15,6 @@ Option Default Integer
 
 lx.load_keywords("\sptools\resources\keywords.txt")
 
-add_test("test_tokenise")
 add_test("test_binary_literals")
 add_test("test_comments")
 add_test("test_directives")
@@ -44,15 +43,6 @@ Sub setup_test()
 End Sub
 
 Sub teardown_test()
-End Sub
-
-Sub test_tokenise()
-  lx.tokenise("  foo    bar/wom " + Chr$(34) + "bat" + Chr$(34) + "   ")
-
-  expect_success(3)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "bar/wom")
-  expect_tk(2, TK_IDENTIFIER, Chr$(34) + "bat" + Chr$(34))
 End Sub
 
 Sub test_binary_literals()
