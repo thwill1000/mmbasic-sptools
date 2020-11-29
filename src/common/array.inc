@@ -22,44 +22,44 @@ End Function
 ' @param  flags$  "i" to search case-insensitively,
 ' @param  lb%     the lower bound to search from,
 '                 if 0/unset then search from the first element.
-' @param  ub%     the upper bound to search from,
-'                 if 0/unset then search from the last element.
+' @param  num%    the number of elements to search,
+'                 if 0/unset then search all the elements (from lb%).
 ' @return         the index of the element containing the value,
 '                 or -1 if not present.
-Function array.bsearch%(a$(), s$, flags$, lb%, ub%)
-  Local lb_% = Max(Mm.Info(Option Base), lb%)
-  Local ub_% = ub%
-  If ub_% = 0 Then ub_% = Bound(a$(), 1)
+Function array.bsearch%(a$(), s$, flags$, lb_%, num_%)
+  Local lb% = Choice(lb_% = 0, Bound(a$(), 0), lb_%)
+  Local num% = Choice(num_% = 0, Bound(a$(), 1) - Bound(a$(), 0) + 1, num_%)
+  Local ub% = lb% + num% - 1
   Local i%
 
   If InStr(UCase$(flags$), "I") Then
     Local us$ = UCase$(s$)
     Local ua$
-    Do While ub_% >= lb_%
-      i% = (lb_% + ub_%) \ 2
+    Do While ub% >= lb%
+      i% = (lb% + ub%) \ 2
       ua$ = UCase$(a$(i%))
       If us$ > ua$ Then
-        lb_% = i% + 1
+        lb% = i% + 1
       ElseIf us$ < ua$ Then
-        ub_% = i% - 1
+        ub% = i% - 1
       Else
         Exit Do
       EndIf
     Loop
   Else
-    Do While ub_% >= lb_%
-      i% = (lb_% + ub_%) \ 2
+    Do While ub% >= lb%
+      i% = (lb% + ub%) \ 2
       If s$ > a$(i%) Then
-        lb_% = i% + 1
+        lb% = i% + 1
       ElseIf s$ < a$(i%) Then
-        ub_% = i% - 1
+        ub% = i% - 1
       Else
         Exit Do
       EndIf
     Loop
   EndIf
 
-  If ub_% >= lb_% Then array.bsearch% = i% Else array.bsearch% = -1
+  If ub% >= lb% Then array.bsearch% = i% Else array.bsearch% = -1
 End Function
 
 ' Gets the capacity (number of elements) that string array a$() can hold.
@@ -108,12 +108,30 @@ End Sub
 ' @param  num%    the number of elements to sort,
 '                 if 0/unset then sort all the elements (from idx%) in array$().
 Sub array.sort(a$(), flags$, idx%, num%)
+
+'  Local fl% = &b00
+'  If InStr(UCase$(flags$), "I") Then fl% = fl% Or &b10
+'  If InStr(UCase$(flags$), "D") Then fl% = fl% Or &b01
+'
   Local base% = Mm.Info(Option Base)
   Local lb% = Max(idx%, base%)
-  Local num_% = num%
-  If num_% = 0 Then num_% = Bound(a$(), 1) - lb% + 1
+  Local ub% = Bound(a$(), 1)
+  Local num_% = Choice(num% = 0, ub% - lb% + 1, num%)
+'
+'  Print "base =" base% ", lb% =" lb% ", ub% =" ub% ", num_% =" num_%
+'
+'  If num_% <= 1 Then
+'    ' Do nothing.
+'  ElseIf num_% > ub% - lb% Then
+'    Sort a$(), , fl%, lb%
+'  ElseIf num_% > 1 Then
+'    Sort a$(), , fl%, lb%, num_%
+'  EndIf
+'
+'  Exit Sub
+
   If num_% <= 1 Then Exit Sub
-  Local ub% = lb% + num_% - 1
+  ub% = lb% + num_% - 1
 
   ' If possible just use the default sort.
   If lb% = base% Then

@@ -22,6 +22,7 @@ add_test("test_init")
 add_test("test_clear")
 add_test("test_clear_given_empty")
 add_test("test_clear_given_full")
+add_test("test_get_key_index")
 add_test("test_get")
 add_test("test_put")
 add_test("test_put_given_full")
@@ -95,6 +96,21 @@ Sub test_clear_given_full()
   For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
+End Sub
+
+Sub test_get_key_index()
+  Local base% = Mm.Info(Option Base)
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+
+  map.put(my_map$(), "foo", "bar")
+  map.put(my_map$(), "wom", "bat")
+  map.put(my_map$(), "aaa", "bbb")
+
+  assert_equals(base%,     map.get_key_index%(my_map$(), "aaa"))
+  assert_equals(base% + 1, map.get_key_index%(my_map$(), "foo"))
+  assert_equals(base% + 2, map.get_key_index%(my_map$(), "wom"))
+  assert_equals(-1,        map.get_key_index%(my_map$(), "unknown"))
 End Sub
 
 Sub test_get()

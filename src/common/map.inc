@@ -3,6 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("array")
 sys.provides("map")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -67,34 +68,21 @@ End Sub
 
 ' Gets the value corresponding to a key, or amp2.NULL$ if the key is not present.
 Function map.get$(mp$(), k$)
-  Local i% = map.get_key_index%(mp$(), k$)
+  Local lb% = Bound(mp$(), 0)
+  Local ub% = Bound(mp$(), 1)
+  Local off% = (ub% - lb%) \ 2
+  Local sz% = Val(mp$(ub%))
+
+  Local i% = array.bsearch%(mp$(), k$, "", lb%, sz%)
   If i% > -1 Then
-    map.get$ = mp$(i% + (Bound(mp$(), 1) - Bound(mp$(), 0)) \ 2)
+    map.get$ = mp$(i% + off%)
   Else
     map.get$ = map.NULL$
   EndIf
 End Function
 
 Function map.get_key_index%(mp$(), k$)
-  Local lb% = Bound(mp$(), 0)
-  Local ub% = Bound(mp$(), 1)
-  Local sz% = Val(mp$(ub%))
-  Local i%
-
-  ' Binary search of keys.
-  ub% = lb% + sz% - 1
-  Do While ub% >= lb%
-    i% = (lb% + ub%) \ 2
-    If k$ > mp$(i%) Then
-      lb% = i% + 1
-    ElseIf k$ < mp$(i%) Then
-      ub% = i% - 1
-    Else
-      map.get_key_index% = i% : Exit Function
-    EndIf
-  Loop
-
-  map.get_key_index% = -1
+  map.get_key_index% = array.bsearch%(mp$(), k$, "", Bound(mp$(), 0), Val(mp$(Bound(mp$(), 1))))
 End Function
 
 ' Adds a key/value pair.
@@ -102,10 +90,10 @@ Sub map.put(mp$(), k$, v$)
   Local lb% = Bound(mp$(), 0)
   Local ub% = Bound(mp$(), 1)
   Local off% = (ub% - lb%) \ 2
-  Local i% = map.get_key_index%(mp$(), k$)
-  If i% <> -1 Then mp$(i% + off%) = v$ : Exit Sub
-
   Local sz% = Val(mp$(ub%))
+
+  Local i% = array.bsearch%(mp$(), k$, "", lb%, sz%)
+  If i% <> -1 Then mp$(i% + off%) = v$ : Exit Sub
 
   If sz% = off% Then Error "map full" : Exit Sub
 
@@ -123,12 +111,13 @@ Sub map.remove(mp$(), k$)
   Local lb% = Bound(mp$(), 0)
   Local ub% = Bound(mp$(), 1)
   Local off% = (ub% - lb%) \ 2
-  Local i% = map.get_key_index%(mp$(), k$)
+  Local sz% = Val(mp$(ub%))
+
+  Local i% = array.bsearch%(mp$(), k$, "", lb%, sz%)
   If i% = -1 Then Exit Sub
 
   mp$(i%) = map.NULL$
   mp$(i% + off%) = map.NULL$
-  Local sz% = Val(mp$(ub%))
   If sz% > 1 Then map.sort(mp$())
   mp$(ub%) = Str$(sz% - 1)
 End Sub

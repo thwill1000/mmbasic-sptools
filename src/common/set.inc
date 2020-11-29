@@ -3,6 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("array")
 sys.provides("set")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -55,34 +56,16 @@ End Sub
 
 ' Gets the index of a value in the set, or -1 if not present.
 Function set.get%(set$(), s$)
-  Local lb% = Bound(set$(), 0)
-  Local ub% = Bound(set$(), 1)
-  Local sz% = Val(set$(ub%))
-  Local i%
-
-  ' Binary search of set$()
-  ub% = lb% + sz% - 1
-  Do While ub% >= lb%
-    i% = (lb% + ub%) \ 2
-    If s$ > set$(i%) Then
-      lb% = i% + 1
-    ElseIf s$ < set$(i%) Then
-      ub% = i% - 1
-    Else
-      set.get% = i% : Exit Function
-    EndIf
-  Loop ' Until ub% < lb%
-
-  set.get% = -1
+  set.get% = array.bsearch%(set$(), s$, "", Bound(set$(), 0), Val(set$(Bound(set$(), 1))))
 End Function
 
 ' Adds a value to the set.
 Sub set.put(set$(), s$)
-  If set.get%(set$(), s$) <> -1  Then Exit Sub
-
   Local lb% = Bound(set$(), 0)
   Local ub% = Bound(set$(), 1)
   Local sz% = Val(set$(ub%))
+
+  If array.bsearch%(set$(), s$, "", lb%, sz%) <> -1 Then Exit Sub
 
   If sz% = ub% - lb% Then Error "set full"
 
