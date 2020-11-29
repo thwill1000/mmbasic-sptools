@@ -45,7 +45,7 @@ Sub test_init()
   set.init(my_set$())
 
   Local i%
-  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
+  For i% = base% To base% + 19 : assert_string_equals(sys.NO_DATA$, my_set$(i%)) : Next
 End Sub
 
 Sub test_capacity()
@@ -67,7 +67,7 @@ Sub test_clear()
 
   assert_equals(0, set.size%(my_set$()))
   Local i%
-  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
+  For i% = base% To base% + 19 : assert_string_equals(sys.NO_DATA$, my_set$(i%)) : Next
 End Sub
 
 Sub test_clear_given_empty()
@@ -79,7 +79,7 @@ Sub test_clear_given_empty()
 
   assert_equals(0, set.size%(my_set$()))
   Local i%
-  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
+  For i% = base% To base% + 19 : assert_string_equals(sys.NO_DATA$, my_set$(i%)) : Next
 End Sub
 
 Sub test_clear_given_full()
@@ -94,7 +94,7 @@ Sub test_clear_given_full()
   set.clear(my_set$())
 
   assert_equals(0, set.size%(my_set$()))
-  For i% = base% To base% + 19 : assert_string_equals(set.NULL$, my_set$(i%)) : Next
+  For i% = base% To base% + 19 : assert_string_equals(sys.NO_DATA$, my_set$(i%)) : Next
 End Sub
 
 Sub test_get()

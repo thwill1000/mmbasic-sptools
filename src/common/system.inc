@@ -2,7 +2,7 @@
 ' For Colour Maximite 2, MMBasic 5.06
 
 Const sys.VERSION$ = "r1b3"
-Const sys.ASC_EM$ = Chr$(25)
+Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.MAX_INCLUDES% = 20
 
 Dim sys.err$

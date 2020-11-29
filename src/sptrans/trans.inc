@@ -103,7 +103,7 @@ Sub apply_replacements()
   Local i, r$, s$
   For i = 0 TO lx.num - 1
     r$ = map.get$(replace$(), lx.token_lc$(i))
-    If r$ <> map.NULL$ Then
+    If r$ <> sys.NO_DATA$ Then
       s$ = Left$(lx.line$, lx.start(i) - 1) + r$ + Mid$(lx.line$, lx.start(i) + lx.len(i))
       lx.parse_basic(s$)
       ' TODO: at the moment this can't change the number of tokens, but when it

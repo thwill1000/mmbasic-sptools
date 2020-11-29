@@ -6,9 +6,6 @@ If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.provides("list")
 If sys.err$ <> "" Then Error sys.err$
 
-' Used as the value for elements beyond the size of the list.
-Const list.NULL$ = String$(4, Chr$(&h7F))
-
 ' Gets the upper-bound that should be used to dimension an array to hold a list
 ' of the given capacity, irrespective of OPTION BASE.
 '
@@ -27,7 +24,7 @@ End Function
 Sub list.init(lst$())
   Local i%
   For i% = Bound(lst$(), 0) To Bound(lst$(), 1)
-    lst$(i%) = list.NULL$
+    lst$(i%) = sys.NO_DATA$
   Next
   lst$(Bound(lst$(), 1)) = "0"
 End Sub
@@ -48,7 +45,7 @@ Sub list.clear(lst$())
   Local sz% = Val(lst$(ub%))
   Local i%
   For i% = lb% To lb% + sz% - 1
-    lst$(i%) = list.NULL$
+    lst$(i%) = sys.NO_DATA$
   Next
   lst$(ub%) = "0"
 End Sub
@@ -90,16 +87,16 @@ Sub list.insert(lst$(), index%, s$)
 End Sub
 
 ' Returns the element at the end of the list.
-' If the list is empty then returns list.NULL$
+' If the list is empty then returns sys.NO_DATA$
 Function list.peek$(lst$())
   Local lb% = Bound(lst$(), 0)
   Local ub% = Bound(lst$(), 1)
   Local sz% = Val(lst$(ub%))
-  If sz% > 0 Then list.peek$ = lst$(lb% + sz% - 1) Else list.peek$ = list.NULL$
+  If sz% > 0 Then list.peek$ = lst$(lb% + sz% - 1) Else list.peek$ = sys.NO_DATA$
 End Function
 
 ' Removes and returns the element at the end of the list.
-' If the list is empty then returns list.NULL$
+' If the list is empty then returns sys.NO_DATA$
 Function list.pop$(lst$())
   Local lb% = Bound(lst$(), 0)
   Local ub% = Bound(lst$(), 1)
@@ -108,7 +105,7 @@ Function list.pop$(lst$())
     list.pop$ = lst$(lb% + sz% - 1)
     lst$(ub%) = Str$(sz% - 1)
   Else
-    list.pop$ = list.NULL$
+    list.pop$ = sys.NO_DATA$
   EndIf
 End Function
 
@@ -131,7 +128,7 @@ Sub list.remove(lst$(), index%)
   For i% = index% To lb% + sz% - 2
     lst$(i%) = lst$(i% + 1)
   Next
-  lst$(i%) = list.NULL$
+  lst$(i%) = sys.NO_DATA$
   lst$(ub%) = Str$(sz% - 1)
 End Sub
 
@@ -149,7 +146,7 @@ End Sub
 Sub list.sort(lst$())
   Local ub% = Bound(lst$(), 1)
   Local sz% = Val(lst$(ub%))
-  lst$(ub%) = list.NULL$
+  lst$(ub%) = sys.NO_DATA$
   Sort lst$()
   lst$(ub%) = Str$(sz%)
 End Sub

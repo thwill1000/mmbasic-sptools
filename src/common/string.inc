@@ -38,7 +38,7 @@ End Function
 ' @param   skip%  1 to skip empty tokens, 0 to return them.
 ' @return  the first token. To retrieve subsequent tokens call this function
 '          with no parameters, i.e. tk$ = str.next_token$().
-'          Returns sys.ASC_EM$ if there are no more tokens.
+'          Returns sys.NO_DATA$ if there are no more tokens.
 Function str.next_token$(s_$, sep_$, skip_%)
   Static s$, sep$, skip%, st%
 
@@ -59,7 +59,7 @@ Function str.next_token$(s_$, sep_$, skip_%)
   EndIf
 
   ' Have we already processed then entire string?
-  If st% > Len(s$) + 1 Then str.next_token$ = sys.ASC_EM$ : Exit Function
+  If st% > Len(s$) + 1 Then str.next_token$ = sys.NO_DATA$ : Exit Function
 
   Local i%
   For i% = st% To Len(s$)
@@ -73,7 +73,7 @@ Function str.next_token$(s_$, sep_$, skip_%)
 
   ' Return the last token.
   str.next_token$ = Mid$(s$, st%, i% - st%)
-  If str.next_token$ = "" And skip% Then str.next_token$ = sys.ASC_EM$
+  If str.next_token$ = "" And skip% Then str.next_token$ = sys.NO_DATA$
   st% = Len(s$) + 2
 End Function
 

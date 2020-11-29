@@ -186,7 +186,7 @@ Sub test_find_all()
   assert_string_equals(root$ + "/tests/tst_string.bas", files$(i%)) : Inc i%
   assert_string_equals(root$ + "/tests/tst_system.bas", files$(i%)) : Inc i%
   assert_string_equals(root$ + "/vt100.inc",            files$(i%)) : Inc i%
-  assert_string_equals(list.NULL$,                      files$(i%))
+  assert_string_equals(sys.NO_DATA$,                    files$(i%))
 End Sub
 
 Sub test_find_files()
@@ -217,7 +217,7 @@ Sub test_find_files()
   assert_string_equals(root$ + "/tests/tst_string.bas", files$(i%)) : Inc i%
   assert_string_equals(root$ + "/tests/tst_system.bas", files$(i%)) : Inc i%
   assert_string_equals(root$ + "/vt100.inc",            files$(i%)) : Inc i%
-  assert_string_equals(list.NULL$,                      files$(i%))
+  assert_string_equals(sys.NO_DATA$,                    files$(i%))
 End Sub
 
 Sub test_find_dirs()
@@ -253,7 +253,7 @@ Sub test_find_all_matching()
   assert_string_equals(root$ + "/tests/tst_file.bas",    files$(i%)) : Inc i%
   assert_string_equals(root$ + "/tests/tst_set.bas",     files$(i%)) : Inc i%
   assert_string_equals(root$ + "/tests/tst_system.bas",  files$(i%)) : Inc i%
-  assert_string_equals(list.NULL$,                       files$(i%))
+  assert_string_equals(sys.NO_DATA$,                     files$(i%))
 End Sub
 
 Sub test_find_files_matching()

@@ -7,10 +7,6 @@ sys.requires("array")
 sys.provides("map")
 If sys.err$ <> "" Then Error sys.err$
 
-' Used as the value for keys/values beyond the size of the map.
-' Note: the length of the strings in the array holding the map must be at least 8 characters.
-Const map.NULL$ = String$(8, Chr$(&h7F))
-
 ' Gets the upper-bound that should be used to dimension an array to hold a map
 ' of the given capacity, irrespective of OPTION BASE.
 '
@@ -25,7 +21,7 @@ Sub map.init(mp$())
   Local lb% = Bound(mp$(), 0)
   Local ub% = Bound(mp$(), 1)
   Local i%
-  For i% = lb% To ub% : mp$(i%) = map.NULL$ : Next
+  For i% = lb% To ub% : mp$(i%) = sys.NO_DATA$ : Next
   mp$(ub%) = "0"
 End Sub
 
@@ -42,8 +38,8 @@ Sub map.clear(mp$())
   Local sz% = Val(mp$(ub%))
   Local i%
   For i% = lb% To lb% + sz% - 1
-    mp$(i%) = map.NULL$
-    mp$(i% + off%) = map.NULL$
+    mp$(i%) = sys.NO_DATA$
+    mp$(i% + off%) = sys.NO_DATA$
   Next
   mp$(ub%) = "0"
 End Sub
@@ -66,7 +62,7 @@ Sub map.dump(mp$())
   Print "END"
 End Sub
 
-' Gets the value corresponding to a key, or amp2.NULL$ if the key is not present.
+' Gets the value corresponding to a key, or sys.NO_DATA$ if the key is not present.
 Function map.get$(mp$(), k$)
   Local lb% = Bound(mp$(), 0)
   Local ub% = Bound(mp$(), 1)
@@ -77,7 +73,7 @@ Function map.get$(mp$(), k$)
   If i% > -1 Then
     map.get$ = mp$(i% + off%)
   Else
-    map.get$ = map.NULL$
+    map.get$ = sys.NO_DATA$
   EndIf
 End Function
 
@@ -116,8 +112,8 @@ Sub map.remove(mp$(), k$)
   Local i% = array.bsearch%(mp$(), k$, "", lb%, sz%)
   If i% = -1 Then Exit Sub
 
-  mp$(i%) = map.NULL$
-  mp$(i% + off%) = map.NULL$
+  mp$(i%) = sys.NO_DATA$
+  mp$(i% + off%) = sys.NO_DATA$
   If sz% > 1 Then map.sort(mp$())
   mp$(ub%) = Str$(sz% - 1)
 End Sub

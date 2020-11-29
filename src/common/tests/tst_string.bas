@@ -66,7 +66,7 @@ Sub test_next_token()
   assert_string_equals("wombat$", str.next_token$())
   assert_string_equals("@@snafu@!", str.next_token$())
   assert_string_equals("@", str.next_token$())
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' ! separator keeping empty tokens.
   assert_string_equals("", str.next_token$(test$, "!"))
@@ -75,14 +75,14 @@ Sub test_next_token()
   assert_string_equals("", str.next_token$())
   assert_string_equals("  wombat$ @@snafu@", str.next_token$())
   assert_string_equals(" @", str.next_token$())
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' ! separator skipping empty tokens.
   assert_string_equals("foo ", str.next_token$(test$, "!", 1))
   assert_string_equals("@bar ", str.next_token$())
   assert_string_equals("  wombat$ @@snafu@", str.next_token$())
   assert_string_equals(" @", str.next_token$())
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ separator keeping empty tokens.
   assert_string_equals("!foo !", str.next_token$(test$, "@"))
@@ -91,14 +91,14 @@ Sub test_next_token()
   assert_string_equals("snafu", str.next_token$())
   assert_string_equals("! ", str.next_token$())
   assert_string_equals("", str.next_token$())
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ separator skipping empty tokens.
   assert_string_equals("!foo !", str.next_token$(test$, "@", 1))
   assert_string_equals("bar !!  wombat$ ", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
   assert_string_equals("! ", str.next_token$())
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ or ! separators keeping empty tokens.
   assert_string_equals("", str.next_token$(test$, "@!"))
@@ -112,7 +112,7 @@ Sub test_next_token()
   assert_string_equals("", str.next_token$())
   assert_string_equals(" ", str.next_token$())
   assert_string_equals("", str.next_token$())
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ or ! separators skipping empty tokens.
   assert_string_equals("foo ", str.next_token$(test$, "@!", 1))
@@ -120,14 +120,14 @@ Sub test_next_token()
   assert_string_equals("  wombat$ ", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
   assert_string_equals(" ", str.next_token$())
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' Tokenise the empty string, keeping empty tokens.
-  assert_string_equals(sys.ASC_EM$, str.next_token$("", "@", 1))
+  assert_string_equals(sys.NO_DATA$, str.next_token$("", "@", 1))
 
   ' Tokenise the empty string, skipping empty tokens.
   assert_string_equals("", str.next_token$("", "@", 0))
-  assert_string_equals(sys.ASC_EM$, str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
 End Sub
 
 Sub test_rpad()

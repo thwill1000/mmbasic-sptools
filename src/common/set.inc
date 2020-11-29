@@ -7,10 +7,6 @@ sys.requires("array")
 sys.provides("set")
 If sys.err$ <> "" Then Error sys.err$
 
-' Used as the value for elements beyond the size of the set.
-' Note: the length of the strings in the array holding the set must be at least 8 characters.
-Const set.NULL$ = String$(8, Chr$(&h7F))
-
 ' Gets the upper-bound that should be used to dimension an array to hold a set
 ' of the given capacity, irrespective of OPTION BASE.
 '
@@ -30,7 +26,7 @@ Sub set.init(set$())
   Local lb% = Bound(set$(), 0)
   Local ub% = Bound(set$(), 1)
   Local i%
-  For i% = lb% To ub% : set$(i%) = set.NULL$ : Next
+  For i% = lb% To ub% : set$(i%) = sys.NO_DATA$ : Next
   set$(ub%) = "0"
 End Sub
 
@@ -40,7 +36,7 @@ Sub set.clear(set$())
   Local ub% = Bound(set$(), 1)
   Local sz% = Val(set$(ub%))
   Local i%
-  For i% = lb% To lb% + sz% - 1 : set$(i%) = set.NULL$ : Next
+  For i% = lb% To lb% + sz% - 1 : set$(i%) = sys.NO_DATA$ : Next
   set$(ub%) = "0"
 End Sub
 
@@ -76,7 +72,7 @@ Sub set.put(set$(), s$)
   If sz% <= 1 Then Exit Sub
   If set$(lb% + sz% - 1) >= set$(lb% + sz% - 2) Then Exit Sub
 
-  set$(ub%) = set.NULL$
+  set$(ub%) = sys.NO_DATA$
   Sort set$()
   set$(ub%) = Str$(sz%)
 End Sub
@@ -88,8 +84,8 @@ Sub set.remove(set$(), s$)
 
   Local ub% = Bound(set$(), 1)
   Local sz% = Val(set$(ub%))
-  set$(i%) = set.NULL$
-  set$(ub%) = set.NULL$
+  set$(i%) = sys.NO_DATA$
+  set$(ub%) = sys.NO_DATA$
   Sort set$()
   set$(ub%) = Str$(sz% - 1)
   EndIf

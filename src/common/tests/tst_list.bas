@@ -46,7 +46,7 @@ Sub test_init()
   assert_equals(0, list.size%(my_list$()))
   Local i%
   For i% = base% To base% + 19
-    assert_string_equals(list.NULL$, my_list$(i%))
+    assert_string_equals(sys.NO_DATA$, my_list$(i%))
   Next
 End Sub
 
@@ -78,7 +78,7 @@ Sub test_clear()
   assert_equals(0, list.size%(my_list$()))
   Local i%
   For i% = base% To base% + 19
-    assert_string_equals(list.NULL$, my_list$(i%))
+    assert_string_equals(sys.NO_DATA$, my_list$(i%))
   Next
 
   assert_equals(20, list.capacity%(my_list$()))
@@ -139,7 +139,7 @@ Sub test_peek()
   Local my_list$(list.new%(20))
   list.init(my_list$())
 
-  assert_string_equals(list.NULL$, list.peek$(my_list$()))
+  assert_string_equals(sys.NO_DATA$, list.peek$(my_list$()))
 
   list.add(my_list$(), "foo")
   list.add(my_list$(), "bar")
@@ -157,9 +157,9 @@ Sub test_pop()
   assert_equals(1, list.size%(my_list$()))
   assert_string_equals("foo", list.pop$(my_list$()))
   assert_equals(0, list.size%(my_list$()))
-  assert_string_equals(list.NULL$, list.pop$(my_list$()))
+  assert_string_equals(sys.NO_DATA$, list.pop$(my_list$()))
   assert_equals(0, list.size%(my_list$()))
-  assert_string_equals(list.NULL$, list.pop$(my_list$()))
+  assert_string_equals(sys.NO_DATA$, list.pop$(my_list$()))
   assert_equals(0, list.size%(my_list$()))
 
   assert_equals(20, list.capacity%(my_list$()))
@@ -194,22 +194,22 @@ Sub test_remove()
   assert_string_equals("aa", my_list$(base% + 0))
   assert_string_equals("cc", my_list$(base% + 1))
   assert_string_equals("dd", my_list$(base% + 2))
-  assert_string_equals(list.NULL$, my_list$(base% + 3))
+  assert_string_equals(sys.NO_DATA$, my_list$(base% + 3))
 
   list.remove(my_list$(), base% + 0)
   assert_equals(2, list.size%(my_list$()))
   assert_string_equals("cc", my_list$(base% + 0))
   assert_string_equals("dd", my_list$(base% + 1))
-  assert_string_equals(list.NULL$, my_list$(base% + 2))
+  assert_string_equals(sys.NO_DATA$, my_list$(base% + 2))
 
   list.remove(my_list$(), base% + 1)
   assert_equals(1, list.size%(my_list$()))
   assert_string_equals("cc", my_list$(base% + 0))
-  assert_string_equals(list.NULL$, my_list$(base% + 1))
+  assert_string_equals(sys.NO_DATA$, my_list$(base% + 1))
 
   list.remove(my_list$(), base% + 0)
   assert_equals(0, list.size%(my_list$()))
-  assert_string_equals(list.NULL$, my_list$(base% + 0))
+  assert_string_equals(sys.NO_DATA$, my_list$(base% + 0))
 
   assert_equals(20, list.capacity%(my_list$()))
 End Sub

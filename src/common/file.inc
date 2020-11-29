@@ -56,7 +56,7 @@ Function fil.find$(path$, pattern$, type$)
 '    list.dump(stack$())
     Do
       fil.find$ = list.pop$(stack$())
-      If fil.find$ = list.NULL$ Then fil.find$ = "" : Exit Function
+      If fil.find$ = sys.NO_DATA$ Then fil.find$ = "" : Exit Function
       name$ = fil.get_name$(fil.find$)
     Loop Until name$ <> ".git" ' Doesn't recurse into .git directories.
 
@@ -170,7 +170,7 @@ Function fil.get_canonical$(f_$)
   list.init(elements$())
   Local lb% = Bound(elements$(), 0)
   Local tk$ = str.next_token$(f$, "/\", 1)
-  Do While tk$ <> sys.ASC_EM$
+  Do While tk$ <> sys.NO_DATA$
     list.add(elements$(), tk$)
     tk$ = str.next_token$()
   Loop

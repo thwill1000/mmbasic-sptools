@@ -48,7 +48,7 @@ Sub test_init()
   map.init(my_map$())
 
   Local i%
-  For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
   assert_equals(20, map.capacity%(my_map$()));
@@ -66,7 +66,7 @@ Sub test_clear()
   map.clear(my_map$())
 
   Local i%
-  For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
 End Sub
@@ -79,7 +79,7 @@ Sub test_clear_given_empty()
   map.clear(my_map$())
 
   Local i%
-  For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
 End Sub
@@ -93,7 +93,7 @@ Sub test_clear_given_full()
 
   map.clear(my_map$())
 
-  For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
 End Sub
@@ -121,10 +121,10 @@ Sub test_get()
   map.put(my_map$(), "wom", "bat")
   map.put(my_map$(), "aaa", "bbb")
 
-  assert_string_equals("bar", map.get$(my_map$(), "foo"))
-  assert_string_equals("bat", map.get$(my_map$(), "wom"))
-  assert_string_equals("bbb", map.get$(my_map$(), "aaa"))
-  assert_string_equals(map.NULL$, map.get$(my_map$(), "unknown"))
+  assert_string_equals("bar",        map.get$(my_map$(), "foo"))
+  assert_string_equals("bat",        map.get$(my_map$(), "wom"))
+  assert_string_equals("bbb",        map.get$(my_map$(), "aaa"))
+  assert_string_equals(sys.NO_DATA$, map.get$(my_map$(), "unknown"))
 End Sub
 
 Sub test_put()
@@ -199,26 +199,26 @@ Sub test_remove()
   map.remove(my_map$(), "wom")
 
   assert_equals(2, map.size%(my_map$()))
-  assert_string_equals("aaa",     my_map$(base% + 0))
-  assert_string_equals("bbb",     my_map$(base% + 0 + 20))
-  assert_string_equals("foo",     my_map$(base% + 1))
-  assert_string_equals("bar",     my_map$(base% + 1 + 20))
-  assert_string_equals(map.NULL$, my_map$(base% + 2))
-  assert_string_equals(map.NULL$, my_map$(base% + 2 + 20))
+  assert_string_equals("aaa",        my_map$(base% + 0))
+  assert_string_equals("bbb",        my_map$(base% + 0 + 20))
+  assert_string_equals("foo",        my_map$(base% + 1))
+  assert_string_equals("bar",        my_map$(base% + 1 + 20))
+  assert_string_equals(sys.NO_DATA$, my_map$(base% + 2))
+  assert_string_equals(sys.NO_DATA$, my_map$(base% + 2 + 20))
 
   map.remove(my_map$(), "aaa")
 
   assert_equals(1, map.size%(my_map$()))
-  assert_string_equals("foo",     my_map$(base% + 0))
-  assert_string_equals("bar",     my_map$(base% + 0 + 20))
-  assert_string_equals(map.NULL$, my_map$(base% + 1))
-  assert_string_equals(map.NULL$, my_map$(base% + 1 + 20))
+  assert_string_equals("foo",        my_map$(base% + 0))
+  assert_string_equals("bar",        my_map$(base% + 0 + 20))
+  assert_string_equals(sys.NO_DATA$, my_map$(base% + 1))
+  assert_string_equals(sys.NO_DATA$, my_map$(base% + 1 + 20))
 
   map.remove(my_map$(), "foo")
 
   assert_equals(0, map.size%(my_map$()))
-  assert_string_equals(map.NULL$, my_map$(base% + 0))
-  assert_string_equals(map.NULL$, my_map$(base% + 0 + 20))
+  assert_string_equals(sys.NO_DATA$, my_map$(base% + 0))
+  assert_string_equals(sys.NO_DATA$, my_map$(base% + 0 + 20))
 End Sub
 
 Sub test_remove_given_absent()
@@ -248,7 +248,7 @@ Sub test_remove_given_empty()
   map.remove(my_map$(), "absent")
 
   Local i%
-  For i% = base% To base% + 39 : assert_string_equals(map.NULL$, my_map$(i%)) : Next
+  For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
   assert_equals(0, map.size%(my_map$()));
 End Sub
@@ -266,7 +266,7 @@ Sub test_remove_given_full()
     If i% <> 15 Then
       assert_string_equals("value" + Str$(i%), map.get$(my_map$(), "key" + Str$(i%)))
     Else
-      assert_string_equals(map.NULL$, map.get$(my_map$(), "key" + Str$(i%)))
+      assert_string_equals(sys.NO_DATA$, map.get$(my_map$(), "key" + Str$(i%)))
     EndIf
   Next
   assert_string_equals("19", my_map$(base% + 40));
