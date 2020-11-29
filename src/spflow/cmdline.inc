@@ -1,4 +1,11 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
+
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("lexer", "options", "sptools")
+sys.provides("cmdline")
+If sys.err$ <> "" Then Error sys.err$
 
 ' Parses command-line 's$'.
 '
@@ -17,7 +24,7 @@ Sub cli.parse(s$)
       Case "b", "brief"   : cli.parse_no_arg("brief", i)
       Case "h", "help"    : cli.usage() : End
       Case "no-location"  : cli.parse_no_arg("no-location", i)
-      Case "v", "version" : cli.version() : End
+      Case "v", "version" : spt.version("spflow") : End
       Case Else:
         sys.err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select
@@ -76,15 +83,4 @@ Sub cli.usage()
   Print "  -h, --help     display this help and exit"
   Print "  --no-location  omit filenames and line numbers from the output"
   Print "  -v, --version  output version information and exit"
-End Sub
-
-Sub cli.version()
-  Print "spflow " + SPT_VERSION$
-  Print "Copyright (c) 2020 Thomas Hugo Williams"
-  Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
-  Print "License MIT <https://opensource.org/licenses/MIT>"
-  Print "This is free software: you are free to change and redistribute it."
-  Print "There is NO WARRANTY, to the extent permitted by law."
-  Print
-  Print "Written by Thomas Hugo Williams."
 End Sub

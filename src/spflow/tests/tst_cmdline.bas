@@ -9,11 +9,12 @@ Option Default Integer
 #Include "../../common/string.inc"
 #Include "../../common/file.inc"
 #Include "../../common/set.inc"
+#Include "../../common/sptools.inc"
 #Include "../../common/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../../sptrans/lexer.inc"
-#Include "../cmdline.inc"
 #Include "../options.inc"
+#Include "../cmdline.inc"
 
 Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)
 Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)

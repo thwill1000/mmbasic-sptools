@@ -1,8 +1,9 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("lexer")
+sys.requires("lexer", "options", "sptools")
 sys.provides("cmdline")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -26,7 +27,7 @@ Sub cli.parse(s$)
       Case "h", "help"        : cli.usage() : End
       Case "n", "no-comments" : cli.parse_no_arg("no-comments", i)
       Case "s", "spacing"     : cli.parse_arg("spacing", i, "{0|1|2}")
-      Case "v", "version"     : cli.version() : End
+      Case "v", "version"     : spt.version("sptrans") : End
       Case Else:
         sys.err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select
@@ -101,15 +102,4 @@ Sub cli.usage()
   Print
   Print "Note that --no-comments, --empty-lines, --indent and --spacing will be overridden by"
   Print "the corresponding directives in source files, unless --format-only is also specified."
-End Sub
-
-Sub cli.version()
-  Print "sptrans " + SPT_VERSION$
-  Print "Copyright (c) 2020 Thomas Hugo Williams"
-  Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
-  Print "License MIT <https://opensource.org/licenses/MIT>"
-  Print "This is free software: you are free to change and redistribute it."
-  Print "There is NO WARRANTY, to the extent permitted by law."
-  Print
-  Print "Written by Thomas Hugo Williams."
 End Sub

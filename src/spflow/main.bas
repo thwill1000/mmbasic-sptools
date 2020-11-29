@@ -18,9 +18,9 @@ Const QU$ = Chr$(34)
 #Include "../sptrans/input.inc"
 #Include "../sptrans/lexer.inc"
 #Include "../sptrans/output.inc"
+#Include "options.inc"
 #Include "cmdline.inc"
 #Include "process.inc"
-#Include "options.inc"
 #Include "treegen.inc"
 
 Sub cendl()

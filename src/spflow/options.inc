@@ -1,4 +1,10 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
+
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("options")
+If sys.err$ <> "" Then Error sys.err$
 
 Dim opt.all
 Dim opt.brief
