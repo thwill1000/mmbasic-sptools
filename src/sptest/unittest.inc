@@ -7,15 +7,18 @@ sys.requires("file", "list", "vt100")
 sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 
-Dim ut.tests$(list.new%(100)) Length 40
+Dim ut.test_names$(list.new%(100)) Length 128
+Dim ut.test_subs$(list.new%(100)) Length 40
 Dim ut.failures$(list.new%(100))
 Dim ut.asserts_count%
 
-list.init(ut.tests$())
+list.init(ut.test_names$())
+list.init(ut.test_subs$())
 list.init(ut.failures$())
 
-Sub add_test(test$)
-  list.add(ut.tests$(), test$)
+Sub add_test(name$, sub$)
+  list.add(ut.test_names$(), name$)
+  list.add(ut.test_subs$(), Choice(sub$ = "", name$, sub$))
 End Sub
 
 Sub assert_fail(msg$)
@@ -72,6 +75,70 @@ Sub assert_string_equals(expected_$, actual_$)
   EndIf
 End Sub
 
+Sub assert_array_equals(expected%(), actual%())
+  Local base% = Mm.Info(Option Base)
+  Local fail% = 0
+
+  Inc ut.asserts_count%
+
+  If Bound(expected%(), 1) = Bound(actual%(), 1) Then
+    Local i%, lb%, ub%
+    lb% = base%
+    ub% = Bound(expected%(), 1)
+    For i% = lb% To ub%
+      If expected%(i%) <> actual%(i%) Then fail% = 1 : Exit For
+    Next
+  Else
+    fail% = 1
+  EndIf
+
+  If fail% Then
+    Local s$ = "Assert array equals failed, expected:" + sys.CRLF$ + "      "
+    For i% = base% To Bound(expected%(), 1)
+      If i% <> base% Then Cat s$, ", "
+      Cat s$, Str$(expected%(i%))
+    Next
+    Cat s$, sys.CRLF$ + "    but actually: " + sys.CRLF$ + "      "
+    For i% = base% To Bound(actual%(), 1)
+      If i% <> base% Then Cat s$, ", "
+      Cat s$, Str$(actual%(i%))
+    Next
+    ut.add_failure(s$)
+  EndIf
+End Sub
+
+Sub assert_string_array_equals(expected$(), actual$())
+  Local base% = Mm.Info(Option Base)
+  Local fail% = 0
+
+  Inc ut.asserts_count%
+
+  If Bound(expected$(), 1) = Bound(actual$(), 1) Then
+    Local i%, lb%, ub%
+    lb% = base%
+    ub% = Bound(expected$(), 1)
+    For i% = lb% To ub%
+      If expected$(i%) <> actual$(i%) Then fail% = 1 : Exit For
+    Next
+  Else
+    fail% = 1
+  EndIf
+
+  If fail% Then
+    Local s$ = "Assert array equals failed, expected:" + sys.CRLF$ + "      "
+    For i% = base% To Bound(expected$(), 1)
+      If i% <> base% Then Cat s$, ", "
+      Cat s$, Chr$(34) + expected$(i%) + Chr$(34)
+    Next
+    Cat s$, sys.CRLF$ + "    but actually: " + sys.CRLF$ + "      "
+    For i% = base% To Bound(actual$(), 1)
+      If i% <> base% Then Cat s$, ", "
+      Cat s$, Chr$(34) + actual$(i%) + Chr$(34)
+    Next
+    ut.add_failure(s$)
+  EndIf
+End Sub
+
 Sub assert_no_error()
   ut.asserts_count% = ut.asserts_count% + 1
   If sys.err$ <> "" Then
@@ -102,26 +169,32 @@ End Sub
 '                  should run itself again appending 'repeat$' to its command line.
 Sub run_tests(repeat$)
   Local base% = Mm.Info(Option Base)
+  Local catch_errors% = ut.is_catch_errors%()
   Local i%, j%, num_failed_asserts%, num_failed_tests%, ub%
 
   Local test$ = Mm.Info$(Current) + " " + Mm.CmdLine$;
   Print test$;
   Local t% = Timer
-  ub% = base% + list.size%(ut.tests$()) - 1
+  ub% = base% + list.size%(ut.test_names$()) - 1
   For i% = base% To ub%
 
     If ut.is_verbose%() Then
       If i% = base% Then Print
-      Print "  " + ut.tests$(i%); ":"; Space$(35 - Len(ut.tests$(i%)));
+      Print "  " + ut.test_names$(i%); ":"; Space$(Max(0, 50 - Len(ut.test_names$(i%))));
     EndIf
 
     ut.asserts_count% = 0
     list.clear(ut.failures$())
 
+    If catch_errors% Then On Error Ignore
     sys.err$ = ""
     setup_test()
-    Call ut.tests$(i%)
+    Call ut.test_subs$(i%)
     teardown_test()
+    If catch_errors% Then
+      If Mm.ErrNo <> 0 Then add_mmbasic_error()
+      On Error Abort
+    EndIf
 
     num_failed_asserts% = list.size%(ut.failures$())
     If num_failed_asserts% > 0 Then Inc num_failed_tests%
@@ -151,7 +224,7 @@ Sub run_tests(repeat$)
     Print Space$(85 - Len(test$));
   EndIf
 
-  Local num_tests% = list.size%(ut.tests$())
+  Local num_tests% = list.size%(ut.test_names$())
   If num_failed_tests% = 0 Then
     ut.print_colour("green")
     Print "PASS (" Str$(num_tests%) "/" Str$(num_tests%) ")";
@@ -175,6 +248,15 @@ Function ut.is_verbose%()
   If Not ut.is_verbose% Then ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0 
 End Function
 
+' Should MMBasic errors be caught and reported as assertion failures?
+Function ut.is_catch_errors%()
+  ut.is_catch_errors% = InStr(" " + Mm.CmdLine$ + " ", " --catch-errors ")
+End Function
+
+Sub add_mmbasic_error()
+  Local i% = InStr(Mm.ErrMsg$, "Error")
+  ut.add_failure("MMBasic " + Mid$(Mm.ErrMsg$, i%))
+End Sub
 
 ' First:  creates the file "/tmp/sptest.list" containing the full paths (one per line)
 '         of each sptest suite/file found by walking the file-system from the current
@@ -201,7 +283,8 @@ Sub ut.run_first()
   Else
     Print "Executing tests ..."
     Local cmd$ = "Run " + Chr$(34) + first$ + Chr$(34) + ", --all"
-    If InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0 Then Cat cmd$, " --verbose"
+    If InStr(" " + Mm.CmdLine$ + " ", " --catch-errors") Then Cat cmd$, " --catch-errors"
+    If InStr(" " + Mm.CmdLine$ + " ", " --verbose ")     Then Cat cmd$, " --verbose"
     Execute cmd$
   EndIf
 End Sub
@@ -245,7 +328,8 @@ Sub ut.run_next()
     Line Input #1, f$
     Close #1
     Local cmd$ = "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
-    If ut.is_verbose%() Then Cat cmd$, " --verbose"
+    If ut.is_catch_errors%() Then Cat cmd$, " --catch-errors"
+    If ut.is_verbose%()      Then Cat cmd$, " --verbose"
     Execute cmd$
   EndIf
 End Sub

@@ -4,6 +4,7 @@
 Const sys.VERSION$ = "r1b3"
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.MAX_INCLUDES% = 20
+Const sys.CRLF$ = Chr$(13) + Chr$(10)
 
 Dim sys.err$
 Dim sys.includes$(sys.MAX_INCLUDES%) Length 20
