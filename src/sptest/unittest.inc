@@ -28,16 +28,12 @@ End Sub
 
 Sub assert_false(z%, msg$)
   Inc ut.asserts_count%
-  If z% Then
-    If msg$ = "" Then ut.add_failure("assert_false() failed") Else ut.add_failure(msg$)
-  EndIf
+  If z% Then ut.add_failure(Choice(msg$ = "", "assert_false() failed", msg$))
 End Sub
 
 Sub assert_true(z%, msg$)
   Inc ut.asserts_count%
-  If Not z% Then
-    If msg$ = "" Then ut.add_failure("assert_true() failed") Else ut.add_failure(msg$)
-  EndIf
+  If Not z% Then ut.add_failure(Choice(msg$ = "", "assert_true() failed", msg$))
 End Sub
 
 Sub ut.add_failure(msg$)
@@ -45,7 +41,7 @@ Sub ut.add_failure(msg$)
 End Sub
 
 Sub assert_equals(expected%, actual%)
-  ut.asserts_count% = ut.asserts_count% + 1
+  Inc ut.asserts_count%
   If expected% <> actual% Then
     Local s$ = "Assert equals failed, expected " + Str$(expected%)
     s$ = s$ + " but actually " + Str$(actual%)
@@ -54,7 +50,7 @@ Sub assert_equals(expected%, actual%)
 End Sub
 
 Sub assert_float_equals(expected!, actual!)
-  ut.asserts_count% = ut.asserts_count% + 1
+  Inc ut.asserts_count%
   If expected! <> actual! Then
     Local s$ = "Assert equals failed, expected " + Str$(expected!)
     s$ = s$ + " but actually " + Str$(actual!)
@@ -63,12 +59,13 @@ Sub assert_float_equals(expected!, actual!)
 End Sub
 
 Sub assert_string_equals(expected_$, actual_$)
-  Local expected$ = str.quote$(expected_$)
-  Local actual$ = str.quote$(actual_$)
-  If Len(expected_$) = 1 Then expected$ = "Chr$(" + Str$(Asc(expected_$)) + ")"
-  If Len(actual_$) = 1 Then actual$ = "Chr$(" + Str$(Asc(actual_$)) + ")"
   Inc ut.asserts_count%
-  If expected$ <> actual$ Then
+  If expected_$ <> actual_$ Then
+    Local expected$ = str.quote$(expected_$)
+    Local actual$ = str.quote$(actual_$)
+    If Len(expected_$) = 1 Then expected$ = "Chr$(" + Str$(Asc(expected_$)) + ")"
+    If Len(actual_$) = 1 Then actual$ = "Chr$(" + Str$(Asc(actual_$)) + ")"
+
     Local s$ = "Assert equals failed, expected " + expected$
     Cat s$, " but actually " + actual$
     ut.add_failure(s$)
@@ -140,7 +137,7 @@ Sub assert_string_array_equals(expected$(), actual$())
 End Sub
 
 Sub assert_no_error()
-  ut.asserts_count% = ut.asserts_count% + 1
+  Inc ut.asserts_count%
   If sys.err$ <> "" Then
     Local s$ = "Expected no error, but actually " + str.quote$(sys.err$)
     ut.add_failure(s$)
@@ -148,18 +145,17 @@ Sub assert_no_error()
 End Sub
 
 Sub assert_error(expected$)
-  ut.asserts_count% = ut.asserts_count% + 1
+  Inc ut.asserts_count%
   If sys.err$ <> expected$ Then
-    Local s$ = "Expected Error " + str.quote$(expected$)
-    Cat s$, ", but actually " + str.quote$(sys.err$)
+    Local s$ = "Expected Error " + str.quote$(expected$) + ", but actually " + str.quote$(sys.err$)
     ut.add_failure(s$)
   EndIf
 End Sub
 
 Sub assert_raw_error(expected$)
-  ut.asserts_count% = ut.asserts_count% + 1
+  Inc ut.asserts_count%
   If InStr(Mm.ErrMsg$, expected$) < 1 Then
-    Local s$ = "Expected Error " + str.quote$(expected$)
+    Local s$ = "Expected Error " + str.quote$(expected$) 
     Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 3))
     ut.add_failure(s$)
   EndIf
@@ -168,54 +164,21 @@ End Sub
 ' @param  repeat$  if this is not empty then after running the test suite the program
 '                  should run itself again appending 'repeat$' to its command line.
 Sub run_tests(repeat$)
-  Local base% = Mm.Info(Option Base)
-  Local catch_errors% = ut.is_catch_errors%()
-  Local i%, j%, num_failed_asserts%, num_failed_tests%, ub%
-
+  Local num_failed_tests% = 0
+  Local num_tests% = list.size%(ut.test_names$())
   Local test$ = Mm.Info$(Current) + " " + Mm.CmdLine$;
+
   Print test$;
+  If ut.is_verbose%() Then Print
+
   Local t% = Timer
-  ub% = base% + list.size%(ut.test_names$()) - 1
-  For i% = base% To ub%
 
-    If ut.is_verbose%() Then
-      If i% = base% Then Print
-      Print "  " + ut.test_names$(i%); ":"; Space$(Max(0, 50 - Len(ut.test_names$(i%))));
-    EndIf
-
-    ut.asserts_count% = 0
-    list.clear(ut.failures$())
-
-    If catch_errors% Then On Error Ignore
-    sys.err$ = ""
-    setup_test()
-    Call ut.test_subs$(i%)
-    teardown_test()
-    If catch_errors% Then
-      If Mm.ErrNo <> 0 Then add_mmbasic_error()
-      On Error Abort
-    EndIf
-
-    num_failed_asserts% = list.size%(ut.failures$())
-    If num_failed_asserts% > 0 Then Inc num_failed_tests%
-
-    If ut.is_verbose%() Then
-      If num_failed_asserts% = 0 Then
-        ut.print_colour("green")
-        Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")";
-      Else If num_failed_asserts% > 0 Then
-        ut.print_colour("red")
-        Print "FAIL ("; Str$(num_failed_asserts%); "/"; Str$(ut.asserts_count%); ")";
-        For j% = base% To base% + num_failed_asserts% - 1
-          Print
-          Print "    "; ut.failures$(j%);
-        Next j%
-      EndIf
-      ut.print_colour("reset")
-      Print
-    EndIf
-
-  Next i%
+  Local i%
+  Local lb% = Mm.Info(Option Base)
+  Local ub% = lb% + num_tests% - 1
+  For i% = lb% To ub%
+    If Not ut.run_single_test%(i%) Then Inc num_failed_tests%
+  Next
 
   If ut.is_verbose%() Then
     Print "  Execution time: " Str$((Timer - t%) / 1000) " s"
@@ -224,7 +187,6 @@ Sub run_tests(repeat$)
     Print Space$(85 - Len(test$));
   EndIf
 
-  Local num_tests% = list.size%(ut.test_names$())
   If num_failed_tests% = 0 Then
     ut.print_colour("green")
     Print "PASS (" Str$(num_tests%) "/" Str$(num_tests%) ")";
@@ -241,6 +203,53 @@ Sub run_tests(repeat$)
     ut.run_next()
   EndIf
 End Sub
+
+' @return 1 if the test passes, 0 if it fails.
+Function ut.run_single_test%(idx%)
+  Local catch_errors% = ut.is_catch_errors%()
+
+  If ut.is_verbose%() Then
+    Print "  " + ut.test_names$(idx%); ":"; Space$(Max(0, 50 - Len(ut.test_names$(idx%))));
+  EndIf
+
+  ut.asserts_count% = 0
+  list.clear(ut.failures$())
+
+  If catch_errors% Then On Error Ignore
+
+  sys.err$ = ""
+  setup_test()
+  Call ut.test_subs$(idx%)
+  teardown_test()
+
+  If catch_errors% Then
+    If Mm.ErrNo <> 0 Then add_mmbasic_error()
+    On Error Abort
+  EndIf
+
+  Local num_failed_asserts% = list.size%(ut.failures$())
+
+  If ut.is_verbose%() Then
+    If num_failed_asserts% = 0 Then
+      ut.print_colour("green")
+      Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")";
+    Else If num_failed_asserts% > 0 Then
+      ut.print_colour("red")
+      Print "FAIL ("; Str$(num_failed_asserts%); "/"; Str$(ut.asserts_count%); ")";
+      Local i%
+      Local lb% = Mm.Info(Option Base)
+      Local ub% = lb% + num_failed_asserts% - 1
+      For i% = lb% To ub%
+        Print
+        Print "    "; ut.failures$(i%);
+      Next i%
+    EndIf
+    ut.print_colour("reset")
+    Print
+  EndIf
+
+  ut.run_single_test% = num_failed_asserts% = 0
+End Function
 
 ' Should verbose output be generated?
 Function ut.is_verbose%()
