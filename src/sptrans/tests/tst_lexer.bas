@@ -79,11 +79,11 @@ Sub test_directives()
 End Sub
 
 Sub test_includes()
-  lx.parse_basic("#Include " + Chr$(34) + "foo.inc" + Chr$(34))
+  lx.parse_basic("#Include " + str.quote$("foo.inc"))
 
   expect_success(2)
   expect_tk(0, TK_KEYWORD, "#Include")
-  expect_tk(1, TK_STRING, Chr$(34) + "foo.inc" + Chr$(34))
+  expect_tk(1, TK_STRING, str.quote$("foo.inc"))
 End Sub
 
 Sub test_hexadecimal_literals()
@@ -176,10 +176,10 @@ Sub test_real_literals()
 End Sub
 
 Sub test_string_literals()
-  lx.parse_basic(Chr$(34) + "This is a string" + Chr$(34))
+  lx.parse_basic(str.quote$("This is a string"))
 
   expect_success(1)
-  expect_tk(0, TK_STRING, Chr$(34) + "This is a string" + Chr$(34))
+  expect_tk(0, TK_STRING, str.quote$("This is a string"))
 End Sub
 
 Sub test_string_no_closing_quote()
@@ -248,7 +248,7 @@ Sub test_get_number()
 End Sub
 
 Sub test_get_string()
-  lx.parse_basic(Chr$(34) + "foo" + Chr$(34) + " " + Chr$(34) + "wom bat" + Chr$(34))
+  lx.parse_basic(str.quote$("foo") + " " + str.quote$("wom bat"))
   assert_string_equals("foo", lx.string$(0))
   assert_string_equals("wom bat", lx.string$(1))
 End Sub

@@ -21,6 +21,7 @@ add_test("test_centre")
 add_test("test_join")
 add_test("test_lpad")
 add_test("test_next_token")
+add_test("test_quote")
 add_test("test_rpad")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
@@ -128,6 +129,21 @@ Sub test_next_token()
   ' Tokenise the empty string, skipping empty tokens.
   assert_string_equals("", str.next_token$("", "@", 0))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
+End Sub
+
+Sub test_quote()
+  Const QU$ = Chr$(34)
+  assert_string_equals(QU$ + "hello" + QU$, str.quote$("hello"))
+  assert_string_equals(QU$ + "hello world" + QU$, str.quote$("hello world"))
+  assert_string_equals(QU$ + QU$ + "hello world" + QU$ + QU$, str.quote$(str.quote$("hello world")))
+
+  assert_string_equals("'hello'", str.quote$("hello", "'"))
+  assert_string_equals("'hello world'", str.quote$("hello world", "'"))
+  assert_string_equals("''hello world''", str.quote$(str.quote$("hello world", "'"), "'"))
+
+  assert_string_equals("{hello}", str.quote$("hello", "{", "}"))
+  assert_string_equals("{hello world}", str.quote$("hello world", "{", "}"))
+  assert_string_equals("<{hello world}>", str.quote$(str.quote$("hello world", "{", "}"), "<", ">"))
 End Sub
 
 Sub test_rpad()

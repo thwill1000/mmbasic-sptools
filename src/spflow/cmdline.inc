@@ -3,7 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("lexer", "options", "sptools")
+sys.requires("lexer", "options", "sptools", "string")
 sys.provides("cmdline")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -69,11 +69,11 @@ Sub cli.parse_no_arg(option$, i)
 End Sub
 
 Sub cli.usage()
-  Local in$ = Chr$(34) + "input file" + Chr$(34)
-  Local out$ = Chr$(34) + "output file" + Chr$(34)
-  Print "Usage: RUN "; Chr$(34); "spflow.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
+  Local in$ = str.quote$("input file")
+  Local out$ = str.quote$("output file")
+  Print "Usage: RUN " str.quote$("spflow.bas") ", [OPTION]... " in$ " [" out$ "]"
   Print
-  Print "Generate an MMBasic flowgraph for the " + in$
+  Print "Generate an MMBasic flowgraph for the " in$
   Print
   Print "  -A, --all      produce graphs for all functions/subroutines, even those"
   Print "                 unreachable from the global scope"

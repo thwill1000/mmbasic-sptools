@@ -3,7 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("file", "list", "vt100")
+sys.requires("file", "list", "string", "vt100")
 sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -63,8 +63,8 @@ Sub assert_float_equals(expected!, actual!)
 End Sub
 
 Sub assert_string_equals(expected_$, actual_$)
-  Local expected$ = Chr$(34) + expected_$ + Chr$(34)
-  Local actual$ = Chr$(34) + actual_$ + Chr$(34)
+  Local expected$ = str.quote$(expected_$)
+  Local actual$ = str.quote$(actual_$)
   If Len(expected_$) = 1 Then expected$ = "Chr$(" + Str$(Asc(expected_$)) + ")"
   If Len(actual_$) = 1 Then actual$ = "Chr$(" + Str$(Asc(actual_$)) + ")"
   Inc ut.asserts_count%
@@ -128,12 +128,12 @@ Sub assert_string_array_equals(expected$(), actual$())
     Local s$ = "Assert array equals failed, expected:" + sys.CRLF$ + "      "
     For i% = base% To Bound(expected$(), 1)
       If i% <> base% Then Cat s$, ", "
-      Cat s$, Chr$(34) + expected$(i%) + Chr$(34)
+      Cat s$, str.quote$(expected$(i%))
     Next
     Cat s$, sys.CRLF$ + "    but actually: " + sys.CRLF$ + "      "
     For i% = base% To Bound(actual$(), 1)
       If i% <> base% Then Cat s$, ", "
-      Cat s$, Chr$(34) + actual$(i%) + Chr$(34)
+      Cat s$, str.quote$(actual$(i%))
     Next
     ut.add_failure(s$)
   EndIf
@@ -142,7 +142,7 @@ End Sub
 Sub assert_no_error()
   ut.asserts_count% = ut.asserts_count% + 1
   If sys.err$ <> "" Then
-    Local s$ = "Expected no error, but actually " + Chr$(34) + sys.err$ + Chr$(34)
+    Local s$ = "Expected no error, but actually " + str.quote$(sys.err$)
     ut.add_failure(s$)
   EndIf
 End Sub
@@ -150,8 +150,8 @@ End Sub
 Sub assert_error(expected$)
   ut.asserts_count% = ut.asserts_count% + 1
   If sys.err$ <> expected$ Then
-    Local s$ = "Expected Error " + Chr$(34) + expected$ + Chr$(34)
-    s$ = s$ + ", but actually " + Chr$(34) + sys.err$ + Chr$(34)
+    Local s$ = "Expected Error " + str.quote$(expected$)
+    Cat s$, ", but actually " + str.quote$(sys.err$)
     ut.add_failure(s$)
   EndIf
 End Sub
@@ -159,8 +159,8 @@ End Sub
 Sub assert_raw_error(expected$)
   ut.asserts_count% = ut.asserts_count% + 1
   If InStr(Mm.ErrMsg$, expected$) < 1 Then
-    Local s$ = "Expected Error " + Chr$(34) + expected$ + Chr$(34)
-    s$ = s$ + ", but actually " + Chr$(34) + Mid$(Mm.ErrMsg$, 3) + Chr$(34)
+    Local s$ = "Expected Error " + str.quote$(expected$)
+    Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 3))
     ut.add_failure(s$)
   EndIf
 End Sub
@@ -282,7 +282,7 @@ Sub ut.run_first()
     End
   Else
     Print "Executing tests ..."
-    Local cmd$ = "Run " + Chr$(34) + first$ + Chr$(34) + ", --all"
+    Local cmd$ = "Run " + str.quote$(first$) + ", --all"
     If InStr(" " + Mm.CmdLine$ + " ", " --catch-errors") Then Cat cmd$, " --catch-errors"
     If InStr(" " + Mm.CmdLine$ + " ", " --verbose ")     Then Cat cmd$, " --verbose"
     Execute cmd$
@@ -327,7 +327,7 @@ Sub ut.run_next()
   Else
     Line Input #1, f$
     Close #1
-    Local cmd$ = "Run " + Chr$(34) + f$ + Chr$(34) + ", --all"
+    Local cmd$ = "Run " + str.quote$(f$) + ", --all"
     If ut.is_catch_errors%() Then Cat cmd$, " --catch-errors"
     If ut.is_verbose%()      Then Cat cmd$, " --verbose"
     Execute cmd$
@@ -336,7 +336,7 @@ End Sub
 
 ' Runs the current test file again appending 'cmd$' to its command line.
 Sub ut.run_same(cmd$)
-  Local tgt$ = "Run " + Chr$(34) + Mm.Info(Current) + Chr$(34) + ", "
+  Local tgt$ = "Run " + str.quote$(Mm.Info(Current)) + ", "
   If Mm.CmdLine$ <> "" Then tgt$ = tgt$ + Mm.CmdLine$ + " "
   tgt$ = tgt$ + cmd$
   Execute tgt$

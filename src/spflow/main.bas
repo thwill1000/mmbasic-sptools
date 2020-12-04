@@ -5,7 +5,6 @@ Option Default Integer
 
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
-Const QU$ = Chr$(34)
 
 #Include "../common/system.inc"
 #Include "../common/array.inc"

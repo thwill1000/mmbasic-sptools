@@ -5,7 +5,6 @@ Option Default Integer
 
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
-Const QU$ = Chr$(34)
 
 #Include "../common/system.inc"
 #Include "../common/array.inc"
@@ -124,7 +123,7 @@ Sub open_include()
 End Sub
 
 Sub close_include()
-  Local s$ = "#Include " + QU$ + in.files$(in.num_open_files% - 1) + QU$
+  Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
   lx.parse_basic(s$)
   If sys.err$ = "" Then pp.print_line()

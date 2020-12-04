@@ -3,7 +3,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("lexer", "options", "sptools")
+sys.requires("lexer", "options", "sptools", "string")
 sys.provides("cmdline")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -72,12 +72,12 @@ Sub cli.parse_no_arg(option$, i)
 End Sub
 
 Sub cli.usage()
-  Local in$ = Chr$(34) + "input file" + Chr$(34)
-  Local out$ = Chr$(34) + "output file" + Chr$(34)
-  Print "Usage: RUN "; Chr$(34); "sptrans.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
+  Local in$ = str.quote$("input file")
+  Local out$ = str.quote$("output file")
+  Print "Usage: RUN " str.quote$("sptrans.bas") ", [OPTION]... " in$ " [" out$ "]"
   Print
-  Print "Transcompile the given "; in$; " flattening any #Include hierarchy and processing"
-  Print "any !directives encountered. The transpiled output is written to the "; out$; ", or"
+  Print "Transcompile the given " in$ " flattening any #Include hierarchy and processing"
+  Print "any !directives encountered. The transpiled output is written to the " out$ ", or"
   Print "the console if unspecified. By using the --format-only option it can also be used as"
   Print "a simple BASIC code formatter."
   Print

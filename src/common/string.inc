@@ -77,6 +77,12 @@ Function str.next_token$(s_$, sep_$, skip_%)
   st% = Len(s$) + 2
 End Function
 
+Function str.quote$(s$, begin$, end$)
+  Local begin_$ = Choice(begin$ = "", Chr$(34), Left$(begin$, 1))
+  Local end_$ = Choice(end$ = "", begin_$, Left$(end$, 1))
+  str.quote$ = begin_$ + s$ + end_$
+End Function
+
 Function str.rpad$(s$, x%)
   str.rpad$ = s$
   If Len(s$) < x% Then str.rpad$ = s$ + Space$(x% - Len(s$))

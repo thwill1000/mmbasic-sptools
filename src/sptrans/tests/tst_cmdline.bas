@@ -16,8 +16,8 @@ Option Default Integer
 #Include "../options.inc"
 #Include "../cmdline.inc"
 
-Const input_file$ = Chr$(34) + "input.bas" + Chr$(34)
-Const output_file$ = Chr$(34) + "output.bas" + Chr$(34)
+Const input_file$ = str.quote$("input.bas")
+Const output_file$ = str.quote$("output.bas")
 
 add_test("test_no_input_file")
 add_test("test_input_file")
