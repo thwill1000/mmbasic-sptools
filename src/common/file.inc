@@ -73,7 +73,7 @@ Function fil.find$(path$, pattern$, type$)
       ' Sort the newly pushed dirs/files so that those beginning 'a|A'
       ' are at the top and those beginning 'z|Z' are near the bottom.
       num% = base% + list.size%(stack$()) - lb%
-      If num% > 0 Then array.sort(stack$(), "id", lb%, num%)
+      If num% > 0 Then Sort stack$(), , &b11, lb%, num%)
     EndIf
 
     ' I've profiled it and its faster to do the name checks before the type checks.

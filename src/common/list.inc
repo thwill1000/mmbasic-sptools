@@ -144,11 +144,10 @@ End Sub
 
 ' Sorts the list.
 Sub list.sort(lst$())
+  Local lb% = Bound(lst$(), 0)
   Local ub% = Bound(lst$(), 1)
   Local sz% = Val(lst$(ub%))
-  lst$(ub%) = sys.NO_DATA$
-  Sort lst$()
-  lst$(ub%) = Str$(sz%)
+  Sort lst$(), , , lb%, sz%
 End Sub
 
 ' Gets the size of the list.

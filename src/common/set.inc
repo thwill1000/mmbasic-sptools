@@ -72,23 +72,22 @@ Sub set.put(set$(), s$)
   If sz% <= 1 Then Exit Sub
   If set$(lb% + sz% - 1) >= set$(lb% + sz% - 2) Then Exit Sub
 
-  set$(ub%) = sys.NO_DATA$
-  Sort set$()
-  set$(ub%) = Str$(sz%)
+  Sort set$(), , , lb%, sz%
 End Sub
 
 ' Removes a value from the set if present.
 Sub set.remove(set$(), s$)
-  Local i% = set.get%(set$(), s$)
-  If i% = -1 Then Exit Sub
-
+  Local lb% = Bound(set$(), 0)
   Local ub% = Bound(set$(), 1)
   Local sz% = Val(set$(ub%))
+
+  Local i% = array.bsearch%(set$(), s$, "", lb%, sz%)
+  If i% = -1 Then Exit Sub
+
   set$(i%) = sys.NO_DATA$
-  set$(ub%) = sys.NO_DATA$
-  Sort set$()
   set$(ub%) = Str$(sz% - 1)
-  EndIf
+
+  Sort set$(), , , lb%, sz%
 End Sub
 
 ' Gets the size of the set.

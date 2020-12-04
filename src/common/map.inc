@@ -128,18 +128,16 @@ Sub map.sort(mp$())
   Local lb% = Bound(mp$(), 0)
   Local ub% = Bound(mp$(), 1)
   Local off% = (ub% - lb%) \ 2
-  ub% = lb% + Val(mp$(ub%)) - 1
-  Local i%, idx%(ub%), tmp$(ub%)
+  Local sz% = Val(mp$(ub%))
+  Local idx%(map.new%(off%))
 
-  ' Copy unsorted keys to tmp$().
-  For i% = lb% To ub% : tmp$(i%) = mp$(i%) : Next
-
-  Sort tmp$(), idx%()
-
-  ' Copy sorted keys back into mp$().
-  For i% = lb% To ub% : mp$(i%) = tmp$(i%) : Next
+  ' Sort keys.
+  Sort mp$(), idx%(), , lb%, sz%
 
   ' Copy values to tmp$().
+  Local i%
+  Local tmp$(map.new%(sz%))
+  ub% = lb% + sz% - 1
   For i% = lb% To ub% : tmp$(i%) = mp$(i% + off%) : Next
 
   ' Copy re-ordered values back into mp$().
