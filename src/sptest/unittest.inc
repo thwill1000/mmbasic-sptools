@@ -40,6 +40,7 @@ Sub ut.add_failure(msg$)
   list.add(ut.failures$(), Str$(ut.asserts_count%) + ": " + msg$)
 End Sub
 
+' TODO: delete this
 Sub assert_equals(expected%, actual%)
   Inc ut.asserts_count%
   If expected% <> actual% Then
@@ -49,14 +50,27 @@ Sub assert_equals(expected%, actual%)
   EndIf
 End Sub
 
-Sub assert_float_equals(expected!, actual!)
+Sub assert_int_equals(expected%, actual%)
   Inc ut.asserts_count%
-  If expected! <> actual! Then
+  If expected% <> actual% Then
+    Local s$ = "Assert equals failed, expected " + Str$(expected%)
+    s$ = s$ + " but actually " + Str$(actual%)
+    ut.add_failure(s$)
+  EndIf
+End Sub
+
+Sub assert_float_equals(expected!, actual!, delta!)
+  Inc ut.asserts_count%
+  If Not equals_float%(expected!, actual!, delta!) Then
     Local s$ = "Assert equals failed, expected " + Str$(expected!)
     s$ = s$ + " but actually " + Str$(actual!)
     ut.add_failure(s$)
   EndIf
 End Sub
+
+Function equals_float%(a!, b!, delta!)
+  equals_float% = (a! >= b! - delta!) And (a! <= b! + delta!)
+End Function
 
 Sub assert_string_equals(expected_$, actual_$)
   Inc ut.asserts_count%
@@ -72,7 +86,7 @@ Sub assert_string_equals(expected_$, actual_$)
   EndIf
 End Sub
 
-Sub assert_array_equals(expected%(), actual%())
+Sub assert_int_array_equals(expected%(), actual%())
   Local base% = Mm.Info(Option Base)
   Local fail% = 0
 
@@ -99,6 +113,38 @@ Sub assert_array_equals(expected%(), actual%())
     For i% = base% To Bound(actual%(), 1)
       If i% <> base% Then Cat s$, ", "
       Cat s$, Str$(actual%(i%))
+    Next
+    ut.add_failure(s$)
+  EndIf
+End Sub
+
+Sub assert_float_array_equals(expected!(), actual!(), delta!())
+  Local base% = Mm.Info(Option Base)
+  Local fail% = 0
+
+  Inc ut.asserts_count%
+
+  If Bound(expected!(), 1) = Bound(actual!(), 1) Then
+    Local i%, lb%, ub%
+    lb% = base%
+    ub% = Bound(expected!(), 1)
+    For i% = lb% To ub%
+      If Not equals_float%(expected!(i%), actual!(i%), delta!(i%)) Then fail% = 1 : Exit For
+    Next
+  Else
+    fail% = 1
+  EndIf
+
+  If fail% Then
+    Local s$ = "Assert array equals failed, expected:" + sys.CRLF$ + "      "
+    For i% = base% To Bound(expected!(), 1)
+      If i% <> base% Then Cat s$, ", "
+      Cat s$, Str$(expected!(i%))
+    Next
+    Cat s$, sys.CRLF$ + "    but actually: " + sys.CRLF$ + "      "
+    For i% = base% To Bound(actual!(), 1)
+      If i% <> base% Then Cat s$, ", "
+      Cat s$, Str$(actual!(i%))
     Next
     ut.add_failure(s$)
   EndIf
@@ -263,8 +309,8 @@ Function ut.is_catch_errors%()
 End Function
 
 Sub add_mmbasic_error()
-  Local i% = InStr(Mm.ErrMsg$, "Error")
-  ut.add_failure("MMBasic " + Mid$(Mm.ErrMsg$, i%))
+  Inc ut.asserts_count%
+  ut.add_failure("MMBasic " + Mid$(Mm.ErrMsg$, InStr(Mm.ErrMsg$, "Error")))
 End Sub
 
 ' First:  creates the file "/tmp/sptest.list" containing the full paths (one per line)

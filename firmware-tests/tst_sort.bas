@@ -60,7 +60,7 @@ Sub test_case_sens_ascending_sort_1()
   Local exp_a$(array.new%(5)) = ("five", "four", "one", "three", "two")
   Local exp_idx%(array.new%(5)) = (base% + 4, base% + 3, base% + 0, base% + 2, base% + 1)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive ascending sort of first 3 elements.
@@ -73,7 +73,7 @@ Sub test_case_sens_ascending_sort_2()
   Local exp_a$(array.new%(5)) = ("one", "three", "two", "four", "five")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 2, base% + 1, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive ascending sort of middle 3 elements.
@@ -86,7 +86,7 @@ Sub test_case_sens_ascending_sort_3()
   Local exp_a$(array.new%(5)) = ("one", "four", "three", "two", "five")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 3, base% + 2, base% + 1, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive ascending sort of last 3 elements.
@@ -99,7 +99,7 @@ Sub test_case_sens_ascending_sort_4()
   Local exp_a$(array.new%(5)) = ("one", "two", "five", "four", "three")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 1, base% + 4, base% + 3, base% + 2)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive ascending sort of single elements.
@@ -114,7 +114,7 @@ Sub test_case_sens_ascending_sort_5()
     Sort a$(), idx%(), &b00, i%, 1
 
     assert_string_array_equals(exp_a$(), a$())
-    assert_array_equals(exp_idx%(), idx%())
+    assert_int_array_equals(exp_idx%(), idx%())
   Next
 End Sub
 
@@ -128,7 +128,7 @@ Sub test_case_sens_descending_sort_1()
   Local exp_a$(array.new%(5)) = ("two", "three", "one", "four", "five")
   Local exp_idx%(array.new%(5)) = (base% + 1, base% + 2, base% + 0, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive descending sort of first 3 elements
@@ -141,7 +141,7 @@ Sub test_case_sens_descending_sort_2()
   Local exp_a$(array.new%(5)) = ("two", "three", "one", "four", "five")
   Local exp_idx%(array.new%(5)) = (base% + 1, base% + 2, base% + 0, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive descending sort of middle 3 elements.
@@ -154,7 +154,7 @@ Sub test_case_sens_descending_sort_3()
   Local exp_a$(array.new%(5)) = ("one", "two", "three", "four", "five")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 1, base% + 2, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive descending sort of last 3 elements.
@@ -167,7 +167,7 @@ Sub test_case_sens_descending_sort_4()
   Local exp_a$(array.new%(5)) = ("one", "two", "three", "four", "five")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 1, base% + 2, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive descending sort of single elements.
@@ -182,7 +182,7 @@ Sub test_case_sens_descending_sort_5()
     Sort a$(), idx%(), &b01, i%, 1
 
     assert_string_array_equals(exp_a$(), a$())
-    assert_array_equals(exp_idx%(), idx%())
+    assert_int_array_equals(exp_idx%(), idx%())
   Next
 End Sub
 
@@ -196,7 +196,7 @@ Sub tst_case_insens_ascending_sort_1()
   Local exp_a$(array.new%(5)) = ("fubar1", "Fubar2", "fuBar3", "FUBAR4", "FuBar5")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 2, base% + 1, base% + 4, base% + 3)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case insensitive ascending sort of first 3 elements.
@@ -209,7 +209,7 @@ Sub tst_case_insens_ascending_sort_2()
   Local exp_a$(array.new%(5)) = ("fubar1", "Fubar2", "fuBar3", "FuBar5", "FUBAR4")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 2, base% + 1, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case insensitive ascending sort of middle 3 elements.
@@ -222,7 +222,7 @@ Sub tst_case_insens_ascending_sort_3()
   Local exp_a$(array.new%(5)) = ("fubar1", "Fubar2", "fuBar3", "FuBar5", "FUBAR4")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 2, base% + 1, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case insensitive ascending sort of last 3 elements.
@@ -235,7 +235,7 @@ Sub tst_case_insens_ascending_sort_4()
   Local exp_a$(array.new%(5)) = ("fubar1", "fuBar3", "Fubar2", "FUBAR4", "FuBar5")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 1, base% + 2, base% + 4, base% + 3)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case insensitive ascending sort of single elements.
@@ -250,7 +250,7 @@ Sub tst_case_insens_ascending_sort_5()
     Sort a$(), idx%(), &b10, i%, 1
 
     assert_string_array_equals(exp_a$(), a$())
-    assert_array_equals(exp_idx%(), idx%())
+    assert_int_array_equals(exp_idx%(), idx%())
   Next
 End Sub
 
@@ -264,7 +264,7 @@ Sub tst_case_ins_descending_sort_1()
   Local exp_a$(array.new%(5)) = ("FuBar5", "FUBAR4", "fuBar3", "Fubar2", "fubar1")
   Local exp_idx%(array.new%(5)) = (base% + 3, base% + 4, base% + 1, base% + 2, base% + 0)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 ' Case sensitive descending sort of first 3 elements.
 Sub tst_case_ins_descending_sort_2()
@@ -276,7 +276,7 @@ Sub tst_case_ins_descending_sort_2()
   Local exp_a$(array.new%(5)) = ("fuBar3", "Fubar2", "fubar1", "FuBar5", "FUBAR4")
   Local exp_idx%(array.new%(5)) = (base% + 1, base% + 2, base% + 0, base% + 3, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive descending sort of middle 3 elements.
@@ -289,7 +289,7 @@ Sub tst_case_ins_descending_sort_3()
   Local exp_a$(array.new%(5)) = ("fubar1", "FuBar5", "fuBar3", "Fubar2", "FUBAR4")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 3, base% + 1, base% + 2, base% + 4)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive descending sort of last 3 elements.
@@ -302,7 +302,7 @@ Sub tst_case_ins_descending_sort_4()
   Local exp_a$(array.new%(5)) = ("fubar1", "fuBar3", "FuBar5", "FUBAR4", "Fubar2")
   Local exp_idx%(array.new%(5)) = (base% + 0, base% + 1, base% + 3, base% + 4, base% + 2)
   assert_string_array_equals(exp_a$(), a$())
-  assert_array_equals(exp_idx%(), idx%())
+  assert_int_array_equals(exp_idx%(), idx%())
 End Sub
 
 ' Case sensitive descending sort of single elements.
@@ -317,7 +317,7 @@ Sub tst_case_ins_descending_sort_5()
     Sort a$(), idx%(), &b11, i%, 1
 
     assert_string_array_equals(exp_a$(), a$())
-    assert_array_equals(exp_idx%(), idx%())
+    assert_int_array_equals(exp_idx%(), idx%())
   Next
 End Sub
 
