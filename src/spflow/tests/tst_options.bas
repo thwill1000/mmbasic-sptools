@@ -33,7 +33,7 @@ End Sub
 Sub test_all()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, opt.all)
+  assert_int_equals(0, opt.all)
 
   elements$(0) = "on"
   elements$(1) = "1"
@@ -44,7 +44,7 @@ Sub test_all()
     opt.all = 999
     opt.set("all", elements$(i))
     assert_no_error()
-    assert_equals(1, opt.all)
+    assert_int_equals(1, opt.all)
     i = i + 1
   Loop
 
@@ -59,7 +59,7 @@ Sub test_all()
     opt.all = 999
     opt.set("all", elements$(i))
     assert_no_error()
-    assert_equals(0, opt.all)
+    assert_int_equals(0, opt.all)
     i = i + 1
   Loop
 
@@ -70,7 +70,7 @@ End Sub
 Sub test_brief()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, opt.brief)
+  assert_int_equals(0, opt.brief)
 
   elements$(0) = "on"
   elements$(1) = "1"
@@ -81,7 +81,7 @@ Sub test_brief()
     opt.brief = 999
     opt.set("brief", elements$(i))
     assert_no_error()
-    assert_equals(1, opt.brief)
+    assert_int_equals(1, opt.brief)
     i = i + 1
   Loop
 
@@ -96,7 +96,7 @@ Sub test_brief()
     opt.brief = 999
     opt.set("brief", elements$(i))
     assert_no_error()
-    assert_equals(0, opt.brief)
+    assert_int_equals(0, opt.brief)
     i = i + 1
   Loop
 
@@ -107,7 +107,7 @@ End Sub
 Sub test_no_location()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, opt.no_location)
+  assert_int_equals(0, opt.no_location)
 
   elements$(0) = "on"
   elements$(1) = "1"
@@ -118,7 +118,7 @@ Sub test_no_location()
     opt.no_location = 999
     opt.set("no-location", elements$(i))
     assert_no_error()
-    assert_equals(1, opt.no_location)
+    assert_int_equals(1, opt.no_location)
     i = i + 1
   Loop
 
@@ -133,7 +133,7 @@ Sub test_no_location()
     opt.no_location = 999
     opt.set("no-location", elements$(i))
     assert_no_error()
-    assert_equals(0, opt.no_location)
+    assert_int_equals(0, opt.no_location)
     i = i + 1
   Loop
 

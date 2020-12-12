@@ -58,18 +58,18 @@ Sub test_simple_sub()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_equals(3, map.size%(subs$()))
+  assert_int_equals(3, map.size%(subs$()))
   assert_string_equals("*GLOBAL*,input.bas,1,3", map.get$(subs$(), "*global*"))
   assert_string_equals("bar,input.bas,4,2", map.get$(subs$(), "bar"))
   assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
-  assert_equals(5, all_calls_sz)
-  assert_equals(1, all_calls(0))
-  assert_equals(-1, all_calls(1))
-  assert_equals(-1, all_calls(2))
-  assert_equals(2, all_calls(3))
-  assert_equals(-1, all_calls(4))
+  assert_int_equals(5, all_calls_sz)
+  assert_int_equals(1, all_calls(0))
+  assert_int_equals(-1, all_calls(1))
+  assert_int_equals(-1, all_calls(2))
+  assert_int_equals(2, all_calls(3))
+  assert_int_equals(-1, all_calls(4))
 
 End Sub
 
@@ -90,15 +90,15 @@ Sub test_simple_fn()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_equals(2, map.size%(subs$()))
+  assert_int_equals(2, map.size%(subs$()))
   assert_string_equals("*GLOBAL*,input.bas,1,1", map.get$(subs$(), "*global*"))
   assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
-  assert_equals(3, all_calls_sz)
-  assert_equals(-1, all_calls(0)) ' foo() calls nothing
-  assert_equals( 1, all_calls(1)) ' *global* calls foo()
-  assert_equals(-1, all_calls(2))
+  assert_int_equals(3, all_calls_sz)
+  assert_int_equals(-1, all_calls(0)) ' foo() calls nothing
+  assert_int_equals( 1, all_calls(1)) ' *global* calls foo()
+  assert_int_equals(-1, all_calls(2))
 
 End Sub
 
@@ -119,16 +119,16 @@ Sub test_self_recursive_sub()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_equals(2, map.size%(subs$()))
+  assert_int_equals(2, map.size%(subs$()))
   assert_string_equals("*GLOBAL*,input.bas,1,2", map.get$(subs$(), "*global*"))
   assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
-  assert_equals(4, all_calls_sz)
-  assert_equals(1, all_calls(0))
-  assert_equals(-1, all_calls(1))
-  assert_equals(1, all_calls(2))
-  assert_equals(-1, all_calls(3))
+  assert_int_equals(4, all_calls_sz)
+  assert_int_equals(1, all_calls(0))
+  assert_int_equals(-1, all_calls(1))
+  assert_int_equals(1, all_calls(2))
+  assert_int_equals(-1, all_calls(3))
 
 End Sub
 
@@ -149,15 +149,15 @@ Sub test_self_recursive_fn()
   Next pass
 
   ' Check the contents of the 'subs' map.
-  assert_equals(2, map.size%(subs$()))
+  assert_int_equals(2, map.size%(subs$()))
   assert_string_equals("*GLOBAL*,input.bas,1,2", map.get$(subs$(), "*global*"))
   assert_string_equals("foo,input.bas,1,0", map.get$(subs$(), "foo"))
 
   ' Check the contents of 'all_calls()'.
-  assert_equals(4, all_calls_sz)
-  assert_equals(1, all_calls(0))
-  assert_equals(-1, all_calls(1))
-  assert_equals(1, all_calls(2))
-  assert_equals(-1, all_calls(3))
+  assert_int_equals(4, all_calls_sz)
+  assert_int_equals(1, all_calls(0))
+  assert_int_equals(-1, all_calls(1))
+  assert_int_equals(1, all_calls(2))
+  assert_int_equals(-1, all_calls(3))
 
 End Sub

@@ -67,7 +67,7 @@ End Sub
 Sub test_colour()
   cli.parse("--colour " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.colour)
+  assert_int_equals(1, opt.colour)
 
   cli.parse("-C=1 " + input_file$)
   assert_error("option '-C' does not expect argument")
@@ -77,12 +77,12 @@ Sub test_no_comments()
   opt.comments = 999
   cli.parse("--no-comments " + input_file$)
   assert_no_error()
-  assert_equals(0, opt.comments)
+  assert_int_equals(0, opt.comments)
 
   opt.comments = 999
   cli.parse("-n " + input_file$)
   assert_no_error()
-  assert_equals(0, opt.comments)
+  assert_int_equals(0, opt.comments)
 
   cli.parse("--no-comments=1" + input_file$)
   assert_error("option '--no-comments' does not expect argument")
@@ -91,11 +91,11 @@ End Sub
 Sub test_empty_lines()
   cli.parse("--empty-lines=0 " + input_file$)
   assert_no_error()
-  assert_equals(0, opt.empty_lines)
+  assert_int_equals(0, opt.empty_lines)
 
   cli.parse("--empty-lines=1 " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.empty_lines)
+  assert_int_equals(1, opt.empty_lines)
 
   cli.parse("--empty-lines " + input_file$)
   assert_error("option '--empty-lines' expects {0|1} argument")
@@ -107,7 +107,7 @@ End Sub
 Sub test_format_only()
   cli.parse("--format-only " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.format_only)
+  assert_int_equals(1, opt.format_only)
 
   cli.parse("-f=1 " + input_file$)
   assert_error("option '-f' does not expect argument")
@@ -116,32 +116,32 @@ End Sub
 Sub test_indent()
   cli.parse("--indent=0 " + input_file$)
   assert_no_error()
-  assert_equals(0, opt.indent_sz)
+  assert_int_equals(0, opt.indent_sz)
 
   cli.parse("--indent=1 " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.indent_sz)
+  assert_int_equals(1, opt.indent_sz)
 
   cli.parse("--indent " + input_file$)
   assert_error("option '--indent' expects <number> argument")
 
   cli.parse("--indent=3 " + input_file$)
   assert_no_error()
-  assert_equals(3, opt.indent_sz)
+  assert_int_equals(3, opt.indent_sz)
 End Sub
 
 Sub test_spacing()
   cli.parse("--spacing=0 " + input_file$)
   assert_no_error()
-  assert_equals(0, opt.spacing)
+  assert_int_equals(0, opt.spacing)
 
   cli.parse("--spacing=1 " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.spacing)
+  assert_int_equals(1, opt.spacing)
 
   cli.parse("--spacing=2 " + input_file$)
   assert_no_error()
-  assert_equals(2, opt.spacing)
+  assert_int_equals(2, opt.spacing)
 
   cli.parse("--spacing " + input_file$)
   assert_error("option '--spacing' expects {0|1|2} argument")
@@ -180,12 +180,12 @@ Sub test_everything()
   cli.parse("-f -C -e=1 -i=2 -s=0 -n " + input_file$ + " " + output_file$)
 
   assert_no_error()
-  assert_equals(1, opt.format_only)
+  assert_int_equals(1, opt.format_only)
   assert_string_equals("input.bas", opt.infile$)
   assert_string_equals("output.bas", opt.outfile$)
-  assert_equals(1, opt.colour)
-  assert_equals(0, opt.comments)
-  assert_equals(1, opt.empty_lines)
-  assert_equals(2, opt.indent_sz)
-  assert_equals(0, opt.spacing)
+  assert_int_equals(1, opt.colour)
+  assert_int_equals(0, opt.comments)
+  assert_int_equals(1, opt.empty_lines)
+  assert_int_equals(2, opt.indent_sz)
+  assert_int_equals(0, opt.spacing)
 End Sub

@@ -52,7 +52,7 @@ Sub test_capacity()
   Local my_set$(set.new%(20))
   set.init(my_set$())
 
-  assert_equals(20, set.capacity%(my_set$()))
+  assert_int_equals(20, set.capacity%(my_set$()))
 End Sub
 
 Sub test_clear()
@@ -65,7 +65,7 @@ Sub test_clear()
 
   set.clear(my_set$())
 
-  assert_equals(0, set.size%(my_set$()))
+  assert_int_equals(0, set.size%(my_set$()))
   Local i%
   For i% = base% To base% + 19 : assert_string_equals(sys.NO_DATA$, my_set$(i%)) : Next
 End Sub
@@ -77,7 +77,7 @@ Sub test_clear_given_empty()
 
   set.clear(my_set$())
 
-  assert_equals(0, set.size%(my_set$()))
+  assert_int_equals(0, set.size%(my_set$()))
   Local i%
   For i% = base% To base% + 19 : assert_string_equals(sys.NO_DATA$, my_set$(i%)) : Next
 End Sub
@@ -89,11 +89,11 @@ Sub test_clear_given_full()
 
   Local i%
   For i% = base% To base% + 19 : set.put(my_set$(), "item" + Str$(i%)) : Next
-  assert_equals(20, set.size%(my_set$()))
+  assert_int_equals(20, set.size%(my_set$()))
 
   set.clear(my_set$())
 
-  assert_equals(0, set.size%(my_set$()))
+  assert_int_equals(0, set.size%(my_set$()))
   For i% = base% To base% + 19 : assert_string_equals(sys.NO_DATA$, my_set$(i%)) : Next
 End Sub
 
@@ -105,9 +105,9 @@ Sub test_get()
   set.put(my_set$(), "foo")
   set.put(my_set$(), "bar")
 
-  assert_equals(base% + 0, set.get%(my_set$(), "bar"))
-  assert_equals(base% + 1, set.get%(my_set$(), "foo"))
-  assert_equals(-1, set.get%(my_set$(), "wombat"))
+  assert_int_equals(base% + 0, set.get%(my_set$(), "bar"))
+  assert_int_equals(base% + 1, set.get%(my_set$(), "foo"))
+  assert_int_equals(-1, set.get%(my_set$(), "wombat"))
 End Sub
 
 Sub test_put()
@@ -118,7 +118,7 @@ Sub test_put()
   set.put(my_set$(), "foo")
   set.put(my_set$(), "bar")
 
-  assert_equals(2, set.size%(my_set$()))
+  assert_int_equals(2, set.size%(my_set$()))
   assert_string_equals("bar", my_set$(base% + 0))
   assert_string_equals("foo", my_set$(base% + 1))
 End Sub
@@ -130,7 +130,7 @@ Sub test_put_given_full()
 
   Local i%
   For i% = base% To base% + 19 : set.put(my_set$(), "item" + Str$(i%)) : Next
-  assert_equals(20, set.size%(my_set$()))
+  assert_int_equals(20, set.size%(my_set$()))
 
   On Error Ignore
   set.put(my_set$(), "too many")
@@ -149,7 +149,7 @@ Sub test_put_given_present()
   set.put(my_set$(), "foo")
   set.put(my_set$(), "bar")
 
-  assert_equals(2, set.size%(my_set$()))
+  assert_int_equals(2, set.size%(my_set$()))
   assert_string_equals("bar", my_set$(base% + 0))
   assert_string_equals("foo", my_set$(base% + 1))
 End Sub
@@ -164,13 +164,13 @@ Sub test_remove()
 
   set.remove(my_set$(), "bar")
 
-  assert_equals(1, set.size%(my_set$()))
-  assert_equals(base% + 0, set.get%(my_set$(), "foo"))
-  assert_equals(-1, set.get%(my_set$(), "bar"))
+  assert_int_equals(1, set.size%(my_set$()))
+  assert_int_equals(base% + 0, set.get%(my_set$(), "foo"))
+  assert_int_equals(-1, set.get%(my_set$(), "bar"))
 
   set.remove(my_set$(), "foo")
 
-  assert_equals(0, set.size%(my_set$()))
-  assert_equals(-1, set.get%(my_set$(), "foo"))
-  assert_equals(-1, set.get%(my_set$(), "bar"))
+  assert_int_equals(0, set.size%(my_set$()))
+  assert_int_equals(-1, set.get%(my_set$(), "foo"))
+  assert_int_equals(-1, set.get%(my_set$(), "bar"))
 End Sub

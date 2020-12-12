@@ -77,7 +77,7 @@ End Sub
 Sub test_all()
   cli.parse("--all " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.all)
+  assert_int_equals(1, opt.all)
 
   cli.parse("-A=1 " + input_file$)
   assert_error("option '-A' does not expect argument")
@@ -86,7 +86,7 @@ End Sub
 Sub test_brief()
   cli.parse("--brief " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.brief)
+  assert_int_equals(1, opt.brief)
 
   cli.parse("-b=1 " + input_file$)
   assert_error("option '-b' does not expect argument")
@@ -95,7 +95,7 @@ End Sub
 Sub test_no_location()
   cli.parse("--no-location " + input_file$)
   assert_no_error()
-  assert_equals(1, opt.no_location)
+  assert_int_equals(1, opt.no_location)
 
   cli.parse("--no-location=1 " + input_file$)
   assert_error("option '--no-location' does not expect argument")

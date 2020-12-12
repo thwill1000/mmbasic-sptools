@@ -36,7 +36,7 @@ End Sub
 Sub test_colour()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, opt.colour)
+  assert_int_equals(0, opt.colour)
 
   elements$(0) = "0"
   elements$(1) = "off"
@@ -47,7 +47,7 @@ Sub test_colour()
   Do While elements$(i) <> Chr$(0)
     opt.colour = 999
     opt.set("colour", elements$(i))
-    assert_equals(0, opt.colour)
+    assert_int_equals(0, opt.colour)
     i = i + 1
   Loop
 
@@ -58,7 +58,7 @@ Sub test_colour()
   Do While elements$(i) <> Chr$(0)
     opt.colour = 999
     opt.set("colour", elements$(i))
-    assert_equals(1, opt.colour)
+    assert_int_equals(1, opt.colour)
     i = i + 1
   Loop
 
@@ -69,7 +69,7 @@ End Sub
 Sub test_comments()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, opt.comments)
+  assert_int_equals(-1, opt.comments)
 
   elements$(0) = "preserve"
   elements$(1) = "default"
@@ -81,7 +81,7 @@ Sub test_comments()
   Do While elements$(i) <> Chr$(0)
     opt.comments = 999
     opt.set("comments", elements$(i))
-    assert_equals(-1, opt.comments)
+    assert_int_equals(-1, opt.comments)
     i = i + 1
   Loop
 
@@ -94,7 +94,7 @@ Sub test_comments()
   Do While elements$(i) <> Chr$(0)
     opt.comments = 999
     opt.set("comments", elements$(i))
-    assert_equals(0, opt.comments)
+    assert_int_equals(0, opt.comments)
     i = i + 1
   Loop
 
@@ -105,7 +105,7 @@ End Sub
 Sub test_empty_lines()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, opt.empty_lines)
+  assert_int_equals(-1, opt.empty_lines)
 
   elements$(0) = "preserve"
   elements$(1) = "default"
@@ -117,7 +117,7 @@ Sub test_empty_lines()
   Do While elements$(i) <> Chr$(0)
     opt.empty_lines = 999
     opt.set("empty-lines", elements$(i))
-    assert_equals(-1, opt.empty_lines)
+    assert_int_equals(-1, opt.empty_lines)
     i = i + 1
   Loop
 
@@ -130,7 +130,7 @@ Sub test_empty_lines()
   Do While elements$(i) <> Chr$(0)
     opt.comments = 999
     opt.set("empty-lines", elements$(i))
-    assert_equals(0, opt.empty_lines)
+    assert_int_equals(0, opt.empty_lines)
     i = i + 1
   Loop
 
@@ -141,7 +141,7 @@ Sub test_empty_lines()
   Do While elements$(i) <> Chr$(0)
     opt.comments = 999
     opt.set("empty-lines", elements$(i))
-    assert_equals(1, opt.empty_lines)
+    assert_int_equals(1, opt.empty_lines)
     i = i + 1
   Loop
 
@@ -152,7 +152,7 @@ End Sub
 Sub test_format_only()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, opt.format_only)
+  assert_int_equals(0, opt.format_only)
 
   elements$(0) = "0"
   elements$(1) = "off"
@@ -163,7 +163,7 @@ Sub test_format_only()
   Do While elements$(i) <> Chr$(0)
     opt.format_only = 999
     opt.set("format-only", elements$(i))
-    assert_equals(0, opt.format_only)
+    assert_int_equals(0, opt.format_only)
     i = i + 1
   Loop
 
@@ -174,7 +174,7 @@ Sub test_format_only()
   Do While elements$(i) <> Chr$(0)
     opt.format_only = 999
     opt.set("format-only", elements$(i))
-    assert_equals(1, opt.format_only)
+    assert_int_equals(1, opt.format_only)
     i = i + 1
   Loop
 
@@ -185,7 +185,7 @@ End Sub
 Sub test_indent()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, opt.indent_sz)
+  assert_int_equals(-1, opt.indent_sz)
 
   elements$(0) = "-1"
   elements$(1) = "preserve"
@@ -197,7 +197,7 @@ Sub test_indent()
   Do While elements$(i) <> Chr$(0)
     opt.indent_sz = 999
     opt.set("indent", elements$(i))
-    assert_equals(-1, opt.indent_sz)
+    assert_int_equals(-1, opt.indent_sz)
     i = i + 1
   Loop
 
@@ -211,7 +211,7 @@ Sub test_indent()
   Do While elements$(i) <> Chr$(0)
     opt.indent_sz = 999
     opt.set("indent", elements$(i))
-    assert_equals(i, opt.indent_sz)
+    assert_int_equals(i, opt.indent_sz)
     i = i + 1
   Loop
 
@@ -227,7 +227,7 @@ End Sub
 Sub test_spacing()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, opt.spacing)
+  assert_int_equals(-1, opt.spacing)
 
   elements$(0) = "preserve"
   elements$(1) = "default"
@@ -239,7 +239,7 @@ Sub test_spacing()
   Do While elements$(i) <> Chr$(0)
     opt.spacing = 999
     opt.set("spacing", elements$(i))
-    assert_equals(-1, opt.spacing)
+    assert_int_equals(-1, opt.spacing)
     i = i + 1
   Loop
 
@@ -250,7 +250,7 @@ Sub test_spacing()
   Do While elements$(i) <> Chr$(0)
     opt.spacing = 999
     opt.set("spacing", elements$(i))
-    assert_equals(0, opt.spacing)
+    assert_int_equals(0, opt.spacing)
     i = i + 1
   Loop
 
@@ -261,7 +261,7 @@ Sub test_spacing()
   Do While elements$(i) <> Chr$(0)
     opt.spacing = 999
     opt.set("spacing", elements$(i))
-    assert_equals(1, opt.spacing)
+    assert_int_equals(1, opt.spacing)
     i = i + 1
   Loop
 
@@ -272,7 +272,7 @@ Sub test_spacing()
   Do While elements$(i) <> Chr$(0)
     opt.spacing = 999
     opt.set("spacing", elements$(i))
-    assert_equals(2, opt.spacing)
+    assert_int_equals(2, opt.spacing)
     i = i + 1
   Loop
 

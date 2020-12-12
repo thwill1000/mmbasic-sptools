@@ -293,14 +293,14 @@ Sub test_old_tokens_cleared()
   Local i
 
   lx.parse_basic("Dim s$(20) Length 20")
-  assert_equals(7, lx.num)
+  assert_int_equals(7, lx.num)
 
   lx.parse_basic("' comment")
-  assert_equals(1, lx.num)
+  assert_int_equals(1, lx.num)
   For i = 1 To 10
-    assert_equals(0, lx.type(i))
-    assert_equals(0, lx.start(i))
-    assert_equals(0, lx.len(i))
+    assert_int_equals(0, lx.type(i))
+    assert_int_equals(0, lx.start(i))
+    assert_int_equals(0, lx.len(i))
   Next i
 End Sub
 

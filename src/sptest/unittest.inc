@@ -40,16 +40,6 @@ Sub ut.add_failure(msg$)
   list.add(ut.failures$(), Str$(ut.asserts_count%) + ": " + msg$)
 End Sub
 
-' TODO: delete this
-Sub assert_equals(expected%, actual%)
-  Inc ut.asserts_count%
-  If expected% <> actual% Then
-    Local s$ = "Assert equals failed, expected " + Str$(expected%)
-    s$ = s$ + " but actually " + Str$(actual%)
-    ut.add_failure(s$)
-  EndIf
-End Sub
-
 Sub assert_int_equals(expected%, actual%)
   Inc ut.asserts_count%
   If expected% <> actual% Then

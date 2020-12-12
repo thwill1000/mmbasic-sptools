@@ -50,8 +50,8 @@ Sub test_init()
   Local i%
   For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
-  assert_equals(0, map.size%(my_map$()));
-  assert_equals(20, map.capacity%(my_map$()));
+  assert_int_equals(0, map.size%(my_map$()));
+  assert_int_equals(20, map.capacity%(my_map$()));
 End Sub
 
 Sub test_clear()
@@ -68,7 +68,7 @@ Sub test_clear()
   Local i%
   For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
-  assert_equals(0, map.size%(my_map$()));
+  assert_int_equals(0, map.size%(my_map$()));
 End Sub
 
 Sub test_clear_given_empty()
@@ -81,7 +81,7 @@ Sub test_clear_given_empty()
   Local i%
   For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
-  assert_equals(0, map.size%(my_map$()));
+  assert_int_equals(0, map.size%(my_map$()));
 End Sub
 
 Sub test_clear_given_full()
@@ -95,7 +95,7 @@ Sub test_clear_given_full()
 
   For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
-  assert_equals(0, map.size%(my_map$()));
+  assert_int_equals(0, map.size%(my_map$()));
 End Sub
 
 Sub test_get_key_index()
@@ -107,10 +107,10 @@ Sub test_get_key_index()
   map.put(my_map$(), "wom", "bat")
   map.put(my_map$(), "aaa", "bbb")
 
-  assert_equals(base%,     map.get_key_index%(my_map$(), "aaa"))
-  assert_equals(base% + 1, map.get_key_index%(my_map$(), "foo"))
-  assert_equals(base% + 2, map.get_key_index%(my_map$(), "wom"))
-  assert_equals(-1,        map.get_key_index%(my_map$(), "unknown"))
+  assert_int_equals(base%,     map.get_key_index%(my_map$(), "aaa"))
+  assert_int_equals(base% + 1, map.get_key_index%(my_map$(), "foo"))
+  assert_int_equals(base% + 2, map.get_key_index%(my_map$(), "wom"))
+  assert_int_equals(-1,        map.get_key_index%(my_map$(), "unknown"))
 End Sub
 
 Sub test_get()
@@ -136,7 +136,7 @@ Sub test_put()
   map.put(my_map$(), "wom", "bat")
   map.put(my_map$(), "aaa", "bbb")
 
-  assert_equals(3, map.size%(my_map$()))
+  assert_int_equals(3, map.size%(my_map$()))
   assert_string_equals("aaa", my_map$(base% + 0))
   assert_string_equals("bbb", my_map$(base% + 0 + 20))
   assert_string_equals("foo", my_map$(base% + 1))
@@ -157,12 +157,12 @@ Sub test_put_given_full()
   map.put(my_map$(), "too many", "value"))
   assert_true(InStr(Mm.ErrMsg$, "map full") > 0, "Assert failed, expected error not thrown")
   On Error Abort
-  assert_equals(20, map.size%(my_map$()))
+  assert_int_equals(20, map.size%(my_map$()))
 
   ' Unless the key already exists.
   map.put(my_map$(), "key15", "value")
   assert_string_equals("value", map.get$(my_map$(), "key15"))
-  assert_equals(20, map.size%(my_map$()))
+  assert_int_equals(20, map.size%(my_map$()))
 End Sub
 
 Sub test_put_given_present()
@@ -178,7 +178,7 @@ Sub test_put_given_present()
   map.put(my_map$(), "wom", "bat2")
   map.put(my_map$(), "aaa", "bbb2")
 
-  assert_equals(3, map.size%(my_map$()))
+  assert_int_equals(3, map.size%(my_map$()))
   assert_string_equals("aaa",  my_map$(base% + 0))
   assert_string_equals("bbb2", my_map$(base% + 0 + 20))
   assert_string_equals("foo",  my_map$(base% + 1))
@@ -198,7 +198,7 @@ Sub test_remove()
 
   map.remove(my_map$(), "wom")
 
-  assert_equals(2, map.size%(my_map$()))
+  assert_int_equals(2, map.size%(my_map$()))
   assert_string_equals("aaa",        my_map$(base% + 0))
   assert_string_equals("bbb",        my_map$(base% + 0 + 20))
   assert_string_equals("foo",        my_map$(base% + 1))
@@ -208,7 +208,7 @@ Sub test_remove()
 
   map.remove(my_map$(), "aaa")
 
-  assert_equals(1, map.size%(my_map$()))
+  assert_int_equals(1, map.size%(my_map$()))
   assert_string_equals("foo",        my_map$(base% + 0))
   assert_string_equals("bar",        my_map$(base% + 0 + 20))
   assert_string_equals(sys.NO_DATA$, my_map$(base% + 1))
@@ -216,7 +216,7 @@ Sub test_remove()
 
   map.remove(my_map$(), "foo")
 
-  assert_equals(0, map.size%(my_map$()))
+  assert_int_equals(0, map.size%(my_map$()))
   assert_string_equals(sys.NO_DATA$, my_map$(base% + 0))
   assert_string_equals(sys.NO_DATA$, my_map$(base% + 0 + 20))
 End Sub
@@ -231,7 +231,7 @@ Sub test_remove_given_absent()
 
   map.remove(my_map$(), "absent")
 
-  assert_equals(3, map.size%(my_map$()))
+  assert_int_equals(3, map.size%(my_map$()))
   assert_string_equals("aaa", my_map$(base% + 0))
   assert_string_equals("bbb", my_map$(base% + 0 + 20))
   assert_string_equals("foo", my_map$(base% + 1))
@@ -250,7 +250,7 @@ Sub test_remove_given_empty()
   Local i%
   For i% = base% To base% + 39 : assert_string_equals(sys.NO_DATA$, my_map$(i%)) : Next
   assert_string_equals("0", my_map$(base% + 40));
-  assert_equals(0, map.size%(my_map$()));
+  assert_int_equals(0, map.size%(my_map$()));
 End Sub
 
 Sub test_remove_given_full()
@@ -270,5 +270,5 @@ Sub test_remove_given_full()
     EndIf
   Next
   assert_string_equals("19", my_map$(base% + 40));
-  assert_equals(19, map.size%(my_map$()));
+  assert_int_equals(19, map.size%(my_map$()));
 End Sub
