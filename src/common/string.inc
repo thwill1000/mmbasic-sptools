@@ -1,4 +1,4 @@
-' Copyright (c) 2019-20 Thomas Hugo Williams
+' Copyright (c) 2019-2021 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
@@ -13,16 +13,6 @@ Function str.centre$(s$, x%)
   Else
     str.centre$ = s$
   EndIf
-End Function
-
-Function str.join$(a$(), ch$, lb_%, num%)
-  Local lb% = Choice(lb_% = 0, Bound(a$(), 0), lb_%)
-  Local ub% = Choice(num% = 0, Bound(a$(), 1), lb% + num% - 1)
-  Local i%
-  For i% = lb% To ub%
-    If i% > lb% Then Cat str.join$, ch$
-    Cat str.join$, a$(i%)
-  Next
 End Function
 
 Function str.lpad$(s$, x%)

@@ -1,4 +1,4 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
@@ -190,7 +190,7 @@ Function fil.get_canonical$(f_$)
     EndIf
   Loop
 
-  fil.get_canonical$ = str.join$(elements$(), "/", lb%, list.size%(elements$()))
+  fil.get_canonical$ = array.join_strings$(elements$(), "/", lb%, list.size%(elements$()))
 End Function
 
 ' Gets the name of file/directory 'f$' minus any path information.

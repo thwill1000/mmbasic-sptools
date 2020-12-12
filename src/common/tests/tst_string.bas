@@ -1,4 +1,5 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default None
@@ -18,7 +19,6 @@ EndIf
 #Include "../../sptest/unittest.inc"
 
 add_test("test_centre")
-add_test("test_join")
 add_test("test_lpad")
 add_test("test_next_token")
 add_test("test_quote")
@@ -38,18 +38,6 @@ Sub test_centre()
   assert_string_equals("     hello     ", str.centre$("hello", 15))
   assert_string_equals("     hello      ", str.centre$("hello", 16))
   assert_string_equals("hello", str.centre$("hello", 2))
-End Sub
-
-Sub test_join()
-  Local base% = Mm.Info(Option Base)
-  Local a$(array.new%(4)) = ("one", "two", "three", "four")
-
-  assert_string_equals("one,two,three,four", str.join$(a$(), ","))
-  assert_string_equals("one, two, three, four", str.join$(a$(), ", "))
-  assert_string_equals("one", str.join$(a$(), ",", , 1))
-  assert_string_equals("one,two", str.join$(a$(), ",", , 2))
-  assert_string_equals("three,four", str.join$(a$(), ",", base% + 2, 2))
-  assert_string_equals("two,three,four", str.join$(a$(), ",", base% + 1))
 End Sub
 
 Sub test_lpad()

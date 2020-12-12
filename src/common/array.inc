@@ -1,5 +1,5 @@
-' Copyright (c) 2020 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.05
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -71,7 +71,6 @@ End Function
 '
 ' @param  src$()    the source array.
 ' @param  dst$()    the destination array.
-' @param  flags$    "r" to copy elements in reverse order.
 ' @param  src_idx%  the start index in the source,
 '                   if 0/unset then use the index of the first element.
 ' @param  dst_idx%  the start index in the destination,
@@ -97,3 +96,99 @@ Sub array.fill(a$(), x$)
   Local i%
   For i% = lb% To ub% : a$(i%) = x$ : Next
 End Sub
+
+' Returns a string consisting of the concatenated elements of a float array
+' joined together with a delimiter.
+'
+' @param   a!()    the array.
+' @param   delim$  delimiter to place between each element, if empty/unset then uses comma.
+' @param   lb%     lower bound to start from, if 0/unset then the 1st element.
+' @param   num%    number of elements to join, if 0/unset then all elements.
+' @param   slen%   maximum length of string to return, if 0/unset then 255 chars.
+' @return          a string composed of the array elements separated by the delimiter. If the
+'                  string had to be truncated to slen% then it is terminated with an ellipsis "..."
+Function array.join_floats$(a!(), delim$, lb%, num%, slen%)
+  Local delim_$ = Choice(delim$ = "", ",", delim$)
+  Local lb_% = Choice(lb% = 0, Mm.Info(Option Base), lb%)
+  Local ub_% = Choice(num% = 0, Bound(a!(), 1), lb_% + num% - 1)
+  Local slen_% = Choice(slen% = 0, 255, slen%)
+
+  Local s$ = Str$(a!(lb_%))
+  Inc lb_%
+
+  Do While lb_% <= ub_%
+    Cat s$, Left$(delim_$, 255 - Len(s$))
+    Cat s$, Left$(Str$(a!(lb_%)), 255 - Len(s$))
+    Inc lb_%
+  Loop
+
+  If Len(s$) <= slen_% Then
+    array.join_floats$ = s$
+  Else
+    array.join_floats$ = Left$(s$, slen_% - 3) + "..."
+  EndIf
+End Function
+
+' Returns a string consisting of the concatenated elements of an integer array
+' joined together with a delimiter.
+'
+' @param   a%()    the array.
+' @param   delim$  delimiter to place between each element, if empty/unset then uses comma.
+' @param   lb%     lower bound to start from, if 0/unset then the 1st element.
+' @param   num%    number of elements to join, if 0/unset then all elements.
+' @param   slen%   maximum length of string to return, if 0/unset then 255 chars.
+' @return          a string composed of the array elements separated by the delimiter. If the
+'                  string had to be truncated to slen% then it is terminated with an ellipsis "..."
+Function array.join_ints$(a%(), delim$, lb%, num%, slen%)
+  Local delim_$ = Choice(delim$ = "", ",", delim$)
+  Local lb_% = Choice(lb% = 0, Mm.Info(Option Base), lb%)
+  Local ub_% = Choice(num% = 0, Bound(a%(), 1), lb_% + num% - 1)
+  Local slen_% = Choice(slen% = 0, 255, slen%)
+
+  Local s$ = Str$(a%(lb_%))
+  Inc lb_%
+
+  Do While lb_% <= ub_%
+    Cat s$, Left$(delim_$, 255 - Len(s$))
+    Cat s$, Left$(Str$(a%(lb_%)), 255 - Len(s$))
+    Inc lb_%
+  Loop
+
+  If Len(s$) <= slen_% Then
+    array.join_ints$ = s$
+  Else
+    array.join_ints$ = Left$(s$, slen_% - 3) + "..."
+  EndIf
+End Function
+
+' Returns a string consisting of the concatenated elements of a string array
+' joined together with a delimiter.
+'
+' @param   a$()    the array.
+' @param   delim$  delimiter to place between each element, if empty/unset then uses comma.
+' @param   lb%     lower bound to start from, if 0/unset then the 1st element.
+' @param   num%    number of elements to join, if 0/unset then all elements.
+' @param   slen%   maximum length of string to return, if 0/unset then 255 chars.
+' @return          a string composed of the array elements separated by the delimiter. If the
+'                  string had to be truncated to slen% then it is terminated with an ellipsis "..."
+Function array.join_strings$(a$(), delim$, lb%, num%, slen%)
+  Local delim_$ = Choice(delim$ = "", ",", delim$)
+  Local lb_% = Choice(lb% = 0, Mm.Info(Option Base), lb%)
+  Local ub_% = Choice(num% = 0, Bound(a$(), 1), lb_% + num% - 1)
+  Local slen_% = Choice(slen% = 0, 255, slen%)
+
+  Local s$ = a$(lb_%)
+  Inc lb_%
+
+  Do While lb_% <= ub_%
+    Cat s$, Left$(delim_$, 255 - Len(s$))
+    Cat s$, Left$(a$(lb_%), 255 - Len(s$))
+    Inc lb_%
+  Loop
+
+  If Len(s$) <= slen_% Then
+    array.join_strings$ = s$
+  Else
+    array.join_strings$ = Left$(s$, slen_% - 3) + "..."
+  EndIf
+End Function

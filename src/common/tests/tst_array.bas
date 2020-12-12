@@ -1,4 +1,5 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default None
@@ -17,11 +18,16 @@ EndIf
 #Include "../vt100.inc"
 #Include "../../sptest/unittest.inc"
 
+Dim base% = Mm.Info(Option Base)
+
 add_test("test_capacity")
 add_test("test_copy")
 add_test("test_fill")
 add_test("test_case_sens_bsearch")
 add_test("test_case_insens_bsearch")
+add_test("test_join_floats")
+add_test("test_join_ints")
+add_test("test_join_strings")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -40,7 +46,6 @@ Sub test_capacity()
 End Sub
 
 Sub test_copy()
-  Local base% = Mm.Info(Option Base)
   Local src$(array.new%(5)) = ("one", "two", "three", "four", "five")
   Local dst$(array.new%(5))
 
@@ -143,7 +148,6 @@ Sub test_fill()
 End Sub
 
 Sub test_case_sens_bsearch()
-  Local base% = Mm.Info(Option Base)
   Local a$(array.new%(5)) = ("abc", "def", "ghi", "jkl", "mno")
 
   assert_int_equals(base% + 0, array.bsearch%(a$(), "abc"))
@@ -206,7 +210,6 @@ Sub test_case_sens_bsearch()
 End Sub
 
 Sub test_case_insens_bsearch()
-  Local base% = Mm.Info(Option Base)
   Local a$(array.new%(5)) = ("abc", "DEf", "gHi", "jkL", "MNO")
 
   assert_int_equals(base% + 0, array.bsearch%(a$(), "abc", "i"))
@@ -259,4 +262,141 @@ Sub test_case_insens_bsearch()
   assert_int_equals(-1,        array.bsearch%(a$(), "ghi", "i", lb%, num%));
   assert_int_equals(-1,        array.bsearch%(a$(), "jkl", "i", lb%, num%));
   assert_int_equals(-1,        array.bsearch%(a$(), "mno", "i", lb%, num%));
+End Sub
+
+Sub test_join_floats()
+  Local a!(array.new%(5)) = (-7.35, 2.3456789, 0.0, -1.2345678, 9999.9999)
+
+  ' Test default behaviour.
+  assert_string_equals("-7.35,2.3456789,0,-1.2345678,9999.9999", array.join_floats$(a!()))
+
+  ' Test 'delim%' parameter.
+  assert_string_equals("-7.35,2.3456789,0,-1.2345678,9999.9999",     array.join_floats$(a!(), ""))
+  assert_string_equals("-7.35, 2.3456789, 0, -1.2345678, 9999.9999", array.join_floats$(a!(), ", "))
+  assert_string_equals("-7.35*2.3456789*0*-1.2345678*9999.9999",     array.join_floats$(a!(), "*"))
+
+  ' Test 'lb%' parameter.
+  assert_string_equals("-7.35,2.3456789,0,-1.2345678,9999.9999", array.join_floats$(a!(), , base% + 0))
+  assert_string_equals("2.3456789,0,-1.2345678,9999.9999",       array.join_floats$(a!(), , base% + 1))
+  assert_string_equals("0,-1.2345678,9999.9999",                 array.join_floats$(a!(), , base% + 2))
+  assert_string_equals("-1.2345678,9999.9999",                   array.join_floats$(a!(), , base% + 3))
+  assert_string_equals("9999.9999",                              array.join_floats$(a!(), , base% + 4))
+
+  ' Test 'num%' parameter.
+  assert_string_equals("-7.35,2.3456789,0,-1.2345678,9999.9999", array.join_floats$(a!(), , , 0))
+  assert_string_equals("-7.35",                                  array.join_floats$(a!(), , , 1))
+  assert_string_equals("-7.35,2.3456789",                        array.join_floats$(a!(), , , 2))
+  assert_string_equals("-7.35,2.3456789,0",                      array.join_floats$(a!(), , , 3))
+  assert_string_equals("-7.35,2.3456789,0,-1.2345678",           array.join_floats$(a!(), , , 4))
+  assert_string_equals("-7.35,2.3456789,0,-1.2345678,9999.9999", array.join_floats$(a!(), , , 5))
+
+  ' Test 'slen%' parameter.
+  assert_string_equals("...",                                    array.join_floats$(a!(), , , , 3))
+  assert_string_equals("-7....",                                 array.join_floats$(a!(), , , , 6))
+  assert_string_equals("-7.35,...",                              array.join_floats$(a!(), , , , 9))
+  assert_string_equals("-7.35,2.3...",                           array.join_floats$(a!(), , , , 12))
+  assert_string_equals("-7.35,2.3456...",                        array.join_floats$(a!(), , , , 15))
+  assert_string_equals("-7.35,2.3456789,0...",                   array.join_floats$(a!(), , , , 20))
+  assert_string_equals("-7.35,2.3456789,0,-1.2...",              array.join_floats$(a!(), , , , 25))
+  assert_string_equals("-7.35,2.3456789,0,-1.2345678,999...",    array.join_floats$(a!(), , , , 35))
+
+  ' Test it all together.
+  assert_string_equals("2.3456789*0",      array.join_floats$(a!(), "*", base% + 1, 2, 20))
+  assert_string_equals("0*-1.2345678...",  array.join_floats$(a!(), "*", base% + 2, 3, 15))
+End Sub
+
+Sub test_join_ints()
+  Local a%(array.new%(5)) = (-735, 23456789, 0, -12345678, 99999999)
+
+  ' Test default behaviour.
+  assert_string_equals("-735,23456789,0,-12345678,99999999", array.join_ints$(a%()))
+
+  ' Test 'delim%' parameter.
+  assert_string_equals("-735,23456789,0,-12345678,99999999",     array.join_ints$(a%(), ""))
+  assert_string_equals("-735, 23456789, 0, -12345678, 99999999", array.join_ints$(a%(), ", "))
+  assert_string_equals("-735*23456789*0*-12345678*99999999",     array.join_ints$(a%(), "*"))
+
+  ' Test 'lb%' parameter.
+  assert_string_equals("-735,23456789,0,-12345678,99999999", array.join_ints$(a%(), , base% + 0))
+  assert_string_equals("23456789,0,-12345678,99999999",      array.join_ints$(a%(), , base% + 1))
+  assert_string_equals("0,-12345678,99999999",               array.join_ints$(a%(), , base% + 2))
+  assert_string_equals("-12345678,99999999",                 array.join_ints$(a%(), , base% + 3))
+  assert_string_equals("99999999",                           array.join_ints$(a%(), , base% + 4))
+
+  ' Test 'num%' parameter.
+  assert_string_equals("-735,23456789,0,-12345678,99999999", array.join_ints$(a%(), , , 0))
+  assert_string_equals("-735",                               array.join_ints$(a%(), , , 1))
+  assert_string_equals("-735,23456789",                      array.join_ints$(a%(), , , 2))
+  assert_string_equals("-735,23456789,0",                    array.join_ints$(a%(), , , 3))
+  assert_string_equals("-735,23456789,0,-12345678",          array.join_ints$(a%(), , , 4))
+  assert_string_equals("-735,23456789,0,-12345678,99999999", array.join_ints$(a%(), , , 5))
+
+  ' Test 'slen%' parameter.
+  assert_string_equals("...",                                array.join_ints$(a%(), , , , 3))
+  assert_string_equals("-73...",                             array.join_ints$(a%(), , , , 6))
+  assert_string_equals("-735,2...",                          array.join_ints$(a%(), , , , 9))
+  assert_string_equals("-735,2345...",                       array.join_ints$(a%(), , , , 12))
+  assert_string_equals("-735,2345678...",                    array.join_ints$(a%(), , , , 15))
+  assert_string_equals("-735,23456789,0,-...",               array.join_ints$(a%(), , , , 20))
+  assert_string_equals("-735,23456789,0,-12345...",          array.join_ints$(a%(), , , , 25))
+  assert_string_equals("-735,23456789,0,-12345678,99999999", array.join_ints$(a%(), , , , 35))
+
+  ' Test it all together.
+  assert_string_equals("23456789*0",      array.join_ints$(a%(), "*", base% + 1, 2, 20))
+  assert_string_equals("0*-12345678*...", array.join_ints$(a%(), "*", base% + 2, 3, 15))
+End Sub
+
+Sub test_join_strings()
+  Local a$(array.new%(5)) = ("one", "two", "three", "four", "five")
+
+  ' Test default behaviour.
+  assert_string_equals("one,two,three,four,five", array.join_strings$(a$()))
+
+  ' Test 'delim%' parameter.
+  assert_string_equals("one,two,three,four,five",     array.join_strings$(a$(), ""))
+  assert_string_equals("one, two, three, four, five", array.join_strings$(a$(), ", "))
+  assert_string_equals("one*two*three*four*five",     array.join_strings$(a$(), "*"))
+
+  ' Test 'lb%' parameter.
+  assert_string_equals("one,two,three,four,five", array.join_strings$(a$(), , base% + 0))
+  assert_string_equals("two,three,four,five",     array.join_strings$(a$(), , base% + 1))
+  assert_string_equals("three,four,five",         array.join_strings$(a$(), , base% + 2))
+  assert_string_equals("four,five",               array.join_strings$(a$(), , base% + 3))
+  assert_string_equals("five",                    array.join_strings$(a$(), , base% + 4))
+
+  ' Test 'num%' parameter.
+  assert_string_equals("one,two,three,four,five", array.join_strings$(a$(), , , 0))
+  assert_string_equals("one",                     array.join_strings$(a$(), , , 1))
+  assert_string_equals("one,two",                 array.join_strings$(a$(), , , 2))
+  assert_string_equals("one,two,three",           array.join_strings$(a$(), , , 3))
+  assert_string_equals("one,two,three,four",      array.join_strings$(a$(), , , 4))
+  assert_string_equals("one,two,three,four,five", array.join_strings$(a$(), , , 5))
+
+  ' Test 'slen%' parameter.
+  assert_string_equals("...",                     array.join_strings$(a$(), , , , 3))
+  assert_string_equals("o...",                    array.join_strings$(a$(), , , , 4))
+  assert_string_equals("on...",                   array.join_strings$(a$(), , , , 5))
+  assert_string_equals("one...",                  array.join_strings$(a$(), , , , 6))
+  assert_string_equals("one,...",                 array.join_strings$(a$(), , , , 7))
+  assert_string_equals("one,t...",                array.join_strings$(a$(), , , , 8))
+  assert_string_equals("one,tw...",               array.join_strings$(a$(), , , , 9))
+  assert_string_equals("one,two...",              array.join_strings$(a$(), , , , 10))
+  assert_string_equals("one,two,...",             array.join_strings$(a$(), , , , 11))
+  assert_string_equals("one,two,t...",            array.join_strings$(a$(), , , , 12))
+  assert_string_equals("one,two,th...",           array.join_strings$(a$(), , , , 13))
+  assert_string_equals("one,two,thr...",          array.join_strings$(a$(), , , , 14))
+  assert_string_equals("one,two,thre...",         array.join_strings$(a$(), , , , 15))
+  assert_string_equals("one,two,three...",        array.join_strings$(a$(), , , , 16))
+  assert_string_equals("one,two,three,...",       array.join_strings$(a$(), , , , 17))
+  assert_string_equals("one,two,three,f...",      array.join_strings$(a$(), , , , 18))
+  assert_string_equals("one,two,three,fo...",     array.join_strings$(a$(), , , , 19))
+  assert_string_equals("one,two,three,fou...",    array.join_strings$(a$(), , , , 20))
+  assert_string_equals("one,two,three,four...",   array.join_strings$(a$(), , , , 21))
+  assert_string_equals("one,two,three,four,...",  array.join_strings$(a$(), , , , 22))
+  assert_string_equals("one,two,three,four,five", array.join_strings$(a$(), , , , 23))
+  assert_string_equals("one,two,three,four,five", array.join_strings$(a$(), , , , 24))
+
+  ' Test it all together.
+  assert_string_equals("two*t...",  array.join_strings$(a$(), "*", base% + 1, 2, 8))
+  assert_string_equals("two*three", array.join_strings$(a$(), "*", base% + 1, 2, 9))
 End Sub
