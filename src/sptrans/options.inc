@@ -1,4 +1,4 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
@@ -7,20 +7,24 @@ sys.provides("options")
 If sys.err$ <> "" Then Error sys.err$
 
 Dim opt.colour       '  0    : no syntax colouring of console output
-                    '  1    : VT100 syntax colouring of console output
+                     '  1    : VT100 syntax colouring of console output
 Dim opt.comments     ' -1    : preserve comments
-                    '  0    : omit all comments
+                     '  0    : omit all comments
 Dim opt.empty_lines  ' -1    : preserve empty lines
-                    '  0    : omit all empty lines
-                    '  1    : include empty line between each Function/Sub
+                     '  0    : omit all empty lines
+                     '  1    : include empty line between each Function/Sub
 Dim opt.format_only  '  0    : transpile
-                    '  1    : just format / pretty-print
+                     '  1    : just format / pretty-print
 Dim opt.indent_sz    ' -1    : preserve indenting
-                    '  0..N : automatically indent by N spaces per level
+                     '  0..N : automatically indent by N spaces per level
+Dim opt.keywords     ' -1    : preserve keyword capitalisation
+                     '  0    : lowercase keywords
+                     '  1    : PascalCase keywords
+                     '  2    : UPPERCASE keywords
 Dim opt.spacing      ' -1    : preserve spacing
-                    '  0    : omit all unnecessary (non-indent) spaces
-                    '  1    : space compactly
-                    '  2    : space generously
+                     '  0    : omit all unnecessary (non-indent) spaces
+                     '  1    : space compactly
+                     '  2    : space generously
 Dim opt.infile$      ' input file/path
 Dim opt.outfile$     ' output file/path, empty for output to console
 
@@ -30,6 +34,7 @@ Sub opt.init()
   opt.empty_lines = -1
   opt.format_only = 0
   opt.indent_sz = -1
+  opt.keywords = -1
   opt.spacing = -1
   opt.infile$ = ""
   opt.outfile$ = ""
@@ -45,6 +50,7 @@ Sub opt.set(name$, value$)
     Case "empty-lines" : opt.set_empty_lines(value$)
     Case "format-only" : opt.set_format_only(value$)
     Case "indent"      : opt.set_indent_sz(value$)
+    Case "keywords"    : opt.set_keywords(value$)
     Case "no-comments" : opt.set_no_comments(value$)
     Case "spacing"     : opt.set_spacing(value$)
     Case "infile"      : opt.set_infile(value$)
@@ -100,6 +106,17 @@ Sub opt.set_indent_sz(value$)
         sys.err$= "expects 'on|<number>' argument"
       EndIf
     End Select
+  End Select
+End Sub
+
+Sub opt.set_keywords(value$)
+  Select Case LCase$(value$)
+    Case "preserve", "default", "on", "-1", "" : opt.keywords = -1
+    Case "lower", "l", "0"                     : opt.keywords = 0
+    Case "pascal", "mixed", "m", "p", "1"      : opt.keywords = 1
+    Case "upper", "u", "2"                     : opt.keywords = 2
+    Case Else
+      sys.err$ = "expects 'preserve|lower|pascal|upper' argument"
   End Select
 End Sub
 

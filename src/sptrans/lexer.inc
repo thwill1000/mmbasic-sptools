@@ -1,8 +1,10 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.requires("set")
+sys.requires("keywords")
 sys.provides("lexer")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -17,9 +19,6 @@ Const TK_DIRECTIVE = 7
 Const TK_OPTION = 8
 '!endif
 
-Dim lx.keywords$(set.new%(1000)) Length 20
-set.init(lx.keywords$())
-
 Const LX_MAX_TOKENS = 255 ' In theory every character may be a separate token.
 Dim lx.type(LX_MAX_TOKENS - 1)
 Dim lx.start(LX_MAX_TOKENS - 1)
@@ -30,21 +29,6 @@ Dim lx.line$
 Dim lx.next_char$
 Dim lx.num
 Dim lx.pos
-
-Sub lx.load_keywords(f$)
-  Local i, s$
-
-  Open f$ For Input As #1
-
-  Do
-    Line Input #1, s$
-    If Len(s$) > 0 And Left$(s$, 1) <> "'" Then
-      set.put(lx.keywords$(), LCase$(s$))
-    EndIf
-  Loop While Not Eof(#1)
-
-  Close #1
-End Sub
 
 Sub lx.parse_basic(line$)
   lx.reset.globals(line$)
@@ -60,7 +44,7 @@ Sub lx.parse_basic(line$)
     ElseIf lx.char$ = Chr$(34) Then
       lx.parse_string()
     ElseIf InStr("@#_abcdefghijklmnopqrstuvwxyz", lx.char$) Then
-      lx.parse_keyword()
+      lx.parse_identifier()
     Else
       lx.parse_symbol()
     EndIf
@@ -212,22 +196,18 @@ Sub lx.advance_until(disallowed$)
   Do While Not InStr(disallowed$, lx.char$) > 0 : lx.advance() : Loop
 End Sub
 
-Sub lx.parse_keyword()
+Sub lx.parse_identifier()
   Local start = lx.pos
 
   lx.advance()
   lx.advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
   If InStr("$!%", lx.char$) Then lx.advance()
-  If lx.is_keyword(Mid$(lx.line$, start, lx.pos - start)) Then
+  If keywords.contains(Mid$(lx.line$, start, lx.pos - start)) Then
     lx.store(TK_KEYWORD, start, lx.pos - start)
   Else
     lx.store(TK_IDENTIFIER, start, lx.pos - start)
   EndIf
 End Sub
-
-Function lx.is_keyword(t$)
-  lx.is_keyword = set.get%(lx.keywords$(), LCase$(t$)) > -1
-End Function
 
 Sub lx.parse_symbol()
   Local start = lx.pos
@@ -300,7 +280,7 @@ Sub lx.parse_command_line(line$)
     ElseIf lx.char$ = Chr$(34) Then
       lx.parse_string()
     ElseIf InStr("@#_abcdefghijklmnopqrstuvwxyz", lx.char$) Then
-      lx.parse_keyword()
+      lx.parse_identifier()
     ElseIf InStr("-/", lx.char$) Then
       lx.parse_option()
     Else

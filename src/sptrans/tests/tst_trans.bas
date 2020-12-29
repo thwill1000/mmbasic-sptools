@@ -1,4 +1,5 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
@@ -15,10 +16,11 @@ Dim in.num_open_files = 1
 #Include "../../common/set.inc"
 #Include "../../common/vt100.inc"
 #Include "../../sptest/unittest.inc"
+#Include "../keywords.inc"
 #Include "../lexer.inc"
 #Include "../trans.inc"
 
-lx.load_keywords("\sptools\resources\keywords.txt")
+keywords.load("\sptools\resources\keywords.txt")
 
 add_test("test_replace")
 

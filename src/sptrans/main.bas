@@ -1,4 +1,5 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
@@ -16,6 +17,7 @@ Const CR$ = Chr$(13)
 #Include "../common/sptools.inc"
 #Include "../common/vt100.inc"
 #Include "input.inc"
+#Include "keywords.inc"
 #Include "lexer.inc"
 #Include "options.inc"
 #Include "output.inc"
@@ -60,7 +62,7 @@ Sub main()
     opt.colour = 0
   EndIf
 
-  lx.load_keywords(SPT_RESOURCES_DIR$ + "/keywords.txt")
+  keywords.load(SPT_RESOURCES_DIR$ + "/keywords.txt")
 
   ' No line numbers when output to file.
   If opt.outfile$ <> "" Then out.line_num_fmt$ = ""

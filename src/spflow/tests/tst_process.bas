@@ -1,4 +1,5 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
@@ -12,6 +13,7 @@ Option Default Integer
 #Include "../../common/set.inc"
 #Include "../../common/vt100.inc"
 #Include "../../sptest/unittest.inc"
+#Include "../../sptrans/keywords.inc"
 #Include "../../sptrans/lexer.inc"
 #Include "../options.inc"
 #Include "../process.inc"

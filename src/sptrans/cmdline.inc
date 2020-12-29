@@ -1,4 +1,4 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
@@ -24,6 +24,7 @@ Sub cli.parse(s$)
       Case "e", "empty-lines" : cli.parse_arg("empty-lines", i, "{0|1}")
       Case "f", "format-only" : cli.parse_no_arg("format-only", i)
       Case "i", "indent"      : cli.parse_arg("indent", i, "<number>")
+      Case "k", "keywords"    : cli.parse_arg("keywords", i, "{l|p|u}")
       Case "h", "help"        : cli.usage() : End
       Case "n", "no-comments" : cli.parse_no_arg("no-comments", i)
       Case "s", "spacing"     : cli.parse_arg("spacing", i, "{0|1|2}")
@@ -86,18 +87,23 @@ Sub cli.usage()
   Print "  -e, --empty-lines=0|1  controls output of empty lines:"
   Print "                           0 - omit all empty lines"
   Print "                           1 - include one empty line between each Function/Sub"
-  Print "                         if ommitted then original formatting will be preserved"
+  Print "                         if ommitted then original line spacing will be preserved"
   Print "  -f, --format-only      only format the output, do not follow #Includes or"
   Print "                         process directives"
   Print "  -h, --help             display this help and exit"
   Print "  -i, --indent=NUM       automatically indent output by NUM spaces per level,"
   Print "                         if omitted then original formatting will be preserved"
+  Print "  -k, --keywords=l|p|u   controls keyword capitalisation:"
+  Print "                           l - lowercase"
+  Print "                           p - PascalCase"
+  Print "                           u - UPPERCASE"
+  Print "                         if omitted then original capitalisation will be preserved"
   Print "  -n, --no-comments      do not include comments in the output"
   Print "  -s, --spacing=0|1|2    controls output of spaces between tokens:"
   Print "                           0 - omit all unnecessary spaces"
   Print "                           1 - compact spacing"
   Print "                           2 - generous spacing"
-  Print "                         if omitted then original formatting will be preserved"
+  Print "                         if omitted then original token spacing will be preserved"
   Print "  -v, --version          output version information and exit"
   Print
   Print "Note that --no-comments, --empty-lines, --indent and --spacing will be overridden by"

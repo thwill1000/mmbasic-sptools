@@ -1,4 +1,13 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
+
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("keywords")
+sys.requires("lexer")
+sys.requires("options")
+sys.provides("pprint")
+If sys.err$ <> "" Then Error sys.err$
 
 Dim TK_COLOUR$(7)
 TK_COLOUR$(TK_IDENTIFIER) = vt100.colour$("white")
@@ -72,7 +81,16 @@ Sub pp.print_line()
 
     ' Output the token with a trailing space where required.
     If opt.colour Then out.print(TK_COLOUR$(lx.type(i)))
-    out.print(lx.token$(i) + Space$(pp.num_spaces(i)))
+    u$ = lx.token$(i)
+    If lx.type(i) = TK_KEYWORD Then
+      u$ = keywords.get$(u$)
+      If u$ = sys.NO_DATA$ Then Error
+      Select Case opt.keywords
+        Case  0 : u$ = LCase$(u$)
+        Case  2 : u$ = UCase$(u$)
+      End Select
+    EndIf
+    out.print(u$ + Space$(pp.num_spaces(i)))
 
     ' Tokens requiring us to increase the indent level after printing them.
     If t$ = " do " Then
