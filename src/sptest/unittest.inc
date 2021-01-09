@@ -1,24 +1,41 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("file", "list", "string", "vt100")
+sys.requires("array", "file", "list", "string", "vt100")
 sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 
-Dim ut.test_names$(list.new%(100)) Length 128
-Dim ut.test_subs$(list.new%(100)) Length 40
-Dim ut.failures$(list.new%(100))
+Const ut.MAX_FAILURES% = 100
+Const ut.MAX_TESTS% = 100
+
 Dim ut.asserts_count%
+Dim ut.failure_count%
+Dim ut.failure_len%(array.new%(ut.MAX_FAILURES%))
+Dim ut.failure_start%(array.new%(ut.MAX_FAILURES%))
+Dim ut.failure_txt%(1000)
+Dim ut.test_names$(list.new%(ut.MAX_TESTS%)) Length 128
+Dim ut.test_subs$(list.new%(ut.MAX_TESTS%)) Length 40
 
 list.init(ut.test_names$())
 list.init(ut.test_subs$())
-list.init(ut.failures$())
 
 Sub add_test(name$, sub$)
   list.add(ut.test_names$(), name$)
   list.add(ut.test_subs$(), Choice(sub$ = "", name$, sub$))
+End Sub
+
+Sub ut.add_failure(msg$)
+  Inc ut.failure_count%
+  ut.failure_start%(ut.failure_count% + Mm.Info(Option Base) - 1) = LLen(ut.failure_txt%()) + 1
+  LongString Append ut.failure_txt%(), Str$(ut.asserts_count%) + ": " + msg$
+  ut.update_failure()
+End Sub
+
+Sub ut.update_failure()
+  Local i% = ut.failure_count% + Mm.Info(Option Base) - 1
+  ut.failure_len%(i%) = LLen(ut.failure_txt%()) - ut.failure_start%(i%) + 1
 End Sub
 
 Sub assert_fail(msg$)
@@ -34,10 +51,6 @@ End Sub
 Sub assert_true(z%, msg$)
   Inc ut.asserts_count%
   If Not z% Then ut.add_failure(Choice(msg$ = "", "assert_true() failed", msg$))
-End Sub
-
-Sub ut.add_failure(msg$)
-  list.add(ut.failures$(), Str$(ut.asserts_count%) + ": " + msg$)
 End Sub
 
 Sub assert_int_equals(expected%, actual%)
@@ -70,11 +83,20 @@ Sub assert_string_equals(expected_$, actual_$)
     If Len(expected_$) = 1 Then expected$ = "Chr$(" + Str$(Asc(expected_$)) + ")"
     If Len(actual_$) = 1 Then actual$ = "Chr$(" + Str$(Asc(actual_$)) + ")"
 
-    Local s$ = "Assert equals failed, expected " + expected$
-    Cat s$, " but actually " + actual$
+    Local s$ = "Assert equals failed, expected " + ut.sanitise_string$(expected$)
+    Cat s$, " but actually " + ut.sanitise_string$(actual$)
     ut.add_failure(s$)
   EndIf
 End Sub
+
+Function ut.sanitise_string$(s$)
+  Local c%, i%, s2$
+  For i% = 1 To Len(s$)
+    c% = Peek(Var s$, i%)
+    Cat s2$, Choice(c% < 32 Or c% > 126, "<" + Str$(c%) + ">", Chr$(c%))
+  Next
+  ut.sanitise_string$ = s2$
+End Function
 
 Sub assert_int_array_equals(expected%(), actual%())
   Local base% = Mm.Info(Option Base)
@@ -158,17 +180,22 @@ Sub assert_string_array_equals(expected$(), actual$())
   EndIf
 
   If fail% Then
-    Local s$ = "Assert array equals failed, expected:" + sys.CRLF$ + "      "
+    ut.add_failure("Assert array equals failed, expected:")
+    Local width% = Len(Str$(Bound(expected$(), 1)))
     For i% = base% To Bound(expected$(), 1)
-      If i% <> base% Then Cat s$, ", "
-      Cat s$, str.quote$(expected$(i%))
+      If expected$(i%) = actual$(i%) Then Continue For
+      LongString Append ut.failure_txt%(), sys.CRLF$
+      LongString Append ut.failure_txt%(), Format$(i%, "      [%" + Str$(width%) + ".0f] ")
+      LongString Append ut.failure_txt%(), str.quote$(ut.sanitise_string$(expected$(i%))))
     Next
-    Cat s$, sys.CRLF$ + "    but actually: " + sys.CRLF$ + "      "
+    LongString Append ut.failure_txt%(), sys.CRLF$ + "    but actually:")
     For i% = base% To Bound(actual$(), 1)
-      If i% <> base% Then Cat s$, ", "
-      Cat s$, str.quote$(actual$(i%))
+      If expected$(i%) = actual$(i%) Then Continue For
+      LongString Append ut.failure_txt%(), sys.CRLF$
+      LongString Append ut.failure_txt%(), Format$(i%, "      [%" + Str$(width%) + ".0f] ")
+      LongString Append ut.failure_txt%(), str.quote$(ut.sanitise_string$(actual$(i%))))
     Next
-    ut.add_failure(s$)
+    ut.update_failure()
   EndIf
 End Sub
 
@@ -249,7 +276,8 @@ Function ut.run_single_test%(idx%)
   EndIf
 
   ut.asserts_count% = 0
-  list.clear(ut.failures$())
+  ut.failure_count% = 0
+  LongString Clear ut.failure_txt%()
 
   If catch_errors% Then On Error Ignore
 
@@ -263,28 +291,31 @@ Function ut.run_single_test%(idx%)
     On Error Abort
   EndIf
 
-  Local num_failed_asserts% = list.size%(ut.failures$())
-
   If ut.is_verbose%() Then
-    If num_failed_asserts% = 0 Then
+    If ut.failure_count% = 0 Then
       ut.print_colour("green")
       Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")";
-    Else If num_failed_asserts% > 0 Then
+    Else If ut.failure_count% > 0 Then
       ut.print_colour("red")
-      Print "FAIL ("; Str$(num_failed_asserts%); "/"; Str$(ut.asserts_count%); ")";
-      Local i%
+      Print "FAIL ("; Str$(ut.failure_count%); "/"; Str$(ut.asserts_count%); ")";
+      Local i%, j%
       Local lb% = Mm.Info(Option Base)
-      Local ub% = lb% + num_failed_asserts% - 1
+      Local ub% = lb% + ut.failure_count% - 1
       For i% = lb% To ub%
         Print
-        Print "    "; ut.failures$(i%);
-      Next i%
+        Print "    ";
+        j% = ut.failure_start%(i%)
+        Do
+          Print LGetStr$(ut.failure_txt%(), j%, Min(255, ut.failure_len%(i%)));
+          Inc j%, Min(255, ut.failure_len%(i%))
+        Loop While j% < ut.failure_len%(i%)
+      Next
     EndIf
     ut.print_colour("reset")
     Print
   EndIf
 
-  ut.run_single_test% = num_failed_asserts% = 0
+  ut.run_single_test% = ut.failure_count% = 0
 End Function
 
 ' Should verbose output be generated?
