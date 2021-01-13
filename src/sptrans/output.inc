@@ -1,5 +1,10 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
 
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("output")
+If sys.err$ <> "" Then Error sys.err$
+
 Dim out.append = 0
 Dim out.file_num = 0
 Dim out.line_num = 0
