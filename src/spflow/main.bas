@@ -1,4 +1,4 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 
 Option Explicit On
 Option Default Integer
@@ -6,14 +6,14 @@ Option Default Integer
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
 
-#Include "../common/system.inc"
-#Include "../common/array.inc"
-#Include "../common/list.inc"
-#Include "../common/string.inc"
-#Include "../common/file.inc"
-#Include "../common/map.inc"
-#Include "../common/set.inc"
-#Include "../common/sptools.inc"
+#Include "../splib/system.inc"
+#Include "../splib/array.inc"
+#Include "../splib/list.inc"
+#Include "../splib/string.inc"
+#Include "../splib/file.inc"
+#Include "../splib/map.inc"
+#Include "../splib/set.inc"
+#Include "../splib/sptools.inc"
 #Include "../sptrans/input.inc"
 #Include "../sptrans/lexer.inc"
 #Include "../sptrans/output.inc"

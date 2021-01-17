@@ -1,14 +1,14 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 
 Option Explicit On
 Option Default Integer
 
-#Include "../../common/system.inc"
-#Include "../../common/array.inc"
-#Include "../../common/list.inc"
-#Include "../../common/string.inc"
-#Include "../../common/file.inc"
-#Include "../../common/vt100.inc"
+#Include "../../splib/system.inc"
+#Include "../../splib/array.inc"
+#Include "../../splib/list.inc"
+#Include "../../splib/string.inc"
+#Include "../../splib/file.inc"
+#Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../options.inc"
 

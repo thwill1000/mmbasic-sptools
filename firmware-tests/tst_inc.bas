@@ -1,4 +1,4 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 
 Option Explicit On
 Option Default None
@@ -9,12 +9,12 @@ Else
   Option Base 0
 EndIf
 
-#Include "../src/common/system.inc"
-#Include "../src/common/array.inc"
-#Include "../src/common/list.inc"
-#Include "../src/common/string.inc"
-#Include "../src/common/file.inc"
-#Include "../src/common/vt100.inc"
+#Include "../src/splib/system.inc"
+#Include "../src/splib/array.inc"
+#Include "../src/splib/list.inc"
+#Include "../src/splib/string.inc"
+#Include "../src/splib/file.inc"
+#Include "../src/splib/vt100.inc"
 #Include "../src/sptest/unittest.inc"
 
 Const base% = Mm.Info(Option Base)
