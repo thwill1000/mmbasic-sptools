@@ -19,10 +19,13 @@ EndIf
 #Include "../../sptest/unittest.inc"
 
 add_test("test_centre")
+add_test("test_equals_ignore_case")
 add_test("test_lpad")
 add_test("test_next_token")
 add_test("test_quote")
 add_test("test_rpad")
+add_test("test_trim")
+add_test("test_unquote")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -38,6 +41,13 @@ Sub test_centre()
   assert_string_equals("     hello     ", str.centre$("hello", 15))
   assert_string_equals("     hello      ", str.centre$("hello", 16))
   assert_string_equals("hello", str.centre$("hello", 2))
+End Sub
+
+Sub test_equals_ignore_case()
+  assert_true(str.equals_ignore_case%("", ""))
+  assert_true(str.equals_ignore_case%("foo", "FOO"))
+  assert_true(str.equals_ignore_case%("fOo", "foO"))
+  assert_false(str.equals_ignore_case%("foo", "BAR"))
 End Sub
 
 Sub test_lpad()
@@ -137,4 +147,29 @@ End Sub
 Sub test_rpad()
   assert_string_equals("hello     ", str.rpad$("hello", 10))
   assert_string_equals("hello", str.rpad$("hello", 2))
+End Sub
+
+Sub test_trim()
+  assert_string_equals("f", str.trim$("f"))
+  assert_string_equals("f", str.trim$(" f"))
+  assert_string_equals("f", str.trim$("f "))
+  assert_string_equals("f", str.trim$(" f "))
+  assert_string_equals("foo", str.trim$("  foo"))
+  assert_string_equals("foo", str.trim$("foo   "))
+  assert_string_equals("foo", str.trim$("  foo   "))
+  assert_string_equals("foo bar", str.trim$(" foo bar  "))
+  assert_string_equals("", str.trim$(""))
+  assert_string_equals("", str.trim$(" "))
+  assert_string_equals("", str.trim$("  "))
+  assert_string_equals("", str.trim$("   "))
+
+End Sub
+
+Sub test_unquote()
+  Const QU$ = Chr$(34)
+  assert_string_equals("foo", str.unquote$(QU$ + "foo" + QU$))
+  assert_string_equals(QU$ + "foo", str.unquote$(QU$ + "foo"))
+  assert_string_equals("foo" + QU$, str.unquote$("foo" + QU$))
+  assert_string_equals(" " + QU$ + "foo" + QU$, str.unquote$(" " + QU$ + "foo" + QU$))
+  assert_string_equals(QU$ + "foo" + QU$ + " ", str.unquote$(QU$ + "foo" + QU$ + " "))
 End Sub

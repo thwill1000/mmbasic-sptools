@@ -15,6 +15,11 @@ Function str.centre$(s$, x%)
   EndIf
 End Function
 
+' Compares s1$ and s2$ ignoring case considerations.
+Function str.equals_ignore_case%(s1$, s2$)
+  str.equals_ignore_case% = LCase$(s1$) = LCase$(s2$)
+End Function
+
 Function str.lpad$(s$, x%)
   str.lpad$ = s$
   If Len(s$) < x% Then str.lpad$ = Space$(x% - Len(s$)) + s$
@@ -76,4 +81,28 @@ End Function
 Function str.rpad$(s$, x%)
   str.rpad$ = s$
   If Len(s$) < x% Then str.rpad$ = s$ + Space$(x% - Len(s$))
+End Function
+
+' Returns a copy of s$ with leading and trailing spaces removed.
+Function str.trim$(s$)
+  Local st%, en%
+  For st% = 1 To Len(s$)
+    If Peek(Var s$, st%) <> 32 Then Exit For
+  Next
+  For en% = Len(s$) To 1 Step -1
+    If Peek(Var s$, en%) <> 32 Then Exit For
+  Next
+  If en% >= st% Then str.trim$ = Mid$(s$, st%, en% - st% + 1)
+End Function
+
+' If s$ both begins and ends with " then returns a copy of s$ with those characters removed,
+' otherwise returns an unmodified copy of s$.
+Function str.unquote$(s$)
+  If Peek(Var s$, 1) = 34 Then
+    If Peek(var s$, Len(s$)) = 34 Then
+      str.unquote$ = Mid$(s$, 2, Len(s$) - 2)
+      Exit Function
+    EndIf
+  EndIf
+  str.unquote$ = s$
 End Function

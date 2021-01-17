@@ -9,6 +9,28 @@ If sys.err$ <> "" Then Error sys.err$
 
 Const FIL.PROG_DIR$ = fil.get_parent$(Mm.Info$(Current))
 
+' Gets the number of files in directory d$ whose names match pattern$.
+'
+' @param   d$        directory to process.
+' @param   pattern$  file pattern to match on, e.g. "*.bas".
+' @param   type$     type of files to return, "dir", "file" or "all".
+' @return  the number of matching files.
+Function fil.count_files%(d$, pattern$, type$)
+  Local f$
+
+  Select Case LCase$(type$)
+    Case "all"      : f$ = Dir$(d$ + "/*", All)
+    Case "dir"      : f$ = Dir$(d$ + "/*", Dir)
+    Case "file", "" : f$ = Dir$(d$ + "/*", File)
+    Case Else       : Error "unknown type: " + type$
+  End Select
+
+  Do While f$ <> ""
+    If fil.fnmatch%(pattern$, f$) Then Inc fil.count_files%
+    f$ = Dir$()
+  Loop
+End Function
+
 ' Does the file/directory 'f$' exist?
 '
 ' @return 1 if the file exists, otherwise 0
@@ -193,6 +215,52 @@ Function fil.get_canonical$(f_$)
   fil.get_canonical$ = array.join_strings$(elements$(), "/", lb%, list.size%(elements$()))
 End Function
 
+' Gets the dot file-extension, from filename f$.
+' e.g. fil.get_extension("foo.bas") => ".bas"
+Function fil.get_extension$(f$)
+  Local i%
+  For i% = Len(f$) To 1 Step -1
+    Select Case Peek(Var f$, i%)
+      Case 46     ' .
+        fil.get_extension$ = Mid$(f$, i%)
+        Exit Function
+      Case 47, 92 ' / or \
+        Exit For
+    End Select
+  Next
+End Function
+
+' Gets the files in directory d$ whose names match pattern$.
+'
+' @param       d$        directory to process.
+' @param       pattern$  file pattern to match on, e.g. "*.bas".
+' @param       type$     type of files to return, "dir", "file" or "all".
+' @param[out]  out$()    the names of matching files are copied into this array.
+Sub fil.get_files(d$, pattern$, type$, out$())
+  Local f$
+
+  Select Case LCase$(type$)
+    Case "all"      : f$ = Dir$(d$ + "/*", All)
+    Case "dir"      : f$ = Dir$(d$ + "/*", Dir)
+    Case "file", "" : f$ = Dir$(d$ + "/*", File)
+    Case Else       : Error "unknown type: " + type$
+  End Select
+
+  Local base_% = Mm.Info(Option Base)
+  Local i% = base_%
+  Do While f$ <> ""
+    If fil.fnmatch%(pattern$, f$) Then
+      out$(i%) = f$
+      Inc i%
+    EndIf
+    f$ = Dir$()
+  Loop
+
+  If i% > base% Then
+    Sort out$(), , &b10, base_%, i% - base_%
+  EndIf
+End Sub
+
 ' Gets the name of file/directory 'f$' minus any path information.
 Function fil.get_name$(f$)
   Local i%
@@ -238,3 +306,19 @@ End Function
 Sub fil.mkdir(f$)
   If Not fil.exists%(f$) Then MkDir f$
 End Sub
+
+' Returns a copy of f$ with any dot file-extension removed.
+' e.g. fil.trim_extension("foo.bas") => "foo"
+Function fil.trim_extension$(f$)
+  Local i%
+  For i% = Len(f$) To 1 Step -1
+    Select Case Peek(Var f$, i%)
+      Case 46     ' .
+        fil.trim_extension$ = Mid$(f$, 1, i% - 1)
+        Exit Function
+      Case 47, 92 ' / or \
+        Exit For
+    End Select
+  Next
+  fil.trim_extension$ = f$
+End Function

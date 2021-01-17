@@ -1,4 +1,5 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default None
@@ -17,6 +18,8 @@ EndIf
 #Include "../vt100.inc"
 #Include "../../sptest/unittest.inc"
 
+Const base% = Mm.Info(Option Base)
+
 add_test("test_get_parent")
 add_test("test_get_name")
 add_test("test_get_canonical")
@@ -30,6 +33,10 @@ add_test("test_find_dirs")
 add_test("test_find_all_matching")
 add_test("test_find_files_matching")
 add_test("test_find_dirs_matching")
+add_test("test_count_files")
+add_test("test_get_extension")
+add_test("test_get_files")
+add_test("test_trim_extension")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -277,4 +284,164 @@ Sub test_find_dirs_matching()
   assert_string_equals(root$ + "/sptest",        fil.find$())
   assert_string_equals(root$ + "/sptrans",       fil.find$())
   assert_string_equals("",                       fil.find$())
+End Sub
+
+Sub test_count_files()
+  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+
+  assert_int_equals(9, fil.count_files%(root$, "*.inc", "all"))
+  assert_int_equals(7, fil.count_files%(FIL.PROG_DIR$, "*.bas", "all"))
+  assert_int_equals(0, fil.count_files%(root$, "*.foo", "all"))
+
+  assert_int_equals(1, fil.count_files%(root$, "*", "dir"))
+  assert_int_equals(0, fil.count_files%(root$, "*.inc", "dir"))
+  assert_int_equals(0, fil.count_files%(FIL.PROG_DIR$, "*.bas", "dir"))
+  assert_int_equals(0, fil.count_files%(root$, "*.foo", "dir"))
+
+  assert_int_equals(9, fil.count_files%(root$, "*.inc", "file"))
+  assert_int_equals(7, fil.count_files%(FIL.PROG_DIR$, "*.bas", "file"))
+  assert_int_equals(0, fil.count_files%(root$, "*.foo", "file"))
+End Sub
+
+Sub test_get_extension()
+  assert_string_equals(".dat", fil.get_extension$("foo.dat"))
+  assert_string_equals("", fil.get_extension$(""))
+  assert_string_equals("", fil.get_extension$("foo"))
+  assert_string_equals(".dat", fil.get_extension$(".dat"))
+  assert_string_equals(".dat", fil.get_extension$("f.dat"))
+  assert_string_equals(".dat", fil.get_extension$("foo.bar.dat"))
+  assert_string_equals(".dat", fil.get_extension$("bugaloo/foo.dat"))
+  assert_string_equals("", fil.get_extension$("wom.bat/foo"))
+  assert_string_equals("", fil.get_extension$("wom.bat\foo"))
+  assert_string_equals(".dat", fil.get_extension$("wom.bat/foo.dat"))
+  assert_string_equals(".dat", fil.get_extension$("wom.bat\foo.dat"))
+  assert_string_equals("", fil.get_extension$("A:/foo"))
+  assert_string_equals("", fil.get_extension$("A:\foo"))
+  assert_string_equals(".dat", fil.get_extension$("A:/foo.dat"))
+  assert_string_equals(".dat", fil.get_extension$("A:\foo.dat"))
+  assert_string_equals("", fil.get_extension$("/foo"))
+  assert_string_equals("", fil.get_extension$("\foo"))
+  assert_string_equals(".dat", fil.get_extension$("/foo.dat"))
+  assert_string_equals(".dat", fil.get_extension$("\foo.dat"))
+  assert_string_equals(".longer", fil.get_extension$("foo.longer"))
+  assert_string_equals(".", fil.get_extension$("foo."))
+End Sub
+
+Sub test_get_files()
+  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+  Local actual$(array.new%(10)) Length 128
+  Local expected$(array.new%(10)) Length 128
+
+  ' Type = ALL
+
+  array.fill(actual$(), "")
+  fil.get_files(root$, "*.inc", "all", actual$())
+  array.fill(expected$(), "")
+  expected$(base% + 0) = "array.inc"
+  expected$(base% + 1) = "file.inc"
+  expected$(base% + 2) = "list.inc"
+  expected$(base% + 3) = "map.inc"
+  expected$(base% + 4) = "set.inc"
+  expected$(base% + 5) = "sptools.inc"
+  expected$(base% + 6) = "string.inc"
+  expected$(base% + 7) = "system.inc"
+  expected$(base% + 8) = "vt100.inc"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(FIL.PROG_DIR$, "*.BAS", "ALL", actual$())
+  array.fill(expected$(), "")
+  expected$(base% + 0) = "tst_array.bas"
+  expected$(base% + 1) = "tst_file.bas"
+  expected$(base% + 2) = "tst_list.bas"
+  expected$(base% + 3) = "tst_map.bas"
+  expected$(base% + 4) = "tst_set.bas"
+  expected$(base% + 5) = "tst_string.bas"
+  expected$(base% + 6) = "tst_system.bas"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(root$, "*.foo", "ALL", actual$())
+  array.fill(expected$(), "")
+  assert_string_array_equals(expected$(), actual$())
+
+  ' Type = DIR
+
+  array.fill(actual$(), "")
+  fil.get_files(root$, "*", "dir", actual$())
+  array.fill(expected$(), "")
+  expected$(base% + 0) = "tests"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(root$, "*.inc", "dir", actual$())
+  array.fill(expected$(), "")
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(FIL.PROG_DIR$, "*.bas", "dir", actual$())
+  array.fill(expected$(), "")
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(root$, "*.foo", "dir", actual$())
+  array.fill(expected$(), "")
+  assert_string_array_equals(expected$(), actual$())
+
+  ' Type = FILE
+
+  array.fill(actual$(), "")
+  fil.get_files(root$, "*.inc", "file", actual$())
+  array.fill(expected$(), "")
+  expected$(base% + 0) = "array.inc"
+  expected$(base% + 1) = "file.inc"
+  expected$(base% + 2) = "list.inc"
+  expected$(base% + 3) = "map.inc"
+  expected$(base% + 4) = "set.inc"
+  expected$(base% + 5) = "sptools.inc"
+  expected$(base% + 6) = "string.inc"
+  expected$(base% + 7) = "system.inc"
+  expected$(base% + 8) = "vt100.inc"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(FIL.PROG_DIR$, "*.BAS", "FILE", actual$())
+  array.fill(expected$(), "")
+  expected$(base% + 0) = "tst_array.bas"
+  expected$(base% + 1) = "tst_file.bas"
+  expected$(base% + 2) = "tst_list.bas"
+  expected$(base% + 3) = "tst_map.bas"
+  expected$(base% + 4) = "tst_set.bas"
+  expected$(base% + 5) = "tst_string.bas"
+  expected$(base% + 6) = "tst_system.bas"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(root$, "*.foo", "FILE", actual$())
+  array.fill(expected$(), "")
+  assert_string_array_equals(expected$(), actual$())
+End Sub
+
+Sub test_trim_extension()
+  assert_string_equals("foo",         fil.trim_extension$("foo.dat"))
+  assert_string_equals("",            fil.trim_extension$(""))
+  assert_string_equals("foo",         fil.trim_extension$("foo"))
+  assert_string_equals("",            fil.trim_extension$(".dat"))
+  assert_string_equals("f",           fil.trim_extension$("f.dat"))
+  assert_string_equals("foo.bar",     fil.trim_extension$("foo.bar.dat"))
+  assert_string_equals("bugaloo/foo", fil.trim_extension$("bugaloo/foo.dat"))
+  assert_string_equals("wom.bat/foo", fil.trim_extension$("wom.bat/foo"))
+  assert_string_equals("wom.bat\foo", fil.trim_extension$("wom.bat\foo"))
+  assert_string_equals("wom.bat/foo", fil.trim_extension$("wom.bat/foo.dat"))
+  assert_string_equals("wom.bat\foo", fil.trim_extension$("wom.bat\foo.dat"))
+  assert_string_equals("A:/foo",      fil.trim_extension$("A:/foo"))
+  assert_string_equals("A:\foo",      fil.trim_extension$("A:\foo"))
+  assert_string_equals("A:/foo",      fil.trim_extension$("A:/foo.dat"))
+  assert_string_equals("A:\foo",      fil.trim_extension$("A:\foo.dat"))
+  assert_string_equals("/foo",        fil.trim_extension$("/foo"))
+  assert_string_equals("\foo",        fil.trim_extension$("\foo"))
+  assert_string_equals("/foo",        fil.trim_extension$("/foo.dat"))
+  assert_string_equals("\foo",        fil.trim_extension$("\foo.dat"))
+  assert_string_equals("foo",         fil.trim_extension$("foo.longer"))
+  assert_string_equals("foo",         fil.trim_extension$("foo."))
 End Sub
