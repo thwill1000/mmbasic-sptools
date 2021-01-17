@@ -95,7 +95,7 @@ Sub test_exists()
 
   assert_true(fil.exists%(f$))
   assert_true(fil.exists%(fil.get_parent$(f$) + "/foo/../" + fil.get_name$(f$)))
-  assert_true(fil.exists%(FIL.PROG_DIR$))
+  assert_true(fil.exists%(fil.PROG_DIR$))
   assert_true(fil.exists%("A:"))
   assert_true(fil.exists%("A:/"))
   assert_true(fil.exists%("A:\"))
@@ -128,7 +128,7 @@ Sub test_is_absolute()
 End Sub
 
 Sub test_is_directory()
-  assert_true(fil.is_directory%(FIL.PROG_DIR$))
+  assert_true(fil.is_directory%(fil.PROG_DIR$))
   assert_true(fil.is_directory%("A:"))
   assert_true(fil.is_directory%("A:/"))
   assert_true(fil.is_directory%("A:\"))
@@ -164,7 +164,7 @@ Sub test_fnmatch()
 End Sub
 
 Sub test_find_all()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
 
   ' Search for all files and directories, filtering out ".bak" files.
   Local files$(array.new%(50)) Length 128
@@ -197,7 +197,7 @@ Sub test_find_all()
 End Sub
 
 Sub test_find_files()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
 
   ' Search for all files, filtering out ".bak" files.
   Local files$(array.new%(50)) Length 128
@@ -228,7 +228,7 @@ Sub test_find_files()
 End Sub
 
 Sub test_find_dirs()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/../..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/../..")
   assert_string_equals(root$,                    fil.find$(root$, "*", "dir"))
   assert_string_equals(root$ + "/common",        fil.find$())
   assert_string_equals(root$ + "/common/tests",  fil.find$())
@@ -242,7 +242,7 @@ Sub test_find_dirs()
 End Sub
 
 Sub test_find_all_matching()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
 
   ' Search for all files and directories, filtering out ".bak" files.
   Local files$(array.new%(50)) Length 128
@@ -264,7 +264,7 @@ Sub test_find_all_matching()
 End Sub
 
 Sub test_find_files_matching()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
 
   assert_string_equals(root$ + "/tests/tst_array.bas",  fil.find$(root$, "*.bas", "file"))
   assert_string_equals(root$ + "/tests/tst_file.bas",   fil.find$())
@@ -277,7 +277,7 @@ Sub test_find_files_matching()
 End Sub
 
 Sub test_find_dirs_matching()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/../..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/../..")
   assert_string_equals(root$,                    fil.find$(root$, "s*", "dir"))
   assert_string_equals(root$ + "/spfind",        fil.find$())
   assert_string_equals(root$ + "/spflow",        fil.find$())
@@ -287,19 +287,19 @@ Sub test_find_dirs_matching()
 End Sub
 
 Sub test_count_files()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
 
   assert_int_equals(9, fil.count_files%(root$, "*.inc", "all"))
-  assert_int_equals(7, fil.count_files%(FIL.PROG_DIR$, "*.bas", "all"))
+  assert_int_equals(7, fil.count_files%(fil.PROG_DIR$, "*.bas", "all"))
   assert_int_equals(0, fil.count_files%(root$, "*.foo", "all"))
 
   assert_int_equals(1, fil.count_files%(root$, "*", "dir"))
   assert_int_equals(0, fil.count_files%(root$, "*.inc", "dir"))
-  assert_int_equals(0, fil.count_files%(FIL.PROG_DIR$, "*.bas", "dir"))
+  assert_int_equals(0, fil.count_files%(fil.PROG_DIR$, "*.bas", "dir"))
   assert_int_equals(0, fil.count_files%(root$, "*.foo", "dir"))
 
   assert_int_equals(9, fil.count_files%(root$, "*.inc", "file"))
-  assert_int_equals(7, fil.count_files%(FIL.PROG_DIR$, "*.bas", "file"))
+  assert_int_equals(7, fil.count_files%(fil.PROG_DIR$, "*.bas", "file"))
   assert_int_equals(0, fil.count_files%(root$, "*.foo", "file"))
 End Sub
 
@@ -328,7 +328,7 @@ Sub test_get_extension()
 End Sub
 
 Sub test_get_files()
-  Local root$ = fil.get_canonical$(FIL.PROG_DIR$ + "/..")
+  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
   Local actual$(array.new%(10)) Length 128
   Local expected$(array.new%(10)) Length 128
 
@@ -349,7 +349,7 @@ Sub test_get_files()
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(FIL.PROG_DIR$, "*.BAS", "ALL", actual$())
+  fil.get_files(fil.PROG_DIR$, "*.BAS", "ALL", actual$())
   array.fill(expected$(), "")
   expected$(base% + 0) = "tst_array.bas"
   expected$(base% + 1) = "tst_file.bas"
@@ -379,7 +379,7 @@ Sub test_get_files()
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(FIL.PROG_DIR$, "*.bas", "dir", actual$())
+  fil.get_files(fil.PROG_DIR$, "*.bas", "dir", actual$())
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 
@@ -405,7 +405,7 @@ Sub test_get_files()
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(FIL.PROG_DIR$, "*.BAS", "FILE", actual$())
+  fil.get_files(fil.PROG_DIR$, "*.BAS", "FILE", actual$())
   array.fill(expected$(), "")
   expected$(base% + 0) = "tst_array.bas"
   expected$(base% + 1) = "tst_file.bas"

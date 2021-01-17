@@ -7,7 +7,7 @@ sys.requires("array", "list", "string")
 sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 
-Const FIL.PROG_DIR$ = fil.get_parent$(Mm.Info$(Current))
+Const fil.PROG_DIR$ = fil.get_parent$(Mm.Info$(Current))
 
 ' Gets the number of files in directory d$ whose names match pattern$.
 '
