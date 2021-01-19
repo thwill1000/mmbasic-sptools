@@ -1,4 +1,5 @@
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
@@ -15,6 +16,7 @@ Const CR$ = Chr$(13)
 #Include "../splib/set.inc"
 #Include "../splib/sptools.inc"
 #Include "../sptrans/input.inc"
+#Include "../sptrans/keywords.inc"
 #Include "../sptrans/lexer.inc"
 #Include "../sptrans/output.inc"
 #Include "options.inc"
