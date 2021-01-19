@@ -24,7 +24,7 @@ Sub cli.parse(s$)
       Case "b", "brief"   : cli.parse_no_arg("brief", i)
       Case "h", "help"    : cli.usage() : End
       Case "no-location"  : cli.parse_no_arg("no-location", i)
-      Case "v", "version" : spt.version("spflow") : End
+      Case "v", "version" : spt.print_version("spflow") : End
       Case Else:
         sys.err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select

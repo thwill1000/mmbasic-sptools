@@ -28,7 +28,7 @@ Sub cli.parse(s$)
       Case "h", "help"        : cli.usage() : End
       Case "n", "no-comments" : cli.parse_no_arg("no-comments", i)
       Case "s", "spacing"     : cli.parse_arg("spacing", i, "{0|1|2}")
-      Case "v", "version"     : spt.version("sptrans") : End
+      Case "v", "version"     : spt.print_version("sptrans") : End
       Case Else:
         sys.err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select

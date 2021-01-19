@@ -181,7 +181,6 @@ Sub test_find_all()
   assert_string_equals(root$ + "/list.inc",             files$(i%)) : Inc i%
   assert_string_equals(root$ + "/map.inc",              files$(i%)) : Inc i%
   assert_string_equals(root$ + "/set.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/sptools.inc",          files$(i%)) : Inc i%
   assert_string_equals(root$ + "/string.inc",           files$(i%)) : Inc i%
   assert_string_equals(root$ + "/system.inc",           files$(i%)) : Inc i%
   assert_string_equals(root$ + "/tests",                files$(i%)) : Inc i%
@@ -213,7 +212,6 @@ Sub test_find_files()
   assert_string_equals(root$ + "/list.inc",             files$(i%)) : Inc i%
   assert_string_equals(root$ + "/map.inc",              files$(i%)) : Inc i%
   assert_string_equals(root$ + "/set.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/sptools.inc",          files$(i%)) : Inc i%
   assert_string_equals(root$ + "/string.inc",           files$(i%)) : Inc i%
   assert_string_equals(root$ + "/system.inc",           files$(i%)) : Inc i%
   assert_string_equals(root$ + "/tests/tst_array.bas",  files$(i%)) : Inc i%
@@ -230,6 +228,7 @@ End Sub
 Sub test_find_dirs()
   Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/../..")
   assert_string_equals(root$,                    fil.find$(root$, "*", "dir"))
+  assert_string_equals(root$ + "/common",        fil.find$())
   assert_string_equals(root$ + "/spfind",        fil.find$())
   assert_string_equals(root$ + "/spflow",        fil.find$())
   assert_string_equals(root$ + "/spflow/tests",  fil.find$())
@@ -290,7 +289,7 @@ End Sub
 Sub test_count_files()
   Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
 
-  assert_int_equals(9, fil.count_files%(root$, "*.inc", "all"))
+  assert_int_equals(8, fil.count_files%(root$, "*.inc", "all"))
   assert_int_equals(7, fil.count_files%(fil.PROG_DIR$, "*.bas", "all"))
   assert_int_equals(0, fil.count_files%(root$, "*.foo", "all"))
 
@@ -299,7 +298,7 @@ Sub test_count_files()
   assert_int_equals(0, fil.count_files%(fil.PROG_DIR$, "*.bas", "dir"))
   assert_int_equals(0, fil.count_files%(root$, "*.foo", "dir"))
 
-  assert_int_equals(9, fil.count_files%(root$, "*.inc", "file"))
+  assert_int_equals(8, fil.count_files%(root$, "*.inc", "file"))
   assert_int_equals(7, fil.count_files%(fil.PROG_DIR$, "*.bas", "file"))
   assert_int_equals(0, fil.count_files%(root$, "*.foo", "file"))
 End Sub
@@ -343,10 +342,9 @@ Sub test_get_files()
   expected$(base% + 2) = "list.inc"
   expected$(base% + 3) = "map.inc"
   expected$(base% + 4) = "set.inc"
-  expected$(base% + 5) = "sptools.inc"
-  expected$(base% + 6) = "string.inc"
-  expected$(base% + 7) = "system.inc"
-  expected$(base% + 8) = "vt100.inc"
+  expected$(base% + 5) = "string.inc"
+  expected$(base% + 6) = "system.inc"
+  expected$(base% + 7) = "vt100.inc"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
@@ -399,10 +397,9 @@ Sub test_get_files()
   expected$(base% + 2) = "list.inc"
   expected$(base% + 3) = "map.inc"
   expected$(base% + 4) = "set.inc"
-  expected$(base% + 5) = "sptools.inc"
-  expected$(base% + 6) = "string.inc"
-  expected$(base% + 7) = "system.inc"
-  expected$(base% + 8) = "vt100.inc"
+  expected$(base% + 5) = "string.inc"
+  expected$(base% + 6) = "system.inc"
+  expected$(base% + 7) = "vt100.inc"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")

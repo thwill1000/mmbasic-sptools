@@ -14,7 +14,7 @@ Const CR$ = Chr$(13)
 #Include "../splib/file.inc"
 #Include "../splib/map.inc"
 #Include "../splib/set.inc"
-#Include "../splib/sptools.inc"
+#Include "../common/sptools.inc"
 #Include "../sptrans/input.inc"
 #Include "../sptrans/keywords.inc"
 #Include "../sptrans/lexer.inc"
