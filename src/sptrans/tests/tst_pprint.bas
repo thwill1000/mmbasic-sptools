@@ -14,6 +14,7 @@ Dim in.num_open_files = 1
 #Include "../../splib/file.inc"
 #Include "../../splib/map.inc"
 #Include "../../splib/set.inc"
+#Include "../../splib/sptools.inc"
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../keywords.inc"
@@ -39,7 +40,7 @@ Dim expected$(19)
 Dim in$(19)
 Dim out$(19)
 
-keywords.load("\sptools\resources\keywords.txt")
+keywords.load()
 
 add_test("Multi-line IF THEN increases indent level", "test_indentation_1")
 add_test("Single-line IF THEN does not change indent level", "test_indentation_2")

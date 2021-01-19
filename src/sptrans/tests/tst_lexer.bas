@@ -11,12 +11,13 @@ Option Default Integer
 #Include "../../splib/file.inc"
 #Include "../../splib/map.inc"
 #Include "../../splib/set.inc"
+#Include "../../splib/sptools.inc"
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../keywords.inc"
 #Include "../lexer.inc"
 
-keywords.load("\sptools\resources\keywords.txt")
+keywords.load()
 
 add_test("test_binary_literals")
 add_test("test_comments")

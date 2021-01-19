@@ -3,15 +3,17 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("map")
+sys.requires("map", "sptools")
 sys.provides("keywords")
 If sys.err$ <> "" Then Error sys.err$
+
+Const keywords.DEFAULT_FILE$ = spt.RESOURCES_DIR$ + "\keywords.txt"
 
 Dim keywords$(map.new%(1000)) Length 20
 map.init(keywords$())
 
 Sub keywords.load(f$)
-  Open f$ For Input As #1
+  Open Choice(f$ = "", keywords.DEFAULT_FILE$, f$) For Input As #1
 
   Local s$
   Do

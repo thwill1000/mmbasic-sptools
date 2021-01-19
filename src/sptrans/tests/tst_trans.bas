@@ -14,13 +14,14 @@ Dim in.num_open_files = 1
 #Include "../../splib/file.inc"
 #Include "../../splib/map.inc"
 #Include "../../splib/set.inc"
+#Include "../../splib/sptools.inc"
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../keywords.inc"
 #Include "../lexer.inc"
 #Include "../trans.inc"
 
-keywords.load("\sptools\resources\keywords.txt")
+keywords.load()
 
 add_test("test_replace")
 

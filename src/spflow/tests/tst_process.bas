@@ -11,6 +11,7 @@ Option Default Integer
 #Include "../../splib/file.inc"
 #Include "../../splib/map.inc"
 #Include "../../splib/set.inc"
+#Include "../../splib/sptools.inc"
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../../sptrans/keywords.inc"

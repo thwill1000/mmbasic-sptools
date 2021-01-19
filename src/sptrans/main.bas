@@ -62,7 +62,7 @@ Sub main()
     opt.colour = 0
   EndIf
 
-  keywords.load(SPT_RESOURCES_DIR$ + "/keywords.txt")
+  keywords.load()
 
   ' No line numbers when output to file.
   If opt.outfile$ <> "" Then out.line_num_fmt$ = ""

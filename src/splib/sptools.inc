@@ -1,4 +1,4 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' For Colour Maximite 2, MMBasic 5.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
@@ -7,14 +7,31 @@ sys.requires("file")
 sys.provides("sptools")
 If sys.err$ <> "" Then Error sys.err$
 
-' TODO: dynamically determine installation directory.
-Const SPT_INSTALL_DIR$ = "/sptools"
-Const SPT_RESOURCES_DIR$ = SPT_INSTALL_DIR$ + "/resources"
-Const SPT_VERSION$ = "(SP Tools) Release " + sys.VERSION$ + " for Colour Maximite 2, MMBasic 5.06"
+Const spt.INSTALL_DIR$ = spt.get_install_dir$()
+Const spt.RESOURCES_DIR$ = spt.INSTALL_DIR$ + "/resources"
+
+' Gets the 'sptools' installation directory.
+Function spt.get_install_dir$()
+
+  ' First try recursing up the directory structure from the running program
+  ' until a file called 'sptools.root' is found.
+  Local d$ = fil.PROG_DIR$
+  Do While d$ <> ""
+    If fil.exists%(d$ + "/sptools.root") Then Exit Do
+    d$ = fil.get_parent$(d$)
+  Loop
+
+  ' Otherwise try the default installation location.
+  If d$ = "" Then d$ = "A:/sptools"
+
+  If Not fil.is_directory%(d$) Then Error "directory not found: " + d$
+
+  spt.get_install_dir$ = d$
+End Function
 
 Sub spt.version(name$)
-  Print name$ " " SPT_VERSION$
-  Print "Copyright (c) 2020 Thomas Hugo Williams"
+  Print name$ " (SP Tools) Release " + sys.VERSION$ + " for Colour Maximite 2, MMBasic 5.06"
+  Print "Copyright (c) 2020-2021 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"
   Print "This is free software: you are free to change and redistribute it."

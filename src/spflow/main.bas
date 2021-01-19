@@ -61,7 +61,7 @@ Sub main()
     EndIf
   EndIf
 
-  lx.load_keywords(SPT_RESOURCES_DIR$ + "/keywords.txt")
+  keywords.load()
 
   out.open(opt.outfile$)
 
