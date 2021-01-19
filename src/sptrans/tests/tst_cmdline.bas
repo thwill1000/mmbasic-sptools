@@ -30,6 +30,7 @@ add_test("test_no_comments")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_indent")
+add_test("test_keywords")
 add_test("test_spacing")
 add_test("test_output_file")
 add_test("test_unquoted_output_file")
@@ -131,6 +132,26 @@ Sub test_indent()
   cli.parse("--indent=3 " + input_file$)
   assert_no_error()
   assert_int_equals(3, opt.indent_sz)
+End Sub
+
+Sub test_keywords()
+  cli.parse("--keywords=l " + input_file$)
+  assert_no_error()
+  assert_int_equals(0, opt.keywords)
+
+  cli.parse("--keywords=p " + input_file$)
+  assert_no_error()
+  assert_int_equals(1, opt.keywords)
+
+  cli.parse("--keywords=u " + input_file$)
+  assert_no_error()
+  assert_int_equals(2, opt.keywords)
+
+  cli.parse("--keywords " + input_file$)
+  assert_error("option '--keywords' expects {l|p|u} argument")
+
+  cli.parse("--keywords=3 " + input_file$)
+  assert_error("option '--keywords' expects {l|p|u} argument")
 End Sub
 
 Sub test_spacing()

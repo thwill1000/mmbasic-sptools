@@ -55,6 +55,7 @@ add_test("Preserve spacing option", "test_preserve_spacing")
 add_test("Minimal spacing option", "test_minimal_spacing")
 add_test("Compact spacing option", "test_compact_spacing")
 add_test("Generous spacing option", "test_generous_spacing")
+add_test("Keyword capitalisation", "test_keyword_capitalisation")
 
 run_tests()
 
@@ -380,5 +381,30 @@ Sub test_generous_spacing()
   expected$(9) = "Dim a(4) = (-2, -1, 0, 1, 2)"
   expected$(10) = "For i% = 5 To 1 Step -1"
   expected$(11) = "Loop Until (-a > -b)"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' Test keyword capitalisation.
+Sub test_keyword_capitalisation()
+  in$(0) = "FOr i=20 TO 1 StEP -2"
+
+  opt.keywords = -1 ' preserve capitalisation.
+  parse_lines()
+  expected$(0) = "FOr i=20 TO 1 StEP -2"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.keywords = 0 ' lower-case.
+  parse_lines()
+  expected$(0) = "for i=20 to 1 step -2"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.keywords = 1 ' pascal-case.
+  parse_lines()
+  expected$(0) = "For i=20 To 1 Step -2"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.keywords = 2 ' upper-case.
+  parse_lines()
+  expected$(0) = "FOR i=20 TO 1 STEP -2"
   assert_string_array_equals(expected$(), out$())
 End Sub

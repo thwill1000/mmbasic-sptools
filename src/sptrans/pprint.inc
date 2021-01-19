@@ -83,12 +83,12 @@ Sub pp.print_line()
     If opt.colour Then out.print(TK_COLOUR$(lx.type(i)))
     u$ = lx.token$(i)
     If lx.type(i) = TK_KEYWORD Then
-      u$ = keywords.get$(u$)
-      If u$ = sys.NO_DATA$ Then Error
       Select Case opt.keywords
-        Case  0 : u$ = LCase$(u$)
-        Case  2 : u$ = UCase$(u$)
+        Case  0 : u$ = LCase$(keywords.get$(u$))
+        Case  1 : u$ = keywords.get$(u$)
+        Case  2 : u$ = UCase$(keywords.get$(u$))
       End Select
+      If u$ = sys.NO_DATA$ Then Error
     EndIf
     out.print(u$ + Space$(pp.num_spaces(i)))
 

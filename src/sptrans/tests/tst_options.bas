@@ -1,4 +1,5 @@
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
@@ -17,6 +18,7 @@ add_test("test_comments")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_indent")
+add_test("test_keywords")
 add_test("test_spacing")
 add_test("test_infile")
 add_test("test_outfile")
@@ -222,6 +224,71 @@ Sub test_indent()
   sys.err$ = ""
   opt.set("indent", "-2")
   assert_error("expects 'on|<number>' argument")
+End Sub
+
+Sub test_keywords()
+  Local elements$(10) Length 10, i
+
+  assert_int_equals(-1, opt.keywords)
+
+  elements$(0) = "preserve"
+  elements$(1) = "default"
+  elements$(2) = "-1"
+  elements$(3) = ""
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(-1, opt.keywords)
+    Inc i
+  Loop
+
+  elements$(0) = "lower"
+  elements$(1) = "l"
+  elements$(2) = "0"
+  elements$(3) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(0, opt.keywords)
+    Inc i
+  Loop
+
+  elements$(0) = "mixed"
+  elements$(1) = "pascal"
+  elements$(2) = "m"
+  elements$(3) = "p"
+  elements$(4) = "1"
+  elements$(5) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(1, opt.keywords)
+    Inc i
+  Loop
+
+  elements$(0) = "upper"
+  elements$(1) = "u"
+  elements$(2) = "2"
+  elements$(3) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(2, opt.keywords)
+    Inc i
+  Loop
+
+  sys.err$ = ""
+  opt.set("keywords", "foo")
+  assert_error("expects 'preserve|lower|pascal|upper' argument")
+
+  sys.err$ = ""
+  opt.set("keywords", "3")
+  assert_error("expects 'preserve|lower|pascal|upper' argument")
 End Sub
 
 Sub test_spacing()
