@@ -246,8 +246,7 @@ Sub fil.get_files(d$, pattern$, type$, out$())
     Case Else       : Error "unknown type: " + type$
   End Select
 
-  Local base_% = Mm.Info(Option Base)
-  Local i% = base_%
+  Local i% = Mm.Info(Option Base)
   Do While f$ <> ""
     If fil.fnmatch%(pattern$, f$) Then
       out$(i%) = f$
@@ -256,8 +255,8 @@ Sub fil.get_files(d$, pattern$, type$, out$())
     f$ = Dir$()
   Loop
 
-  If i% > base% Then
-    Sort out$(), , &b10, base_%, i% - base_%
+  If i% > Mm.Info(Option Base) Then
+    Sort out$(), , &b10, Mm.Info(Option Base), i% - Mm.Info(Option Base)
   EndIf
 End Sub
 
