@@ -121,12 +121,16 @@ Sub test_next_token()
   assert_string_equals(" ", str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  ' Tokenise the empty string, keeping empty tokens.
+  ' Tokenising the empty string only works if the previous tokenisation returned sys.NO_DATA$
+  ' otherise using "" as the first argument will just continue that previous tokenisation.
+  assert_string_equals(sys.NO_DATA$, str.next_token$(sys.NO_DATA$, " ", 0))
+  assert_string_equals(sys.NO_DATA$, str.next_token$(sys.NO_DATA$, " ", 1))
+  assert_string_equals(sys.NO_DATA$, str.next_token$(sys.NO_DATA$, "@", 0))
+  assert_string_equals(sys.NO_DATA$, str.next_token$(sys.NO_DATA$, "@", 1))
+  assert_string_equals(sys.NO_DATA$, str.next_token$("", " ", 0))
+  assert_string_equals(sys.NO_DATA$, str.next_token$("", " ", 1))
+  assert_string_equals(sys.NO_DATA$, str.next_token$("", "@", 0))
   assert_string_equals(sys.NO_DATA$, str.next_token$("", "@", 1))
-
-  ' Tokenise the empty string, skipping empty tokens.
-  assert_string_equals("", str.next_token$("", "@", 0))
-  assert_string_equals(sys.NO_DATA$, str.next_token$())
 End Sub
 
 Sub test_quote()
