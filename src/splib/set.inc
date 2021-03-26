@@ -55,6 +55,12 @@ Function set.get%(set$(), s$)
   set.get% = array.bsearch%(set$(), s$, "", Bound(set$(), 0), Val(set$(Bound(set$(), 1))))
 End Function
 
+Function set.is_full%(set$())
+  Local ub% = Bound(set$(), 1)
+  '             = (ub% - lb%) = sz%
+  set.is_full% = (ub% - Bound(set$(), 0)) = Val(set$(ub%))
+End Function
+
 ' Adds a value to the set.
 Sub set.put(set$(), s$)
   Local lb% = Bound(set$(), 0)

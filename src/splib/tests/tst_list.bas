@@ -22,6 +22,7 @@ add_test("test_add")
 add_test("test_clear")
 add_test("test_get")
 add_test("test_insert")
+add_test("test_is_full")
 add_test("test_peek")
 add_test("test_pop")
 add_test("test_push")
@@ -133,6 +134,24 @@ Sub test_insert()
   assert_string_equals("snafu", my_list$(base% + 4))
 
   assert_int_equals(20, list.capacity%(my_list$()))
+End Sub
+
+Sub test_is_full()
+  Local base% = Mm.Info(Option Base)
+  Local my_list$(list.new%(10))
+  list.init(my_list$())
+  Local i%
+  For i% = 1 To 3 : list.add(my_list$(), Str$(i%)) : Next
+
+  assert_false(list.is_full%(my_list$()))
+
+  For i% = 4 To 9 : list.add(my_list$(), Str$(i%)) : Next
+
+  assert_false(list.is_full%(my_list$()))
+
+  list.add(my_list$(), "10")
+
+  assert_true(list.is_full%(my_list$()))
 End Sub
 
 Sub test_peek()

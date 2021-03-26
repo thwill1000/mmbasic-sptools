@@ -81,6 +81,13 @@ Function map.get_key_index%(mp$(), k$)
   map.get_key_index% = array.bsearch%(mp$(), k$, "", Bound(mp$(), 0), Val(mp$(Bound(mp$(), 1))))
 End Function
 
+Function map.is_full%(map$())
+  Local ub% = Bound(map$(), 1)
+  '             = (ub% - lb%) \ 2 = sz%
+  map.is_full% = (ub% - Bound(map$(), 0)) \ 2 = Val(map$(ub%))
+End Function
+
+
 ' Adds a key/value pair.
 Sub map.put(mp$(), k$, v$)
   Local lb% = Bound(mp$(), 0)

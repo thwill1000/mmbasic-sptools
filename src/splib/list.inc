@@ -34,6 +34,7 @@ Sub list.add(lst$(), s$)
   Local lb% = Bound(lst$(), 0)
   Local ub% = Bound(lst$(), 1)
   Local sz% = Val(lst$(ub%))
+  ' TODO: report error if adding to a full list.
   lst$(lb% + sz%) = s$
   lst$(ub%) = Str$(sz% + 1)
 End Sub
@@ -85,6 +86,12 @@ Sub list.insert(lst$(), index%, s$)
   lst$(i%) = s$
   lst$(ub%) = Str$(sz% + 1)
 End Sub
+
+Function list.is_full%(lst$())
+  Local ub% = Bound(lst$(), 1)
+  '             = (ub% - lb%) = sz%
+  list.is_full% = (ub% - Bound(lst$(), 0)) = Val(lst$(ub%))
+End Function
 
 ' Returns the element at the end of the list.
 ' If the list is empty then returns sys.NO_DATA$

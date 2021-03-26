@@ -24,6 +24,7 @@ add_test("test_clear")
 add_test("test_clear_given_empty")
 add_test("test_clear_given_full")
 add_test("test_get")
+add_test("test_is_full")
 add_test("test_put")
 add_test("test_put_given_present")
 add_test("test_put_given_full")
@@ -108,6 +109,24 @@ Sub test_get()
   assert_int_equals(base% + 0, set.get%(my_set$(), "bar"))
   assert_int_equals(base% + 1, set.get%(my_set$(), "foo"))
   assert_int_equals(-1, set.get%(my_set$(), "wombat"))
+End Sub
+
+Sub test_is_full()
+  Local base% = Mm.Info(Option Base)
+  Local my_set$(set.new%(10))
+  set.init(my_set$())
+  Local i%
+  For i% = 1 To 3 : set.put(my_set$(), Str$(i%)) : Next
+
+  assert_false(set.is_full%(my_set$()))
+
+  For i% = 4 To 9 : set.put(my_set$(), Str$(i%)) : Next
+
+  assert_false(set.is_full%(my_set$()))
+
+  set.put(my_set$(), "10")
+
+  assert_true(set.is_full%(my_set$()))
 End Sub
 
 Sub test_put()

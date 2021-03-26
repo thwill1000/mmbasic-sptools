@@ -24,6 +24,7 @@ add_test("test_clear_given_empty")
 add_test("test_clear_given_full")
 add_test("test_get_key_index")
 add_test("test_get")
+add_test("test_is_full")
 add_test("test_put")
 add_test("test_put_given_full")
 add_test("test_put_given_present")
@@ -125,6 +126,24 @@ Sub test_get()
   assert_string_equals("bat",        map.get$(my_map$(), "wom"))
   assert_string_equals("bbb",        map.get$(my_map$(), "aaa"))
   assert_string_equals(sys.NO_DATA$, map.get$(my_map$(), "unknown"))
+End Sub
+
+Sub test_is_full()
+  Local base% = Mm.Info(Option Base)
+  Local my_map$(map.new%(10))
+  map.init(my_map$())
+  Local i%
+  For i% = 1 To 3 : map.put(my_map$(), Str$(i%), "foo") : Next
+
+  assert_false(map.is_full%(my_map$()))
+
+  For i% = 4 To 9 : map.put(my_map$(), Str$(i%), "foo") : Next
+
+  assert_false(map.is_full%(my_map$()))
+
+  map.put(my_map$(), "10")
+
+  assert_true(map.is_full%(my_map$()))
 End Sub
 
 Sub test_put()
