@@ -39,7 +39,7 @@ End Sub
 
 Sub test_centre()
   assert_string_equals("     hello     ", str.centre$("hello", 15))
-  assert_string_equals("     hello      ", str.centre$("hello", 16))
+  assert_string_equals("      hello     ", str.centre$("hello", 16))
   assert_string_equals("hello", str.centre$("hello", 2))
 End Sub
 

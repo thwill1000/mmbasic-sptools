@@ -6,10 +6,17 @@ If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.provides("string")
 If sys.err$ <> "" Then Error sys.err$
 
+' Pads a string with spaces to the left and right so that it will be centred
+' within a fixed length field. If the string is longer than the field then
+' this function just returns the string. If an odd number of spaces are
+' required then the extra space is added to the left hand side of the string.
+'
+' @param  s$  the string to centre.
+' @param  x   the field length.
 Function str.centre$(s$, x%)
   If Len(s$) < x% Then
-    str.centre$ = Space$((x% - Len(s$)) \ 2) + s$
-    str.centre$ = str.centre$ + Space$(x% - Len(str.centre$))
+    str.centre$ = s$ + Space$((x% - Len(s$)) \ 2)
+    str.centre$ = Space$(x% - Len(str.centre$)) + str.centre$
   Else
     str.centre$ = s$
   EndIf
