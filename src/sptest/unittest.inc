@@ -53,6 +53,15 @@ Sub assert_true(z%, msg$)
   If Not z% Then ut.add_failure(Choice(msg$ = "", "assert_true() failed", msg$))
 End Sub
 
+Sub assert_hex_equals(expected%, actual%, chars%)
+  Inc ut.asserts_count%
+  If expected% <> actual% Then
+    Local s$ = "Assert equals failed, expected &h" + Hex$(expected%, chars%)
+    s$ = s$ + " but actually &h" + Hex$(actual%, chars%)
+    ut.add_failure(s$)
+  EndIf
+End Sub
+
 Sub assert_int_equals(expected%, actual%)
   Inc ut.asserts_count%
   If expected% <> actual% Then
