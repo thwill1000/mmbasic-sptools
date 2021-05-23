@@ -1,14 +1,9 @@
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
-' For Colour Maximite 2, MMBasic 5.06
+' For Colour Maximite 2, MMBasic 5.07
 
 Option Explicit On
 Option Default None
-
-If InStr(Mm.CmdLine$, "--base=1") Then
-  Option Base 1
-Else
-  Option Base 0
-EndIf
+Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 #Include "../system.inc"
 #Include "../array.inc"
@@ -18,7 +13,8 @@ EndIf
 #Include "../vt100.inc"
 #Include "../../sptest/unittest.inc"
 
-Const base% = Mm.Info(Option Base)
+Const BASE% = Mm.Info(Option Base)
+Const RSRC$ = fil.get_canonical$(fil.PROG_DIR$ + "/resources/tst_file")
 
 add_test("test_get_parent")
 add_test("test_get_name")
@@ -106,19 +102,19 @@ Sub test_exists()
 End Sub
 
 Sub test_is_absolute()
-  assert_int_equals(0, fil.is_absolute%("foo.bas"))
-  assert_int_equals(0, fil.is_absolute%("dir/foo.bas"))
-  assert_int_equals(0, fil.is_absolute%("dir\foo.bas"))
-  assert_int_equals(1, fil.is_absolute%("A:/dir/foo.bas"))
-  assert_int_equals(1, fil.is_absolute%("A:\dir\foo.bas"))
-  assert_int_equals(1, fil.is_absolute%("a:/dir/foo.bas"))
-  assert_int_equals(1, fil.is_absolute%("a:\dir\foo.bas"))
-  assert_int_equals(1, fil.is_absolute%("/dir/foo.bas"))
-  assert_int_equals(1, fil.is_absolute%("\dir\foo.bas"))
-  assert_int_equals(0, fil.is_absolute%("dir/../foo.bas"))
-  assert_int_equals(0, fil.is_absolute%("dir\..\foo.bas"))
-  assert_int_equals(0, fil.is_absolute%("dir/./foo.bas"))
-  assert_int_equals(0, fil.is_absolute%("dir\.\foo.bas"))
+  assert_false(fil.is_absolute%("foo.bas"))
+  assert_false(fil.is_absolute%("dir/foo.bas"))
+  assert_false(fil.is_absolute%("dir\foo.bas"))
+  assert_true(fil.is_absolute%("A:/dir/foo.bas"))
+  assert_true(fil.is_absolute%("A:\dir\foo.bas"))
+  assert_true(fil.is_absolute%("a:/dir/foo.bas"))
+  assert_true(fil.is_absolute%("a:\dir\foo.bas"))
+  assert_true(fil.is_absolute%("/dir/foo.bas"))
+  assert_true(fil.is_absolute%("\dir\foo.bas"))
+  assert_false(fil.is_absolute%("dir/../foo.bas"))
+  assert_false(fil.is_absolute%("dir\..\foo.bas"))
+  assert_false(fil.is_absolute%("dir/./foo.bas"))
+  assert_false(fil.is_absolute%("dir\.\foo.bas"))
 
   assert_true(fil.is_absolute%("A:"))
   assert_true(fil.is_absolute%("A:/"))
@@ -164,143 +160,100 @@ Sub test_fnmatch()
 End Sub
 
 Sub test_find_all()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
-
-  ' Search for all files and directories, filtering out ".bak" files.
-  Local files$(array.new%(50)) Length 128
-  list.init(files$())
-  Local f$ = fil.find$(root$, "*", "all")
-  Do While f$ <> ""
-    If Right$(f$, 4) <> ".bak" Then list.push(files$(), f$)
-    f$ = fil.find$()
-  Loop
-  Local i% = Mm.Info(Option Base)
-  assert_string_equals(root$,                           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/array.inc",            files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/file.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/list.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/map.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/set.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/string.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/system.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests",                files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_array.bas",  files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_file.bas",   files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_list.bas",   files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_map.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_set.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_string.bas", files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_system.bas", files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/vt100.inc",            files$(i%)) : Inc i%
-  assert_string_equals(sys.NO_DATA$,                    files$(i%))
+  assert_string_equals(RSRC$,                                 fil.find$(RSRC$, "*", "all"))
+  assert_string_equals(RSRC$ + "/snafu-dir",                  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir",           fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir/four.bar",  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/three.bar",        fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir",                 fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir",          fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir/four.bar", fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/three.bar",       fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         fil.find$())
+  assert_string_equals(RSRC$ + "/zzz.txt",                    fil.find$())
+  assert_string_equals("",                                    fil.find$())
 End Sub
 
 Sub test_find_files()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
-
-  ' Search for all files, filtering out ".bak" files.
-  Local files$(array.new%(50)) Length 128
-  list.init(files$())
-  Local f$ = fil.find$(root$, "*", "file")
-  Do While f$ <> ""
-    If Right$(f$, 4) <> ".bak" Then list.push(files$(), f$)
-    f$ = fil.find$()
-  Loop
-  Local i% = Mm.Info(Option Base)
-  assert_string_equals(root$ + "/array.inc",            files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/file.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/list.inc",             files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/map.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/set.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/string.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/system.inc",           files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_array.bas",  files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_file.bas",   files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_list.bas",   files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_map.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_set.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_string.bas", files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_system.bas", files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/vt100.inc",            files$(i%)) : Inc i%
-  assert_string_equals(sys.NO_DATA$,                    files$(i%))
+  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          fil.find$(RSRC$, "*", "file"))
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir/four.bar",  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/three.bar",        fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir/four.bar", fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/three.bar",       fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         fil.find$())
+  assert_string_equals(RSRC$ + "/zzz.txt",                    fil.find$())
+  assert_string_equals("",                                    fil.find$())
 End Sub
 
 Sub test_find_dirs()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/../..")
-  assert_string_equals(root$,                    fil.find$(root$, "*", "dir"))
-  assert_string_equals(root$ + "/common",        fil.find$())
-  assert_string_equals(root$ + "/spfind",        fil.find$())
-  assert_string_equals(root$ + "/spflow",        fil.find$())
-  assert_string_equals(root$ + "/spflow/tests",  fil.find$())
-  assert_string_equals(root$ + "/splib",         fil.find$())
-  assert_string_equals(root$ + "/splib/tests",   fil.find$())
-  assert_string_equals(root$ + "/sptest",        fil.find$())
-  assert_string_equals(root$ + "/sptrans",       fil.find$())
-  assert_string_equals(root$ + "/sptrans/tests", fil.find$())
-  assert_string_equals("",                       fil.find$())
+  assert_string_equals(RSRC$,                        fil.find$(RSRC$, "*", "dir"))
+  assert_string_equals(RSRC$ + "/snafu-dir",         fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir",  fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir",        fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir", fil.find$())
+  assert_string_equals("",                           fil.find$())
 End Sub
 
 Sub test_find_all_matching()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
-
-  ' Search for all files and directories, filtering out ".bak" files.
-  Local files$(array.new%(50)) Length 128
-  list.init(files$())
-  Local f$ = fil.find$(root$, "*e*", "all")
-  Do While f$ <> ""
-    If Right$(f$, 4) <> ".bak" Then list.push(files$(), f$)
-    f$ = fil.find$()
-  Loop
-  Local i% = Mm.Info(Option Base)
-  assert_string_equals(root$ + "/file.inc",              files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/set.inc",               files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/system.inc",            files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests",                 files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_file.bas",    files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_set.bas",     files$(i%)) : Inc i%
-  assert_string_equals(root$ + "/tests/tst_system.bas",  files$(i%)) : Inc i%
-  assert_string_equals(sys.NO_DATA$,                     files$(i%))
+  assert_string_equals(RSRC$,                                 fil.find$(RSRC$, "*f*", "all"))
+  assert_string_equals(RSRC$ + "/snafu-dir",                  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir/four.bar",  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir/four.bar", fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         fil.find$())
+  assert_string_equals("",                                    fil.find$())
 End Sub
 
 Sub test_find_files_matching()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
-
-  assert_string_equals(root$ + "/tests/tst_array.bas",  fil.find$(root$, "*.bas", "file"))
-  assert_string_equals(root$ + "/tests/tst_file.bas",   fil.find$())
-  assert_string_equals(root$ + "/tests/tst_list.bas",   fil.find$())
-  assert_string_equals(root$ + "/tests/tst_map.bas",    fil.find$())
-  assert_string_equals(root$ + "/tests/tst_set.bas",    fil.find$())
-  assert_string_equals(root$ + "/tests/tst_string.bas", fil.find$())
-  assert_string_equals(root$ + "/tests/tst_system.bas", fil.find$())
-  assert_string_equals("",                              fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          fil.find$(RSRC$, "*.foo", "file"))
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", fil.find$())
+  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         fil.find$())
+  assert_string_equals("",                                    fil.find$())
 End Sub
 
 Sub test_find_dirs_matching()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/../..")
-  assert_string_equals(root$,              fil.find$(root$, "s*", "dir"))
-  assert_string_equals(root$ + "/spfind",  fil.find$())
-  assert_string_equals(root$ + "/spflow",  fil.find$())
-  assert_string_equals(root$ + "/splib",   fil.find$())
-  assert_string_equals(root$ + "/sptest",  fil.find$())
-  assert_string_equals(root$ + "/sptrans", fil.find$())
-  assert_string_equals("",                 fil.find$())
+  assert_string_equals(RSRC$ + "/snafu-dir/subdir",  fil.find$(RSRC$, "*ub*", "dir"))
+  assert_string_equals(RSRC$ + "/wombat-dir/subdir", fil.find$())
+  assert_string_equals("",                           fil.find$())
 End Sub
 
 Sub test_count_files()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
+  assert_int_equals(3, fil.count_files%(RSRC$, "*", "all"))
+  assert_int_equals(1, fil.count_files%(RSRC$, "*fu*", "all"))
+  assert_int_equals(4, fil.count_files%(RSRC$ + "/snafu-dir", "*", "all"))
+  assert_int_equals(2, fil.count_files%(RSRC$ + "/snafu-dir", "*.foo", "all"))
+  assert_int_equals(1, fil.count_files%(RSRC$ + "/snafu-dir", "*.bar", "all"))
+  assert_int_equals(2, fil.count_files%(RSRC$ + "/snafu-dir", "*r", "all"))
 
-  assert_int_equals(8, fil.count_files%(root$, "*.inc", "all"))
-  assert_int_equals(7, fil.count_files%(fil.PROG_DIR$, "*.bas", "all"))
-  assert_int_equals(0, fil.count_files%(root$, "*.foo", "all"))
+  assert_int_equals(1, fil.count_files%(RSRC$, "*", "file"))
+  assert_int_equals(0, fil.count_files%(RSRC$, "*fu*", "file"))
+  assert_int_equals(3, fil.count_files%(RSRC$ + "/snafu-dir", "*", "file"))
+  assert_int_equals(2, fil.count_files%(RSRC$ + "/snafu-dir", "*.foo", "file"))
+  assert_int_equals(1, fil.count_files%(RSRC$ + "/snafu-dir", "*.bar", "file"))
+  assert_int_equals(1, fil.count_files%(RSRC$ + "/snafu-dir", "*r", "file"))
 
-  assert_int_equals(1, fil.count_files%(root$, "*", "dir"))
-  assert_int_equals(0, fil.count_files%(root$, "*.inc", "dir"))
-  assert_int_equals(0, fil.count_files%(fil.PROG_DIR$, "*.bas", "dir"))
-  assert_int_equals(0, fil.count_files%(root$, "*.foo", "dir"))
-
-  assert_int_equals(8, fil.count_files%(root$, "*.inc", "file"))
-  assert_int_equals(7, fil.count_files%(fil.PROG_DIR$, "*.bas", "file"))
-  assert_int_equals(0, fil.count_files%(root$, "*.foo", "file"))
+  assert_int_equals(2, fil.count_files%(RSRC$, "*", "dir"))
+  assert_int_equals(1, fil.count_files%(RSRC$, "*fu*", "dir"))
+  assert_int_equals(1, fil.count_files%(RSRC$ + "/snafu-dir", "*", "dir"))
+  assert_int_equals(0, fil.count_files%(RSRC$ + "/snafu-dir", "*.foo", "dir"))
+  assert_int_equals(0, fil.count_files%(RSRC$ + "/snafu-dir", "*.bar", "dir"))
+  assert_int_equals(1, fil.count_files%(RSRC$ + "/snafu-dir", "*r", "dir"))
 End Sub
 
 Sub test_get_extension()
@@ -328,94 +281,84 @@ Sub test_get_extension()
 End Sub
 
 Sub test_get_files()
-  Local root$ = fil.get_canonical$(fil.PROG_DIR$ + "/..")
   Local actual$(array.new%(10)) Length 128
   Local expected$(array.new%(10)) Length 128
 
   ' Type = ALL
 
   array.fill(actual$(), "")
-  fil.get_files(root$, "*.inc", "all", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "*r*", "all", actual$())
   array.fill(expected$(), "")
-  expected$(base% + 0) = "array.inc"
-  expected$(base% + 1) = "file.inc"
-  expected$(base% + 2) = "list.inc"
-  expected$(base% + 3) = "map.inc"
-  expected$(base% + 4) = "set.inc"
-  expected$(base% + 5) = "string.inc"
-  expected$(base% + 6) = "system.inc"
-  expected$(base% + 7) = "vt100.inc"
+  expected$(BASE% + 0) = "subdir"
+  expected$(BASE% + 1) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(fil.PROG_DIR$, "*.BAS", "ALL", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "*R*", "ALL", actual$())
   array.fill(expected$(), "")
-  expected$(base% + 0) = "tst_array.bas"
-  expected$(base% + 1) = "tst_file.bas"
-  expected$(base% + 2) = "tst_list.bas"
-  expected$(base% + 3) = "tst_map.bas"
-  expected$(base% + 4) = "tst_set.bas"
-  expected$(base% + 5) = "tst_string.bas"
-  expected$(base% + 6) = "tst_system.bas"
+  expected$(BASE% + 0) = "subdir"
+  expected$(BASE% + 1) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(root$, "*.foo", "ALL", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "*xyz*", "ALL", actual$())
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 
   ' Type = DIR
 
   array.fill(actual$(), "")
-  fil.get_files(root$, "*", "dir", actual$())
+  fil.get_files(RSRC$, "*", "dir", actual$())
   array.fill(expected$(), "")
-  expected$(base% + 0) = "tests"
+  expected$(BASE% + 0) = "snafu-dir"
+  expected$(BASE% + 1) = "wombat-dir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(root$, "*.inc", "dir", actual$())
+  fil.get_files(RSRC$, "*fu*", "dir", actual$())
+  array.fill(expected$(), "")
+  expected$(BASE% + 0) = "snafu-dir"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(RSRC$, "*.foo", "dir", actual$())
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(fil.PROG_DIR$, "*.bas", "dir", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "*r*", "dir", actual$())
   array.fill(expected$(), "")
+  expected$(BASE% + 0) = "subdir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(root$, "*.foo", "dir", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "*R*", "DIR", actual$())
   array.fill(expected$(), "")
+  expected$(BASE% + 0) = "subdir"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  fil.get_files(RSRC$ + "/snafu-dir", "subdir", "DIR", actual$())
+  array.fill(expected$(), "")
+  expected$(BASE% + 0) = "subdir"
   assert_string_array_equals(expected$(), actual$())
 
   ' Type = FILE
 
   array.fill(actual$(), "")
-  fil.get_files(root$, "*.inc", "file", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "*r*", "file", actual$())
   array.fill(expected$(), "")
-  expected$(base% + 0) = "array.inc"
-  expected$(base% + 1) = "file.inc"
-  expected$(base% + 2) = "list.inc"
-  expected$(base% + 3) = "map.inc"
-  expected$(base% + 4) = "set.inc"
-  expected$(base% + 5) = "string.inc"
-  expected$(base% + 6) = "system.inc"
-  expected$(base% + 7) = "vt100.inc"
+  expected$(BASE% + 0) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(fil.PROG_DIR$, "*.BAS", "FILE", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "*R*", "FILE", actual$())
   array.fill(expected$(), "")
-  expected$(base% + 0) = "tst_array.bas"
-  expected$(base% + 1) = "tst_file.bas"
-  expected$(base% + 2) = "tst_list.bas"
-  expected$(base% + 3) = "tst_map.bas"
-  expected$(base% + 4) = "tst_set.bas"
-  expected$(base% + 5) = "tst_string.bas"
-  expected$(base% + 6) = "tst_system.bas"
+  expected$(BASE% + 0) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  fil.get_files(root$, "*.foo", "FILE", actual$())
+  fil.get_files(RSRC$ + "/snafu-dir", "subdir", "FILE", actual$())
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 End Sub
