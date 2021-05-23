@@ -1,8 +1,9 @@
 ' Copyright (c) 2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
-' Implementation of the Tiny Encryption Algorithm,
-' specifically the XXTEA variant.
+' MD5 algorithm from https://en.wikipedia.org/wiki/MD5
+' XXTEA algorithm from https://en.wikipedia.org/wiki/XXTEA
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -13,18 +14,21 @@ If sys.err$ <> "" Then Error sys.err$
 ' Calculates the MD5 hash of bytes held in a buffer.
 '
 ' To calculate the MD5 hash of a string s$:
-'   crypt.md5$(Peek(VarAddr s$) + 1, Len(s$))
+'   ok% = crypt.md5%(Peek(VarAddr s$) + 1, Len(s$), out%())
 '
 ' To calculate the MD5 hash of a long string ls%():
-'   crypt.md5$(Peek(VarAddr ls%()) + 8, LLen(ls%()))
+'   ok% = crypt.md5%(Peek(VarAddr ls%()) + 8, LLen(ls%()), out%())
 '
-' @param  ad%    address of the buffer.
-' @param  size%  number of bytes to process.
-' @return        MD5 hash, 128-bit little-endian value formatted as hex.
-Function crypt.md5$(ad%, size%)
+' @param  ad%     address of the buffer.
+' @param  size%   number of bytes to process.
+' @param  out%()  on return the MD5 hash in little-endian format (2 elements = 16 bytes = 128-bits)
+' @return         1 on success, 0 on failure, see sys.err$ for details of failure.
+Function crypt.md5%(ad%, size%, out%())
 
-  Local chunk%(array.new%(64))
-  Local chunk_addr% = Peek(VarAddr chunk%())
+  If Bound(out%(), 1) - Bound(out%(), 0) <> 1 Then Error "out%() should have 2 elements"
+
+  Local block%(array.new%(64))
+  Const b_addr% = Peek(VarAddr block%())
 
   ' Storage for hash, each element treated as 32-bit unsigned integer.
   Local h%(array.new%(4))
@@ -36,47 +40,59 @@ Function crypt.md5$(ad%, size%)
   Local cur% = 0, num%
 
   Do
-    ' Process chunks of 64 bytes / 512 bits at a time.
+    ' Process blocks of 64 bytes / 512 bits at a time.
     num% = Min(size% - cur%, 64)
-    Memory Set chunk_addr%, 0, 64
-    Memory Copy ad% + cur%, chunk_addr%, num%
+    Memory Set b_addr%, 0, 64
+    Memory Copy ad% + cur%, b_addr%, num%
 
     If num% < 64 Then
-      ' Append '1' bit to chunk%, the remainder will already be padded with zeros.
-      Poke Byte chunk_addr% + num%, &h80
+      ' Append '1' bit to block%, the remainder will already be padded with zeros.
+      Poke Byte b_addr% + num%, &h80
 
       If num% > 55 Then
-        crypt.md5_chunk(chunk%(), h%(), r%(), k%())
-        Memory Set chunk_addr%, 0, 64
+        crypt.md5_block(block%(), h%(), r%(), k%())
+        Memory Set b_addr%, 0, 64
       EndIf
 
-      ' Last 64-bits of chunk% should be data length in bits as a 64-bit little-endian integer.
-      Poke Integer chunk_addr% + 56, size% * 8
+      ' Last 64-bits of block% should be data length in bits as a 64-bit little-endian integer.
+      Poke Integer b_addr% + 56, size% * 8
     EndIf
 
-    crypt.md5_chunk(chunk%(), h%(), r%(), k%())
+    crypt.md5_block(block%(), h%(), r%(), k%())
 
     Inc cur%, 64
   Loop While num% = 64
 
-  Local i%
-  Local h_addr% = Peek(VarAddr h%())
-  For i% = 0 To 31
-    ' Note we are only interested in the bottom 4-bytes of each Integer.
-    If (i% Mod 8) < 4 Then Cat crypt.md5$, Hex$(Peek(Byte h_addr% + i%), 2)
-  Next
+  Const BASE% = Mm.Info(Option Base)
+  out%(BASE%)     = h%(BASE%)     Or h%(BASE% + 1) << 32
+  out%(BASE% + 1) = h%(BASE% + 2) Or h%(BASE% + 3) << 32
+  crypt.md5% = 1
 
-  crypt.md5$ = LCase$(crypt.md5$)
+End Function
+
+' Formats 128-bit MD5 hash as a string.
+'
+' @param  md5%()  the MD5 hash in little-endian format (2 elements = 16 bytes = 128-bits)
+' @return         the formatted MD5 hash.
+Function crypt.md5_fmt$(md5%())
+  If Bound(md5%(), 1) - Bound(md5%(), 0) <> 1 Then Error "md5%() should have 2 elements"
+  Local i%, s$
+  Const md5_addr% = Peek(VarAddr md5%())
+  For i% = 0 To 15 : Cat s$, Hex$(Peek(Byte md5_addr% + i%), 2) : Next
+  crypt.md5_fmt$ = LCase$(s$)
 End Function
 
 ' Calculates the MD5 hash of a file.
 '
-' @param  fd%    file-descriptor for a file Open For Input.
-' @return        MD5 hash, 128-bit little-endian value formatted as hex.
-Function crypt.md5_file$(fd%)
+' @param  fd%     file-descriptor for a file Open For Input.
+' @param  out%()  on return the MD5 hash in little-endian format (2 elements = 16 bytes = 128-bits)
+' @return         1 on success, 0 on failure, see sys.err$ for details of failure.
+Function crypt.md5_file%(fd%, out%())
 
-  Local chunk%(array.new%(64))
-  Local chunk_addr% = Peek(VarAddr chunk%())
+  If Bound(out%(), 1) - Bound(out%(), 0) <> 1 Then Error "out%() should have 2 elements"
+
+  Local block%(array.new%(64))
+  Const b_addr% = Peek(VarAddr block%())
 
   ' Storage for hash, each element treated as 32-bit unsigned integer.
   Local h%(array.new%(4))
@@ -91,41 +107,39 @@ Function crypt.md5_file$(fd%)
     s$ = Input$(64, #fd%)
     num% = Len(s$)
     Inc size%, num%
-    Memory Set chunk_addr%, 0, 64
-    Memory Copy Peek(VarAddr s$) + 1, chunk_addr%, num%
+    Memory Set b_addr%, 0, 64
+    Memory Copy Peek(VarAddr s$) + 1, b_addr%, num%
 
     If num% < 64 Then
-      ' Append '1' bit to chunk%, the remainder will already be padded with zeros.
-      Poke Byte chunk_addr% + num%, &h80
+      ' Append '1' bit to block%, the remainder will already be padded with zeros.
+      Poke Byte b_addr% + num%, &h80
 
       If num% > 55 Then
-        crypt.md5_chunk(chunk%(), h%(), r%(), k%())
-        Memory Set chunk_addr%, 0, 64
+        crypt.md5_block(block%(), h%(), r%(), k%())
+        Memory Set b_addr%, 0, 64
       EndIf
 
-      ' Last 64-bits of chunk% should be file length in bits as a 64-bit little-endian integer.
-      Poke Integer chunk_addr% + 56, size% * 8
+      ' Last 64-bits of block% should be file length in bits as a 64-bit little-endian integer.
+      Poke Integer b_addr% + 56, size% * 8
     EndIf
 
-    crypt.md5_chunk(chunk%(), h%(), r%(), k%())
+    crypt.md5_block(block%(), h%(), r%(), k%())
   Loop While num% = 64
 
-  ' Format the hash as a string.
-  Local i%
-  Local h_addr% = Peek(VarAddr h%())
-  For i% = 0 To 31
-    ' Note we are only interested in the bottom 4-bytes of each Integer.
-    If (i% Mod 8) < 4 Then Cat crypt.md5_file$, Hex$(Peek(Byte h_addr% + i%), 2)
-  Next
+  Const BASE% = Mm.Info(Option Base)
+  out%(BASE%)     = h%(BASE%)     Or h%(BASE% + 1) << 32
+  out%(BASE% + 1) = h%(BASE% + 2) Or h%(BASE% + 3) << 32
+  crypt.md5_file% = 1
 
-  crypt.md5_file$ = LCase$(crypt.md5_file$)
 End Function
 
-' @param  chunk%()  512-bit chunk to process (64 elements).
+' Process 512-bit block in MD5 hash calculation.
+'
+' @param  block%()  512-bit block to process (64 elements).
 ' @param  h%()      hash-values (4 elements).
 ' @param  r%()      per-round shift amounts (64 elements).
 ' @param  k%()      binary integer part of the sines of integers (Radians) as constants (64 elements).
-Sub crypt.md5_chunk(chunk%(), h%(), r%(), k%())
+Sub crypt.md5_block(block%(), h%(), r%(), k%())
   Const BASE% = Mm.Info(Option Base)
 
   ' Note that all variables should be treated as unsigned 32-bit integers
@@ -139,15 +153,15 @@ Sub crypt.md5_chunk(chunk%(), h%(), r%(), k%())
     Memory Copy data_addr% + 544, Peek(VarAddr k%()), 512
   EndIf
 
-  ' Split chunk into 16 x 32-bit words.
-  Local chunk_addr% = Peek(VarAddr chunk%())
+  ' Split block into 16 x 32-bit words.
+  Local b_addr% = Peek(VarAddr block%())
   Local i%, w%(array.new%(16))
   For i% = 0 To 15
-     w%(i% + BASE%) = Peek(Word chunk_addr% + 4 * i%)
+     w%(i% + BASE%) = Peek(Word b_addr% + 4 * i%)
   Next
 
   ' Main loop.
-  Local a% = h%(base%), b% = h%(base% + 1), c% = h%(base% + 2), d% = h%(base% + 3), f%, g%, tmp%
+  Local a% = h%(BASE%), b% = h%(BASE% + 1), c% = h%(BASE% + 2), d% = h%(BASE% + 3), f%, g%, tmp%
   For i% = 0 To 63
     Select Case i%
       Case 0 To 15
@@ -168,23 +182,23 @@ Sub crypt.md5_chunk(chunk%(), h%(), r%(), k%())
     d% = c%
     c% = b%
     b% = (a% + f%) And &hFFFFFFFF
-    b% = (b% + k%(i% + base%)) And &hFFFFFFFF
-    b% = (b% + w%(g% + base%)) And &hFFFFFFFF
-    b% = (b% << r%(i% + base%)) Or (b% >> (32 - r%(i% + base%)))
+    b% = (b% + k%(i% + BASE%)) And &hFFFFFFFF
+    b% = (b% + w%(g% + BASE%)) And &hFFFFFFFF
+    b% = (b% << r%(i% + BASE%)) Or (b% >> (32 - r%(i% + BASE%)))
     b% = (b% + c%) And &hFFFFFFFF
     a% = tmp%
 
   Next
 
-  ' Add this chunk's hash to the result.
-  h%(base%)     = (h%(base%)     + a%) And &hFFFFFFFF
-  h%(base% + 1) = (h%(base% + 1) + b%) And &hFFFFFFFF
-  h%(base% + 2) = (h%(base% + 2) + c%) And &hFFFFFFFF
-  h%(base% + 3) = (h%(base% + 3) + d%) And &hFFFFFFFF
+  ' Add this block's hash to the result.
+  h%(BASE%)     = (h%(BASE%)     + a%) And &hFFFFFFFF
+  h%(BASE% + 1) = (h%(BASE% + 1) + b%) And &hFFFFFFFF
+  h%(BASE% + 2) = (h%(BASE% + 2) + c%) And &hFFFFFFFF
+  h%(BASE% + 3) = (h%(BASE% + 3) + d%) And &hFFFFFFFF
 
 End Sub
 
-' Not a real CSUB, this provides data for initialising constant arrays in crypt.md5().
+' Not a real CSUB, this provides data for initialising MD5 constants.
 CSub crypt.md5_data()
   00000000
 
@@ -228,34 +242,185 @@ CSub crypt.md5_data()
   F7537E82 00000000 BD3AF235 00000000 2AD7D2BB 00000000 EB86D391 00000000
 End CSub
 
-' @param  v%()  data to be interpreted as n% x 32-bit words
-' @param  n%    length of data, in 32-bit words
-' @param  k%()  128-bit key (16-bytes)
-Function crypt.xxtea_encrypt%(v%(), n%, k%())
+' Encrypts/decrypts file using XXTEA/CBC/PKCS#7 algorithm.
+'
+' @param  cmd$       command to perform, either "encrypt" or "decrypt".
+' @param  in_fd%     reads input from this file descriptor.
+' @param  out_fd%    writes output to this file descriptor.
+' @param  k%()       encryption key (2 elements = 16 bytes = 128-bits).
+' @param  iv%()      initialisation vector (2 elements = 16 bytes = 128-bits),
+'                    this is ignored when cmd$ = "decrypt".
+' @return            1 on success, 0 on failure, see sys.err$ for details of failure.
+Function crypt.xxtea_file%(cmd$, in_fd%, out_fd%, k%(), iv%())
+
+  If Bound(k%(), 1) - Bound(k%(), 0) <> 1 Then Error "k%() should have 2 elements"
+  If Bound(iv%(), 1) - Bound(iv%(), 0) <> 1 Then Error "iv%() should have 2 elements"
+
+  Local s$, num%
+  Const s_addr% = Peek(VarAddr s$)
+  Local block%(array.new%(2)) ' 16-bytes = 128-bits
+  Const b_addr% = Peek(VarAddr block%())
+  Local iv2%(array.new%(2)) ' 16-bytes = 128-bits
+  Const iv2_addr% = Peek(VarAddr iv2%())
+
+  If cmd$ = "encrypt" Then
+
+    ' Write 128-bit initialisation vector.
+    Poke Byte s_addr%, 16
+    Memory Copy Peek(VarAddr iv%()), s_addr% + 1, 16
+    Print #out_fd%, s$;
+
+    ' iv2%() = iv%()
+    Memory Copy Peek(VarAddr iv%()), iv2_addr%, 16
+
+    Do
+
+      ' Read 128-bit block.
+      s$ = Input$(16, #in_fd%)
+      num% = Len(s$)
+      If num% > 0 Then Memory Copy s_addr% + 1, b_addr%, num%
+
+      ' If we read a block of N bytes where N < 16 bytes long then we append PKCS#7
+      ' padding of 16 - N bytes each of value 16 - N. In the event the input file
+      ' size is an exact multiple of 16 then we append 16 bytes of value 16.
+      If num% < 16 Then Memory Set b_addr% + num%, 16 - num%, 16 - num%
+
+      ' Implement CBC by XORing iv2%() with block%().
+      Poke Integer b_addr%, Peek(Integer b_addr%) Xor Peek(Integer iv2_addr%)
+      Poke Integer b_addr% + 8, Peek(Integer b_addr% + 8) Xor Peek(Integer iv2_addr% + 8)
+
+      ' Encrypt block.
+      If Not crypt.xxtea_block%(cmd$, block%(), k%()) Then Exit Do
+
+      ' Write 128-bit block.
+      Poke Byte s_addr%, 16
+      Memory Copy b_addr%, s_addr% + 1, 16
+      Print #out_fd%, s$;
+
+      ' iv2%() = block%()
+      Memory Copy b_addr%, iv2_addr%, 16
+
+    Loop Until num% < 16
+
+  ElseIf cmd$ = "decrypt" Then
+
+    Local iv3%(array.new%(2))
+    Local iv3_addr% = Peek(VarAddr iv3%())
+
+    ' Read 128-bit initialisation vector.
+    s$ = Input$(16, #in_fd%)
+    If Len(s$) < 16 Then
+      sys.err$ = "encrypted file too short: " + Str$(Len(s$)) + " bytes"
+      Exit Function
+    EndIf
+    Memory Copy s_addr% + 1, iv2_addr%, 16
+
+    Do
+
+      ' Read 128-bit block.
+      s$ = Input$(16, #in_fd%)
+      If Len(s$) < 16 Then
+        sys.err$ = "encrypted file length not multiple of 16 bytes"
+        Exit Function
+      EndIf
+      Memory Copy s_addr% + 1, b_addr%, 16
+
+      ' iv3%() = block%(), which we will need for the next iteration.
+      Memory Copy b_addr%, iv3_addr%, 16
+
+      ' Decrypt block.
+      If Not crypt.xxtea_block%(cmd$, block%(), k%()) Then Exit Function
+
+      ' Implement CBC by XORing iv2%() with block%().
+      Poke Integer b_addr%, Peek(Integer b_addr%) Xor Peek(Integer iv2_addr%)
+      Poke Integer b_addr% + 8, Peek(Integer b_addr% + 8) Xor Peek(Integer iv2_addr% + 8)
+
+      ' iv2%() = iv3%()
+      Memory Copy iv3_addr%, iv2_addr%, 16
+
+      ' If we've reached the EOF then we do not want to write the entire
+      ' block, the last byte in the block will indicate the number of bytes
+      ' we should ignore, which may be the entire block.
+      num% = Choice(Eof(#in_fd%), 16 - Peek(Byte b_addr% + 15), 16)
+
+      ' Write block.
+      Poke Byte s_addr%, num%
+      If num% > 0 Then Memory Copy b_addr%, s_addr% + 1, num%
+      Print #out_fd%, s$;
+
+    Loop Until num% < 16
+
+  Else
+
+    Error "Unknown encryption command: " + cmd$
+
+  EndIf
+
+  crypt.xxtea_file% = 1
+
+End Function
+
+' Encrypts/decrypts block using XXTEA algorithm.
+'
+' @param  cmd$      command to perform, either "encrypt" or "decrypt".
+' @param  block%()  data to encrypted, interpreted as 32-bit words.
+' @param  k%()      encryption key (2 elements = 16 bytes = 128-bits).
+' @return           1 on success, 0 on failure, see sys.err$ for details of failure.
+Function crypt.xxtea_block%(cmd$, block%(), k%())
   Const DELTA% = &h9e3779b9 ' 4-bytes
-  Const v_addr% = Peek(VarAddr v%())
+  Const b_addr% = Peek(VarAddr block%())
   Const k_addr% = Peek(VarAddr k%())
-  Local rounds% = 6 + 52 \ n%
-  Local sum% = 0
-  Local y% = 0
-  Local z% = Peek(Word v_addr% + 4 * (n% - 1))
-  Local e%, p%
+  Const N% = 2 * (Bound(block%(), 1) - Bound(block%(), 0) + 1)
+  Local rounds% = 6 + 52 \ N%
+  Local sum%, y%, z%, e%, p%
 
-  Do
-    sum% = (sum% + DELTA%) And &hFFFFFFFF
-    e% = (sum% >> 2) And 3
-    For p% = 0 To n% - 2
-      y% = Peek(Word v_addr% + 4 * (p% + 1))
-      z% = (Peek(Word v_addr% + 4 * p%) + crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
-      Poke Word v_addr% + 4 * p%, z%
-    Next
-    y% = Peek(Word v_addr%)
-    z% = (Peek(Word v_addr% + 4 * (n% - 1)) + crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
-    Poke Word v_addr% + 4 * (n% - 1), z%
-    Inc rounds%, -1
-  Loop While rounds%
+  If cmd$ = "encrypt" Then
 
-  crypt.xxtea_encrypt% = 1
+    sum% = 0
+    y% = 0
+    z% = Peek(Word b_addr% + 4 * (N% - 1))
+
+    Do
+      sum% = (sum% + DELTA%) And &hFFFFFFFF
+      e% = (sum% >> 2) And 3
+      For p% = 0 To N% - 2
+        y% = Peek(Word b_addr% + 4 * (p% + 1))
+        z% = (Peek(Word b_addr% + 4 * p%) + crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
+        Poke Word b_addr% + 4 * p%, z%
+      Next
+      y% = Peek(Word b_addr%)
+      z% = (Peek(Word b_addr% + 4*(N%-1)) + crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
+      Poke Word b_addr% + 4 * (N% - 1), z%
+      Inc rounds%, -1
+    Loop While rounds%
+
+  ElseIf cmd$ = "decrypt" Then
+
+    sum% = rounds% * DELTA%
+    y% = Peek(Word b_addr%)
+    z% = 0
+
+    Do
+      e% = (sum% >> 2) And 3
+      For p% = N% - 1 To 1 Step -1
+        z% = Peek(Word b_addr% + 4 * (p% - 1))
+        y% = (Peek(Word b_addr% + 4 * p%) - crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
+        Poke Word b_addr% + 4 * p%, y%
+      Next
+      z% = Peek(Word b_addr% + 4 * (N% - 1))
+      y% = (Peek(Word b_addr%) - crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
+      Poke Word b_addr%, y%
+      sum% = (sum% - DELTA%) And &hFFFFFFFF
+      Inc rounds%, -1
+    Loop While rounds%
+
+  Else
+
+    Error "Unknown encryption command: " + cmd$
+
+  EndIf
+
+  crypt.xxtea_block% = 1
 End Function
 
 Function crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)
@@ -263,39 +428,4 @@ Function crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)
   Inc lhs%, (y% >> 3) Xor ((z% << 4) And &hFFFFFFFF)
   Local rhs% = (sum% Xor y%) + (Peek(Word k_addr% + 4 * ((p% And 3) Xor e%)) Xor z%)
   crypt.mx% = (lhs% And &hFFFFFFFF) Xor (rhs% And &hFFFFFFFF)
-
-'  Print Hex$(y%, 8) " ";
-'  Print Hex$(z%, 8) " ";
-'  Print Hex$((z% >> 5) Xor ((y% << 2) And &hFFFFFFFF), 8) " ";
-'  Print Hex$((y% >> 3) Xor ((z% << 4) And &hFFFFFFFF), 8) " ";
-'  Print Hex$(sum% Xor y%, 8) " ";
-'  Print Hex$(Peek(Word k_addr% + 4 * ((p% And 3) Xor e%)) Xor z%, 8) " ";
-'  Print Hex$(crypt.mx%, 8)
-End Function
-
-Function crypt.xxtea_decrypt%(v%(), n%, k%())
-  Const DELTA% = &h9e3779b9 ' 4-bytes
-  Const v_addr% = Peek(VarAddr v%())
-  Const k_addr% = Peek(VarAddr k%())
-  Local rounds% = 6 + 52 \ n%
-  Local sum% = rounds% * DELTA%
-  Local y% = Peek(Word v_addr%)
-  Local z% = 0
-  Local e%, p%
-
-  Do
-    e% = (sum% >> 2) And 3
-    For p% = n% - 1 To 1 Step -1
-      z% = Peek(Word v_addr% + 4 * (p% - 1))
-      y% = (Peek(Word v_addr% + 4 * p%) - crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
-      Poke Word v_addr% + 4 * p%, y%
-    Next
-    z% = Peek(Word v_addr% + 4 * (n% - 1))
-    y% = (Peek(Word v_addr%) - crypt.mx%(y%, z%, sum%, k_addr%, p%, e%)) And &hFFFFFFFF
-    Poke Word v_addr%, y%
-    sum% = (sum% - DELTA%) And &hFFFFFFFF
-    Inc rounds%, -1
-  Loop While rounds%
-
-  crypt.xxtea_decrypt% = 1
 End Function

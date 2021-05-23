@@ -30,12 +30,10 @@ Function spt.get_install_dir$()
 End Function
 
 Sub spt.print_version(name$)
-  Print name$ " (SP Tools) Release " + sys.VERSION$ + " for Colour Maximite 2, MMBasic 5.06"
+  Print name$ " (SP Tools) Release " + sys.VERSION$ + " for Colour Maximite 2, MMBasic 5.07"
   Print "Copyright (c) 2020-2021 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"
   Print "This is free software: you are free to change and redistribute it."
   Print "There is NO WARRANTY, to the extent permitted by law."
-  Print
-  Print "Written by Thomas Hugo Williams."
 End Sub
