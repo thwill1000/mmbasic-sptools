@@ -1,72 +1,79 @@
 ' Copyright (c) 2020 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
+
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("lexer", "options", "sptools", "string")
+sys.provides("cmdline")
+If sys.err$ <> "" Then Error sys.err$
 
 ' Parses command-line 's$'.
 '
-' Sets 'err$' if it encounters an error.
-Sub cl_parse(s$)
+' Sets 'sys.err$' if it encounters an error.
+Sub cli.parse(s$)
   Local i = 0, o$
 
-  lx_parse_command_line(s$)
-  If err$ <> "" Then Exit Sub
+  lx.parse_command_line(s$)
+  If sys.err$ <> "" Then Exit Sub
 
   ' Process options.
 
-  Do While i < lx_num And err$ = "" And lx_type(i) = TK_OPTION
-    Select Case lx_option$(i)
-      Case "A", "all"     : cl_parse_no_arg("all", i)
-      Case "b", "brief"   : cl_parse_no_arg("brief", i)
-      Case "h", "help"    : cl_usage() : End
-      Case "no-location"  : cl_parse_no_arg("no-location", i)
-      Case "v", "version" : cl_version() : End
+  Do While i < lx.num And sys.err$ = "" And lx.type(i) = TK_OPTION
+    Select Case lx.option$(i)
+      Case "A", "all"     : cli.parse_no_arg("all", i)
+      Case "b", "brief"   : cli.parse_no_arg("brief", i)
+      Case "h", "help"    : cli.usage() : End
+      Case "no-location"  : cli.parse_no_arg("no-location", i)
+      Case "v", "version" : spt.print_version("spflow") : End
       Case Else:
-        err$ = "option '" + lx_token$(i) + "' is unknown"
+        sys.err$ = "option '" + lx.token$(i) + "' is unknown"
     End Select
   Loop
 
-  If err$ <> "" Then Exit Sub
+  If sys.err$ <> "" Then Exit Sub
 
   ' Process arguments.
 
-  If i >= lx_num Then err$ = "no input file specified" : Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "input file name must be quoted" : Exit Sub
-  op_set("infile", lx_string$(i))
+  If i >= lx.num Then sys.err$ = "no input file specified" : Exit Sub
+  If lx.type(i) <> TK_STRING Then sys.err$ = "input file name must be quoted" : Exit Sub
+  opt.set("infile", lx.string$(i))
   i = i + 1
 
-  If i >= lx_num Then Exit Sub
-  If lx_type(i) <> TK_STRING Then err$ = "output file name must be quoted" : Exit Sub
-  op_set("outfile", lx_string$(i))
+  If i >= lx.num Then Exit Sub
+  If lx.type(i) <> TK_STRING Then sys.err$ = "output file name must be quoted" : Exit Sub
+  opt.set("outfile", lx.string$(i))
   i = i + 1
 
-  If i <> lx_num Then err$ = "unexpected argument '" + lx_token$(i) + "'"
+  If i <> lx.num Then sys.err$ = "unexpected argument '" + lx.token$(i) + "'"
 End Sub
 
 ' Parses an option with an argument.
-Sub cl_parse_arg(option$, i, arg$)
-  If lx_token$(i + 1) <> "=" Or lx_token$(i + 2) = "" Then
-    err$ = "missing argument"
+Sub cli.parse_arg(option$, i, arg$)
+  If lx.token$(i + 1) <> "=" Or lx.token$(i + 2) = "" Then
+    sys.err$ = "missing argument"
   Else
-    op_set(option$, lx_token$(i + 2))
+    opt.set(option$, lx.token$(i + 2))
   EndIf
-  If err$ <> "" Then err$ = "option '" + lx_token$(i) + "' expects " + arg$ + " argument"
+  If sys.err$ <> "" Then sys.err$ = "option '" + lx.token$(i) + "' expects " + arg$ + " argument"
   i = i + 3
 End Sub
 
 ' Parses an option without an argument.
-Sub cl_parse_no_arg(option$, i)
-  If lx_token$(i + 1) = "=" Then
-    err$ = "option '" + lx_token$(i) + "' does not expect argument"
+Sub cli.parse_no_arg(option$, i)
+  If lx.token$(i + 1) = "=" Then
+    sys.err$ = "option '" + lx.token$(i) + "' does not expect argument"
   Else
-    op_set(option$, "on")
+    opt.set(option$, "on")
   EndIf
   i = i + 1
 End Sub
 
-Sub cl_usage()
-  Local in$ = Chr$(34) + "input file" + Chr$(34)
-  Local out$ = Chr$(34) + "output file" + Chr$(34)
-  Print "Usage: RUN "; Chr$(34); "spflow.bas" ; Chr$(34); ", [OPTION]... "; in$; " ["; out$; "]"
+Sub cli.usage()
+  Local in$ = str.quote$("input file")
+  Local out$ = str.quote$("output file")
+  Print "Usage: RUN " str.quote$("spflow.bas") ", [OPTION]... " in$ " [" out$ "]"
   Print
-  Print "Generate an MMBasic flowgraph for the " + in$
+  Print "Generate an MMBasic flowgraph for the " in$
   Print
   Print "  -A, --all      produce graphs for all functions/subroutines, even those"
   Print "                 unreachable from the global scope"
@@ -76,15 +83,4 @@ Sub cl_usage()
   Print "  -h, --help     display this help and exit"
   Print "  --no-location  omit filenames and line numbers from the output"
   Print "  -v, --version  output version information and exit"
-End Sub
-
-Sub cl_version()
-  Print "spflow " + SPT_VERSION$
-  Print "Copyright (c) 2020 Thomas Hugo Williams"
-  Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
-  Print "License MIT <https://opensource.org/licenses/MIT>"
-  Print "This is free software: you are free to change and redistribute it."
-  Print "There is NO WARRANTY, to the extent permitted by law."
-  Print
-  Print "Written by Thomas Hugo Williams."
 End Sub

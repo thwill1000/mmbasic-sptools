@@ -1,6 +1,6 @@
 #!/bin/bash
 
-release=1b2
+release=1b3
 release_dir="sptools-r$release"
 base="$release_dir/sptools"
 

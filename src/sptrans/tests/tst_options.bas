@@ -1,20 +1,24 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
 
-#Include "../options.inc"
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
-#Include "../../common/list.inc"
-#Include "../../common/set.inc"
+#Include "../../splib/system.inc"
+#Include "../../splib/array.inc"
+#Include "../../splib/list.inc"
+#Include "../../splib/string.inc"
+#Include "../../splib/file.inc"
+#Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
+#Include "../options.inc"
 
 add_test("test_colour")
 add_test("test_comments")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_indent")
+add_test("test_keywords")
 add_test("test_spacing")
 add_test("test_infile")
 add_test("test_outfile")
@@ -25,16 +29,16 @@ run_tests()
 End
 
 Sub setup_test()
-  op_init()
+  opt.init()
 End Sub
 
 Sub teardown_test()
 End Sub
 
-Function test_colour()
+Sub test_colour()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, op_colour)
+  assert_int_equals(0, opt.colour)
 
   elements$(0) = "0"
   elements$(1) = "off"
@@ -43,9 +47,9 @@ Function test_colour()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_colour = 999
-    op_set("colour", elements$(i))
-    assert_equals(0, op_colour)
+    opt.colour = 999
+    opt.set("colour", elements$(i))
+    assert_int_equals(0, opt.colour)
     i = i + 1
   Loop
 
@@ -54,20 +58,20 @@ Function test_colour()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_colour = 999
-    op_set("colour", elements$(i))
-    assert_equals(1, op_colour)
+    opt.colour = 999
+    opt.set("colour", elements$(i))
+    assert_int_equals(1, opt.colour)
     i = i + 1
   Loop
 
-  op_set("colour", "foo")
+  opt.set("colour", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_comments()
+Sub test_comments()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, op_comments)
+  assert_int_equals(-1, opt.comments)
 
   elements$(0) = "preserve"
   elements$(1) = "default"
@@ -77,9 +81,9 @@ Function test_comments()
   elements$(5) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = 999
-    op_set("comments", elements$(i))
-    assert_equals(-1, op_comments)
+    opt.comments = 999
+    opt.set("comments", elements$(i))
+    assert_int_equals(-1, opt.comments)
     i = i + 1
   Loop
 
@@ -90,20 +94,20 @@ Function test_comments()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = 999
-    op_set("comments", elements$(i))
-    assert_equals(0, op_comments)
+    opt.comments = 999
+    opt.set("comments", elements$(i))
+    assert_int_equals(0, opt.comments)
     i = i + 1
   Loop
 
-  op_set("comments", "foo")
+  opt.set("comments", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_empty_lines()
+Sub test_empty_lines()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, op_empty_lines)
+  assert_int_equals(-1, opt.empty_lines)
 
   elements$(0) = "preserve"
   elements$(1) = "default"
@@ -113,9 +117,9 @@ Function test_empty_lines()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_empty_lines = 999
-    op_set("empty-lines", elements$(i))
-    assert_equals(-1, op_empty_lines)
+    opt.empty_lines = 999
+    opt.set("empty-lines", elements$(i))
+    assert_int_equals(-1, opt.empty_lines)
     i = i + 1
   Loop
 
@@ -126,9 +130,9 @@ Function test_empty_lines()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = 999
-    op_set("empty-lines", elements$(i))
-    assert_equals(0, op_empty_lines)
+    opt.comments = 999
+    opt.set("empty-lines", elements$(i))
+    assert_int_equals(0, opt.empty_lines)
     i = i + 1
   Loop
 
@@ -137,20 +141,20 @@ Function test_empty_lines()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_comments = 999
-    op_set("empty-lines", elements$(i))
-    assert_equals(1, op_empty_lines)
+    opt.comments = 999
+    opt.set("empty-lines", elements$(i))
+    assert_int_equals(1, opt.empty_lines)
     i = i + 1
   Loop
 
-  op_set("empty-lines", "foo")
+  opt.set("empty-lines", "foo")
   assert_error("expects 'on|off|single' argument")
-End Function
+End Sub
 
-Function test_format_only()
+Sub test_format_only()
   Local elements$(10) Length 10, i
 
-  assert_equals(0, op_format_only)
+  assert_int_equals(0, opt.format_only)
 
   elements$(0) = "0"
   elements$(1) = "off"
@@ -159,9 +163,9 @@ Function test_format_only()
   elements$(4) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_format_only = 999
-    op_set("format-only", elements$(i))
-    assert_equals(0, op_format_only)
+    opt.format_only = 999
+    opt.set("format-only", elements$(i))
+    assert_int_equals(0, opt.format_only)
     i = i + 1
   Loop
 
@@ -170,20 +174,20 @@ Function test_format_only()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_format_only = 999
-    op_set("format-only", elements$(i))
-    assert_equals(1, op_format_only)
+    opt.format_only = 999
+    opt.set("format-only", elements$(i))
+    assert_int_equals(1, opt.format_only)
     i = i + 1
   Loop
 
-  op_set("format-only", "foo")
+  opt.set("format-only", "foo")
   assert_error("expects 'on|off' argument")
-End Function
+End Sub
 
-Function test_indent()
+Sub test_indent()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, op_indent_sz)
+  assert_int_equals(-1, opt.indent_sz)
 
   elements$(0) = "-1"
   elements$(1) = "preserve"
@@ -193,9 +197,9 @@ Function test_indent()
   elements$(5) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_indent_sz = 999
-    op_set("indent", elements$(i))
-    assert_equals(-1, op_indent_sz)
+    opt.indent_sz = 999
+    opt.set("indent", elements$(i))
+    assert_int_equals(-1, opt.indent_sz)
     i = i + 1
   Loop
 
@@ -207,25 +211,90 @@ Function test_indent()
   elements$(5) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_indent_sz = 999
-    op_set("indent", elements$(i))
-    assert_equals(i, op_indent_sz)
+    opt.indent_sz = 999
+    opt.set("indent", elements$(i))
+    assert_int_equals(i, opt.indent_sz)
     i = i + 1
   Loop
 
-  err$ = ""
-  op_set("indent", "foo")
+  sys.err$ = ""
+  opt.set("indent", "foo")
   assert_error("expects 'on|<number>' argument")
 
-  err$ = ""
-  op_set("indent", "-2")
+  sys.err$ = ""
+  opt.set("indent", "-2")
   assert_error("expects 'on|<number>' argument")
-End Function
+End Sub
 
-Function test_spacing()
+Sub test_keywords()
   Local elements$(10) Length 10, i
 
-  assert_equals(-1, op_spacing)
+  assert_int_equals(-1, opt.keywords)
+
+  elements$(0) = "preserve"
+  elements$(1) = "default"
+  elements$(2) = "-1"
+  elements$(3) = ""
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(-1, opt.keywords)
+    Inc i
+  Loop
+
+  elements$(0) = "lower"
+  elements$(1) = "l"
+  elements$(2) = "0"
+  elements$(3) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(0, opt.keywords)
+    Inc i
+  Loop
+
+  elements$(0) = "mixed"
+  elements$(1) = "pascal"
+  elements$(2) = "m"
+  elements$(3) = "p"
+  elements$(4) = "1"
+  elements$(5) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(1, opt.keywords)
+    Inc i
+  Loop
+
+  elements$(0) = "upper"
+  elements$(1) = "u"
+  elements$(2) = "2"
+  elements$(3) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.keywords = 999
+    opt.set("keywords", elements$(i))
+    assert_int_equals(2, opt.keywords)
+    Inc i
+  Loop
+
+  sys.err$ = ""
+  opt.set("keywords", "foo")
+  assert_error("expects 'preserve|lower|pascal|upper' argument")
+
+  sys.err$ = ""
+  opt.set("keywords", "3")
+  assert_error("expects 'preserve|lower|pascal|upper' argument")
+End Sub
+
+Sub test_spacing()
+  Local elements$(10) Length 10, i
+
+  assert_int_equals(-1, opt.spacing)
 
   elements$(0) = "preserve"
   elements$(1) = "default"
@@ -235,9 +304,9 @@ Function test_spacing()
   elements$(5) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_spacing = 999
-    op_set("spacing", elements$(i))
-    assert_equals(-1, op_spacing)
+    opt.spacing = 999
+    opt.set("spacing", elements$(i))
+    assert_int_equals(-1, opt.spacing)
     i = i + 1
   Loop
 
@@ -246,9 +315,9 @@ Function test_spacing()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_spacing = 999
-    op_set("spacing", elements$(i))
-    assert_equals(0, op_spacing)
+    opt.spacing = 999
+    opt.set("spacing", elements$(i))
+    assert_int_equals(0, opt.spacing)
     i = i + 1
   Loop
 
@@ -257,9 +326,9 @@ Function test_spacing()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_spacing = 999
-    op_set("spacing", elements$(i))
-    assert_equals(1, op_spacing)
+    opt.spacing = 999
+    opt.set("spacing", elements$(i))
+    assert_int_equals(1, opt.spacing)
     i = i + 1
   Loop
 
@@ -268,41 +337,41 @@ Function test_spacing()
   elements$(2) = Chr$(0)
   i = 0
   Do While elements$(i) <> Chr$(0)
-    op_spacing = 999
-    op_set("spacing", elements$(i))
-    assert_equals(2, op_spacing)
+    opt.spacing = 999
+    opt.set("spacing", elements$(i))
+    assert_int_equals(2, opt.spacing)
     i = i + 1
   Loop
 
-  err$ = ""
-  op_set("spacing", "foo")
+  sys.err$ = ""
+  opt.set("spacing", "foo")
   assert_error("expects 'on|minimal|compact|generous' argument")
 
-  err$ = ""
-  op_set("spacing", "3")
+  sys.err$ = ""
+  opt.set("spacing", "3")
   assert_error("expects 'on|minimal|compact|generous' argument")
-End Function
+End Sub
 
-Function test_infile()
-  assert_string_equals("", op_infile$)
+Sub test_infile()
+  assert_string_equals("", opt.infile$)
 
-  err$ = ""
-  op_set("infile", "foo.bas")
+  sys.err$ = ""
+  opt.set("infile", "foo.bas")
   assert_no_error()
-  assert_string_equals("foo.bas", op_infile$)
-End Function
+  assert_string_equals("foo.bas", opt.infile$)
+End Sub
 
-Function test_outfile()
-  assert_string_equals("", op_outfile$)
+Sub test_outfile()
+  assert_string_equals("", opt.outfile$)
 
-  err$ = ""
-  op_set("outfile", "foo.bas")
+  sys.err$ = ""
+  opt.set("outfile", "foo.bas")
   assert_no_error()
-  assert_string_equals("foo.bas", op_outfile$)
-End Function
+  assert_string_equals("foo.bas", opt.outfile$)
+End Sub
 
-Function test_unknown()
-  err$ = ""
-  op_set("unknown", "foo")
+Sub test_unknown()
+  sys.err$ = ""
+  opt.set("unknown", "foo")
   assert_error("unknown option: unknown")
-End Function
+End Sub

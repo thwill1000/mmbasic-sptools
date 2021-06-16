@@ -1,129 +1,135 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
 
 Const BS$ = Chr$(8)
 Const CR$ = Chr$(13)
-Const QU$ = Chr$(34)
 
+#Include "../splib/system.inc"
+#Include "../splib/array.inc"
+#Include "../splib/list.inc"
+#Include "../splib/string.inc"
+#Include "../splib/file.inc"
+#Include "../splib/map.inc"
+#Include "../splib/set.inc"
+#Include "../splib/vt100.inc"
+#Include "../common/sptools.inc"
 #Include "input.inc"
+#Include "keywords.inc"
 #Include "lexer.inc"
 #Include "options.inc"
 #Include "output.inc"
 #Include "pprint.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
-#Include "../common/error.inc"
-#Include "../common/file.inc"
-#Include "../common/list.inc"
-#Include "../common/map.inc"
-#Include "../common/set.inc"
-#Include "../common/sptools.inc"
-#Include "../common/strings.inc"
 
 Sub cendl()
-  If op_outfile$ <> "" Then Print
+  If opt.outfile$ <> "" Then Print
 End Sub
 
 Sub cout(s$)
-  If op_outfile$ <> "" Then Print s$;
+  If opt.outfile$ <> "" Then Print s$;
 End Sub
 
 Sub cerror(msg$)
-  Local i = in_files_sz - 1
+  Local i = in.num_open_files% - 1
   Print
-  Print "[" + in_files$(i) + ":" + Str$(in_line_num(i)) + "] Error: " + msg$
+  Print "[" + in.files$(i) + ":" + Str$(in.line_num(i)) + "] Error: " + msg$
   End
 End Sub
 
 Sub main()
   Local s$, t
 
-  op_init()
+  opt.init()
 
-  cl_parse(Mm.CmdLine$)
-  If err$ <> "" Then Print "sptrans: "; err$ : Print : cl_usage() : End
+  cli.parse(Mm.CmdLine$)
+  If sys.err$ <> "" Then Print "sptrans: "; sys.err$ : Print : cli.usage() : End
 
-  If Not fil.exists%(op_infile$) Then Print "sptrans: input file '" op_infile$ "' not found." : End
+  If Not fil.exists%(opt.infile$) Then
+    Print "sptrans: input file '" opt.infile$ "' not found."
+    End
+  EndIf
 
-  If op_outfile$ <> "" Then
-    If fil.exists%(op_outfile$)) Then
-      Line Input "Overwrite existing '" + op_outfile$ + "' [y|N] ? ", s$
+  If opt.outfile$ <> "" Then
+    If fil.exists%(opt.outfile$)) Then
+      Line Input "Overwrite existing '" + opt.outfile$ + "' [y|N] ? ", s$
       If LCase$(s$) <> "y" Then Print "CANCELLED" : End
       Print
     EndIf
-    op_colour = 0
+    opt.colour = 0
   EndIf
 
-  lx_load_keywords(SPT_RESOURCES_DIR$ + "/keywords.txt")
+  keywords.load()
 
   ' No line numbers when output to file.
-  If op_outfile$ <> "" Then out_line_num_fmt$ = ""
+  If opt.outfile$ <> "" Then out.line_num_fmt$ = ""
 
-  out_open(op_outfile$)
+  out.open(opt.outfile$)
 
-  If Not op_format_only Then
-    If op_colour Then out_print(TK_COLOUR$(TK_COMMENT))
-    out_print("' Transpiled on " + DateTime$(Now))
-    If op_colour Then out_print(VT100_RESET)
-    out_endl()
-    out_endl()
+  If Not opt.format_only Then
+    If opt.colour Then out.print(TK_COLOUR$(TK_COMMENT))
+    out.print("' Transpiled on " + DateTime$(Now))
+    If opt.colour Then out.print(vt100.colour$("reset"))
+    out.endl()
+    out.endl()
   EndIf
 
-  cout("Transpiling from '" + op_infile$ + "' to '" + op_outfile$ + "' ...") : cendl()
-  in_open(op_infile$)
-  If err$ <> "" Then cerror(err$)
-  cout(in_files$(0)) : cendl()
+  cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
+  in.open(opt.infile$)
+  If sys.err$ <> "" Then cerror(sys.err$)
+  cout(in.files$(0)) : cendl()
   cout("   ")
 
   t = Timer
   Do
-    cout(BS$ + Mid$("\|/-", ((in_line_num(in_files_sz - 1) \ 8) Mod 4) + 1, 1))
+    cout(BS$ + Mid$("\|/-", ((in.line_num(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
-    s$ = in_readln$()
-    lx_parse_basic(s$)
-    If err$ = "" Then
-      If Not op_format_only Then transpile()
+    s$ = in.readln$()
+    lx.parse_basic(s$)
+    If sys.err$ = "" Then
+      If Not opt.format_only Then transpile()
       If tr_include$ <> "" Then open_include()
     EndIf
-    If err$ <> "" Then cerror(err$)
+    If sys.err$ <> "" Then cerror(sys.err$)
 
-    pp_print_line()
+    pp.print_line()
 
-    If Eof(#in_files_sz) Then
-      If in_files_sz > 1 Then close_include() Else in_close()
-      If err$ <> "" Then cerror(err$)
-      cout(BS$ + " " + CR$ + Space$(1 + in_files_sz * 2))
+    If Eof(#in.num_open_files%) Then
+      If in.num_open_files% > 1 Then close_include() Else in.close()
+      If sys.err$ <> "" Then cerror(sys.err$)
+      cout(BS$ + " " + CR$ + Space$(1 + in.num_open_files% * 2))
     EndIf
 
-  Loop Until in_files_sz = 0
+  Loop Until in.num_open_files% = 0
 
   Print
   Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
 
-  out_close()
+  out.close()
 
 End Sub
 
 Sub open_include()
-  Local s$ = lx_line$
+  Local s$ = lx.line$
   s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
-  lx_parse_basic(s$)
-  If err$ = "" Then in_open(tr_include$)
-  If err$ = "" Then
-    Local i = in_files_sz
-    cout(CR$ + Space$((i - 1) * 2) + in_files$(i - 1)) : cendl()
+  lx.parse_basic(s$)
+  If sys.err$ = "" Then in.open(tr_include$)
+  If sys.err$ = "" Then
+    Local i = in.num_open_files%
+    cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
     cout(" " + Space$(i * 2))
   EndIf
 End Sub
 
 Sub close_include()
-  Local s$ = "#Include " + QU$ + in_files$(in_files_sz - 1) + QU$
+  Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
-  lx_parse_basic(s$)
-  If err$ = "" Then pp_print_line()
-  If err$ = "" Then in_close()
+  lx.parse_basic(s$)
+  If sys.err$ = "" Then pp.print_line()
+  If sys.err$ = "" Then in.close()
 End Sub
 
 main()

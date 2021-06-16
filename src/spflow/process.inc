@@ -18,9 +18,7 @@ Const MAX_NUM_SUBS = 1000
 '
 ' When pass 1 ends an entry is added to represent the global scope:
 '   "global*" > "*GLOBAL*,NAME,1,INDEX"
-Dim subs_k$(MAX_NUM_SUBS) Length 32
-Dim subs_v$(MAX_NUM_SUBS)
-Dim subs_sz
+Dim subs$(map.new%(MAX_NUM_SUBS)) Length 255
 
 ' Used by pass 2:
 '   global_calls(i) = 1 if the global scope calls subroutine 'i'.
@@ -40,9 +38,8 @@ Dim all_calls_sz = 0
 ' Name of subroutine currently being processed.
 Dim current_sub$ = GLOBAL_SCOPE$
 
-Sub pr_init()
-  map_init(subs_k$(), subs_v$(), MAX_NUM_SUBS + 1)
-  subs_sz = 0
+Sub pro.init()
+  map.init(subs$())
 
   Math Set 0, current_calls()
   Math Set 0, global_calls()
@@ -54,21 +51,26 @@ End Sub
 Sub process(pass)
   Local i
 
-  For i = 0 To lx_num - 1
+  ' Ignore directives.
+  If lx.num >= 1 Then
+    If lx.type(0) = TK_DIRECTIVE Then Exit Sub
+  EndIf
 
-    If InStr(" cfunction csub function sub ", " " + lx_token_lc$(i) + " ") Then
+  For i = 0 To lx.num - 1
+
+    If InStr(" cfunction csub function sub ", " " + lx.token_lc$(i) + " ") Then
       If i > 0 Then
-        If lx_token_lc$(i - 1) = "end" Then
+        If lx.token_lc$(i - 1) = "end" Then
           If pass = 2 Then pass2_sub_end()
           current_sub$ = GLOBAL_SCOPE$
         EndIf
-      ElseIf lx_type(i + 1) = TK_IDENTIFIER Then
+      ElseIf lx.type(i + 1) = TK_IDENTIFIER Then
         If current_sub$ <> GLOBAL_SCOPE$ Then Error "Unexpected state"
-        current_sub$ = lx_token$(i + 1)
+        current_sub$ = lx.token$(i + 1)
         If pass = 1 Then pass1_sub_begin()
       EndIf
     Else If pass = 2 Then
-      If lx_type(i) = TK_IDENTIFIER Then pass2_identifier(i)
+      If lx.type(i) = TK_IDENTIFIER Then pass2_identifier(i)
     EndIf
 
   Next i
@@ -79,9 +81,9 @@ End Sub
 '
 ' @param  i  the index of the keyword token.
 Sub pass1_sub_begin(i)
-  Local s$ = current_sub$ + "," + in_files$(in_files_sz - 1)
-  s$ = s$ + "," + Str$(in_line_num(in_files_sz - 1))
-  map_put(subs_k$(), subs_v$(), subs_sz, LCase$(current_sub$), s$)
+  Local s$ = current_sub$ + "," + in.files$(in.num_open_files% - 1)
+  s$ = s$ + "," + Str$(in.line_num(in.num_open_files% - 1))
+  map.put(subs$(), LCase$(current_sub$), s$)
 End Sub
 
 Sub pass_completed(pass)
@@ -95,8 +97,8 @@ End Sub
 Sub pass1_completed()
   ' Add map entry for the global scope.
   Local k$ = LCase$(GLOBAL_SCOPE$)
-  Local v$ = GLOBAL_SCOPE$ + "," + in_files$(0) + ",1"
-  map_put(subs_k$(), subs_v$(), subs_sz, k$, v$)
+  Local v$ = GLOBAL_SCOPE$ + "," + in.files$(0) + ",1"
+  map.put(subs$(), k$, v$)
 End Sub
 
 Sub pass2_completed()
@@ -108,20 +110,20 @@ End Sub
 '
 ' @param  i  the index of the identifier token.
 Sub pass2_identifier(i)
-  Local id$ = lx_token_lc$(i)
+  Local id$ = lx.token_lc$(i)
 
   ' If the 'id' is not in the 'subs' map then not a function or subroutine.
-  Local idx = set_get(subs_k$(), subs_sz, id$)
+  Local idx = map.get_key_index%(subs$(), id$)
   If idx = -1 Then Exit Sub
 
   ' Ignore 'id' followed by =
-  If i < lx_num - 1 Then
-    If lx_token$(i + 1) = "=" Then Exit Sub
+  If i < lx.num - 1 Then
+    If lx.token$(i + 1) = "=" Then Exit Sub
   EndIf
 
   ' Ignore 'id' preceded by function/sub.
   If i > 0 Then
-    If InStr(" cfunction csub function sub ", " " + lx_token_lc$(i - 1) + " ") Then Exit Sub
+    If InStr(" cfunction csub function sub ", " " + lx.token_lc$(i - 1) + " ") Then Exit Sub
   EndIf
 
   ' Set flag in the appropriate calls array.
@@ -136,7 +138,7 @@ End Sub
 ' CFUNCTION, CSUB, FUNCTION or SUB is processed.
 Sub pass2_sub_end()
   If current_sub$ = GLOBAL_SCOPE$ Then
-    err$ = "unexpected state; is subroutine name in 'keywords.txt'?"
+    sys.err$ = "unexpected state; is subroutine name in 'keywords.txt'?"
     Exit Sub
   EndIf
 
@@ -157,9 +159,9 @@ Sub append_calls(sub_name$, calls())
 
   ' Update the value in the 'subs' map to include a field pointing to the current
   ' position in all_calls().
-  v$ = map_get$(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$))
+  v$ = map.get$(subs$(), LCase$(sub_name$))
   v$ = v$ + "," + Str$(all_calls_sz)
-  map_put(subs_k$(), subs_v$(), subs_sz, LCase$(sub_name$), v$)
+  map.put(subs$(), LCase$(sub_name$), v$)
 
   ' Append indexes of non-zero elements to all_calls().
   For i = 0 To MAX_NUM_SUBS

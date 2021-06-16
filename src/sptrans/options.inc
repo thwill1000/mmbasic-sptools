@@ -1,125 +1,148 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
-Dim op_colour       '  0    : no syntax colouring of console output
-                    '  1    : VT100 syntax colouring of console output
-Dim op_comments     ' -1    : preserve comments
-                    '  0    : omit all comments
-Dim op_empty_lines  ' -1    : preserve empty lines
-                    '  0    : omit all empty lines
-                    '  1    : include empty line between each Function/Sub
-Dim op_format_only  '  0    : transpile
-                    '  1    : just format / pretty-print
-Dim op_indent_sz    ' -1    : preserve indenting
-                    '  0..N : automatically indent by N spaces per level
-Dim op_spacing      ' -1    : preserve spacing
-                    '  0    : omit all unnecessary (non-indent) spaces
-                    '  1    : space compactly
-                    '  2    : space generously
-Dim op_infile$      ' input file/path
-Dim op_outfile$     ' output file/path, empty for output to console
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("options")
+If sys.err$ <> "" Then Error sys.err$
 
-Sub op_init()
-  op_colour = 0
-  op_comments = -1
-  op_empty_lines = -1
-  op_format_only = 0
-  op_indent_sz = -1
-  op_spacing = -1
-  op_infile$ = ""
-  op_outfile$ = ""
+Dim opt.colour       '  0    : no syntax colouring of console output
+                     '  1    : VT100 syntax colouring of console output
+Dim opt.comments     ' -1    : preserve comments
+                     '  0    : omit all comments
+Dim opt.empty_lines  ' -1    : preserve empty lines
+                     '  0    : omit all empty lines
+                     '  1    : include empty line between each Function/Sub
+Dim opt.format_only  '  0    : transpile
+                     '  1    : just format / pretty-print
+Dim opt.indent_sz    ' -1    : preserve indenting
+                     '  0..N : automatically indent by N spaces per level
+Dim opt.keywords     ' -1    : preserve keyword capitalisation
+                     '  0    : lowercase keywords
+                     '  1    : PascalCase keywords
+                     '  2    : UPPERCASE keywords
+Dim opt.spacing      ' -1    : preserve spacing
+                     '  0    : omit all unnecessary (non-indent) spaces
+                     '  1    : space compactly
+                     '  2    : space generously
+Dim opt.infile$      ' input file/path
+Dim opt.outfile$     ' output file/path, empty for output to console
+
+Sub opt.init()
+  opt.colour = 0
+  opt.comments = -1
+  opt.empty_lines = -1
+  opt.format_only = 0
+  opt.indent_sz = -1
+  opt.keywords = -1
+  opt.spacing = -1
+  opt.infile$ = ""
+  opt.outfile$ = ""
 End Sub
 
 ' Sets the value for an option.
 '
-' If name$ or value$ are invalid then sets err$.
-Sub op_set(name$, value$)
+' If name$ or value$ are invalid then sets sys.err$.
+Sub opt.set(name$, value$)
   Select Case LCase$(name$)
-    Case "colour"      : op_set_colour(value$)
-    Case "comments"    : op_set_comments(value$)
-    Case "empty-lines" : op_set_empty_lines(value$)
-    Case "format-only" : op_set_format_only(value$)
-    Case "indent"      : op_set_indent_sz(value$)
-    Case "no-comments" : op_set_no_comments(value$)
-    Case "spacing"     : op_set_spacing(value$)
-    Case "infile"      : op_set_infile(value$)
-    Case "outfile"     : op_set_outfile(value$)
+    Case "colour"      : opt.set_colour(value$)
+    Case "comments"    : opt.set_comments(value$)
+    Case "empty-lines" : opt.set_empty_lines(value$)
+    Case "format-only" : opt.set_format_only(value$)
+    Case "indent"      : opt.set_indent_sz(value$)
+    Case "keywords"    : opt.set_keywords(value$)
+    Case "no-comments" : opt.set_no_comments(value$)
+    Case "spacing"     : opt.set_spacing(value$)
+    Case "infile"      : opt.set_infile(value$)
+    Case "outfile"     : opt.set_outfile(value$)
     Case Else
-      err$ = "unknown option: " + name$
+      sys.err$ = "unknown option: " + name$
   End Select
 End Sub
 
-Sub op_set_colour(value$)
+Sub opt.set_colour(value$)
   Select Case LCase$(value$)
-    Case "default", "off", "0", "" : op_colour = 0
-    Case "on", "1"                 : op_colour = 1
+    Case "default", "off", "0", "" : opt.colour = 0
+    Case "on", "1"                 : opt.colour = 1
     Case Else
-      err$ = "expects 'on|off' argument"
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
-Sub op_set_comments(value$)
+Sub opt.set_comments(value$)
   Select Case LCase$(value$)
-    Case "preserve", "default", "on", "-1", "" : op_comments = -1
-    Case "none", "omit", "off", "0"            : op_comments = 0
+    Case "preserve", "default", "on", "-1", "" : opt.comments = -1
+    Case "none", "omit", "off", "0"            : opt.comments = 0
     Case Else
-      err$ = "expects 'on|off' argument"
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
-Sub op_set_empty_lines(value$)
+Sub opt.set_empty_lines(value$)
   Select Case LCase$(value$)
-    Case "preserve", "default", "on", "-1", "" : op_empty_lines = -1
-    Case "none", "omit", "off", "0"            : op_empty_lines = 0
-    Case "single", "1"                         : op_empty_lines = 1
+    Case "preserve", "default", "on", "-1", "" : opt.empty_lines = -1
+    Case "none", "omit", "off", "0"            : opt.empty_lines = 0
+    Case "single", "1"                         : opt.empty_lines = 1
     Case Else
-      err$ = "expects 'on|off|single' argument"
+      sys.err$ = "expects 'on|off|single' argument"
   End Select
 End Sub
 
-Sub op_set_format_only(value$)
+Sub opt.set_format_only(value$)
   Select Case LCase$(value$)
-    Case "default", "off", "0", "" : op_format_only = 0
-    Case "on", "1"                 : op_format_only = 1
-    Case Else                      : err$ = "expects 'on|off' argument"
+    Case "default", "off", "0", "" : opt.format_only = 0
+    Case "on", "1"                 : opt.format_only = 1
+    Case Else                      : sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
-Sub op_set_indent_sz(value$)
+Sub opt.set_indent_sz(value$)
   Select Case LCase$(value$)
-    Case "preserve", "default", "on", "-1", "" : op_indent_sz = -1
+    Case "preserve", "default", "on", "-1", "" : opt.indent_sz = -1
     Case Else
       If Str$(Val(value$)) = value$ And Val(value$) >= 0 Then
-        op_indent_sz = Val(value$)
+        opt.indent_sz = Val(value$)
       Else
-        err$= "expects 'on|<number>' argument"
+        sys.err$= "expects 'on|<number>' argument"
       EndIf
     End Select
   End Select
 End Sub
 
-Sub op_set_no_comments(value$)
+Sub opt.set_keywords(value$)
   Select Case LCase$(value$)
-    Case "default", "off", "0", "" : op_comments = -1
-    Case "on", "1"                 : op_comments = 0
-    Case Else                      : err$ = "expects 'on|off' argument"
-  End Select
-End Sub
-
-Sub op_set_spacing(value$)
-  Select Case LCase$(value$)
-    Case "preserve", "default", "on", "-1", "" : op_spacing = -1
-    Case "minimal", "off", "omit", "0"         : op_spacing = 0
-    Case "compact", "1"                        : op_spacing = 1
-    Case "generous", "2"                       : op_spacing = 2
+    Case "preserve", "default", "on", "-1", "" : opt.keywords = -1
+    Case "lower", "l", "0"                     : opt.keywords = 0
+    Case "pascal", "mixed", "m", "p", "1"      : opt.keywords = 1
+    Case "upper", "u", "2"                     : opt.keywords = 2
     Case Else
-      err$ = "expects 'on|minimal|compact|generous' argument"
+      sys.err$ = "expects 'preserve|lower|pascal|upper' argument"
   End Select
 End Sub
 
-Sub op_set_infile(value$)
-  op_infile$ = value$
+Sub opt.set_no_comments(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.comments = -1
+    Case "on", "1"                 : opt.comments = 0
+    Case Else                      : sys.err$ = "expects 'on|off' argument"
+  End Select
 End Sub
 
-Sub op_set_outfile(value$)
-  op_outfile$ = value$
+Sub opt.set_spacing(value$)
+  Select Case LCase$(value$)
+    Case "preserve", "default", "on", "-1", "" : opt.spacing = -1
+    Case "minimal", "off", "omit", "0"         : opt.spacing = 0
+    Case "compact", "1"                        : opt.spacing = 1
+    Case "generous", "2"                       : opt.spacing = 2
+    Case Else
+      sys.err$ = "expects 'on|minimal|compact|generous' argument"
+  End Select
+End Sub
+
+Sub opt.set_infile(value$)
+  opt.infile$ = value$
+End Sub
+
+Sub opt.set_outfile(value$)
+  opt.outfile$ = value$
 End Sub

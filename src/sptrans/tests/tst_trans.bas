@@ -1,21 +1,27 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' For Colour Maximite 2, MMBasic 5.06
 
 Option Explicit On
 Option Default Integer
 
 Const MAX_NUM_FILES = 5
-Dim in_files_sz = 1
+Dim in.num_open_files = 1
 
+#Include "../../splib/system.inc"
+#Include "../../splib/array.inc"
+#Include "../../splib/list.inc"
+#Include "../../splib/string.inc"
+#Include "../../splib/file.inc"
+#Include "../../splib/map.inc"
+#Include "../../splib/set.inc"
+#Include "../../splib/vt100.inc"
+#Include "../../sptest/unittest.inc"
+#Include "../../common/sptools.inc"
+#Include "../keywords.inc"
 #Include "../lexer.inc"
 #Include "../trans.inc"
-#Include "../../common/error.inc"
-#Include "../../common/file.inc"
-#Include "../../common/list.inc"
-#Include "../../common/map.inc"
-#Include "../../common/set.inc"
-#Include "../../sptest/unittest.inc"
 
-lx_load_keywords("\sptools\resources\keywords.txt")
+keywords.load()
 
 add_test("test_replace")
 
@@ -29,11 +35,11 @@ End Sub
 Sub teardown_test()
 End Sub
 
-Function test_replace()
-  map_clear(replace$(), with$(), replace_sz)
-  lx_parse_basic("'!replace x      y") : transpile()
-  lx_parse_basic("'!replace &hFFFF z") : transpile()
-  lx_parse_basic("Dim x = &hFFFF ' comment") : transpile()
+Sub test_replace()
+  map.clear(replace$())
+  lx.parse_basic("'!replace x      y") : transpile()
+  lx.parse_basic("'!replace &hFFFF z") : transpile()
+  lx.parse_basic("Dim x = &hFFFF ' comment") : transpile()
 
   expect_tokens(5)
   expect_tk(0, TK_KEYWORD, "Dim")
@@ -41,16 +47,16 @@ Function test_replace()
   expect_tk(2, TK_SYMBOL, "=")
   expect_tk(3, TK_IDENTIFIER, "z")
   expect_tk(4, TK_COMMENT, "' comment")
-  assert_string_equals("Dim y = z ' comment", lx_line$)
-End Function
+  assert_string_equals("Dim y = z ' comment", lx.line$)
+End Sub
 
 Sub expect_tokens(num)
   assert_no_error()
-  assert_true(lx_num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx_num))
+  assert_true(lx.num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx.num))
 End Sub
 
 Sub expect_tk(i, type, s$)
-  assert_true(lx_type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx_type(i)))
-  assert_string_equals(s$, lx_token$(i))
+  assert_true(lx.type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx.type(i)))
+  assert_string_equals(s$, lx.token$(i))
 End Sub
 
