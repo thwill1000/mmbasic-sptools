@@ -1,13 +1,10 @@
-:' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For Colour Maximite 2, MMBasic 5.07
 
 Option Explicit On
 Option Default None
-
-If InStr(Mm.CmdLine$, "--base=1") Then
-  Option Base 1
-Else
-  Option Base 0
-EndIf
+Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 #Include "../system.inc"
 #Include "../array.inc"
@@ -22,7 +19,6 @@ add_test("test_provides_given_duplicates")
 add_test("test_provides_given_too_many")
 add_test("test_requires")
 add_test("test_firmware_version")
-add_test("test_pseudo")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -92,28 +88,4 @@ Sub test_firmware_version()
   assert_int_equals(50600, sys.firmware_version%("5.06"))
 '  assert_int_equals(50506, sys.firmware_version%())
   assert_int_equals(12345678, sys.firmware_version%("12.34.5.678"))
-End Sub
-
-Sub test_pseudo()
-  Local base% = Mm.Info(Option Base)
-  Local x% = sys.pseudo%(-7) ' seed the random number generator.
-
-  ' Assert that first 10 generated values are as expected.
-  Local i%
-  Local expected%(base% + 9) = (6,4,4,7,10,2,10,10,3,4)
-  For i% = base% To base% + 9
-    assert_int_equals(expected%(i%), sys.pseudo%(10))
-  Next
-
-  ' Assert that calling the Sub 1000 times generates each number 1..10 at least once.
-  Local count%(10)
-  For i% = 1 To 1000
-    x% = sys.pseudo%(10)
-    count%(x%) = count%(x%) + 1
-  Next
-
-  If base% = 0 Then assert_int_equals(0, count%(0))
-  For i% = 1 To 10
-    assert_int_equals(1, count%(i%) > 0)
-  Next
 End Sub
