@@ -81,6 +81,9 @@ Sub test_requires()
 
   sys.requires("wombat", "snafu")
   assert_error("required file(s) not included: wombat.inc, snafu.inc")
+
+  sys.requires("a", "bar", "c", "d", "e", "foo", "g", "h", "i", "j")
+  assert_error("required file(s) not included: a.inc, c.inc, d.inc, e.inc, g.inc, h.inc, i.inc, j.inc")
 End Sub
 
 Sub test_firmware_version()

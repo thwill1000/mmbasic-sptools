@@ -24,12 +24,15 @@ Sub sys.provides(f$)
 End Sub
 
 Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
+
+  ' Use indexes from 1..10 even when Option Base 0.
   Local f$(10) Length 20
   f$(1) = f1$ : f$(2) = f2$ : f$(3) = f3$ : f$(4) = f4$ : f$(5) = f5$
   f$(6) = f6$ : f$(7) = f7$ : f$(8) = f8$ : f$(9) = f9$ : f$(10) = f10$
-
-  Local i%, j%, ok%, fail%
+  Local i%
   For i% = 1 To 10 : f$(i%) = LCase$(f$(i%)) : Next
+
+  Local j%, ok%, fail%
   For i% = 1 To 10
     If f$(i%) <> "" Then
       ok% = 0
@@ -38,7 +41,7 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
           Case f$(i%) : ok% = 1 : Exit For
           Case ""     : Exit For
         End Select
-      Next j%
+      Next
       If Not ok% Then
         If Not fail% Then
           sys.err$ = "required file(s) not included: " + f$(i%) + ".inc"
@@ -48,7 +51,7 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
         EndIf
       EndIf
     EndIf
-  Next i%
+  Next
 End Sub
 
 ' Formats a firmware version as a 5-digit number, e.g.
