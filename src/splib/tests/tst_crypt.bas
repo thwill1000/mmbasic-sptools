@@ -1,8 +1,10 @@
 ' Copyright (c) 2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For Colour Maximite 2, MMBasic 5.07
 
 Option Explicit On
 Option Default None
-Option Base Choice(InStr(Mm.CmdLine$, "--base=1"), 1, 0)
+Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 #Include "../system.inc"
 #Include "../array.inc"

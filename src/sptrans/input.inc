@@ -1,4 +1,6 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For Colour Maximite 2, MMBasic 5.07
 
 ' Stack of open input source files.
 Const MAX_NUM_FILES = 5

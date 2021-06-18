@@ -1,4 +1,6 @@
-' Copyright (c) 2020 Thomas Hugo Williams
+' Copyright (c) 2020-2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For Colour Maximite 2, MMBasic 5.07
 
 Dim tg.call_stack$(list.new%(50)) Length 40
 list.init(tg.call_stack$())

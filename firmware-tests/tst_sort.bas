@@ -1,13 +1,10 @@
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
+' License MIT <https://opensource.org/licenses/MIT>
+' For Colour Maximite 2, MMBasic 5.07
 
 Option Explicit On
 Option Default None
-
-If InStr(Mm.CmdLine$, "--base=1") Then
-  Option Base 1
-Else
-  Option Base 0
-EndIf
+Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 #Include "../src/splib/system.inc"
 #Include "../src/splib/array.inc"
