@@ -17,7 +17,7 @@ Option Base 0
 #Include "../splib/file.inc"
 #Include "../common/sptools.inc"
 
-Const PROG_NAME$ = LCase$(fil.trim_extension$(fil.get_name$(Mm.Info(Current))))
+Const PROG_NAME$ = LCase$(file.trim_extension$(file.get_name$(Mm.Info(Current))))
 
 Dim cmd$
 Dim in_file$
@@ -30,7 +30,7 @@ ok% = parse_cmdline%()
 If Not ok% Then print_usage() : End
 If version% Then spt.print_version(PROG_NAME$) : End
 
-If Not fil.exists%(in_file$) Then
+If Not file.exists%(in_file$) Then
   ok% = 0
   sys.err$ = "input file '" + in_file$ + "' not found"
 EndIf
@@ -171,7 +171,7 @@ End Function
 
 Function prompt_for_overwrite%()
   Local s$ = "y"
-  If fil.exists%(out_file$) Then
+  If file.exists%(out_file$) Then
     Line Input "Overwrite existing '" + out_file$ + "' [y|N] ? ", s$
     s$ = LCase$(str.trim$(s$))
   EndIf

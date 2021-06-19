@@ -16,16 +16,16 @@ Function spt.get_install_dir$()
 
   ' First try recursing up the directory structure from the running program
   ' until a file called 'sptools.root' is found.
-  Local d$ = fil.PROG_DIR$
+  Local d$ = file.PROG_DIR$
   Do While d$ <> ""
-    If fil.exists%(d$ + "/sptools.root") Then Exit Do
-    d$ = fil.get_parent$(d$)
+    If file.exists%(d$ + "/sptools.root") Then Exit Do
+    d$ = file.get_parent$(d$)
   Loop
 
   ' Otherwise try the default installation location.
   If d$ = "" Then d$ = "A:/sptools"
 
-  If Not fil.is_directory%(d$) Then Error "directory not found: " + d$
+  If Not file.is_directory%(d$) Then Error "directory not found: " + d$
 
   spt.get_install_dir$ = d$
 End Function

@@ -49,13 +49,13 @@ Sub main()
   cli.parse(Mm.CmdLine$)
   If sys.err$ <> "" Then Print "spflow: " sys.err$ : Print : cli.usage() : End
 
-  If Not fil.exists%(opt.infile$)) Then
+  If Not file.exists%(opt.infile$)) Then
     Print "spflow: input file '" opt.infile$ "' not found."
     End
   EndIf
 
   If opt.outfile$ <> "" Then
-    If fil.exists%(opt.outfile$)) Then
+    If file.exists%(opt.outfile$)) Then
       Line Input "Overwrite existing '" + opt.outfile$ + "' [y|N] ? ", s$
       If LCase$(s$) <> "y" Then Print "CANCELLED" : End
       Print

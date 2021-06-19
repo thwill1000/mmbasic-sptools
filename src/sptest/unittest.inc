@@ -352,14 +352,14 @@ End Sub
 Sub ut.run_first()
   Print "Building list of tests ..."
   Open "/tmp/sptest.lst" For Output As #1
-  Local f$ = fil.find$(Cwd$, "*st*.bas", "file")
+  Local f$ = file.find$(Cwd$, "*st*.bas", "file")
   Local first$
   Do While f$ <> ""
     If ut.is_test_file%(f$) Then
       Print #1, f$
       If first$ = "" Then first$ = f$
     EndIf
-    f$ = fil.find$()
+    f$ = file.find$()
   Loop
   Close #1
 
@@ -376,13 +376,13 @@ Sub ut.run_first()
 End Sub
 
 Function ut.is_test_file%(f$)
-  Local name$ = fil.get_name$(f$)
+  Local name$ = file.get_name$(f$)
 
   ' Check name matches pattern for sptest files.
-  If fil.fnmatch%("test_*.bas", name$) Then ut.is_test_file% = 1
-  If fil.fnmatch%("tst_*.bas", name$) Then ut.is_test_file% = 1
-  If fil.fnmatch%("*_test.bas", name$) Then ut.is_test_file% = 1
-  If fil.fnmatch%("*_tst*.bas", name$) Then ut.is_test_file% = 1
+  If file.fnmatch%("test_*.bas", name$) Then ut.is_test_file% = 1
+  If file.fnmatch%("tst_*.bas", name$) Then ut.is_test_file% = 1
+  If file.fnmatch%("*_test.bas", name$) Then ut.is_test_file% = 1
+  If file.fnmatch%("*_tst*.bas", name$) Then ut.is_test_file% = 1
 
   If Not ut.is_test_file% Then Exit Function
 
@@ -393,7 +393,7 @@ Function ut.is_test_file%(f$)
   For i% = 1 To 50
     If Eof(#2) Then Exit For
     Line Input #2, s$
-    If fil.fnmatch%("*#include*unittest.inc*", s$) Then ut.is_test_file% = 1 : Exit For
+    If file.fnmatch%("*#include*unittest.inc*", s$) Then ut.is_test_file% = 1 : Exit For
   Next
   Close #2
 

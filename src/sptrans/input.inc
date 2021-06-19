@@ -17,14 +17,14 @@ Sub in.open(f$)
   Local f2$
 
   If list.size%(in.files$()) > 0 Then
-    If Not fil.is_absolute%(f$) Then
-      f2$ = fil.get_parent$(in.files$(0))
+    If Not file.is_absolute%(f$) Then
+      f2$ = file.get_parent$(in.files$(0))
       If f2$ <> "" Then f2$ = f2$ + "/"
     EndIf
   EndIf
   f2$ = f2$ + f$
 
-  If Not fil.exists%(f2$) Then sys.err$ = "#Include file '" + f2$ + "' not found"
+  If Not file.exists%(f2$) Then sys.err$ = "#Include file '" + f2$ + "' not found"
   If sys.err$ = "" Then
     list.push(in.files$(), f2$)
     in.num_open_files% = list.size%(in.files$())

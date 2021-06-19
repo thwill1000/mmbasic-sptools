@@ -73,7 +73,7 @@ Sub test_md5_given_string()
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
     If size% > 255 Then Continue Do
-    Open fil.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
+    Open file.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
     s$ = Input$(255, #1)
     Close #1
     assert_int_equals(size%, Len(s$))
@@ -91,7 +91,7 @@ Sub test_md5_given_long_string()
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
     LongString Clear ls%()
-    Open fil.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
+    Open file.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
     Do
       s$ = Input$(255, #1)
       LongString Append ls%(), s$
@@ -110,7 +110,7 @@ Sub test_md5_file()
   Do
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
-    Open fil.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
+    Open file.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
     assert_true(crypt.md5_file%(1, md5%()))
     Close #1
     assert_string_equals(md5_decrypted$, crypt.md5_fmt$(md5%()))
@@ -206,9 +206,9 @@ Sub test_xxtea_file()
   Do
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
-    original_file$ = fil.PROG_DIR$ + "/resources/tst_crypt/" + filename$
-    encrypted_file$ = fil.PROG_DIR$ + "/tmp/" + filename$ + ".encrypted"
-    decrypted_file$ = fil.PROG_DIR$ + "/tmp/" + filename$ + ".decrypted"
+    original_file$ = file.PROG_DIR$ + "/resources/tst_crypt/" + filename$
+    encrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".encrypted"
+    decrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".decrypted"
 
     ' Encrypt file.
     Open original_file$ For Input As #1
@@ -246,9 +246,9 @@ End Sub
 
 Sub test_xxtea_file_iv_dependent()
   Const filename$ = "lorem_ipsum.txt"
-  Const original_file$ = fil.PROG_DIR$ + "/resources/tst_crypt/" + filename$
-  Const encrypted_file$ = fil.PROG_DIR$ + "/tmp/" + filename$ + ".iv.encrypted"
-  Const decrypted_file$ = fil.PROG_DIR$ + "/tmp/" + filename$ + ".iv.decrypted"
+  Const original_file$ = file.PROG_DIR$ + "/resources/tst_crypt/" + filename$
+  Const encrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".iv.encrypted"
+  Const decrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".iv.decrypted"
   Local k%(array.new%(2)) = (17470987, -89397865243)
   Local md5%(array.new%(2))
 
@@ -295,9 +295,9 @@ End Sub
 
 Sub test_xxtea_file_key_dependent()
   Const filename$ = "lorem_ipsum.txt"
-  Const original_file$ = fil.PROG_DIR$ + "/resources/tst_crypt/" + filename$
-  Const encrypted_file$ = fil.PROG_DIR$ + "/tmp/" + filename$ + ".key.encrypted"
-  Const decrypted_file$ = fil.PROG_DIR$ + "/tmp/" + filename$ + ".key.decrypted"
+  Const original_file$ = file.PROG_DIR$ + "/resources/tst_crypt/" + filename$
+  Const encrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".key.encrypted"
+  Const decrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".key.decrypted"
   Local iv%(array.new%(2)) = (-478912, 123456789)
   Local md5%(array.new%(2))
 

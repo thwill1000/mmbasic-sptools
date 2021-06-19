@@ -15,7 +15,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1")  > 0
 #Include "../src/sptest/unittest.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const RESOURCE_DIR$ = fil.PROG_DIR$ + "/resources/tst_math"
+Const RESOURCE_DIR$ = file.PROG_DIR$ + "/resources/tst_math"
 
 add_test("test_fft")
 

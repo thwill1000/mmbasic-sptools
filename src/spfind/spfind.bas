@@ -12,8 +12,8 @@ Option Explicit On
 #Include "../splib/string.inc"
 #Include "../splib/file.inc"
 
-Dim f$ = fil.find$(Cwd$, Mm.CmdLine$, "all")
+Dim f$ = file.find$(Cwd$, Mm.CmdLine$, "all")
 Do While f$ <> ""
   Print f$
-  f$ = fil.find$()
+  f$ = file.find$()
 Loop
