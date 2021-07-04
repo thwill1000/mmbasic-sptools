@@ -4,8 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("set")
-sys.requires("keywords")
+sys.requires("set", "keywords")
 sys.provides("lexer")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -57,7 +56,7 @@ End Sub
 Sub lx.reset(line$)
   ' Clear old token data
   Do While lx.num > 0
-    lx.num = lx.num - 1
+    Inc lx.num, -1
     lx.type(lx.num) = 0
     lx.start(lx.num) = 0
     lx.len(lx.num) = 0
@@ -70,36 +69,30 @@ Sub lx.reset(line$)
 End Sub
 
 Sub lx.advance()
-  lx.pos = lx.pos + 1
-  If lx.next_char$ = "" Then
-    If lx.pos > Len(lx.line$) Then
-      lx.char$ = Chr$(10)
-    Else
-      lx.char$ = LCase$(Chr$(Peek(Var lx.line$, lx.pos)))
-    EndIf
-  Else
-    lx.char$ = lx.next_char$
+  Inc lx.pos
+  lx.char$ = lx.next_char$
+  If lx.char$ = "" Then
+    lx.char$ = Choice(lx.pos <= Len(lx.line$), LCase$(Chr$(Peek(Var lx.line$, lx.pos))), Chr$(10))
   EndIf
-  If lx.pos + 1 > Len(lx.line$) Then
-    lx.next_char$ = Chr$(10)
-  Else
+
+  If lx.pos + 1 <= Len(lx.line$) Then
     lx.next_char$ = LCase$(Chr$(Peek(Var lx.line$, lx.pos + 1)))
+  Else
+    lx.next_char$ = Chr$(10)
   EndIf
+
 End Sub
 
 Sub lx.parse_number()
   If InStr(".0123456789", lx.char$) Then
     lx.parse_decimal()
   ElseIf lx.char$ = "&" Then
-    If lx.next_char$ = "b"  Then
-      lx.parse_binary()
-    ElseIf lx.next_char$ = "h" Then
-      lx.parse_hexadecimal()
-    ElseIf lx.next_char$ = "o" Then
-      lx.parse_octal()
-    Else
-      sys.err$ = "Unknown literal type &" + lx.next_char$ : Exit Sub
-    EndIf
+    Select Case lx.next_char$
+      Case "b" : lx.parse_binary()
+      Case "h" : lx.parse_hexadecimal()
+      Case "o" : lx.parse_octal()
+      Case Else : sys.err$ = "Unknown literal type &" + lx.next_char$
+    End Select
   EndIf
 End Sub
 
@@ -127,11 +120,11 @@ Sub lx.store(type, start, length)
   lx.type(lx.num) = type
   lx.start(lx.num) = start
   lx.len(lx.num) = length
-  lx.num = lx.num + 1
+  Inc lx.num
 End Sub
 
 Sub lx.advance_while(allowed$)
-  Do While InStr(allowed$, lx.char$) > 0 : lx.advance() : Loop
+  Do While InStr(allowed$, lx.char$) : lx.advance() : Loop
 End Sub
 
 Sub lx.parse_binary()
@@ -162,11 +155,7 @@ Sub lx.parse_octal()
 End Sub
 
 Sub lx.parse_comment_or_directive()
-  If lx.next_char$ = "!" Then
-    lx.parse_directive()
-  Else
-    lx.parse_comment()
-  EndIf
+  If lx.next_char$ = "!" Then lx.parse_directive() Else lx.parse_comment()
 End Sub
 
 Sub lx.parse_directive()
@@ -194,7 +183,7 @@ Sub lx.parse_string()
 End Sub
 
 Sub lx.advance_until(disallowed$)
-  Do While Not InStr(disallowed$, lx.char$) > 0 : lx.advance() : Loop
+  Do While Not InStr(disallowed$, lx.char$) : lx.advance() : Loop
 End Sub
 
 Sub lx.parse_identifier()
@@ -203,28 +192,31 @@ Sub lx.parse_identifier()
   lx.advance()
   lx.advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
   If InStr("$!%", lx.char$) Then lx.advance()
-  If keywords.contains(Mid$(lx.line$, start, lx.pos - start)) Then
-    lx.store(TK_KEYWORD, start, lx.pos - start)
+  Local ln% = lx.pos - start
+  If keywords.contains(Mid$(lx.line$, start, ln%)) Then
+    lx.store(TK_KEYWORD, start, ln%)
   Else
-    lx.store(TK_IDENTIFIER, start, lx.pos - start)
+    lx.store(TK_IDENTIFIER, start, ln%)
   EndIf
 End Sub
 
 Sub lx.parse_symbol()
   Local start = lx.pos
 
-  If lx.char$ <> "<" And lx.char$ <> ">" And lx.char$ <> "=" Then
-    lx.store(TK_SYMBOL, start, 1)
-    lx.advance()
-  Else
-    lx.advance()
-    If lx.char$ = "<" Or lx.char$ = ">" Or lx.char$ = "=" Then
-      lx.store(TK_SYMBOL, start, 2)
+  Select Case lx.char$
+    Case "<", ">", "="
       lx.advance()
-    Else
+      Select Case lx.char$
+        Case "<", ">", "="
+          lx.store(TK_SYMBOL, start, 2)
+          lx.advance()
+        Case Else
+          lx.store(TK_SYMBOL, start, 1)
+      End Select
+    Case Else
       lx.store(TK_SYMBOL, start, 1)
-    EndIf
-  EndIf
+      lx.advance()
+  End Select
 End Sub
 
 ' Gets the text of token 'i'.
@@ -293,28 +285,31 @@ Sub lx.parse_command_line(line$)
 End Sub
 
 Sub lx.parse_option()
-  Local e = 0
-  Local legal$ = "-_abcdefghijklmnopqrstuvwxyz0123456789"
-  Local start = lx.pos
 
-  If lx.char$ = "-" Then
-    lx.advance()
-    If lx.char$ = "-" Then lx.advance()
-    If InStr(legal$, lx.char$) < 1 Then e = 1 Else lx.advance_while(legal$)
-  ElseIf lx.char$ = "/" Then
-    lx.advance()
-    If InStr(legal$, lx.char$) < 1 Then e = 1 Else lx.advance_while(legal$)
+  Const start = lx.pos
+
+  Select Case lx.char$
+    Case "-"
+      lx.advance()
+      If lx.char$ = "-" Then lx.advance()
+    Case "/"
+      lx.advance()
+    Case Else
+      Error "Unexpected badly formed option" ' Should never happen.
+  End Select
+
+  Const legal$ = "-_abcdefghijklmnopqrstuvwxyz0123456789"
+  Local ok% = InStr(legal$, lx.char$) > 0
+  If ok% Then lx.advance_while(legal$)
+  ok% = ok% And (InStr("= " + Chr$(10), lx.char$) > 0)
+
+  If ok% Then
+    lx.store(TK_OPTION, start, lx.pos - start)
   Else
-    Error ' this should never happen
-  EndIf
-
-  If e = 1 Or InStr("= " + Chr$(10), lx.char$) < 1 Then
-    If InStr("= " + Chr$(10), lx.char$) < 1 Then lx.advance()
+    If Not InStr("= " + Chr$(10), lx.char$) Then lx.advance()
     sys.err$ = "Illegal command-line option format: " + Mid$(lx.line$, start, lx.pos - start)
-    Exit Sub
   EndIf
 
-  lx.store(TK_OPTION, start, lx.pos - start)
 End Sub
 
 ' Gets the command-line option corresponding to token 'i'.
@@ -322,9 +317,6 @@ End Sub
 ' Throws an Error if token 'i' is not a command-line option.
 Function lx.option$(i)
   If lx.type(i) <> TK_OPTION Then Error "{" + lx.token$(i) + "} is not a command-line option"
-  If Mid$(lx.line$, lx.start(i), 2) = "--" Then
-    lx.option$ = Mid$(lx.line$, lx.start(i) + 2, lx.len(i) - 2)
-  Else
-    lx.option$ = Mid$(lx.line$, lx.start(i) + 1, lx.len(i) - 1)
-  EndIf
+  Local sz% = Choice(Mid$(lx.line$, lx.start(i), 2) = "--", 2, 1)
+  lx.option$ = Mid$(lx.line$, lx.start(i) + sz%, lx.len(i) - sz%)
 End Function
