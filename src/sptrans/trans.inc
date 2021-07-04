@@ -4,7 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("map", "set")
+sys.requires("set")
 sys.provides("trans")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -24,9 +24,9 @@ Dim tr.if_stack_sz(MAX_NUM_FILES - 1)
 Dim tr.flags$(set.new%(10))
 set.init(tr.flags$())
 
-' The map of replacements.
-Dim tr.replace$(map.new%(200))
-map.init(tr.replace$())
+' The list of replacements (from -> to).
+Dim tr.num_replacements
+Dim tr.replacements$(199, 1) Length 80
 
 ' Set to name of file after processing #Include
 Dim tr.include$
@@ -104,20 +104,105 @@ End Sub
 
 ' Applies replacements to the currently parsed line, lx.line$.
 Sub tr.apply_replacements()
-  If map.size%(tr.replace$()) = 0 Then Exit Sub
+  If lx.num = 0 Then Exit Sub
+  If tr.num_replacements% = 0 Then Exit Sub
+  If lx.type(0) = TK_DIRECTIVE Then Exit Sub ' Don't replace within directives.
 
-  Local i, r$, s$
-  For i = 0 TO lx.num - 1
-    r$ = map.get$(tr.replace$(), lx.token_lc$(i))
-    If r$ <> sys.NO_DATA$ Then
-      s$ = Left$(lx.line$, lx.start(i) - 1) + r$ + Mid$(lx.line$, lx.start(i) + lx.len(i))
-      lx.parse_basic(s$)
-      ' TODO: at the moment this can't change the number of tokens, but when it
-      '       can this will need looking at closer.
-      If sys.err$ <> "" Then Exit Sub
-    EndIf
-  Next i
+  Local capture$, i%, j%, k%, s$, to_$
+  For i% = 0 To tr.num_replacements% - 1
+    j% = 0
+    ' Need to use a DO rather than a FOR because the latter does not re-evaluate its end-point
+    ' at the beginning of each iteration.
+    Do While j% < lx.num
+      k% = tr.match%(j%, i%, capture$)
+      If k% > -1 Then
+        s$ = Left$(lx.line$, lx.start(j%) - 1)
+        to_$ = str.replace$(tr.replacements$(i%, 1), "|", " ")
+        to_$ = str.replace$(to_$, "%1", Field$(capture$, 1, "|"))
+        If Len(s$) + Len(to_$) + Len(lx.line$) - lx.start(k%) - lx.len(k%) > 255 Then
+          sys.err$ = "applying replacement makes line > 255 characters"
+          Exit Sub
+        EndIf
+        ' WARNING! In firmware 5.07 CAT does not error when it overflows 255 characters.
+        Cat s$, to_$
+        Cat s$, Mid$(lx.line$, lx.start(k%) + lx.len(k%))
+        lx.parse_basic(s$)
+        If sys.err$ <> "" Then Exit Sub
+      EndIf
+      Inc j%
+    Loop
+  Next
+
 End Sub
+
+' Attempts to match current token array against a 'from' specification.
+'
+' @param  ti  index into the token array from which to attempt the match.
+' @param  ri  index into the replacements array for the 'from' we are trying to match.
+' @return     the token index where the match ends, or -1 if there is no match.
+Function tr.match%(ti%, ri%, capture$)
+  Local done%, from$, i%, t$
+
+  tr.match% = -1
+  capture$ = ""
+
+  Do
+    from$ = Field$(tr.replacements$(ri, 0), i% + 1, "|")
+    t$ = lx.token$(ti% + i%)
+
+    If from$ = "" Then
+      tr.match% = ti% + i% - 1
+      done% = 1
+    ElseIf InStr("%% %d %h", Right$(from$, 2)) Mod 3 = 1 Then
+      done% = Not tr.capture%(from$, t$, capture$)
+    Else
+      done% = from$ <> LCase$(t$)
+    EndIf
+
+    Inc i%
+  Loop Until done%
+End Function
+
+Function tr.capture%(pattern$, token$, capture$)
+  Local allowed$
+
+  Select Case Right$(pattern$, 2)
+    Case "%%" : allowed$ = "*"                      ' match any character.
+    Case "%d" : allowed$ = "0123456789"             ' match decimal digits.
+    Case "%h" : allowed$ = "abcdefABCDEF0123456789" ' match hexadecimal digits.
+    Case Else : Error "Unknown pattern."
+  End Select
+
+  If Len(pattern$) = 2 Then
+    ' pattern$ is just a pattern, e.g. %%, %d, %h
+    ' - we try to match and capture the entire token$.
+    If tr.contains_only%(allowed$, token$) Then
+      Cat capture$, token$ + "|"
+      tr.capture% = 1
+    EndIf
+
+  ElseIf InStr(LCase$(token$), Left$(pattern$, Len(pattern$) - 2)) = 1 Then
+    ' pattern$ is a prefix followed by a pattern, e.g. foo%%
+    ' - we try to match and capture everything in token$ after the prefix.
+    Local t$ = Mid$(token$, Len(pattern$) - 1)
+    If tr.contains_only%(allowed$, t$) Then
+      Cat capture$, t$ + "|"
+      tr.capture% = 1
+    EndIf
+  EndIf
+End Function
+
+' Are all the characters in 's$' present in 'allowed$' ?
+' If 'allowed$' is "*" then always returns 1 (true).
+Function tr.contains_only%(allowed$, s$)
+  If allowed$ <> "*" Then
+    Local i%
+    For i% = 1 To Len(s$)
+      If Not InStr(allowed$, Mid$(s$, 1, 1)) Then Exit Function
+    Next
+  EndIf
+  tr.contains_only% = 1
+End Function
 
 Sub tr.process_clear()
   If lx.num < 2 Then sys.err$ = "expects a <flag> argument"
@@ -202,9 +287,53 @@ Sub tr.process_indent()
 End Sub
 
 Sub tr.process_replace()
-  If lx.num < 3 Then sys.err$ = "expects <from> and <to> arguments"
-  If lx.num > 3 Then sys.err$ = "has too many arguments"
-  If sys.err$ = "" Then map.put(tr.replace$(), lx.token_lc$(1), lx.token_lc$(2))
+  Local in_group%
+  Local i%
+  Local gidx% = 0
+  Local groups$(1)
+  Local gtype$(1) Length 4 = ( "from", "to" )
+
+  For i% = 1 To lx.num - 1
+    Select Case lx.token_lc$(i%)
+      Case "{"
+        If in_group% Then
+          sys.err$ = "has unexpected '{'"
+        Else
+          in_group% = 1
+        EndIf
+      Case "}"
+        If in_group% Then
+          in_group% = 0
+          If groups$(gidx%) = "" Then sys.err$ = "has empty <" + gtype$(gidx%) + "> group"
+          Inc gidx%
+        Else
+          sys.err$ = "has unexpected '}'"
+        EndIf
+      Case Else
+        If gidx% > 1 Then
+          sys.err$ = "has too many arguments"
+        ElseIf in_group% Then
+          If groups$(gidx%) <> "" Then Cat groups$(gidx%), "|"
+          Cat groups$(gidx%), lx.token$(i%)
+        Else
+          groups$(gidx%) = lx.token$(i%)
+          Inc gidx%
+        EndIf
+    End Select
+
+    If sys.err$ <> "" Then Exit For
+  Next
+
+  If sys.err$ = "" Then
+    If in_group% Then
+      sys.err$ = "has missing '}'"
+    ElseIf gidx% < 2 Then
+      sys.err$ = "expects <from> and <to> arguments"
+    Else
+      tr.add_replacement(groups$(0), groups$(1))
+    EndIf
+  EndIf
+
   If sys.err$ <> "" Then sys.err$ = "!replace directive " + sys.err$
 End Sub
 
@@ -224,4 +353,19 @@ Sub tr.process_spacing()
   If lx.num > 2 Then sys.err$ = " has too many arguments")
   If sys.err$ = "" Then opt.set_spacing(lx.token_lc$(1))
   If sys.err$ <> "" Then sys.err$ = "!spacing directive " + sys.err$
+End Sub
+
+Sub tr.clear_replacements()
+  Local i%
+  For i% = 0 To tr.num_replacements% - 1
+    tr.replacements$(i%, 0) = ""
+    tr.replacements$(i%, 1) = ""
+  Next
+  tr.num_replacements% = 0
+End Sub
+
+Sub tr.add_replacement(from$, to_$)
+  tr.replacements$(tr.num_replacements%, 0) = LCase$(from$)
+  tr.replacements$(tr.num_replacements%, 1) = to_$
+  Inc tr.num_replacements%
 End Sub

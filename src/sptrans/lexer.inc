@@ -183,6 +183,28 @@ Sub lx.parse_directive()
   lx.advance()
   lx.advance_while("-_abcdefghijklmnopqrstuvwxyz0123456789")
   lx.store(TK_DIRECTIVE, start, lx.pos - start)
+
+  If lx.token_lc$(lx.num - 1) = "'!replace" Then lx.parse_replace_directive()
+End Sub
+
+Sub lx.parse_replace_directive()
+  Local start
+
+  Do While lx.char$ <> Chr$(10)
+    If lx.char$ = " " Then
+      lx.advance()
+    ElseIf InStr("{}", lx.char$) Then
+      lx.parse_symbol()
+    Else
+      start = lx.pos
+      lx.advance()
+      lx.advance_until(" {}" + Chr$(10))
+      ' TODO: not really a KEYWORD, but a REPLACEMENT token.
+      lx.store(TK_KEYWORD, start, lx.pos - start)
+    EndIf
+
+    If sys.err$ <> "" Then Exit Do
+  Loop
 End Sub
 
 Sub lx.parse_comment()
