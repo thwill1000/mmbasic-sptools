@@ -37,10 +37,10 @@ Sub teardown_test()
 End Sub
 
 Sub test_replace()
-  map.clear(replace$())
-  lx.parse_basic("'!replace x      y") : transpile()
-  lx.parse_basic("'!replace &hFFFF z") : transpile()
-  lx.parse_basic("Dim x = &hFFFF ' comment") : transpile()
+  map.clear(tr.replace$())
+  lx.parse_basic("'!replace x      y") : tr.transpile()
+  lx.parse_basic("'!replace &hFFFF z") : tr.transpile()
+  lx.parse_basic("Dim x = &hFFFF ' comment") : tr.transpile()
 
   expect_tokens(5)
   expect_tk(0, TK_KEYWORD, "Dim")

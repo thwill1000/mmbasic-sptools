@@ -91,8 +91,8 @@ Sub main()
     s$ = in.readln$()
     lx.parse_basic(s$)
     If sys.err$ = "" Then
-      If Not opt.format_only Then transpile()
-      If tr_include$ <> "" Then open_include()
+      If Not opt.format_only Then tr.transpile()
+      If tr.include$ <> "" Then open_include()
     EndIf
     If sys.err$ <> "" Then cerror(sys.err$)
 
@@ -117,7 +117,7 @@ Sub open_include()
   Local s$ = lx.line$
   s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
   lx.parse_basic(s$)
-  If sys.err$ = "" Then in.open(tr_include$)
+  If sys.err$ = "" Then in.open(tr.include$)
   If sys.err$ = "" Then
     Local i = in.num_open_files%
     cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
