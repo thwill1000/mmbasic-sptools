@@ -32,7 +32,7 @@ Dim lx.num
 Dim lx.pos
 
 Sub lx.parse_basic(line$)
-  lx.reset.globals(line$)
+  lx.reset(line$)
   lx.advance()
 
   Do While lx.char$ <> Chr$(10)
@@ -54,7 +54,7 @@ Sub lx.parse_basic(line$)
   Loop
 End Sub
 
-Sub lx.reset.globals(line$)
+Sub lx.reset(line$)
   ' Clear old token data
   Do While lx.num > 0
     lx.num = lx.num - 1
@@ -268,7 +268,7 @@ Function lx.number(i) As Float
 End Function
 
 Sub lx.parse_command_line(line$)
-  lx.reset.globals(line$)
+  lx.reset(line$)
   lx.advance()
 
   Do While lx.char$ <> Chr$(10)
