@@ -59,7 +59,8 @@ add_test("Minimal spacing option", "test_minimal_spacing")
 add_test("Compact spacing option", "test_compact_spacing")
 add_test("Generous spacing option", "test_generous_spacing")
 add_test("Keyword capitalisation", "test_keyword_capitalisation")
-add_test("Body of CSUB is correctly syntax highlighted", "test_syntax_highlight_1")
+add_test("Syntax highlighting - CSUBs", "test_syntax_highlight_1")
+add_test("Syntax highlighting - comments", "test_syntax_highlight_2")
 
 run_tests()
 
@@ -99,9 +100,10 @@ End Sub
 Sub test_comments_1()
   in$(0) = "' comment 1"
   in$(1) = "  ' comment 2"
-  in$(2) = "If a = b Then ' comment 3"
+  in$(2) = "If a = b Then REM comment 3"
   in$(3) = "  Print c ' comment 4"
   in$(4) = "EndIf ' comment 5"
+  in$(5) = "REM comment 6"
 
   opt.comments = 0
   parse_lines()
@@ -111,6 +113,7 @@ Sub test_comments_1()
   expected$(2) = "If a = b Then"
   expected$(3) = "  Print c"
   expected$(4) = "EndIf"
+  expected$(5) = ""
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -454,8 +457,8 @@ Sub test_syntax_highlight_1()
   Const gr$ = vt100.colour$("green")
   Const ma$ = vt100.colour$("magenta")
   Const rs$ = vt100.colour$("reset")
-  Const ye$ = vt100.colour$("yellow")
   Const wh$ = vt100.colour$("white")
+  Const ye$ = vt100.colour$("yellow")
   expected$(0) = cy$ + "CSub " + wh$ + "abcdef" + wh$ +"(" + wh$ + ")" + rs$
   expected$(1) = "  " + gr$ + "00000000" + rs$
   expected$(2) = "  " + gr$ + "00AABBCC " + gr$ + "FFFFFFFF" + rs$
@@ -463,5 +466,23 @@ Sub test_syntax_highlight_1()
   expected$(5) = "  " + wh$ + "not_valid " + wh$ + "= " + gr$ + "5" + rs$
   expected$(6) = "  " + wh$ + "not_valid_either " + wh$ + "= " + ma$ + Chr$(34) + "wombat" + Chr$(34) + rs$
   expected$(7) = cy$ + "End " + cy$ + "CSub" + rs$
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' Test syntax highlighting of comments.
+Sub test_syntax_highlight_2()
+  in$(0) = "' Comment 1"
+  in$(1) = "foo 'Comment2"
+  in$(2) = "bar REM Comment 3"
+
+  opt.colour = 1
+  parse_lines()
+
+  Const rs$ = vt100.colour$("reset")
+  Const wh$ = vt100.colour$("white")
+  Const ye$ = vt100.colour$("yellow")
+  expected$(0) = ye$ + "' Comment 1" + rs$
+  expected$(1) = wh$ + "foo " + ye$ + "'Comment2" + rs$
+  expected$(2) = wh$ + "bar " + ye$ + "REM Comment 3" + rs$
   assert_string_array_equals(expected$(), out$())
 End Sub

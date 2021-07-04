@@ -25,19 +25,24 @@ Dim in.num_open_files = 1
 keywords.load()
 
 add_test("test_replace")
+add_test("test_comment_if")
+add_test("test_comment_if_not")
+add_test("test_uncomment_if")
+add_test("test_uncomment_if_not")
 
 run_tests()
 
 End
 
 Sub setup_test()
+  set.clear(tr.flags$())
+  map.clear(tr.replace$())
 End Sub
 
 Sub teardown_test()
 End Sub
 
 Sub test_replace()
-  map.clear(tr.replace$())
   lx.parse_basic("'!replace x      y") : tr.transpile()
   lx.parse_basic("'!replace &hFFFF z") : tr.transpile()
   lx.parse_basic("Dim x = &hFFFF ' comment") : tr.transpile()
@@ -49,6 +54,88 @@ Sub test_replace()
   expect_tk(3, TK_IDENTIFIER, "z")
   expect_tk(4, TK_COMMENT, "' comment")
   assert_string_equals("Dim y = z ' comment", lx.line$)
+End Sub
+
+Sub test_comment_if()
+  ' 'foo' is set, code inside !comment_if block should be commented.
+  lx.parse_basic("'!set foo") : tr.transpile()
+  lx.parse_basic("'!comment_if foo") : tr.transpile()
+  lx.parse_basic("one") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' one")
+  lx.parse_basic("two") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' two")
+  lx.parse_basic("'!endif") : tr.transpile()
+
+  ' Code outside the block should not be commented.
+  lx.parse_basic("three") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_comment_if_not()
+  ' 'foo' is NOT set, code inside !comment_if NOT block should be commented.
+  lx.parse_basic("'!comment_if not foo") : tr.transpile()
+  lx.parse_basic("one") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' one")
+  lx.parse_basic("two") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' two")
+  lx.parse_basic("'!endif") : tr.transpile()
+
+  ' 'foo' is set, code inside !comment_if NOT block should NOT be commented.
+  lx.parse_basic("'!set foo") : tr.transpile()
+  lx.parse_basic("'!comment_if not foo") : tr.transpile()
+  lx.parse_basic("three") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+  lx.parse_basic("'!endif") : tr.transpile()
+End Sub
+
+Sub test_uncomment_if()
+  ' 'foo' is set, code inside !uncomment_if block should be uncommented.
+  lx.parse_basic("'!set foo") : tr.transpile()
+  lx.parse_basic("'!uncomment_if foo") : tr.transpile()
+  lx.parse_basic("' one") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("REM two") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "two")
+  lx.parse_basic("'' three") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' three")
+  lx.parse_basic("'!endif") : tr.transpile()
+
+  ' Code outside the block should not be uncommented.
+  lx.parse_basic("' four") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' four")
+End Sub
+
+Sub test_uncomment_if_not()
+  ' 'foo' is NOT set, code inside !uncomment_if NOT block should be uncommented.
+  lx.parse_basic("'!uncomment_if not foo") : tr.transpile()
+  lx.parse_basic("' one") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("REM two") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "two")
+  lx.parse_basic("'' three") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' three")
+  lx.parse_basic("'!endif") : tr.transpile()
+
+  ' 'foo' is set, code inside !uncomment_if NOT block should NOT be uncommented.
+  lx.parse_basic("'!set foo") : tr.transpile()
+  lx.parse_basic("'!uncomment_if not foo") : tr.transpile()
+  lx.parse_basic("' four") : tr.transpile()
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' four")
+  lx.parse_basic("'!endif") : tr.transpile()
 End Sub
 
 Sub expect_tokens(num)

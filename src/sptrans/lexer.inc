@@ -202,7 +202,14 @@ Sub lx.parse_identifier()
   lx.advance()
   lx.advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
 
-  If lx.char$ = ":" Then
+  If lx.char$ = " " Then
+    ' Handle old-school REM statements.
+    If LCase$(Mid$(lx.line$, start, lx.pos - start)) = "rem") Then
+      lx.store(TK_COMMENT, start, Len(lx.line$) - start + 1)
+      lx.char$ = Chr$(10)
+      Exit Sub
+    EndIf
+  ElseIf lx.char$ = ":" Then
     ' Handle labels.
     If lx.num = 0 Then lx.advance()
   ElseIf InStr("$!%", lx.char$) Then

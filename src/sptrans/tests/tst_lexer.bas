@@ -70,6 +70,11 @@ Sub test_comments()
 
   expect_success(1)
   expect_tk(0, TK_COMMENT, "' This is a comment");
+
+  lx.parse_basic("REM This is also a comment")
+
+  expect_success(1)
+  expect_tk(0, TK_COMMENT, "REM This is also a comment");
 End Sub
 
 Sub test_directives()

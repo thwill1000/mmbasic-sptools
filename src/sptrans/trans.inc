@@ -92,8 +92,12 @@ Sub tr.add_comments()
     lx.parse_basic(String$(nc, "'") + " " + lx.line$)
   ElseIf nc < 0 Then
     Do While nc < 0 And lx.num > 0 And lx.type(0) = TK_COMMENT
-      lx.parse_basic(Space$(lx.start(0)) + Right$(lx.line$, Len(lx.line$) - lx.start(0)))
-      nc = nc + 1
+      If Mid$(lx.line$, lx.start(0), 1) = "'" Then
+        lx.parse_basic(Space$(lx.start(0)) + Mid$(lx.line$, lx.start(0) + 1))
+      ElseIf LCase$(Mid$(lx.line$, lx.start(0), 3)) = "rem" Then
+        lx.parse_basic(Space$(lx.start(0) + 2) + Mid$(lx.line$, lx.start(0) + 3))
+      EndIf
+      Inc nc, 1
     Loop
   EndIf
 End Sub
@@ -143,6 +147,7 @@ Sub tr.process_if()
   ElseIf lx.num = 3 Then
     If t$ = "not" Then
       invert = 1
+      t$ = lx.token_lc$(2)
     Else
       sys.err$ = "followed by unexpected token {" + lx.token$(1) + "}"
     EndIf
