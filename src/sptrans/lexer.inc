@@ -16,7 +16,8 @@ Const TK_STRING = 4
 Const TK_KEYWORD = 5
 Const TK_SYMBOL = 6
 Const TK_DIRECTIVE = 7
-Const TK_OPTION = 8
+Const TK_LABEL = 8
+Const TK_OPTION = 9
 '!endif
 
 Const LX_MAX_TOKENS = 255 ' In theory every character may be a separate token.
@@ -115,9 +116,13 @@ Sub lx.parse_decimal()
     lx.advance()
     If lx.char$ = "-" Or lx.char$ = "+" Then lx.advance()
     lx.advance_while("0123456789")
+  ElseIf lx.char$ = ":" Then
+     ' Handle numeric labels.
+     If lx.num = 0 Then lx.advance()
   EndIf
 
   lx.store(TK_NUMBER, start, lx.pos - start)
+  If Right$(lx.token$(lx.num - 1), 1) = ":" Then lx.type(lx.num - 1) = TK_LABEL
 End Sub
 
 Sub lx.store(type, start, length)
@@ -196,13 +201,22 @@ Sub lx.parse_identifier()
 
   lx.advance()
   lx.advance_while("._abcdefghijklmnopqrstuvwxyz0123456789")
-  If InStr("$!%", lx.char$) Then lx.advance()
+
+  If lx.char$ = ":" Then
+    ' Handle labels.
+    If lx.num = 0 Then lx.advance()
+  ElseIf InStr("$!%", lx.char$) Then
+    ' Handle trailing type symbol.
+    lx.advance()
+  EndIf
+
   Local ln% = lx.pos - start
   If keywords.contains(Mid$(lx.line$, start, ln%)) Then
     lx.store(TK_KEYWORD, start, ln%)
     If lx.token_lc$(lx.num - 1) = "csub" Then lx.csub = Not lx.csub
   Else
     lx.store(TK_IDENTIFIER, start, ln%)
+    If Right$(lx.token$(lx.num - 1), 1) = ":" Then lx.type(lx.num - 1) = TK_LABEL
   EndIf
 End Sub
 

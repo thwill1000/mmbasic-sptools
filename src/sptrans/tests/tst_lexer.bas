@@ -33,6 +33,7 @@ add_test("test_real_literals")
 add_test("test_string_literals")
 add_test("test_string_no_closing_quote")
 add_test("test_symbols")
+add_test("test_labels")
 add_test("test_get_number")
 add_test("test_get_string")
 add_test("test_get_directive")
@@ -242,6 +243,43 @@ Sub test_symbols()
   expect_tk(2, TK_IDENTIFIER, "xx")
   expect_tk(3, TK_SYMBOL, "+")
   expect_tk(4, TK_NUMBER, "1")
+
+End Sub
+
+Sub test_labels()
+  lx.parse_basic("  label:")
+  expect_success(1)
+  expect_tk(0, TK_LABEL, "label:")
+
+  lx.parse_basic("  label: not_a_label:")
+  expect_success(3)
+  expect_tk(0, TK_LABEL,      "label:")
+  expect_tk(1, TK_IDENTIFIER, "not_a_label")
+  expect_tk(2, TK_SYMBOL,     ":")
+
+  lx.parse_basic("  not_a_label : not_a_label:")
+  expect_success(4)
+  expect_tk(0, TK_IDENTIFIER, "not_a_label")
+  expect_tk(1, TK_SYMBOL,     ":")
+  expect_tk(2, TK_IDENTIFIER, "not_a_label")
+  expect_tk(3, TK_SYMBOL,     ":")
+
+  lx.parse_basic("  1234: ' label")
+  expect_success(2)
+  expect_tk(0, TK_LABEL,   "1234:")
+  expect_tk(1, TK_COMMENT, "' label")
+
+  lx.parse_basic("  1234 ' not a label")
+  expect_success(2)
+  expect_tk(0, TK_NUMBER,  "1234")
+  expect_tk(1, TK_COMMENT, "' not a label")
+
+  lx.parse_basic("  foo 1234: ' not a label")
+  expect_success(4)
+  expect_tk(0, TK_IDENTIFIER, "foo")
+  expect_tk(1, TK_NUMBER,     "1234")
+  expect_tk(2, TK_SYMBOL,     ":")
+  expect_tk(3, TK_COMMENT,    "' not a label")
 
 End Sub
 

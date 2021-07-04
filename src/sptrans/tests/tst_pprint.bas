@@ -284,7 +284,7 @@ Sub test_indentation_9()
   assert_string_array_equals(expected$(), out$())
 End Sub
 
-' Test compact spacing option.
+' Test preserve spacing option.
 Sub test_preserve_spacing()
   opt.spacing = -1
   setup_spacing_test()
@@ -303,6 +303,7 @@ Sub test_preserve_spacing()
   expected$(9) = "Dim  a(4)  =  (-2,  -1,  0,  1,  2)"
   expected$(10) = "For  i%  =  5  To  1  Step  -1"
   expected$(11) = "Loop Until  (  -a  >  -b  )"
+  expected$(12) = "label: foo  :  bar"
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -319,6 +320,7 @@ Sub setup_spacing_test()
   in$(9) = "Dim  a(4)  =  (-2,  -1,  0,  1,  2)"
   in$(10) = "For  i%  =  5  To  1  Step  -1"
   in$(11) = "Loop Until  (  -a  >  -b  )"
+  in$(12) = "label: foo  :  bar"
 End Sub
 
 ' Test minimal spacing option.
@@ -340,6 +342,7 @@ Sub test_minimal_spacing()
   expected$(9) = "Dim a(4)=(-2,-1,0,1,2)"
   expected$(10) = "For i%=5 To 1 Step-1"
   expected$(11) = "Loop Until(-a>-b)"
+  expected$(12) = "label: foo:bar"
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -362,6 +365,7 @@ Sub test_compact_spacing()
   expected$(9) = "Dim a(4)=(-2,-1,0,1,2)"
   expected$(10) = "For i%=5 To 1 Step -1"
   expected$(11) = "Loop Until (-a>-b)"
+  expected$(12) = "label: foo : bar"
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -384,6 +388,7 @@ Sub test_generous_spacing()
   expected$(9) = "Dim a(4) = (-2, -1, 0, 1, 2)"
   expected$(10) = "For i% = 5 To 1 Step -1"
   expected$(11) = "Loop Until (-a > -b)"
+  expected$(12) = "label: foo : bar"
   assert_string_array_equals(expected$(), out$())
 End Sub
 

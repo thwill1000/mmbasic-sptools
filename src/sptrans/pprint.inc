@@ -8,7 +8,7 @@ sys.requires("keywords", "lexer", "options", "output")
 sys.provides("pprint")
 If sys.err$ <> "" Then Error sys.err$
 
-Dim TK_COLOUR$(7)
+Dim TK_COLOUR$(8)
 TK_COLOUR$(TK_IDENTIFIER) = vt100.colour$("white")
 TK_COLOUR$(TK_NUMBER)     = vt100.colour$("green")
 TK_COLOUR$(TK_COMMENT)    = vt100.colour$("yellow")
@@ -16,6 +16,7 @@ TK_COLOUR$(TK_STRING)     = vt100.colour$("magenta")
 TK_COLOUR$(TK_KEYWORD)    = vt100.colour$("cyan")
 TK_COLOUR$(TK_SYMBOL)     = vt100.colour$("white")
 TK_COLOUR$(TK_DIRECTIVE)  = vt100.colour$("red")
+TK_COLOUR$(TK_LABEL)      = vt100.colour$("green")
 
 Dim pp.previous = 0 ' 0 : previous line was empty
                     ' 1 : previous line was comment
@@ -75,6 +76,8 @@ Sub pp.print_line()
       If opt.indent_sz = -1 Then
         ' Use existing indentation.
         out.print(Space$(lx.start(0) - 1))
+      ElseIf lx.type(0) = TK_LABEL Then
+        ' Use no indentation.
       ElseIf lx.type(0) = TK_COMMENT And (opt.spacing = -1 Or opt.spacing = 2) Then
         ' Use existing indentation.
         out.print(Space$(lx.start(0) - 1))
@@ -174,6 +177,9 @@ Function pp.num_spaces(i)
 
   Local t$ = lx.token_lc$(i)
   Local u$ = lx.token_lc$(i + 1)
+
+  ' Should always have a space after a label.
+  If lx.type(i) = TK_LABEL Then pp.num_spaces = 1 : Exit Function
 
   ' Never need a space before a comma, semi-colon or closing bracket,
   ' except after a comma.
