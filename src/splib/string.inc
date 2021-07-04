@@ -82,6 +82,20 @@ Function str.quote$(s$, begin$, end$)
   str.quote$ = begin_$ + s$ + end_$
 End Function
 
+' Gets copy of 'haystack$' with occurrences of 'needle$' replaced by 'rep$'.
+Function str.replace$(haystack$, needle$, rep$)
+  Local p%, st%, s$
+  Do
+    Inc st%
+    p% = InStr(st%, haystack$, needle$)
+    If p% < 1 Then Exit Do
+    Cat s$, Mid$(haystack$, st%, p% - st%) + rep$
+    st% = p% + Len(needle$) - 1
+  Loop
+  Cat s$, Mid$(haystack$, st%)
+  str.replace$ = s$
+End Function
+
 Function str.rpad$(s$, x%)
   str.rpad$ = s$
   If Len(s$) < x% Then str.rpad$ = s$ + Space$(x% - Len(s$))

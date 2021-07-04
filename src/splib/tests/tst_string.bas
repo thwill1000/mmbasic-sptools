@@ -19,6 +19,7 @@ add_test("test_equals_ignore_case")
 add_test("test_lpad")
 add_test("test_next_token")
 add_test("test_quote")
+add_test("test_replace")
 add_test("test_rpad")
 add_test("test_trim")
 add_test("test_unquote")
@@ -142,6 +143,14 @@ Sub test_quote()
   assert_string_equals("{hello}", str.quote$("hello", "{", "}"))
   assert_string_equals("{hello world}", str.quote$("hello world", "{", "}"))
   assert_string_equals("<{hello world}>", str.quote$(str.quote$("hello world", "{", "}"), "<", ">"))
+End Sub
+
+Sub test_replace()
+  assert_string_equals("", str.replace$("", "foo", "bar"))
+  assert_string_equals("Hello World", str.replace$("Hello World", "foo", "bar"))
+  assert_string_equals("Goodbye World", str.replace$("Hello World", "Hello", "Goodbye"))
+  assert_string_equals("Hello Goodbye", str.replace$("Hello World", "World", "Goodbye"))
+  assert_string_equals("He**o Wor*d", str.replace$("Hello World", "l", "*"))
 End Sub
 
 Sub test_rpad()
