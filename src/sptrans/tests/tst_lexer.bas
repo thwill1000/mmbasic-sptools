@@ -27,6 +27,7 @@ add_test("test_hexadecimal_literals")
 add_test("test_identifiers")
 add_test("test_includes")
 add_test("test_integer_literals")
+add_test("test_integer_literals_with_e")
 add_test("test_keywords")
 add_test("test_octal_literals")
 add_test("test_real_literals")
@@ -79,7 +80,6 @@ End Sub
 
 Sub test_directives()
   lx.parse_basic("'!comment_if foo")
-
   expect_success(2)
   expect_tk(0, TK_DIRECTIVE, "'!comment_if")
   expect_tk(1, TK_IDENTIFIER, "foo")
@@ -128,6 +128,19 @@ Sub test_integer_literals()
 
   expect_success(1)
   expect_tk(0, TK_NUMBER, "421")
+End Sub
+
+Sub test_integer_literals_with_e()
+  ' If there is just a trailing E then it is part of the number literal.
+  lx.parse_basic("12345E")
+  expect_success(1)
+  expect_tk(0, TK_NUMBER,     "12345E")
+
+  ' Otherwise it is the start of a separate identifier.
+  lx.parse_basic("12345ENDPROC")
+  expect_success(2)
+  expect_tk(0, TK_NUMBER,     "12345")
+  expect_tk(1, TK_IDENTIFIER, "ENDPROC")
 End Sub
 
 Sub test_keywords()

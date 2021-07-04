@@ -113,12 +113,19 @@ Sub lx.parse_decimal()
   EndIf
 
   If lx.char$ = "e" Then
-    lx.advance()
-    If lx.char$ = "-" Or lx.char$ = "+" Then lx.advance()
-    lx.advance_while("0123456789")
+    ' Handle E numbers:
+    '  - if there is just a trailing E, e.g. 1234E then the E is part of the
+    '    number literal.
+    '  - however if followed by anything other than +, -, or <digit>,
+    '    e.g. 1234ENDPROC then the E is part of a following identifier.
+    If InStr(" -+0123456789" + Chr$(10), lx.next_char$) Then
+      lx.advance()
+      If lx.char$ = "-" Or lx.char$ = "+" Then lx.advance()
+      lx.advance_while("0123456789")
+    EndIf
   ElseIf lx.char$ = ":" Then
-     ' Handle numeric labels.
-     If lx.num = 0 Then lx.advance()
+    ' Handle numeric labels.
+    If lx.num = 0 Then lx.advance()
   EndIf
 
   lx.store(TK_NUMBER, start, lx.pos - start)
