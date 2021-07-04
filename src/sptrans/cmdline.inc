@@ -22,6 +22,7 @@ Sub cli.parse(s$)
   Do While i < lx.num And sys.err$ = "" And lx.type(i) = TK_OPTION
     Select Case lx.option$(i)
       Case "C", "colour"      : cli.parse_no_arg("colour", i)
+      Case "crunch"           : cli.parse_no_arg("crunch", i)
       Case "e", "empty-lines" : cli.parse_arg("empty-lines", i, "{0|1}")
       Case "f", "format-only" : cli.parse_no_arg("format-only", i)
       Case "i", "indent"      : cli.parse_arg("indent", i, "<number>")
@@ -83,6 +84,9 @@ Sub cli.usage()
   Print "the console if unspecified. By using the --format-only option it can also be used as"
   Print "a simple BASIC code formatter."
   Print
+  Print "  --crunch               aggressively remove whitespace from the output, "
+  Print "                         equivalent to:"
+  Print "                           --empty-lines=0 --indent=0 --no-comments --spacing=0"
   Print "  -C, --colour           syntax highlight the output,"
   Print "                         only valid for output to VT100 serial console"
   Print "  -e, --empty-lines=0|1  controls output of empty lines:"

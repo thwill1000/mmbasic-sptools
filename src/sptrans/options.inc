@@ -48,6 +48,7 @@ Sub opt.set(name$, value$)
   Select Case LCase$(name$)
     Case "colour"      : opt.set_colour(value$)
     Case "comments"    : opt.set_comments(value$)
+    Case "crunch"      : opt.set_crunch(value$)
     Case "empty-lines" : opt.set_empty_lines(value$)
     Case "format-only" : opt.set_format_only(value$)
     Case "indent"      : opt.set_indent_sz(value$)
@@ -74,6 +75,19 @@ Sub opt.set_comments(value$)
   Select Case LCase$(value$)
     Case "preserve", "default", "on", "-1", "" : opt.comments = -1
     Case "none", "omit", "off", "0"            : opt.comments = 0
+    Case Else
+      sys.err$ = "expects 'on|off' argument"
+  End Select
+End Sub
+
+Sub opt.set_crunch(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : ' do nothing
+    Case "on", "1"
+      opt.comments = 0
+      opt.empty_lines = 0
+      opt.indent_sz = 0
+      opt.spacing = 0
     Case Else
       sys.err$ = "expects 'on|off' argument"
   End Select

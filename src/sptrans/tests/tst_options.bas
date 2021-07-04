@@ -16,6 +16,7 @@ Option Default Integer
 
 add_test("test_colour")
 add_test("test_comments")
+add_test("test_crunch")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_indent")
@@ -102,6 +103,51 @@ Sub test_comments()
   Loop
 
   opt.set("comments", "foo")
+  assert_error("expects 'on|off' argument")
+End Sub
+
+Sub test_crunch()
+  Local elements$(10) Length 10, i
+
+  assert_int_equals(0, opt.colour)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.comments = 999
+    opt.empty_lines = 999
+    opt.indent_sz = 999
+    opt.spacing = 999
+    opt.set("crunch", elements$(i))
+    assert_int_equals(999, opt.comments)
+    assert_int_equals(999, opt.empty_lines)
+    assert_int_equals(999, opt.indent_sz)
+    assert_int_equals(999, opt.spacing)
+    Inc i
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.comments = 999
+    opt.empty_lines = 999
+    opt.indent_sz = 999
+    opt.spacing = 999
+    opt.set("crunch", elements$(i))
+    assert_int_equals(0, opt.comments)
+    assert_int_equals(0, opt.empty_lines)
+    assert_int_equals(0, opt.indent_sz)
+    assert_int_equals(0, opt.spacing)
+    Inc i
+  Loop
+
+  opt.set("crunch", "foo")
   assert_error("expects 'on|off' argument")
 End Sub
 

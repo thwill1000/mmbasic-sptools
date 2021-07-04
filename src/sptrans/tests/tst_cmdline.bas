@@ -27,6 +27,7 @@ add_test("test_no_input_file")
 add_test("test_input_file")
 add_test("test_unquoted_input_file")
 add_test("test_colour")
+add_test("test_crunch")
 add_test("test_no_comments")
 add_test("test_empty_lines")
 add_test("test_format_only")
@@ -76,6 +77,24 @@ Sub test_colour()
 
   cli.parse("-C=1 " + input_file$)
   assert_error("option '-C' does not expect argument")
+End Sub
+
+Sub test_crunch()
+  opt.comments = 999
+  opt.empty_lines = 999
+  opt.indent_sz = 999
+  opt.spacing = 999
+
+  cli.parse("--crunch " + input_file$)
+
+  assert_no_error()
+  assert_int_equals(0, opt.comments)
+  assert_int_equals(0, opt.empty_lines)
+  assert_int_equals(0, opt.indent_sz)
+  assert_int_equals(0, opt.spacing)
+
+  cli.parse("--crunch=1 " + input_file$)
+  assert_error("option '--crunch' does not expect argument")
 End Sub
 
 Sub test_no_comments()
