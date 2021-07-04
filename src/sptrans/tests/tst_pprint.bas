@@ -58,6 +58,7 @@ add_test("Minimal spacing option", "test_minimal_spacing")
 add_test("Compact spacing option", "test_compact_spacing")
 add_test("Generous spacing option", "test_generous_spacing")
 add_test("Keyword capitalisation", "test_keyword_capitalisation")
+add_test("Body of CSUB is correctly syntax highlighted", "test_syntax_highlight_1")
 
 run_tests()
 
@@ -408,5 +409,34 @@ Sub test_keyword_capitalisation()
   opt.keywords = 2 ' upper-case.
   parse_lines()
   expected$(0) = "FOR i=20 TO 1 STEP -2"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' Test syntax highlighting within CSUB.
+Sub test_syntax_highlight_1()
+  in$(0) = "CSub abcdef()"
+  in$(1) = "  00000000"
+  in$(2) = "  00AABBCC FFFFFFFF"
+  in$(3) = "  ' comment"
+  in$(5) = "  not_valid = 5"
+  in$(6) = "  not_valid_either = " + Chr$(34) + "wombat" + Chr$(34)
+  in$(7) = "End CSub"
+
+  opt.colour = 1
+  parse_lines()
+
+  Const cy$ = vt100.colour$("cyan")
+  Const gr$ = vt100.colour$("green")
+  Const ma$ = vt100.colour$("magenta")
+  Const rs$ = vt100.colour$("reset")
+  Const ye$ = vt100.colour$("yellow")
+  Const wh$ = vt100.colour$("white")
+  expected$(0) = cy$ + "CSub " + wh$ + "abcdef" + wh$ +"(" + wh$ + ")" + rs$
+  expected$(1) = "  " + gr$ + "00000000" + rs$
+  expected$(2) = "  " + gr$ + "00AABBCC " + gr$ + "FFFFFFFF" + rs$
+  expected$(3) = "  " + ye$ + "' comment" + rs$
+  expected$(5) = "  " + wh$ + "not_valid " + wh$ + "= " + gr$ + "5" + rs$
+  expected$(6) = "  " + wh$ + "not_valid_either " + wh$ + "= " + ma$ + Chr$(34) + "wombat" + Chr$(34) + rs$
+  expected$(7) = cy$ + "End " + cy$ + "CSub" + rs$
   assert_string_array_equals(expected$(), out$())
 End Sub

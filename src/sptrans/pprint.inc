@@ -21,6 +21,7 @@ Dim pp.previous = 0 ' 0 : previous line was empty
                     ' 1 : previous line was comment
                     ' 2 : previous line had content
 Dim pp.indent_lvl
+Dim pp.within_csub = 0
 
 Sub pp.print_line()
   Local i, t$, u$
@@ -46,6 +47,9 @@ Sub pp.print_line()
   For i = 0 To lx.num - 1
 
     t$ = " " + lx.token_lc$(i) + " "
+
+    ' Record entry and exit from CSUB definition.
+    If t$ = " csub " Then pp.within_csub = Not pp.within_csub
 
     ' If the 'empty-lines' option is 'single|1' and previous printed line
     ' had content and the line starts with {Function|Sub} then print empty line.
@@ -81,7 +85,6 @@ Sub pp.print_line()
     EndIf
 
     ' Output the token with a trailing space where required.
-    If opt.colour Then out.print(TK_COLOUR$(lx.type(i)))
     u$ = lx.token$(i)
     If lx.type(i) = TK_KEYWORD Then
       Select Case opt.keywords
@@ -91,6 +94,7 @@ Sub pp.print_line()
       End Select
       If u$ = sys.NO_DATA$ Then Error
     EndIf
+    If opt.colour Then out.print(get_highlight$(i%))
     out.print(u$ + Space$(pp.num_spaces(i)))
 
     ' Tokens requiring us to increase the indent level after printing them.
@@ -136,6 +140,25 @@ Sub pp.print_line()
   If pp.indent_lvl < 0 Then pp.indent_lvl = 0
 
 End Sub
+
+' Gets the syntax highlighting colour to use for token 'i%'.
+Function get_highlight$(i%)
+  get_highlight$ = TK_COLOUR$(lx.type(i%))
+
+  ' Special handling to highlight the non-standard hex data within CSUBs as if it were numbers.
+  If Not pp.within_csub Then Exit Function
+  If Not lx.type(i%) = TK_IDENTIFIER Then Exit Function
+  Local t$ = lx.token$(i%)
+  Local j%
+  For j% = 1 To Len(t$)
+    If Not InStr(".0123456789ABCDEFabcdef", Mid$(t$, j%, 1)) Then Exit Function
+  Next
+  If i% = 0 Then
+    get_highlight$ = TK_COLOUR$(TK_NUMBER)
+  ElseIf lx.token_lc$(i - 1) <> "csub" Then
+    get_highlight$ = TK_COLOUR$(TK_NUMBER)
+  EndIf
+End Function
 
 ' How many spaces should follow token 'i' ?
 Function pp.num_spaces(i)
