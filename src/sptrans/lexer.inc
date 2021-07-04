@@ -29,6 +29,7 @@ Dim lx.line$
 Dim lx.next_char$
 Dim lx.num
 Dim lx.pos
+Dim lx.csub ' 1 if we are tokenising within a CSUB definition, otherwise 0.
 
 Sub lx.parse_basic(line$)
   lx.reset(line$)
@@ -38,7 +39,11 @@ Sub lx.parse_basic(line$)
     If lx.char$ = " " Then
       lx.advance()
     ElseIf InStr("&.0123456789", lx.char$) Then
-      lx.parse_number()
+      If lx.csub Then
+        lx.parse_identifier()
+      Else
+        lx.parse_number()
+      EndIf
     ElseIf lx.char$ = "'" Then
       lx.parse_comment_or_directive()
     ElseIf lx.char$ = Chr$(34) Then
@@ -195,6 +200,7 @@ Sub lx.parse_identifier()
   Local ln% = lx.pos - start
   If keywords.contains(Mid$(lx.line$, start, ln%)) Then
     lx.store(TK_KEYWORD, start, ln%)
+    If lx.token_lc$(lx.num - 1) = "csub" Then lx.csub = Not lx.csub
   Else
     lx.store(TK_IDENTIFIER, start, ln%)
   EndIf
