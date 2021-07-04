@@ -53,14 +53,14 @@ Sub pp.print_line()
     If t$ = " csub " Then pp.within_csub = Not pp.within_csub
 
     ' If the 'empty-lines' option is 'single|1' and previous printed line
-    ' had content and the line starts with {Function|Sub} then print empty line.
+    ' had content and the line starts with {CSub|Function|Sub} then print empty line.
     If opt.empty_lines = 1 And pp.previous = 2 Then
-      If i = 0 And Instr(" sub function ", t$) > 0 Then out.endl()
+      If i = 0 And Instr(" csub sub function ", t$) > 0 Then out.endl()
     EndIf
 
     ' Tokens requiring us to decrease the indent level before printing them.
     If Instr(" end ", t$) Then
-      If Instr(" select sub function ", " " + lx.token_lc$(i + 1) + " ") Then
+      If Instr(" csub select sub function ", " " + lx.token_lc$(i + 1) + " ") Then
         pp.indent_lvl = pp.indent_lvl - 1
         If lx.token_lc$(i + 1) = "select" Then pp.indent_lvl = pp.indent_lvl - 1
       EndIf
@@ -114,7 +114,7 @@ Sub pp.print_line()
         u$ = lx.token_lc$(i + 1)
         If u$ <> "if" Then pp.indent_lvl = pp.indent_lvl + 1
 
-      ElseIf Instr(" case function select sub ", t$) Then
+      ElseIf Instr(" case csub function select sub ", t$) Then
           pp.indent_lvl = pp.indent_lvl + 1
 
       ElseIf t$ = " then " Then
@@ -131,9 +131,9 @@ Sub pp.print_line()
   If lx.type(0) = TK_COMMENT Then pp.previous = 1 Else pp.previous = 2
 
   ' If the 'empty-lines' option is 'single|1' and the line ends with
-  ' End {Function|Sub} then print one.
+  ' End {CSub|Function|Sub} then print one.
   If opt.empty_lines = 1 Then
-    If Instr(" function sub ", t$) > 0 Then
+    If Instr(" csub function sub ", t$) > 0 Then
       u$ = lx.token_lc$(lx.num - 2)
       If u$ = "end" Then out.endl() : pp.previous = 0
     EndIf

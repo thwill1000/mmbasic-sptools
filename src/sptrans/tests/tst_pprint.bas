@@ -53,6 +53,7 @@ add_test("EXIT FUNCTION does not change indent level", "test_indentation_7")
 add_test("EXIT SUB does not change indent level", "test_indentation_8")
 add_test("Omission of comments", "test_comments_1")
 add_test("SELECT CASE increases indent level", "test_indentation_9")
+add_test("Body of CSUB is indented", "test_indentation_10")
 add_test("Preserve spacing option", "test_preserve_spacing")
 add_test("Minimal spacing option", "test_minimal_spacing")
 add_test("Compact spacing option", "test_compact_spacing")
@@ -281,6 +282,25 @@ Sub test_indentation_9()
   expected$(9)  = "    Case Else : Print 5"
   expected$(10) = "  End Select"
   expected$(11) = "EndIf"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' Test indentation of CSUB structure.
+Sub test_indentation_10()
+  in$(0) = "CSub foo()"
+  in$(1) = "00000000"
+  in$(2) = "00AABBCC FFFFFFFF"
+  in$(3) = "End CSub"
+  in$(4) = "x = x + 1 ' something at global level"
+
+  opt.indent_sz = 2
+  parse_lines()
+
+  expected$(0) = "CSub foo()"
+  expected$(1) = "  00000000"
+  expected$(2) = "  00AABBCC FFFFFFFF"
+  expected$(3) = "End CSub"
+  expected$(4) = in$(4)
   assert_string_array_equals(expected$(), out$())
 End Sub
 
