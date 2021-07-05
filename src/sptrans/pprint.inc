@@ -169,9 +169,17 @@ Function pp.num_spaces(i)
   ' Never need a space after the last token.
   If i >= lx.num - 1 Then Exit Function
 
-  ' Preserve existing spaces before a comment or if opt.spacing = -1,
-  If (opt.spacing = -1) Or (lx.type(i + 1) = TK_COMMENT) Then
+  ' Preserve existing spaces if opt.spacing = -1.
+  If opt.spacing = -1 Then
     pp.num_spaces = lx.start(i + 1) - lx.start(i) - lx.len(i)
+    Exit Function
+  EndIf
+
+  ' Preserve existing spaces before a comment,
+  ' except it opt.spacing > 0 then use a minimum of one space.
+  If lx.type(i + 1) = TK_COMMENT Then
+    pp.num_spaces = lx.start(i + 1) - lx.start(i) - lx.len(i)
+    If opt.spacing > 0 Then pp.num_spaces = Max(1, pp.num_spaces)
     Exit Function
   EndIf
 

@@ -54,10 +54,11 @@ add_test("EXIT SUB does not change indent level", "test_indentation_8")
 add_test("Omission of comments", "test_comments_1")
 add_test("SELECT CASE increases indent level", "test_indentation_9")
 add_test("Body of CSUB is indented", "test_indentation_10")
-add_test("Preserve spacing option", "test_preserve_spacing")
-add_test("Minimal spacing option", "test_minimal_spacing")
-add_test("Compact spacing option", "test_compact_spacing")
-add_test("Generous spacing option", "test_generous_spacing")
+add_test("Spacing - preserve option", "test_preserve_spacing")
+add_test("Spacing - minimal option", "test_minimal_spacing")
+add_test("Spacing - compact option", "test_compact_spacing")
+add_test("Spacing - generous option", "test_generous_spacing")
+add_test("Spacing - before comments", "test_comment_spacing")
 add_test("Keyword capitalisation", "test_keyword_capitalisation")
 add_test("Syntax highlighting - CSUBs", "test_syntax_highlight_1")
 add_test("Syntax highlighting - comments", "test_syntax_highlight_2")
@@ -412,6 +413,36 @@ Sub test_generous_spacing()
   expected$(10) = "For i% = 5 To 1 Step -1"
   expected$(11) = "Loop Until (-a > -b)"
   expected$(12) = "label: foo : bar"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_comment_spacing()
+  in$(0) = "foo'comment1"
+  in$(1) = "bar    ' comment2"
+
+
+  opt.spacing = -1
+  parse_lines()
+  expected$(0) = "foo'comment1"
+  expected$(1) = "bar    ' comment2"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 0
+  parse_lines()
+  expected$(0) = "foo'comment1"
+  expected$(1) = "bar    ' comment2"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 1
+  parse_lines()
+  expected$(0) = "foo 'comment1"
+  expected$(1) = "bar    ' comment2"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 2
+  parse_lines()
+  expected$(0) = "foo 'comment1"
+  expected$(1) = "bar    ' comment2"
   assert_string_array_equals(expected$(), out$())
 End Sub
 
