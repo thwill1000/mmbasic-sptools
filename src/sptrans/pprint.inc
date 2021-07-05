@@ -24,6 +24,9 @@ Dim pp.previous = 0 ' 0 : previous line was empty
 Dim pp.indent_lvl
 Dim pp.within_csub = 0
 
+' TODO: control with option.
+Const pp.LINE_NUM_WIDTH% = 6
+
 Sub pp.print_line()
   Local i, t$, u$
 
@@ -44,6 +47,8 @@ Sub pp.print_line()
 
   ' Nothing more to do for empty lines.
   If lx.num = 0 Then pp.previous = 0 : out.endl() : Exit Sub
+
+  Local indent%
 
   For i = 0 To lx.num - 1
 
@@ -71,21 +76,7 @@ Sub pp.print_line()
       If u$ <> "select" Then pp.indent_lvl = pp.indent_lvl - 1
     EndIf
 
-    ' Indent the first token.
-    If i = 0 Then
-      If opt.indent_sz = -1 Then
-        ' Use existing indentation.
-        out.print(Space$(lx.start(0) - 1))
-      ElseIf lx.type(0) = TK_LABEL Then
-        ' Use no indentation.
-      ElseIf lx.type(0) = TK_COMMENT And (opt.spacing = -1 Or opt.spacing = 2) Then
-        ' Use existing indentation.
-        out.print(Space$(lx.start(0) - 1))
-      ElseIf pp.indent_lvl > 0 Then
-        ' Use automatic indentation.
-        out.print(Space$(pp.indent_lvl * opt.indent_sz))
-      EndIf
-    EndIf
+    out.print(Space$(pp.num_indent%(i)))
 
     ' Output the token with a trailing space where required.
     u$ = lx.token$(i)
@@ -96,6 +87,8 @@ Sub pp.print_line()
         Case  2 : u$ = UCase$(keywords.get$(u$))
       End Select
       If u$ = sys.NO_DATA$ Then Error
+    ElseIf lx.type(i) = TK_NUMBER Then
+      If i = 0 Then u$ = str.lpad$(u$, pp.LINE_NUM_WIDTH%)
     EndIf
     If opt.colour Then out.print(get_highlight$(i%))
     out.print(u$ + Space$(pp.num_spaces(i)))
@@ -143,6 +136,34 @@ Sub pp.print_line()
   If pp.indent_lvl < 0 Then pp.indent_lvl = 0
 
 End Sub
+
+' How many spaces should token 'i' be indented by ?
+Function pp.num_indent%(i%)
+
+  ' We only indent the first token ... uness it is a line number in which case
+  ' we indent the second token.
+  Select Case i%
+    Case > 1 : Exit Function
+    Case 0   : If lx.type(0) = TK_NUMBER Then Exit Function
+    Case 1   : If lx.type(0) <> TK_NUMBER Then Exit Function
+  End Select
+
+  If opt.indent_sz = -1 Then
+    ' Use existing indentation.
+    pp.num_indent% = lx.start(i%) - Choice(i%, pp.LINE_NUM_WIDTH%, 1)
+  ElseIf lx.type(i%) = TK_LABEL Then
+    ' Use no indentation.
+    pp.num_indent% = 0
+  ElseIf lx.type(i%) = TK_COMMENT And (opt.spacing = -1 Or opt.spacing = 2) Then
+    ' Use existing indentation.
+    pp.num_indent% = lx.start(i%) - Choice(i%, pp.LINE_NUM_WIDTH%, 1)
+  ElseIf pp.indent_lvl > 0 Then
+    ' Use automatic indentation.
+    pp.num_indent% = pp.indent_lvl * opt.indent_sz
+  EndIf
+
+  pp.num_indent% = Max(0, pp.num_indent%)
+End Function
 
 ' Gets the syntax highlighting colour to use for token 'i%'.
 Function get_highlight$(i%)

@@ -43,17 +43,18 @@ Dim out$(19)
 
 keywords.load()
 
-add_test("Multi-line IF THEN increases indent level", "test_indentation_1")
-add_test("Single-line IF THEN does not change indent level", "test_indentation_2")
-add_test("CONTINUE FOR does not change indent level", "test_indentation_3")
-add_test("END SUB decreases indent level", "test_indentation_4")
-add_test("END FUNCTION decreases indent level", "test_indentation_5")
-add_test("EXIT FOR does not change indent level", "test_indentation_6")
-add_test("EXIT FUNCTION does not change indent level", "test_indentation_7")
-add_test("EXIT SUB does not change indent level", "test_indentation_8")
+add_test("Indenting - multi-line IF THEN increases", "test_indentation_1")
+add_test("Indenting - single-line IF THEN does not change", "test_indentation_2")
+add_test("Indenting - CONTINUE FOR does not change", "test_indentation_3")
+add_test("Indenting - END SUB decreases", "test_indentation_4")
+add_test("Indenting - END FUNCTION decreases", "test_indentation_5")
+add_test("Indenting - EXIT FOR does not change", "test_indentation_6")
+add_test("Indenting - EXIT FUNCTION does not change", "test_indentation_7")
+add_test("Indenting - EXIT SUB does not change", "test_indentation_8")
+add_test("Indenting - SELECT CASE increases", "test_indentation_9")
+add_test("Indenting - body of CSUB is indented", "test_indentation_10")
+add_test("Indenting - line numbers not indented", "test_indentation_11")
 add_test("Omission of comments", "test_comments_1")
-add_test("SELECT CASE increases indent level", "test_indentation_9")
-add_test("Body of CSUB is indented", "test_indentation_10")
 add_test("Spacing - preserve option", "test_preserve_spacing")
 add_test("Spacing - minimal option", "test_minimal_spacing")
 add_test("Spacing - compact option", "test_compact_spacing")
@@ -308,6 +309,48 @@ Sub test_indentation_10()
   assert_string_array_equals(expected$(), out$())
 End Sub
 
+' Test indentation of line numbers.
+Sub test_indentation_11()
+
+  ' Line numbers left-padded to 6 characters.
+  in$(0) = "1 foo"
+  in$(1) = "12 foo"
+  in$(2) = "1234 foo"
+  in$(3) = "12345 foo"
+  in$(4) = "123456 foo"
+  in$(5) = "1234567 foo"
+
+  opt.indent_sz = 2
+  parse_lines()
+
+  expected$(0) = "     1 foo"
+  expected$(1) = "    12 foo"
+  expected$(2) = "  1234 foo"
+  expected$(3) = " 12345 foo"
+  expected$(4) = "123456 foo"
+  expected$(5) = "1234567 foo"
+  assert_string_array_equals(expected$(), out$())
+
+  ' Line numbers not indented, but subsequent tokens are.
+  setup_test()
+
+  in$(0) = "10 For i% = 1 To 5"
+  in$(1) = "20 If a% = b% Then
+  in$(2) = "30 foo"
+  in$(3) = "40 EndIf"
+  in$(4) = "50 Next"
+
+  opt.indent_sz = 2
+  parse_lines()
+
+  expected$(0) = "    10 For i% = 1 To 5"
+  expected$(1) = "    20   If a% = b% Then
+  expected$(2) = "    30     foo"
+  expected$(3) = "    40   EndIf"
+  expected$(4) = "    50 Next"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
 ' Test preserve spacing option.
 Sub test_preserve_spacing()
   opt.spacing = -1
@@ -419,7 +462,6 @@ End Sub
 Sub test_comment_spacing()
   in$(0) = "foo'comment1"
   in$(1) = "bar    ' comment2"
-
 
   opt.spacing = -1
   parse_lines()
