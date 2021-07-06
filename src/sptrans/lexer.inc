@@ -93,12 +93,13 @@ Sub lx.parse_number()
   If InStr(".0123456789", lx.char$) Then
     lx.parse_decimal()
   ElseIf lx.char$ = "&" Then
-    Select Case lx.next_char$
-      Case "b" : lx.parse_binary()
-      Case "h" : lx.parse_hexadecimal()
-      Case "o" : lx.parse_octal()
-      Case Else : sys.err$ = "Unknown literal type &" + lx.next_char$
-    End Select
+    If InStr("abcdefh0123456789", lx.next_char$) Then
+      lx.parse_hex_or_binary()
+    ElseIf lx.next_char$ = "o" Then
+      lx.parse_octal()
+    Else
+      sys.err$ = "Unknown literal type &" + lx.next_char$
+    EndIf
   EndIf
 End Sub
 
@@ -144,17 +145,17 @@ Sub lx.advance_while(allowed$)
   Do While InStr(allowed$, lx.char$) : lx.advance() : Loop
 End Sub
 
-Sub lx.parse_binary()
+Sub lx.parse_hex_or_binary()
   Local start = lx.pos
 
-  lx.advance()
-  lx.advance()
-  lx.advance_while("01")
-  lx.store(TK_NUMBER, start, lx.pos - start)
-End Sub
-
-Sub lx.parse_hexadecimal()
-  Local start = lx.pos
+  ' To facilitate transpiling BBC Basic source code the lexer accepts
+  ' hex numbers which begin with just an & instead of &h.
+  '
+  ' This does introduce an unresolved ambiguity, e.g. is "&b0" the binary
+  ' number 0 or the hex number B0 ?
+  '
+  ' TODO: provide an option to switch between BBC Basic and MMBasic
+  '       "&-prefixed" literals.
 
   lx.advance()
   lx.advance()

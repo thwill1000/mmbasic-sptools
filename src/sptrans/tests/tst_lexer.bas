@@ -55,15 +55,15 @@ End Sub
 
 Sub test_binary_literals()
   lx.parse_basic("&b1001001")
-
   expect_success(1)
   expect_tk(0, TK_NUMBER, "&b1001001")
 
+  ' Because the lexer accepts BBC micro-style hex numbers this is
+  ' not considered a syntax error, and nor does it result in two
+  ' separate tokens "&B01" and "23456789".
   lx.parse_basic("&B0123456789")
-
-  expect_success(2)
-  expect_tk(0, TK_NUMBER, "&B01")
-  expect_tk(1, TK_NUMBER, "23456789")
+  expect_success(1)
+  expect_tk(0, TK_NUMBER, "&B0123456789")
 End Sub
 
 Sub test_comments()
@@ -100,15 +100,19 @@ End Sub
 
 Sub test_hexadecimal_literals()
   lx.parse_basic("&hABCDEF")
-
   expect_success(1)
   expect_tk(0, TK_NUMBER, "&hABCDEF")
 
   lx.parse_basic("&Habcdefghijklmn")
-
   expect_success(2)
   expect_tk(0, TK_NUMBER, "&Habcdef")
   expect_tk(1, TK_IDENTIFIER, "ghijklmn")
+
+  ' To facilitate transpiling BBC Basic source code the The lexer accepts
+  ' hex numbers which begin just & instead of &h.
+  lx.parse_basic("&ABCDEF")
+  expect_success(1)
+  expect_tk(0, TK_NUMBER, "&ABCDEF")
 End Sub
 
 Sub test_identifiers()
