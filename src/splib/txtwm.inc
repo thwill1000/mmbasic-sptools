@@ -86,7 +86,7 @@ End Sub
 Sub twm.init_serial_attrs()
   Local i%, vt$
 
-  Dim twm.vt$(255)
+  Dim twm.vt$(255) Length 20
 
   For i% = 0 To 255
     ' Clear attributes
