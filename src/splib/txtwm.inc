@@ -39,6 +39,8 @@ Dim twm.last_at%    ' as an optimisation we keep a record of the last attribute
                     ' writing vt100 control-codes then this may get out of
                     ' synch. It can be cleared by setting it to -1 or calling
                     ' twm.switch().
+Dim twm.cursor_enabled%
+Dim twm.cursor_locked%
 
 ' For the currently selected window:
 Dim twm.id% ' id
@@ -78,7 +80,7 @@ Sub twm.init(max_num%, mem_sz%)
   twm.init_serial_attrs()
   twm.init_screen_attrs()
   twm.init_box_chars()
-
+  twm.enable_cursor(0)
 End Sub
 
 Sub twm.init_serial_attrs()
@@ -245,12 +247,13 @@ Function twm.new_win%(x%, y%, w%, h%)
 End Function
 
 Sub twm.switch(id%)
-
   ' Calling twm.switch() always resets this even if no actually window switch
   ' is required.
   twm.last_at% = -1
 
   If twm.id% = id% Then Exit Sub
+
+  twm.lock_vga_cursor(1)
 
   Local ptr%
 
@@ -272,6 +275,8 @@ Sub twm.switch(id%)
   twm.at% = Peek(Byte ptr% + 6)
   twm.pc% = ptr% + 7
   twm.pa% = twm.pc% + twm.w% * twm.h%
+
+  twm.lock_vga_cursor(0)
 End Sub
 
 Sub twm.foreground(col%)
@@ -293,9 +298,11 @@ End Sub
 ' Print s$ at (x%, y%) in the current window.
 ' Leaves twm.x% and twm.y% one beyond the last printed char position.
 Sub twm.print_at(x%, y%, s$)
+  twm.lock_vga_cursor(1)
   twm.x% = x%
   twm.y% = y%
   twm.print(s$)
+  twm.lock_vga_cursor(0)
 End Sub
 
 Function sys.int_bounds_err$(var$, value%, lb%, ub%)
@@ -348,6 +355,8 @@ Sub twm.print(s$)
   ' Set serial console VT100 attributes
   If twm.last_at% <> at% Then Print vt$; : twm.last_at% = at%
 
+  twm.lock_vga_cursor(1)
+
   Do
     If twm.y% = twm.h% Then
       twm.scroll_up(1)
@@ -383,9 +392,13 @@ Sub twm.print(s$)
     EndIf
   Loop While is% <= ls%
 
+  twm.lock_vga_cursor(0)
+
 End Sub
 
 Sub twm.scroll_down(redraw%)
+  twm.lock_vga_cursor(1)
+
   Local pa% = twm.pa% + twm.w% * (twm.h% - 1)
   Local pc% = twm.pc% + twm.w% * (twm.h% - 1)
   Local y%
@@ -403,9 +416,13 @@ Sub twm.scroll_down(redraw%)
   Memory Set pc%, 32, twm.w%
 
   If redraw% Then twm.redraw()
+
+  twm.lock_vga_cursor(0)
 End Sub
 
 Sub twm.scroll_up(redraw%)
+  twm.lock_vga_cursor(1)
+
   Local pa% = twm.pa%
   Local pc% = twm.pc%
   Local y%
@@ -423,6 +440,8 @@ Sub twm.scroll_up(redraw%)
   Memory Set pc%, 32, twm.w%
 
   If redraw% Then twm.redraw()
+
+  twm.lock_vga_cursor(0)
 End Sub
 
 Sub twm.redraw()
@@ -455,9 +474,11 @@ Sub twm.redraw()
 End Sub
 
 Sub twm.cls()
+  twm.lock_vga_cursor(1)
   Memory Set twm.pc%, 32, twm.w% * twm.h%
   Memory Set twm.pa%, twm.at%, twm.w% * twm.h%
   twm.redraw()
+  twm.lock_vga_cursor(0)
 End Sub
 
 Sub twm.box(x%, y%, w%, h%)
@@ -465,6 +486,8 @@ Sub twm.box(x%, y%, w%, h%)
   Local pc% = twm.pc%
   Local s$
   Local ad%
+
+  twm.lock_vga_cursor(1)
 
   ' Top
   Poke Var s$, 0, w%
@@ -493,6 +516,8 @@ Sub twm.box(x%, y%, w%, h%)
   Next
   Poke Var s$, w%, twm.box_or%(&hBC, Peek(Byte ad% + w% - 1))
   twm.print_at(x%, y% + h% - 1, s$)
+
+  twm.lock_vga_cursor(0)
 End Sub
 
 ' Combines a new character 'ch%' and an existing character 'ex%'.
@@ -508,7 +533,7 @@ Function twm.box_or%(ch%, ex%)
 End Function
 
 ' Sends VT100 control-code to hide/show cursor to the serial console.
-Sub twm.show_cursor(z%)
+Sub twm.enable_cursor(z%)
   Local s$ = LCase$(Mm.Info$(Option Console))
   Select Case s$
     Case "screen" : Exit Sub
@@ -516,6 +541,14 @@ Sub twm.show_cursor(z%)
   End Select
   Print Chr$(27) Choice(z%, "[?25h", "[?25l");
   If s$ = "both" Then Option Console Both
+
+  If z% = twm.cursor_enabled% Then Exit Sub
+  twm.cursor_enabled% = z%
+  If z% Then
+    SetTick 500, twm.update_vga_cursor, 4
+  Else
+    SetTick 0, twm.update_vga_cursor, 4
+  EndIf
 End Sub
 
 ' Sounds the console "bell".
@@ -528,4 +561,50 @@ Sub twm.bell()
   End Select
   Print Chr$(7);
   If s$ = "both" Then Option Console Both
+End Sub
+
+' Toggle whether the VGA cursor is lit or not,
+' intended to be called as an ISR via SetTick.
+Sub twm.update_vga_cursor()
+  Static lit% = 0
+
+  If twm.cursor_locked% Then Exit Sub
+
+  ' Do not draw the cursor if it is out of bounds,
+  ' if there are issues may need to check for < 0 too.
+  If twm.x% >= twm.w% Or twm.y% >= twm.h% Then Exit Sub
+
+  lit% = Not lit%
+  Local of% = twm.y% * twm.w% + twm.x%
+  Local ax% = twm.a% + twm.x%
+  Local by% = twm.b% + twm.y%
+  Local fg% = Choice(lit%, RGB(Black), RGB(White))
+  Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,"_",,,,fg%,-1
+  Text (ax%-1)*twm.fw%,(by%-1)*twm.fh% + 1,"_",,,,fg%,-1
+End Sub
+
+' Lock/unlock the VGA cursor.
+' The cursor should be locked whilst manipulating twm.x% & twm.y%
+Sub twm.lock_vga_cursor(lock%)
+  Inc twm.cursor_locked%, Choice(lock%, 1, -1))
+  If twm.id% = -1 Then Exit Sub
+
+  If lock% < 0 Then Error "Unbalanced cursor lock/unlock."
+
+  ' Character cell contents has already been restored and we are just counting up.
+  If lock% > 1 Then Exit Sub
+
+  ' Do not restore character cell contents if cursor is out of bounds,
+  ' if there are issues may need to check for < 0 too.
+  If twm.x% >= twm.w% Or twm.y% >= twm.h% Then Exit Sub
+
+  ' Restore character cell contents.
+  Local ax% = twm.a% + twm.x%
+  Local by% = twm.b% + twm.y%
+  Local of% = twm.y% * twm.w% + twm.x%
+  Local ch% = Peek(Byte twm.pc% + of%)
+  Local at% = Peek(Byte twm.pa% + of%)
+  Local fg% = twm.fg%(at%)
+  Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,Chr$(ch%),,,,fg%,twm.bg%(at%)
+  If at% And &b01000000 Then Text (ax%-1)*twm.fw%+1,(by%-1)*twm.fh%,Chr$(ch%),,,,fg%,-1
 End Sub
