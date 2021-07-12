@@ -505,11 +505,22 @@ End Function
 ' Sends VT100 control-code to hide/show cursor to the serial console.
 Sub twm.show_cursor(z%)
   Local s$ = LCase$(Mm.Info$(Option Console))
-  If s$ = "screen" Then
-    Exit Sub
-  ElseIf s$ = "both" Then
-    Option Console Serial
-  EndIf
+  Select Case s$
+    Case "screen" : Exit Sub
+    Case "both"   : Option Console Serial
+  End Select
   Print Chr$(27) Choice(z%, "[?25h", "[?25l");
+  If s$ = "both" Then Option Console Both
+End Sub
+
+' Sounds the console "bell".
+Sub twm.bell()
+  Play Tone 800, 800, 200
+  Local s$ = LCase$(Mm.Info$(Option Console))
+  Select Case s$
+    Case "screen" : Exit Sub
+    Case "both"   : Option Console Serial
+  End Select
+  Print Chr$(7);
   If s$ = "both" Then Option Console Both
 End Sub
