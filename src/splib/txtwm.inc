@@ -124,7 +124,10 @@ Sub twm.init_screen_attrs()
       Case Else Error
     End Select
 
-    ' TODO: Bold/Bright text
+    ' Bold/Bright text
+    If i% And &b01000000 Then
+      If fg% <> 0 Then fg% = fg% Or &h404040
+    EndIf
 
     ' Background
     Select Case (i% And &b00111000) >> 3
@@ -317,14 +320,14 @@ Sub twm.putc(ch%)
 
   ' Update VGA display:
   Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),twm.bg%(at%)
-
+  If at% And &b01000000 Then Text (ax%-1)*twm.fw%+1,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),-1
 End Sub
 
 Sub twm.print(s$)
 
 '  If twm.x% < 0 Or twm.x% >= twm.w% Then Error sys.int_bounds_err$("x", twm.x%, 0, twm.w% - 1)
 '
-'  ' If twm.y% = twm.h% then the window will immediately scroll before printing the first character.
+'  If twm.y% = twm.h% then the window will immediately scroll before printing the first character.
 '  If twm.y% < 0 Or twm.y% > twm.h% Then Error sys.int_bounds_err$("y", twm.y%, 0, twm.h%)
 
   Local is% = 1                         ' current index into s$
@@ -367,6 +370,7 @@ Sub twm.print(s$)
 
     ' Update VGA display:
     Text (ax% - 1) * twm.fw%, (by% - 1) * twm.fh%, seg$,,,, fg%, bg%
+    If at% And &b01000000 Then Text (ax% - 1) * twm.fw% + 1, (by% - 1) * twm.fh%, seg$,,,, fg%, -1
 
     Inc is%, nc%
     Inc twm.x%, nc%
@@ -441,6 +445,7 @@ Sub twm.redraw()
 
       ' Update VGA display:
       Text vx%, vy%, ch$,,,, twm.fg%(at%), twm.bg%(at%)
+      If at% And &b01000000 Then Text vx%+1, vy%, ch$,,,, twm.fg%(at%), -1
       Inc vx%, twm.fw%
     Next x%
     Inc pa%, twm.w%
