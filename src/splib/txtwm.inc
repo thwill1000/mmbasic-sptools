@@ -503,13 +503,13 @@ Function twm.box_or%(ch%, ex%)
 End Function
 
 ' Sends VT100 control-code to hide/show cursor to the serial console.
-Sub twm.show_cursor(z)
+Sub twm.show_cursor(z%)
   Local s$ = LCase$(Mm.Info$(Option Console))
   If s$ = "screen" Then
     Exit Sub
   ElseIf s$ = "both" Then
     Option Console Serial
   EndIf
-  Print Chr$(27) Choice(z, "[?25h", "[?25l");
+  Print Chr$(27) Choice(z%, "[?25h", "[?25l");
   If s$ = "both" Then Option Console Both
 End Sub
