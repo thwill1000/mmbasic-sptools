@@ -30,6 +30,7 @@ add_test("test_apply_replace")
 add_test("test_apply_replace_groups")
 add_test("test_apply_replace_patterns")
 add_test("test_replace_fails_if_too_long")
+add_test("test_replace_with_nothing")
 add_test("test_comment_if")
 add_test("test_comment_if_not")
 add_test("test_uncomment_if")
@@ -82,23 +83,28 @@ Sub test_parse_replace()
   tr.transpile()
   assert_string_equals("", sys.err$)
   expect_replacement(6, "&%h", "&h%1")
+
+  lx.parse_basic("'!replace foo")
+  tr.transpile()
+  assert_string_equals("", sys.err$)
+  expect_replacement(7, "foo", "")
+
+  lx.parse_basic("'!replace {foo}")
+  tr.transpile()
+  assert_string_equals("", sys.err$)
+  expect_replacement(8, "foo", "")
+
+  lx.parse_basic("'!replace foo {}")
+  tr.transpile()
+  assert_string_equals("", sys.err$)
+  expect_replacement(9, "foo", "")
 End Sub
 
 Sub test_parse_replace_given_errors()
   lx.parse_basic("'!replace")
   tr.transpile()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive expects <from> and <to> arguments", sys.err$)
-
-  lx.parse_basic("'!replace x")
-  tr.transpile()
-  assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive expects <from> and <to> arguments", sys.err$)
-
-  lx.parse_basic("'!replace {x}")
-  tr.transpile()
-  assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive expects <from> and <to> arguments", sys.err$)
+  assert_string_equals("!replace directive expects <from> argument", sys.err$)
 
   lx.parse_basic("'!replace {}")
   tr.transpile()
@@ -109,11 +115,6 @@ Sub test_parse_replace_given_errors()
   tr.transpile()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has empty <from> group", sys.err$)
-
-  lx.parse_basic("'!replace x {}")
-  tr.transpile()
-  assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has empty <to> group", sys.err$)
 
   lx.parse_basic("'!replace { x y")
   tr.transpile()
@@ -298,6 +299,17 @@ Sub test_replace_fails_if_too_long()
   lx.parse_basic(s$)
   tr.transpile()
   assert_error("applying replacement makes line > 255 characters")
+End Sub
+
+Sub test_replace_with_nothing()
+  lx.parse_basic("'!replace bar") : tr.transpile()
+  lx.parse_basic("foo bar wom") : tr.transpile()
+  expect_tokens(2)
+  expect_tk(0, TK_IDENTIFIER, "foo")
+  expect_tk(1, TK_IDENTIFIER, "wom")
+
+  lx.parse_basic("bar bar bar") : tr.transpile()
+  expect_tokens(0)
 End Sub
 
 Sub test_comment_if()

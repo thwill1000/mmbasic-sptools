@@ -128,6 +128,9 @@ Sub tr.apply_replacements()
         Cat s$, Mid$(lx.line$, lx.start(k%) + lx.len(k%))
         lx.parse_basic(s$)
         If sys.err$ <> "" Then Exit Sub
+
+        ' If we removed a token then compensate by not incrementing j% this time around the loop.
+        If to_$ = "" Then Inc j%, -1
       EndIf
       Inc j%
     Loop
@@ -291,7 +294,6 @@ Sub tr.process_replace()
   Local i%
   Local gidx% = 0
   Local groups$(1)
-  Local gtype$(1) Length 4 = ( "from", "to" )
 
   For i% = 1 To lx.num - 1
     Select Case lx.token_lc$(i%)
@@ -304,7 +306,9 @@ Sub tr.process_replace()
       Case "}"
         If in_group% Then
           in_group% = 0
-          If groups$(gidx%) = "" Then sys.err$ = "has empty <" + gtype$(gidx%) + "> group"
+          If gidx% = 0 Then
+            If groups$(gidx%) = "" Then sys.err$ = "has empty <from> group"
+          EndIf
           Inc gidx%
         Else
           sys.err$ = "has unexpected '}'"
@@ -327,8 +331,8 @@ Sub tr.process_replace()
   If sys.err$ = "" Then
     If in_group% Then
       sys.err$ = "has missing '}'"
-    ElseIf gidx% < 2 Then
-      sys.err$ = "expects <from> and <to> arguments"
+    ElseIf gidx% < 1 Then
+      sys.err$ = "expects <from> argument"
     Else
       tr.add_replacement(groups$(0), groups$(1))
     EndIf
