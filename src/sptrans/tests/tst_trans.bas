@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 Option Explicit On
 Option Default Integer
@@ -26,12 +26,17 @@ keywords.load()
 
 add_test("test_parse_replace")
 add_test("test_parse_replace_given_errors")
+add_test("test_parse_unreplace")
+add_test("test_parse_unreplace_given_errs")
+add_test("test_parse_given_too_many_rpl")
 add_test("test_apply_replace")
 add_test("test_apply_replace_groups")
 add_test("test_apply_replace_patterns")
 add_test("test_replace_fails_if_too_long")
 add_test("test_replace_with_fewer_tokens")
 add_test("test_replace_with_more_tokens")
+add_test("test_replace_given_new_rpl")
+add_test("test_apply_unreplace")
 add_test("test_comment_if")
 add_test("test_comment_if_not")
 add_test("test_uncomment_if")
@@ -94,11 +99,13 @@ Sub test_parse_replace()
   lx.parse_basic("'!replace {foo}")
   tr.transpile()
   assert_string_equals("", sys.err$)
+  expect_replacement(7, Chr$(0), Chr$(0))
   expect_replacement(8, "foo", "")
 
   lx.parse_basic("'!replace foo {}")
   tr.transpile()
   assert_string_equals("", sys.err$)
+  expect_replacement(8, Chr$(0), Chr$(0))
   expect_replacement(9, "foo", "")
 End Sub
 
@@ -147,6 +154,54 @@ Sub test_parse_replace_given_errors()
   tr.transpile()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has unexpected '}'", sys.err$)
+End Sub
+
+Sub test_parse_given_too_many_rpl()
+  Local i%
+  For i% = 0 To tr.MAX_REPLACEMENTS% - 1
+    lx.parse_basic("'!replace a" + Str$(i%) + " b")
+    tr.transpile()
+  Next
+  assert_string_equals("", sys.err$)
+
+  lx.parse_basic("'!replace foo bar")
+  tr.transpile()
+  assert_string_equals("!replace directive too many replacements (max 200)", sys.err$)
+End Sub
+
+Sub test_parse_unreplace()
+  lx.parse_basic("'!replace foo bar")
+  tr.transpile()
+  lx.parse_basic("'!replace wom bat")
+  tr.transpile()
+  lx.parse_basic("'!unreplace foo")
+  tr.transpile()
+
+  assert_string_equals("", sys.err$)
+  assert_int_equals(2, tr.num_replacements%)
+  expect_replacement(0, Chr$(0), Chr$(0))
+  expect_replacement(1, "wom", "bat")
+End Sub
+
+Sub test_parse_unreplace_given_errs()
+  ' Test given missing argument to directive.
+  lx.parse_basic("'!unreplace")
+  tr.transpile()
+  assert_string_equals("!unreplace directive expects <from> argument", sys.err$)
+
+  ' Test given directive has too many arguments.
+  lx.parse_basic("'!unreplace { a b } c")
+  tr.transpile()
+  assert_string_equals("!unreplace directive has too many arguments", sys.err$)
+
+  ' Test given replacement not present.
+  lx.parse_basic("'!replace wom bat")
+  tr.transpile()
+  lx.parse_basic("'!unreplace foo")
+  tr.transpile()
+  assert_string_equals("!unreplace directive could not find 'foo'", sys.err$)
+  assert_int_equals(1, tr.num_replacements%)
+  expect_replacement(0, "wom", "bat")
 End Sub
 
 Sub test_apply_replace()
@@ -399,6 +454,54 @@ Sub test_replace_with_more_tokens()
   expect_tk(5, TK_IDENTIFIER, "wom")
 End Sub
 
+  expect_tk(2, TK_IDENTIFIER, "ben")
+End Sub
+
+Sub test_replace_given_new_rpl()
+  lx.parse_basic("'!replace foo bar") : tr.transpile()
+  lx.parse_basic("foo wom bill") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "bar")
+  expect_tk(1, TK_IDENTIFIER, "wom")
+  expect_tk(2, TK_IDENTIFIER, "bill")
+
+  lx.parse_basic("'!replace foo snafu") : tr.transpile()
+  lx.parse_basic("foo wom bill") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "snafu")
+  expect_tk(1, TK_IDENTIFIER, "wom")
+  expect_tk(2, TK_IDENTIFIER, "bill")
+End Sub
+
+Sub test_apply_unreplace()
+  lx.parse_basic("'!replace foo bar") : tr.transpile()
+  lx.parse_basic("'!replace wom bat") : tr.transpile()
+  lx.parse_basic("'!replace bill ben") : tr.transpile()
+  expect_replacement(0, "foo", "bar")
+  expect_replacement(1, "wom", "bat")
+  expect_replacement(2, "bill", "ben")
+  expect_replacement(3, "", "")
+
+  lx.parse_basic("foo wom bill") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "bar")
+  expect_tk(1, TK_IDENTIFIER, "bat")
+  expect_tk(2, TK_IDENTIFIER, "ben")
+
+  lx.parse_basic("'!unreplace wom") : tr.transpile()
+  assert_string_equals("", sys.err$)
+  expect_replacement(0, "foo", "bar")
+  expect_replacement(1, Chr$(0), Chr$(0))
+  expect_replacement(2, "bill", "ben")
+  expect_replacement(3, "", "")
+
+  lx.parse_basic("foo wom bill") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "bar")
+  expect_tk(1, TK_IDENTIFIER, "wom")
+  expect_tk(2, TK_IDENTIFIER, "ben")
+End Sub
+
 Sub test_comment_if()
   ' 'foo' is set, code inside !comment_if block should be commented.
   lx.parse_basic("'!set foo") : tr.transpile()
@@ -487,8 +590,8 @@ Sub test_unknown_directive()
 End Sub
 
 Sub expect_replacement(i%, from$, to_$)
-  assert_string_equals(from$, tr.replacements$(i%, 0))
-  assert_string_equals(to_$, tr.replacements$(i%, 1))
+  assert_true(from$ = tr.replacements$(i%, 0), "Assert failed, expected from$ = '" + from$ + "', but was '" + tr.replacements$(i%, 0) + "'")
+  assert_true(to_$  = tr.replacements$(i%, 1), "Assert failed, expected to_$ = '"   + to_$  + "', but was '" + tr.replacements$(i%, 1) + "'")
 End Sub
 
 Sub expect_tokens(num)

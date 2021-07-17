@@ -57,10 +57,11 @@ Sub tr.transpile()
     Case "!comment_if"   : tr.process_if()
     Case "!empty-lines"  : tr.process_empty_lines()
     Case "!indent"       : tr.process_indent()
-    Case "!uncomment_if" : tr.process_if()  ' Same SUB for !comment_if and !uncomment_if.
     Case "!replace"      : tr.process_replace()
     Case "!set"          : tr.process_set()
     Case "!spacing"      : tr.process_spacing()
+    Case "!uncomment_if" : tr.process_if()       ' Same SUB for !comment_if and !uncomment_if.
+    Case "!unreplace"    : tr.process_replace()  ' Same SUB for !replace & !unreplace.
     Case Else            : sys.err$ = "unknown " + Mid$(lx.directive$(0), 1) + " directive"
   End Select
 
@@ -111,6 +112,10 @@ Sub tr.apply_replacements()
 
   Local capture$, i%, j%, k%, old_num%, s$, to_$
   For i% = 0 To tr.num_replacements% - 1
+
+    ' Skip 'dead' entries.
+    If tr.replacements$(i%, 0) = Chr$(0) Then Continue For
+
     j% = 0
     ' Need to use a DO rather than a FOR because the latter does not re-evaluate its end-point
     ' at the beginning of each iteration.
@@ -297,7 +302,8 @@ Sub tr.process_replace()
   Local in_group%
   Local i%
   Local gidx% = 0
-  Local groups$(1)
+  Local unreplace% = lx.directive$(0) = "!unreplace"
+  Local groups$(1) = ( "", Choice(unreplace%, Chr$(0), "") )
 
   For i% = 1 To lx.num - 1
     Select Case lx.token_lc$(i%)
@@ -318,7 +324,7 @@ Sub tr.process_replace()
           sys.err$ = "has unexpected '}'"
         EndIf
       Case Else
-        If gidx% > 1 Then
+        If gidx% > 1 Or (unreplace% And gidx% > 0) Then
           sys.err$ = "has too many arguments"
         ElseIf in_group% Then
           If groups$(gidx%) <> "" Then Cat groups$(gidx%), "|"
@@ -342,7 +348,7 @@ Sub tr.process_replace()
     EndIf
   EndIf
 
-  If sys.err$ <> "" Then sys.err$ = "!replace directive " + sys.err$
+  If sys.err$ <> "" Then sys.err$ = lx.directive$(0) + " directive " + sys.err$
 End Sub
 
 Sub tr.process_set()
@@ -372,8 +378,49 @@ Sub tr.clear_replacements()
   tr.num_replacements% = 0
 End Sub
 
+' Adds a new entry to the replacement list.
+'
+'   - if the entry exists then flags it as "dead" and adds a new entry to the
+'     end of the list.
+'   - if to_$ = Chr$(0) then expects entry to exist and flags it as "dead".
 Sub tr.add_replacement(from$, to_$)
-  tr.replacements$(tr.num_replacements%, 0) = LCase$(from$)
-  tr.replacements$(tr.num_replacements%, 1) = to_$
+  Local f_lower$ = LCase$(from$)
+  Local i%
+
+  ' Find existing replacement (if any) and flag entry dead.
+  For i% = 0 To tr.num_replacements% - 1
+    If f_lower$ = tr.replacements$(i%, 0) Then
+      tr.replacements$(i%, 0) = Chr$(0)
+      tr.replacements$(i%, 1) = Chr$(0)
+      Inc i%
+      Exit For
+    EndIf
+  Next
+
+  ' Handle clearing an entry.
+  If to_$ = Chr$(0) Then
+    If i% = tr.num_replacements% Then sys.err$ = "could not find '" + from$ + "'"
+    Exit Sub
+  EndIf
+
+  ' Handle too many entries.
+  If i% >= tr.MAX_REPLACEMENTS% Then
+    sys.err$ = "too many replacements (max " + Str$(tr.MAX_REPLACEMENTS%) + ")"
+    Exit Sub
+  EndIf
+
+  ' Actually add the new entry.
+  tr.replacements$(i%, 0) = f_lower$
+  tr.replacements$(i%, 1) = to_$
   Inc tr.num_replacements%
+End Sub
+
+Sub tr.dump_replacements()
+  Local i%, s$
+  For i% = 0 To tr.num_replacements% - 1
+    Print Str$(i%) ": " ;
+    Print Choice(tr.replacements$(i%, 0) = Chr$(0), "<null>", tr.replacements$(i%, 0));
+    Print " => ";
+    Print Choice(tr.replacements$(i%, 1) = Chr$(0), "<null>", tr.replacements$(i%, 1))
+  Next
 End Sub
