@@ -30,7 +30,8 @@ add_test("test_apply_replace")
 add_test("test_apply_replace_groups")
 add_test("test_apply_replace_patterns")
 add_test("test_replace_fails_if_too_long")
-add_test("test_replace_with_nothing")
+add_test("test_replace_with_fewer_tokens")
+add_test("test_replace_with_more_tokens")
 add_test("test_comment_if")
 add_test("test_comment_if_not")
 add_test("test_uncomment_if")
@@ -301,15 +302,100 @@ Sub test_replace_fails_if_too_long()
   assert_error("applying replacement makes line > 255 characters")
 End Sub
 
-Sub test_replace_with_nothing()
+Sub test_replace_with_fewer_tokens()
+  ' Replace 1 token with 0.
   lx.parse_basic("'!replace bar") : tr.transpile()
   lx.parse_basic("foo bar wom") : tr.transpile()
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "wom")
 
+  ' Removal of all tokens.
+  setup_test()
+  lx.parse_basic("'!replace bar") : tr.transpile()
   lx.parse_basic("bar bar bar") : tr.transpile()
   expect_tokens(0)
+
+  ' Replace 2 tokens with 1.
+  setup_test()
+  lx.parse_basic("'!replace { foo bar } wom") : tr.transpile()
+  lx.parse_basic("foo bar foo bar snafu") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "wom")
+  expect_tk(1, TK_IDENTIFIER, "wom")
+  expect_tk(2, TK_IDENTIFIER, "snafu")
+
+  ' Note that we don't end up with the single token "foo" because once we have
+  ' applied a replacement we do not recursively apply that replacement to the
+  ' already replaced text.
+  setup_test()
+  lx.parse_basic("'!replace { foo bar } foo") : tr.transpile()
+  lx.parse_basic("foo bar bar") : tr.transpile()
+  expect_tokens(2)
+  expect_tk(0, TK_IDENTIFIER, "foo")
+  expect_tk(1, TK_IDENTIFIER, "bar")
+
+  ' Replace 3 tokens with 1 - again note we don't just end up with "foo".
+  setup_test()
+  lx.parse_basic("'!replace { foo bar wom } foo") : tr.transpile()
+  lx.parse_basic("foo bar wom bar wom") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "foo")
+  expect_tk(1, TK_IDENTIFIER, "bar")
+  expect_tk(2, TK_IDENTIFIER, "wom")
+
+  ' Replace 3 tokens with 2 - and again we don't just end up with "foo bar".
+  setup_test()
+  lx.parse_basic("'!replace { foo bar wom } { foo bar }") : tr.transpile()
+  lx.parse_basic("foo bar wom wom") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "foo")
+  expect_tk(1, TK_IDENTIFIER, "bar")
+  expect_tk(2, TK_IDENTIFIER, "wom")
+End Sub
+
+Sub test_replace_with_more_tokens()
+  ' Replace 1 token with 2 - note that we don't get infinite recursion because
+  ' once we have applied the replacement text we not not recusively apply the
+  ' replacement to the already replaced text.
+  lx.parse_basic("'!replace foo { foo bar }") : tr.transpile()
+  lx.parse_basic("foo wom") : tr.transpile()
+  expect_tokens(3)
+  expect_tk(0, TK_IDENTIFIER, "foo")
+  expect_tk(1, TK_IDENTIFIER, "bar")
+  expect_tk(2, TK_IDENTIFIER, "wom")
+
+  setup_test()
+  lx.parse_basic("'!replace foo { bar foo }") : tr.transpile()
+  lx.parse_basic("foo wom foo") : tr.transpile()
+  expect_tokens(5)
+  expect_tk(0, TK_IDENTIFIER, "bar")
+  expect_tk(1, TK_IDENTIFIER, "foo")
+  expect_tk(2, TK_IDENTIFIER, "wom")
+  expect_tk(3, TK_IDENTIFIER, "bar")
+  expect_tk(4, TK_IDENTIFIER, "foo")
+
+  ' Ensure replacement applied for multiple matches.
+  setup_test()
+  lx.parse_basic("'!replace foo { bar foo }") : tr.transpile()
+  lx.parse_basic("foo foo") : tr.transpile()
+  expect_tokens(4)
+  expect_tk(0, TK_IDENTIFIER, "bar")
+  expect_tk(1, TK_IDENTIFIER, "foo")
+  expect_tk(2, TK_IDENTIFIER, "bar")
+  expect_tk(3, TK_IDENTIFIER, "foo")
+
+  ' Replace 3 tokens with 4.
+  setup_test()
+  lx.parse_basic("'!replace { foo bar wom } { foo bar wom foo }") : tr.transpile()
+  lx.parse_basic("foo bar wom bar wom") : tr.transpile()
+  expect_tokens(6)
+  expect_tk(0, TK_IDENTIFIER, "foo")
+  expect_tk(1, TK_IDENTIFIER, "bar")
+  expect_tk(2, TK_IDENTIFIER, "wom")
+  expect_tk(3, TK_IDENTIFIER, "foo")
+  expect_tk(4, TK_IDENTIFIER, "bar")
+  expect_tk(5, TK_IDENTIFIER, "wom")
 End Sub
 
 Sub test_comment_if()

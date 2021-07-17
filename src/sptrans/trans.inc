@@ -108,7 +108,7 @@ Sub tr.apply_replacements()
   If tr.num_replacements% = 0 Then Exit Sub
   If lx.type(0) = TK_DIRECTIVE Then Exit Sub ' Don't replace within directives.
 
-  Local capture$, i%, j%, k%, s$, to_$
+  Local capture$, i%, j%, k%, old_num%, s$, to_$
   For i% = 0 To tr.num_replacements% - 1
     j% = 0
     ' Need to use a DO rather than a FOR because the latter does not re-evaluate its end-point
@@ -126,13 +126,16 @@ Sub tr.apply_replacements()
         ' WARNING! In firmware 5.07 CAT does not error when it overflows 255 characters.
         Cat s$, to_$
         Cat s$, Mid$(lx.line$, lx.start(k%) + lx.len(k%))
+        old_num% = lx.num%
         lx.parse_basic(s$)
         If sys.err$ <> "" Then Exit Sub
 
-        ' If we removed a token then compensate by not incrementing j% this time around the loop.
-        If to_$ = "" Then Inc j%, -1
+        ' Adjust j% so we don't resume searching for matches until immediately
+        ' after the current replacement.
+        Inc j%, Max(0, 1 + lx.num% - old_num% + k% - j%)
+      Else
+        Inc j%
       EndIf
-      Inc j%
     Loop
   Next
 
