@@ -17,6 +17,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 add_test("test_centre")
 add_test("test_equals_ignore_case")
 add_test("test_lpad")
+add_test("test_is_plain_ascii")
 add_test("test_next_token")
 add_test("test_quote")
 add_test("test_replace")
@@ -50,6 +51,19 @@ End Sub
 Sub test_lpad()
   assert_string_equals("     hello", str.lpad$("hello", 10))
   assert_string_equals("hello", str.lpad$("hello", 2))
+End Sub
+
+Sub test_is_plain_ascii()
+  Local i%
+  For i% = 0 To 8 : assert_false(str.is_plain_ascii%("foo" + Chr$(i%) + "bar")) : Next
+  assert_true(str.is_plain_ascii%("foo" + Chr$(9) + "bar"))   ' Tab
+  assert_true(str.is_plain_ascii%("foo" + Chr$(10) + "bar"))  ' Line Feed
+  assert_false(str.is_plain_ascii%("foo" + Chr$(11) + "bar")) ' Vertical Tab
+  assert_false(str.is_plain_ascii%("foo" + Chr$(12) + "bar")) ' Form Feed
+  assert_true(str.is_plain_ascii%("foo" + Chr$(13) + "bar"))  ' Carriage Return
+  For i% = 14 To 31 : assert_false(str.is_plain_ascii%("foo" + Chr$(i%) + "bar")) : Next
+  For i% = 32 To 126 : assert_true(str.is_plain_ascii%("foo" + Chr$(i%) + "bar")) : Next
+  assert_false(str.is_plain_ascii%("foo" + Chr$(127))) ' Delete
 End Sub
 
 Sub test_next_token()

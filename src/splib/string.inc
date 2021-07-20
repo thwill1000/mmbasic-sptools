@@ -28,6 +28,22 @@ Function str.equals_ignore_case%(s1$, s2$)
   str.equals_ignore_case% = LCase$(s1$) = LCase$(s2$)
 End Function
 
+' Does a string contain only printable and/or whitespace ASCII ?
+'
+' @param  s$  the string.
+' @return     1 if the string only contains printable and/or whitespace ASCII, otherwise 0.
+Function str.is_plain_ascii%(s$)
+  Local i%
+  For i% = 1 To Len(s$)
+    Select Case Peek(Var s$, i%)
+      Case 9, 10, 13   : ' Tab, line-feed and carriage-return are acceptable.
+      Case < 32, > 126 : Exit Function
+      Case Else        : ' ASCII printable characters.
+    End Select
+  Next
+  str.is_plain_ascii% = 1
+End Function
+
 Function str.lpad$(s$, x%)
   str.lpad$ = s$
   If Len(s$) < x% Then str.lpad$ = Space$(x% - Len(s$)) + s$
