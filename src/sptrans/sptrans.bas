@@ -93,13 +93,16 @@ Sub main()
 
     s$ = in.readln$()
     lx.parse_basic(s$)
-    If sys.err$ = "" Then
-      trok% = Choice(opt.format_only, 1, tr.transpile%())
-      If trok% = tr.STATUS_INCLUDE% Then open_include()
-    EndIf
-    If sys.err$ <> "" Then cerror(sys.err$)
+    trok% = 0 ' Error
+    If sys.err$ = "" Then trok% = Choice(opt.format_only, 1, tr.transpile%())
 
-    pp.print_line()
+    Select Case trok%
+      Case 0                    : cerror(sys.err$)
+      Case 1                    : pp.print_line()
+      Case tr.STATUS_INCLUDE%   : open_include() : pp.print_line()
+      Case tr.STATUS_OMIT_LINE% : ' Do nothing
+      Case Else                 : Error "Unknown status: " + Str(trok%)
+    End Select
 
     If Eof(#in.num_open_files%) Then
       If in.num_open_files% > 1 Then close_include() Else in.close()

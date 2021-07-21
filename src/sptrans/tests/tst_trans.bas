@@ -42,6 +42,8 @@ add_test("test_comment_if_not")
 add_test("test_uncomment_if")
 add_test("test_uncomment_if_not")
 add_test("test_unknown_directive")
+add_test("test_remove_if")
+add_test("test_remove_if_not")
 
 run_tests()
 
@@ -617,6 +619,41 @@ Sub test_uncomment_if_not()
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+End Sub
+
+Sub test_remove_if()
+  Local ok%
+
+  ' 'foo' is set, code inside !remove_if block should be omitted.
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  lx.parse_basic("'!remove_if foo") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block should not be omitted.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_remove_if_not()
+  Local ok%
+
+  ' 'foo' is not set, code inside !remove_if block should be omitted.
+  lx.parse_basic("'!remove_if not foo") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block should not be omitted.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_unknown_directive()

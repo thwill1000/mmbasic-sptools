@@ -89,6 +89,11 @@ Sub test_directives()
   expect_success(2)
   expect_tk(0, TK_DIRECTIVE, "'!empty-lines")
   expect_tk(1, TK_KEYWORD, "off")
+
+  lx.parse_basic("'!remove_if foo")
+  expect_success(2)
+  expect_tk(0, TK_DIRECTIVE, "'!remove_if")
+  expect_tk(1, TK_IDENTIFIER, "foo")
 End Sub
 
 Sub test_replace_directives()

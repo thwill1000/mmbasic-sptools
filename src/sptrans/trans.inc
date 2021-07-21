@@ -13,8 +13,9 @@ Dim tr.num_comments(MAX_NUM_FILES - 1)
 ' For each source file we maintain a stack of currently open !if directives.
 ' If 'i' is the base-0 index of the source file then
 '   if_stack(i, if_stack_sz - 1)
-'     = +1  : if the current !if directive incremented 'num_comments'
-'     = -1  : if the current !if directive decremented 'num_comments'
+'     = +1  : if the latest !if directive incremented 'num_comments'
+'     = +2  : if the latest !if directive set the 'omit_code' flag
+'     = -1  : if the latest !if directive decremented 'num_comments'
 '     = 0   : if the current !if directive is inactive
 Const tr.MAX_NUM_IFS = 10
 Dim tr.if_stack(MAX_NUM_FILES - 1, tr.MAX_NUM_IFS - 1)
@@ -32,18 +33,29 @@ Dim tr.replacements$(tr.MAX_REPLACEMENTS% - 1, 1) Length 80
 ' Set to name of file after processing #INCLUDE.
 Dim tr.include$
 
+' Set to 1 by the !remove_if directive this causes all code to be omitted until
+' we process the matching !endif which will reset it to 0.
+Dim tr.omit_code%
+
 Const tr.STATUS_INCLUDE% = 2
+Const tr.STATUS_OMIT_LINE% = 3
 
 ' @return  0  on error, see 'sys.err$' for details.
 '          1  on general success.
-'          2  if processed a #INCLUDE, see 'tr.include$' for the filename/path.
-
+'          2  if processed a #INCLUDE, see 'tr.include$' for the filename/path
+'          3  if line was deleted/omitted by the transpiler.
 Function tr.transpile%()
   tr.include$ = ""
 
   If lx.token_lc$(0) = "'!endif" Then
     tr.process_endif()
     If sys.err$ <> "" Then Exit Function
+  EndIf
+
+  If tr.omit_code% Then
+    lx.parse_basic("") ' Not really necessary since it should be ignored by the caller.
+    tr.transpile% = tr.STATUS_OMIT_LINE%
+    Exit Function
   EndIf
 
   tr.add_comments()
@@ -65,6 +77,7 @@ Function tr.transpile%()
     Case "!empty-lines"  : tr.process_empty_lines()
     Case "!indent"       : tr.process_indent()
     Case "!replace"      : tr.process_replace()
+    Case "!remove_if"    : tr.process_if()
     Case "!set"          : tr.process_set()
     Case "!spacing"      : tr.process_spacing()
     Case "!uncomment_if" : tr.process_if()       ' Same SUB for !comment_if and !uncomment_if.
@@ -79,7 +92,13 @@ Function tr.transpile%()
 End Function
 
 Sub tr.process_endif()
-  tr.update_num_comments(-tr.pop_if())
+  Local x% = tr.pop_if()
+  Select Case x%
+    Case 0     : ' Do nothing.
+    Case 1, -1 : tr.update_num_comments(-x%)
+    Case 2     : tr.omit_code = 0
+    Case Else  : Error
+  End Select
   If sys.err$ <> "" Then Exit Sub
   lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
 End Sub
@@ -268,15 +287,27 @@ Sub tr.process_if()
   Local x = set.get%(tr.flags$(), t$) > -1
   If invert Then x = Not x
 
-  If lx.directive$(0) = "!comment_if" Then
-    tr.push_if(x)
-    If x Then tr.update_num_comments(+1)
-  ElseIf lx.directive$(0) = "!uncomment_if" Then
-    tr.push_if(-x)
-    If x Then tr.update_num_comments(-1)
-  Else
-    Error
-  EndIf
+  Select Case lx.directive$(0)
+    Case "!comment_if"
+      tr.push_if(x)
+      If x Then tr.update_num_comments(+1)
+
+    Case "!remove_if"
+      ' TODO: support nested !remove_if directives.
+      If tr.omit_code Then
+        sys.err$ = "nested !remove_if directives are not supported"
+      Else
+        tr.push_if(x * 2)
+        If x Then tr.omit_code = 1
+      EndIf
+
+    Case "!uncomment_if"
+      tr.push_if(-x)
+      If x Then tr.update_num_comments(-1)
+
+    Case Else
+      Error
+  End Select
 End Sub
 
 Sub tr.push_if(x)
