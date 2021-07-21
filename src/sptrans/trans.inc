@@ -95,9 +95,9 @@ Sub tr.add_comments()
   ElseIf nc < 0 Then
     Do While nc < 0 And lx.num > 0 And lx.type(0) = TK_COMMENT
       If Mid$(lx.line$, lx.start(0), 1) = "'" Then
-        lx.parse_basic(Space$(lx.start(0)) + Mid$(lx.line$, lx.start(0) + 1))
+        lx.parse_basic(Left$(lx.line$, lx.start(0) - 1) + Mid$(lx.line$, lx.start(0) + 1))
       ElseIf LCase$(Mid$(lx.line$, lx.start(0), 3)) = "rem" Then
-        lx.parse_basic(Space$(lx.start(0) + 2) + Mid$(lx.line$, lx.start(0) + 3))
+        lx.parse_basic(Left$(lx.line$, lx.start(0) - 1) + Mid$(lx.line$, lx.start(0) + 3))
       EndIf
       Inc nc, 1
     Loop

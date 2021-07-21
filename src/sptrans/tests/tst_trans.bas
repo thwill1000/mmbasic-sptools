@@ -544,19 +544,26 @@ Sub test_uncomment_if()
   ' 'foo' is set, code inside !uncomment_if block should be uncommented.
   lx.parse_basic("'!set foo") : tr.transpile()
   lx.parse_basic("'!uncomment_if foo") : tr.transpile()
+
   lx.parse_basic("' one") : tr.transpile()
+  assert_string_equals(" one", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
+
   lx.parse_basic("REM two") : tr.transpile()
+  assert_string_equals(" two", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
+
   lx.parse_basic("'' three") : tr.transpile()
+  assert_string_equals("' three", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' three")
   lx.parse_basic("'!endif") : tr.transpile()
 
   ' Code outside the block should not be uncommented.
   lx.parse_basic("' four") : tr.transpile()
+  assert_string_equals("' four", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
 End Sub
@@ -564,13 +571,19 @@ End Sub
 Sub test_uncomment_if_not()
   ' 'foo' is NOT set, code inside !uncomment_if NOT block should be uncommented.
   lx.parse_basic("'!uncomment_if not foo") : tr.transpile()
+
   lx.parse_basic("' one") : tr.transpile()
+  assert_string_equals(" one", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
+
   lx.parse_basic("REM two") : tr.transpile()
+  assert_string_equals(" two", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
+
   lx.parse_basic("'' three") : tr.transpile()
+  assert_string_equals("' three", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' three")
   lx.parse_basic("'!endif") : tr.transpile()
@@ -579,6 +592,7 @@ Sub test_uncomment_if_not()
   lx.parse_basic("'!set foo") : tr.transpile()
   lx.parse_basic("'!uncomment_if not foo") : tr.transpile()
   lx.parse_basic("' four") : tr.transpile()
+  assert_string_equals("' four", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
   lx.parse_basic("'!endif") : tr.transpile()
