@@ -86,6 +86,7 @@ Sub main()
   cout(in.files$(0)) : cendl()
   cout("   ")
 
+  Local trok%
   t = Timer
   Do
     cout(BS$ + Mid$("\|/-", ((in.line_num(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
@@ -93,8 +94,8 @@ Sub main()
     s$ = in.readln$()
     lx.parse_basic(s$)
     If sys.err$ = "" Then
-      If Not opt.format_only Then tr.transpile()
-      If tr.include$ <> "" Then open_include()
+      trok% = Choice(opt.format_only, 1, tr.transpile%())
+      If trok% = tr.STATUS_INCLUDE% Then open_include()
     EndIf
     If sys.err$ <> "" Then cerror(sys.err$)
 

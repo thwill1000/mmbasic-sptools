@@ -29,27 +29,34 @@ Const tr.MAX_REPLACEMENTS% = 200
 Dim tr.num_replacements
 Dim tr.replacements$(tr.MAX_REPLACEMENTS% - 1, 1) Length 80
 
-' Set to name of file after processing #Include
+' Set to name of file after processing #INCLUDE.
 Dim tr.include$
 
-Sub tr.transpile()
+Const tr.STATUS_INCLUDE% = 2
+
+' @return  0  on error, see 'sys.err$' for details.
+'          1  on general success.
+'          2  if processed a #INCLUDE, see 'tr.include$' for the filename/path.
+
+Function tr.transpile%()
   tr.include$ = ""
 
   If lx.token_lc$(0) = "'!endif" Then
     tr.process_endif()
-    If sys.err$ <> "" Then Exit Sub
+    If sys.err$ <> "" Then Exit Function
   EndIf
 
   tr.add_comments()
   tr.apply_replacements()
-  If sys.err$ <> "" Then Exit Sub
+  If sys.err$ <> "" Then Exit Function
 
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
-    If sys.err$ <> "" Then Exit Sub
+    tr.transpile% = Choice(sys.err$ = "", tr.STATUS_INCLUDE%, 0)
+    Exit Function
   EndIf
 
-  If lx.type(0) <> TK_DIRECTIVE Then Exit Sub
+  If lx.type(0) <> TK_DIRECTIVE Then tr.transpile% = 1 : Exit Function
 
   Select Case lx.directive$(0)
     Case "!clear"        : tr.process_clear()
@@ -65,10 +72,11 @@ Sub tr.transpile()
     Case Else            : sys.err$ = "unknown " + Mid$(lx.directive$(0), 1) + " directive"
   End Select
 
-  If sys.err$ <> "" Then Exit Sub
-
-  lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
-End Sub
+  If sys.err$ = "" Then
+    lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
+    tr.transpile% = 1
+  EndIf
+End Function
 
 Sub tr.process_endif()
   tr.update_num_comments(-tr.pop_if())

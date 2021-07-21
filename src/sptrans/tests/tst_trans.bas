@@ -56,126 +56,128 @@ Sub teardown_test()
 End Sub
 
 Sub test_parse_replace()
+  Local ok%
+
   lx.parse_basic("'!replace DEF Sub")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(0, "def", "Sub")
 
   lx.parse_basic("'!replace ENDPROC { End Sub }")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(1, "endproc", "End|Sub")
 
   lx.parse_basic("'!replace { THEN ENDPROC } { Then Exit Sub }")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(2, "then|endproc", "Then|Exit|Sub")
 
   lx.parse_basic("'!replace GOTO%% { Goto %1 }")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(3, "goto%%", "Goto|%1")
 
   lx.parse_basic("'!replace { THEN %% } { Then Goto %1 }")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(4, "then|%%", "Then|Goto|%1")
 
   lx.parse_basic("'!replace '%% { CRLF$ %1 }")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(5, "'%%", "CRLF$|%1")
 
   lx.parse_basic("'!replace &%h &h%1")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(6, "&%h", "&h%1")
 
   lx.parse_basic("'!replace foo")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(7, "foo", "")
 
   lx.parse_basic("'!replace {foo}")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(7, Chr$(0), Chr$(0))
   expect_replacement(8, "foo", "")
 
   lx.parse_basic("'!replace foo {}")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(8, Chr$(0), Chr$(0))
   expect_replacement(9, "foo", "")
 End Sub
 
 Sub test_parse_replace_given_errors()
+  Local ok%
+
   lx.parse_basic("'!replace")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive expects <from> argument", sys.err$)
 
   lx.parse_basic("'!replace {}")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has empty <from> group", sys.err$)
 
   lx.parse_basic("'!replace {} y")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has empty <from> group", sys.err$)
 
   lx.parse_basic("'!replace { x y")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has missing '}'", sys.err$)
 
   lx.parse_basic("'!replace { x } { y z")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has missing '}'", sys.err$)
 
   lx.parse_basic("'!replace { x } { y } z")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has too many arguments", sys.err$)
 
   lx.parse_basic("'!replace { x } { y } { z }")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has too many arguments", sys.err$)
 
   lx.parse_basic("'!replace { {")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has unexpected '{'", sys.err$)
 
   lx.parse_basic("'!replace foo }")
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_string_equals("!replace directive has unexpected '}'", sys.err$)
 End Sub
 
 Sub test_parse_given_too_many_rpl()
-  Local i%
+  Local i%, ok%
+
   For i% = 0 To tr.MAX_REPLACEMENTS% - 1
-    lx.parse_basic("'!replace a" + Str$(i%) + " b")
-    tr.transpile()
+    lx.parse_basic("'!replace a" + Str$(i%) + " b") : ok% = tr.transpile%()
   Next
   assert_string_equals("", sys.err$)
 
-  lx.parse_basic("'!replace foo bar")
-  tr.transpile()
+  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
   assert_string_equals("!replace directive too many replacements (max 200)", sys.err$)
 End Sub
 
 Sub test_parse_unreplace()
-  lx.parse_basic("'!replace foo bar")
-  tr.transpile()
-  lx.parse_basic("'!replace wom bat")
-  tr.transpile()
-  lx.parse_basic("'!unreplace foo")
-  tr.transpile()
+  Local ok%
+
+  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
+  lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
+  lx.parse_basic("'!unreplace foo") : ok% = tr.transpile%()
 
   assert_string_equals("", sys.err$)
   assert_int_equals(2, tr.num_replacements%)
@@ -184,30 +186,30 @@ Sub test_parse_unreplace()
 End Sub
 
 Sub test_parse_unreplace_given_errs()
+  Local ok%
+
   ' Test given missing argument to directive.
-  lx.parse_basic("'!unreplace")
-  tr.transpile()
+  lx.parse_basic("'!unreplace") : ok% = tr.transpile%()
   assert_string_equals("!unreplace directive expects <from> argument", sys.err$)
 
   ' Test given directive has too many arguments.
-  lx.parse_basic("'!unreplace { a b } c")
-  tr.transpile()
+  lx.parse_basic("'!unreplace { a b } c") : ok% = tr.transpile%()
   assert_string_equals("!unreplace directive has too many arguments", sys.err$)
 
   ' Test given replacement not present.
-  lx.parse_basic("'!replace wom bat")
-  tr.transpile()
-  lx.parse_basic("'!unreplace foo")
-  tr.transpile()
+  lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
+  lx.parse_basic("'!unreplace foo") : ok% = tr.transpile%()
   assert_string_equals("!unreplace directive could not find 'foo'", sys.err$)
   assert_int_equals(1, tr.num_replacements%)
   expect_replacement(0, "wom", "bat")
 End Sub
 
 Sub test_apply_replace()
-  lx.parse_basic("'!replace x      y") : tr.transpile()
-  lx.parse_basic("'!replace &hFFFF z") : tr.transpile()
-  lx.parse_basic("Dim x = &hFFFF ' comment") : tr.transpile()
+  Local ok%
+
+  lx.parse_basic("'!replace x      y") : ok% = tr.transpile%()
+  lx.parse_basic("'!replace &hFFFF z") : ok% = tr.transpile%()
+  lx.parse_basic("Dim x = &hFFFF ' comment") : ok% = tr.transpile%()
 
   expect_tokens(5)
   expect_tk(0, TK_KEYWORD, "Dim")
@@ -219,8 +221,10 @@ Sub test_apply_replace()
 End Sub
 
 Sub test_apply_replace_groups()
-  lx.parse_basic("'!replace ab { cd ef }") : tr.transpile()
-  lx.parse_basic("ab gh ij") : tr.transpile()
+  Local ok%
+
+  lx.parse_basic("'!replace ab { cd ef }") : ok% = tr.transpile%()
+  lx.parse_basic("ab gh ij") : ok% = tr.transpile%()
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "cd")
   expect_tk(1, TK_IDENTIFIER, "ef")
@@ -228,8 +232,8 @@ Sub test_apply_replace_groups()
   expect_tk(3, TK_IDENTIFIER, "ij")
 
   setup_test()
-  lx.parse_basic("'!replace {ab cd} ef") : tr.transpile()
-  lx.parse_basic("ab cd gh ij") : tr.transpile()
+  lx.parse_basic("'!replace {ab cd} ef") : ok% = tr.transpile%()
+  lx.parse_basic("ab cd gh ij") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "ef")
   expect_tk(1, TK_IDENTIFIER, "gh")
@@ -237,9 +241,11 @@ Sub test_apply_replace_groups()
 End Sub
 
 Sub test_apply_replace_patterns()
+  Local ok%
+
   setup_test()
-  lx.parse_basic("'!replace { DEF PROC%% } { SUB proc%1 }") : tr.transpile()
-  lx.parse_basic("foo DEF PROCWOMBAT bar") : tr.transpile()
+  lx.parse_basic("'!replace { DEF PROC%% } { SUB proc%1 }") : ok% = tr.transpile%()
+  lx.parse_basic("foo DEF PROCWOMBAT bar") : ok% = tr.transpile%()
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "SUB")
@@ -247,8 +253,8 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar")
 
   setup_test()
-  lx.parse_basic("'!replace GOTO%d { Goto %1 }") : tr.transpile()
-  lx.parse_basic("foo GOTO1234 bar") : tr.transpile()
+  lx.parse_basic("'!replace GOTO%d { Goto %1 }") : ok% = tr.transpile%()
+  lx.parse_basic("foo GOTO1234 bar") : ok% = tr.transpile%()
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD   , "Goto")
@@ -256,10 +262,10 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar") 
 
   setup_test()
-  lx.parse_basic("'!replace { THEN %d } { Then Goto %1 }") : tr.transpile()
+  lx.parse_basic("'!replace { THEN %d } { Then Goto %1 }") : ok% = tr.transpile%()
 
   ' Test %d pattern matches decimal digits ...
-  lx.parse_basic("foo THEN 1234 bar") : tr.transpile()
+  lx.parse_basic("foo THEN 1234 bar") : ok% = tr.transpile%()
   expect_tokens(5)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD   , "Then")
@@ -268,7 +274,7 @@ Sub test_apply_replace_patterns()
   expect_tk(4, TK_IDENTIFIER, "bar") 
 
   ' ... but it should not match other characters.
-  lx.parse_basic("foo THEN wombat bar") : tr.transpile()
+  lx.parse_basic("foo THEN wombat bar") : ok% = tr.transpile%()
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD   , "THEN")
@@ -276,8 +282,8 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar") 
 
   setup_test()
-  lx.parse_basic("'!replace { PRINT '%% } { ? : ? %1 }") : tr.transpile()
-  lx.parse_basic("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar") : tr.transpile()
+  lx.parse_basic("'!replace { PRINT '%% } { ? : ? %1 }") : ok% = tr.transpile%()
+  lx.parse_basic("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar") : ok% = tr.transpile%()
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_SYMBOL,     "?")
@@ -287,8 +293,8 @@ Sub test_apply_replace_patterns()
   expect_tk(5, TK_IDENTIFIER, "bar")
 
   setup_test()
-  lx.parse_basic("'!replace '%% { : ? %1 }") : tr.transpile()
-  lx.parse_basic("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar") : tr.transpile()
+  lx.parse_basic("'!replace '%% { : ? %1 }") : ok% = tr.transpile%()
+  lx.parse_basic("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar") : ok% = tr.transpile%()
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "PRINT")
@@ -298,15 +304,15 @@ Sub test_apply_replace_patterns()
   expect_tk(5, TK_IDENTIFIER, "bar")
 
   setup_test()
-  lx.parse_basic("'!replace REM%% { ' %1 }") : tr.transpile()
-  lx.parse_basic("foo REM This is a comment") : tr.transpile()
+  lx.parse_basic("'!replace REM%% { ' %1 }") : ok% = tr.transpile%()
+  lx.parse_basic("foo REM This is a comment") : ok% = tr.transpile%()
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_COMMENT, "' This is a comment")
 
   setup_test()
-  lx.parse_basic("'!replace { Spc ( } { Space$ ( }") : tr.transpile()
-  lx.parse_basic("foo Spc(5) bar") : tr.transpile()
+  lx.parse_basic("'!replace { Spc ( } { Space$ ( }") : ok% = tr.transpile%()
+  lx.parse_basic("foo Spc(5) bar") : ok% = tr.transpile%()
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "Space$")
@@ -317,8 +323,8 @@ Sub test_apply_replace_patterns()
 
   ' Test %h pattern matches hex digits ...
   setup_test()
-  lx.parse_basic("'!replace GOTO%h { Goto %1 }") : tr.transpile()
-  lx.parse_basic("foo GOTOabcdef0123456789 bar") : tr.transpile()
+  lx.parse_basic("'!replace GOTO%h { Goto %1 }") : ok% = tr.transpile%()
+  lx.parse_basic("foo GOTOabcdef0123456789 bar") : ok% = tr.transpile%()
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "Goto")
@@ -326,7 +332,7 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar")
 
   ' ... but it should not match other characters.
-  lx.parse_basic("foo GOTOxyz bar") : tr.transpile()
+  lx.parse_basic("foo GOTOxyz bar") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "GOTOxyz")
@@ -334,15 +340,16 @@ Sub test_apply_replace_patterns()
 End Sub
 
 Sub test_replace_fails_if_too_long()
-  Local s$
-  lx.parse_basic("'!replace foo foobar") : tr.transpile()
+  Local ok%, s$
+
+  lx.parse_basic("'!replace foo foobar") : ok% = tr.transpile%()
 
   ' Test where replaced string should be 255 characters.
   s$ = String$(248, "a")
   Cat s$, " foo"
   assert_int_equals(252, Len(s$))
   lx.parse_basic(s$)
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_no_error()
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, String$(248, "a"))
@@ -354,28 +361,30 @@ Sub test_replace_fails_if_too_long()
   Cat s$, " foo"
   assert_int_equals(255, Len(s$))
   lx.parse_basic(s$)
-  tr.transpile()
+  ok% = tr.transpile%()
   assert_error("applying replacement makes line > 255 characters")
 End Sub
 
 Sub test_replace_with_fewer_tokens()
+  Local ok%
+
   ' Replace 1 token with 0.
-  lx.parse_basic("'!replace bar") : tr.transpile()
-  lx.parse_basic("foo bar wom") : tr.transpile()
+  lx.parse_basic("'!replace bar") : ok% = tr.transpile%()
+  lx.parse_basic("foo bar wom") : ok% = tr.transpile%()
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "wom")
 
   ' Removal of all tokens.
   setup_test()
-  lx.parse_basic("'!replace bar") : tr.transpile()
-  lx.parse_basic("bar bar bar") : tr.transpile()
+  lx.parse_basic("'!replace bar") : ok% = tr.transpile%()
+  lx.parse_basic("bar bar bar") : ok% = tr.transpile%()
   expect_tokens(0)
 
   ' Replace 2 tokens with 1.
   setup_test()
-  lx.parse_basic("'!replace { foo bar } wom") : tr.transpile()
-  lx.parse_basic("foo bar foo bar snafu") : tr.transpile()
+  lx.parse_basic("'!replace { foo bar } wom") : ok% = tr.transpile%()
+  lx.parse_basic("foo bar foo bar snafu") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "wom")
   expect_tk(1, TK_IDENTIFIER, "wom")
@@ -385,16 +394,16 @@ Sub test_replace_with_fewer_tokens()
   ' applied a replacement we do not recursively apply that replacement to the
   ' already replaced text.
   setup_test()
-  lx.parse_basic("'!replace { foo bar } foo") : tr.transpile()
-  lx.parse_basic("foo bar bar") : tr.transpile()
+  lx.parse_basic("'!replace { foo bar } foo") : ok% = tr.transpile%()
+  lx.parse_basic("foo bar bar") : ok% = tr.transpile%()
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
 
   ' Replace 3 tokens with 1 - again note we don't just end up with "foo".
   setup_test()
-  lx.parse_basic("'!replace { foo bar wom } foo") : tr.transpile()
-  lx.parse_basic("foo bar wom bar wom") : tr.transpile()
+  lx.parse_basic("'!replace { foo bar wom } foo") : ok% = tr.transpile%()
+  lx.parse_basic("foo bar wom bar wom") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
@@ -402,8 +411,8 @@ Sub test_replace_with_fewer_tokens()
 
   ' Replace 3 tokens with 2 - and again we don't just end up with "foo bar".
   setup_test()
-  lx.parse_basic("'!replace { foo bar wom } { foo bar }") : tr.transpile()
-  lx.parse_basic("foo bar wom wom") : tr.transpile()
+  lx.parse_basic("'!replace { foo bar wom } { foo bar }") : ok% = tr.transpile%()
+  lx.parse_basic("foo bar wom wom") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
@@ -411,19 +420,21 @@ Sub test_replace_with_fewer_tokens()
 End Sub
 
 Sub test_replace_with_more_tokens()
+  Local ok%
+
   ' Replace 1 token with 2 - note that we don't get infinite recursion because
   ' once we have applied the replacement text we not not recusively apply the
   ' replacement to the already replaced text.
-  lx.parse_basic("'!replace foo { foo bar }") : tr.transpile()
-  lx.parse_basic("foo wom") : tr.transpile()
+  lx.parse_basic("'!replace foo { foo bar }") : ok% = tr.transpile%()
+  lx.parse_basic("foo wom") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
   expect_tk(2, TK_IDENTIFIER, "wom")
 
   setup_test()
-  lx.parse_basic("'!replace foo { bar foo }") : tr.transpile()
-  lx.parse_basic("foo wom foo") : tr.transpile()
+  lx.parse_basic("'!replace foo { bar foo }") : ok% = tr.transpile%()
+  lx.parse_basic("foo wom foo") : ok% = tr.transpile%()
   expect_tokens(5)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "foo")
@@ -433,8 +444,8 @@ Sub test_replace_with_more_tokens()
 
   ' Ensure replacement applied for multiple matches.
   setup_test()
-  lx.parse_basic("'!replace foo { bar foo }") : tr.transpile()
-  lx.parse_basic("foo foo") : tr.transpile()
+  lx.parse_basic("'!replace foo { bar foo }") : ok% = tr.transpile%()
+  lx.parse_basic("foo foo") : ok% = tr.transpile%()
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "foo")
@@ -443,8 +454,8 @@ Sub test_replace_with_more_tokens()
 
   ' Replace 3 tokens with 4.
   setup_test()
-  lx.parse_basic("'!replace { foo bar wom } { foo bar wom foo }") : tr.transpile()
-  lx.parse_basic("foo bar wom bar wom") : tr.transpile()
+  lx.parse_basic("'!replace { foo bar wom } { foo bar wom foo }") : ok% = tr.transpile%()
+  lx.parse_basic("foo bar wom bar wom") : ok% = tr.transpile%()
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
@@ -454,19 +465,18 @@ Sub test_replace_with_more_tokens()
   expect_tk(5, TK_IDENTIFIER, "wom")
 End Sub
 
-  expect_tk(2, TK_IDENTIFIER, "ben")
-End Sub
-
 Sub test_replace_given_new_rpl()
-  lx.parse_basic("'!replace foo bar") : tr.transpile()
-  lx.parse_basic("foo wom bill") : tr.transpile()
+  Local ok%
+
+  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
+  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "wom")
   expect_tk(2, TK_IDENTIFIER, "bill")
 
-  lx.parse_basic("'!replace foo snafu") : tr.transpile()
-  lx.parse_basic("foo wom bill") : tr.transpile()
+  lx.parse_basic("'!replace foo snafu") : ok% = tr.transpile%()
+  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "snafu")
   expect_tk(1, TK_IDENTIFIER, "wom")
@@ -474,28 +484,30 @@ Sub test_replace_given_new_rpl()
 End Sub
 
 Sub test_apply_unreplace()
-  lx.parse_basic("'!replace foo bar") : tr.transpile()
-  lx.parse_basic("'!replace wom bat") : tr.transpile()
-  lx.parse_basic("'!replace bill ben") : tr.transpile()
+  Local ok%
+
+  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
+  lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
+  lx.parse_basic("'!replace bill ben") : ok% = tr.transpile%()
   expect_replacement(0, "foo", "bar")
   expect_replacement(1, "wom", "bat")
   expect_replacement(2, "bill", "ben")
   expect_replacement(3, "", "")
 
-  lx.parse_basic("foo wom bill") : tr.transpile()
+  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "bat")
   expect_tk(2, TK_IDENTIFIER, "ben")
 
-  lx.parse_basic("'!unreplace wom") : tr.transpile()
+  lx.parse_basic("'!unreplace wom") : ok% = tr.transpile%()
   assert_string_equals("", sys.err$)
   expect_replacement(0, "foo", "bar")
   expect_replacement(1, Chr$(0), Chr$(0))
   expect_replacement(2, "bill", "ben")
   expect_replacement(3, "", "")
 
-  lx.parse_basic("foo wom bill") : tr.transpile()
+  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "wom")
@@ -503,103 +515,113 @@ Sub test_apply_unreplace()
 End Sub
 
 Sub test_comment_if()
+  Local ok%
+
   ' 'foo' is set, code inside !comment_if block should be commented.
-  lx.parse_basic("'!set foo") : tr.transpile()
-  lx.parse_basic("'!comment_if foo") : tr.transpile()
-  lx.parse_basic("one") : tr.transpile()
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  lx.parse_basic("'!comment_if foo") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' one")
-  lx.parse_basic("two") : tr.transpile()
+  lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' two")
-  lx.parse_basic("'!endif") : tr.transpile()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
 
   ' Code outside the block should not be commented.
-  lx.parse_basic("three") : tr.transpile()
+  lx.parse_basic("three") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_comment_if_not()
+  Local ok%
+
   ' 'foo' is NOT set, code inside !comment_if NOT block should be commented.
-  lx.parse_basic("'!comment_if not foo") : tr.transpile()
-  lx.parse_basic("one") : tr.transpile()
+  lx.parse_basic("'!comment_if not foo") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' one")
-  lx.parse_basic("two") : tr.transpile()
+  lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' two")
-  lx.parse_basic("'!endif") : tr.transpile()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
 
   ' 'foo' is set, code inside !comment_if NOT block should NOT be commented.
-  lx.parse_basic("'!set foo") : tr.transpile()
-  lx.parse_basic("'!comment_if not foo") : tr.transpile()
-  lx.parse_basic("three") : tr.transpile()
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  lx.parse_basic("'!comment_if not foo") : ok% = tr.transpile%()
+  lx.parse_basic("three") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
-  lx.parse_basic("'!endif") : tr.transpile()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
 End Sub
 
 Sub test_uncomment_if()
-  ' 'foo' is set, code inside !uncomment_if block should be uncommented.
-  lx.parse_basic("'!set foo") : tr.transpile()
-  lx.parse_basic("'!uncomment_if foo") : tr.transpile()
+  Local ok%
 
-  lx.parse_basic("' one") : tr.transpile()
+  ' 'foo' is set, code inside !uncomment_if block should be uncommented.
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  lx.parse_basic("'!uncomment_if foo") : ok% = tr.transpile%()
+
+  lx.parse_basic("' one") : ok% = tr.transpile%()
   assert_string_equals(" one", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
 
-  lx.parse_basic("REM two") : tr.transpile()
+  lx.parse_basic("REM two") : ok% = tr.transpile%()
   assert_string_equals(" two", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
 
-  lx.parse_basic("'' three") : tr.transpile()
+  lx.parse_basic("'' three") : ok% = tr.transpile%()
   assert_string_equals("' three", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' three")
-  lx.parse_basic("'!endif") : tr.transpile()
+
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
 
   ' Code outside the block should not be uncommented.
-  lx.parse_basic("' four") : tr.transpile()
+  lx.parse_basic("' four") : ok% = tr.transpile%()
   assert_string_equals("' four", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
 End Sub
 
 Sub test_uncomment_if_not()
-  ' 'foo' is NOT set, code inside !uncomment_if NOT block should be uncommented.
-  lx.parse_basic("'!uncomment_if not foo") : tr.transpile()
+  Local ok%
 
-  lx.parse_basic("' one") : tr.transpile()
+  ' 'foo' is NOT set, code inside !uncomment_if NOT block should be uncommented.
+  lx.parse_basic("'!uncomment_if not foo") : ok% = tr.transpile%()
+
+  lx.parse_basic("' one") : ok% = tr.transpile%()
   assert_string_equals(" one", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
 
-  lx.parse_basic("REM two") : tr.transpile()
+  lx.parse_basic("REM two") : ok% = tr.transpile%()
   assert_string_equals(" two", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
 
-  lx.parse_basic("'' three") : tr.transpile()
+  lx.parse_basic("'' three") : ok% = tr.transpile%()
   assert_string_equals("' three", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' three")
-  lx.parse_basic("'!endif") : tr.transpile()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
 
   ' 'foo' is set, code inside !uncomment_if NOT block should NOT be uncommented.
-  lx.parse_basic("'!set foo") : tr.transpile()
-  lx.parse_basic("'!uncomment_if not foo") : tr.transpile()
-  lx.parse_basic("' four") : tr.transpile()
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  lx.parse_basic("'!uncomment_if not foo") : ok% = tr.transpile%()
+  lx.parse_basic("' four") : ok% = tr.transpile%()
   assert_string_equals("' four", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
-  lx.parse_basic("'!endif") : tr.transpile()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
 End Sub
 
 Sub test_unknown_directive()
-  lx.parse_basic("'!wombat foo") : tr.transpile()
+  lx.parse_basic("'!wombat foo")
+  assert_int_equals(0, tr.transpile%())
   assert_error("unknown !wombat directive")
 End Sub
 
