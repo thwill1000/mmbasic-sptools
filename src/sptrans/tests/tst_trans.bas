@@ -60,53 +60,53 @@ Sub test_parse_replace()
 
   lx.parse_basic("'!replace DEF Sub")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(0, "def", "Sub")
 
   lx.parse_basic("'!replace ENDPROC { End Sub }")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(1, "endproc", "End|Sub")
 
   lx.parse_basic("'!replace { THEN ENDPROC } { Then Exit Sub }")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(2, "then|endproc", "Then|Exit|Sub")
 
   lx.parse_basic("'!replace GOTO%% { Goto %1 }")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(3, "goto%%", "Goto|%1")
 
   lx.parse_basic("'!replace { THEN %% } { Then Goto %1 }")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(4, "then|%%", "Then|Goto|%1")
 
   lx.parse_basic("'!replace '%% { CRLF$ %1 }")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(5, "'%%", "CRLF$|%1")
 
   lx.parse_basic("'!replace &%h &h%1")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(6, "&%h", "&h%1")
 
   lx.parse_basic("'!replace foo")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(7, "foo", "")
 
   lx.parse_basic("'!replace {foo}")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(7, Chr$(0), Chr$(0))
   expect_replacement(8, "foo", "")
 
   lx.parse_basic("'!replace foo {}")
   ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(8, Chr$(0), Chr$(0))
   expect_replacement(9, "foo", "")
 End Sub
@@ -117,47 +117,47 @@ Sub test_parse_replace_given_errors()
   lx.parse_basic("'!replace")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive expects <from> argument", sys.err$)
+  assert_error("!replace directive expects <from> argument")
 
   lx.parse_basic("'!replace {}")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has empty <from> group", sys.err$)
+  assert_error("!replace directive has empty <from> group")
 
   lx.parse_basic("'!replace {} y")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has empty <from> group", sys.err$)
+  assert_error("!replace directive has empty <from> group")
 
   lx.parse_basic("'!replace { x y")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has missing '}'", sys.err$)
+  assert_error("!replace directive has missing '}'")
 
   lx.parse_basic("'!replace { x } { y z")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has missing '}'", sys.err$)
+  assert_error("!replace directive has missing '}'")
 
   lx.parse_basic("'!replace { x } { y } z")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has too many arguments", sys.err$)
+  assert_error("!replace directive has too many arguments")
 
   lx.parse_basic("'!replace { x } { y } { z }")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has too many arguments", sys.err$)
+  assert_error("!replace directive has too many arguments")
 
   lx.parse_basic("'!replace { {")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has unexpected '{'", sys.err$)
+  assert_error("!replace directive has unexpected '{'")
 
   lx.parse_basic("'!replace foo }")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
-  assert_string_equals("!replace directive has unexpected '}'", sys.err$)
+  assert_error("!replace directive has unexpected '}'")
 End Sub
 
 Sub test_parse_given_too_many_rpl()
@@ -166,10 +166,10 @@ Sub test_parse_given_too_many_rpl()
   For i% = 0 To tr.MAX_REPLACEMENTS% - 1
     lx.parse_basic("'!replace a" + Str$(i%) + " b") : ok% = tr.transpile%()
   Next
-  assert_string_equals("", sys.err$)
+  assert_no_error()
 
   lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
-  assert_string_equals("!replace directive too many replacements (max 200)", sys.err$)
+  assert_error("!replace directive too many replacements (max 200)")
 End Sub
 
 Sub test_parse_unreplace()
@@ -179,7 +179,7 @@ Sub test_parse_unreplace()
   lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
   lx.parse_basic("'!unreplace foo") : ok% = tr.transpile%()
 
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   assert_int_equals(2, tr.num_replacements%)
   expect_replacement(0, Chr$(0), Chr$(0))
   expect_replacement(1, "wom", "bat")
@@ -190,16 +190,16 @@ Sub test_parse_unreplace_given_errs()
 
   ' Test given missing argument to directive.
   lx.parse_basic("'!unreplace") : ok% = tr.transpile%()
-  assert_string_equals("!unreplace directive expects <from> argument", sys.err$)
+  assert_error("!unreplace directive expects <from> argument")
 
   ' Test given directive has too many arguments.
   lx.parse_basic("'!unreplace { a b } c") : ok% = tr.transpile%()
-  assert_string_equals("!unreplace directive has too many arguments", sys.err$)
+  assert_error("!unreplace directive has too many arguments")
 
   ' Test given replacement not present.
   lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
   lx.parse_basic("'!unreplace foo") : ok% = tr.transpile%()
-  assert_string_equals("!unreplace directive could not find 'foo'", sys.err$)
+  assert_error("!unreplace directive could not find 'foo'")
   assert_int_equals(1, tr.num_replacements%)
   expect_replacement(0, "wom", "bat")
 End Sub
@@ -501,7 +501,7 @@ Sub test_apply_unreplace()
   expect_tk(2, TK_IDENTIFIER, "ben")
 
   lx.parse_basic("'!unreplace wom") : ok% = tr.transpile%()
-  assert_string_equals("", sys.err$)
+  assert_no_error()
   expect_replacement(0, "foo", "bar")
   expect_replacement(1, Chr$(0), Chr$(0))
   expect_replacement(2, "bill", "ben")
