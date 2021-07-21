@@ -26,10 +26,11 @@ Dim in.num_open_files = 1
 Dim out.buf$
 
 Sub out.endl()
-  Cat out.buf$, sys.CRLF$
+  out.print(sys.CRLF$)
 End Sub
 
 Sub out.print(s$)
+  If out.buf$ = Chr$(0) Then out.buf$ = ""
   Cat out.buf$, s$
 End Sub
 
@@ -63,6 +64,8 @@ add_test("Spacing - before comments", "test_comment_spacing")
 add_test("Keyword capitalisation", "test_keyword_capitalisation")
 add_test("Syntax highlighting - CSUBs", "test_syntax_highlight_1")
 add_test("Syntax highlighting - comments", "test_syntax_highlight_2")
+add_test("Empty lines - ignore if previous line was empty", "test_empty_lines_1")
+add_test("Empty lines - ignore if empty-lines option is 0", "test_empty_lines_2")
 
 run_tests()
 
@@ -84,17 +87,19 @@ Sub teardown_test()
 End Sub
 
 Sub parse_lines()
-  Local i
+  Local i%, j% = Mm.Info(Option Base)
   pp.previous = 0
   pp.indent_lvl = 0
-  For i = Bound(in$(), 0) To Bound(in$(), 1)
-    out.buf$ = ""
-    lx.parse_basic(in$(i))
+  For i% = Bound(in$(), 0) To Bound(in$(), 1)
+    out.buf$ = Chr$(0)
+    lx.parse_basic(in$(i%))
     pp.print_line()
-    out$(i) = out.buf$
-
-    ' Trim trailing CRLF.
-    If Right$(out$(i), 2) = sys.CRLF$ Then out$(i) = Left$(out$(i), Len(out$(i)) - 2)
+    If out.buf$ <> Chr$(0) Then
+      out$(j%) = out.buf$
+      ' Trim trailing CRLF.
+      If Right$(out$(j%), 2) = sys.CRLF$ Then out$(j%) = Left$(out$(j%), Len(out$(j%)) - 2)
+      Inc j%
+    EndIf
   Next
 End Sub
 
@@ -110,12 +115,10 @@ Sub test_comments_1()
   opt.comments = 0
   parse_lines()
 
-  expected$(0) = ""
-  expected$(1) = ""
-  expected$(2) = "If a = b Then"
-  expected$(3) = "  Print c"
-  expected$(4) = "EndIf"
-  expected$(5) = ""
+  expected$(0) = "If a = b Then"
+  expected$(1) = "  Print c"
+  expected$(2) = "EndIf"
+  expected$(3) = ""
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -557,5 +560,35 @@ Sub test_syntax_highlight_2()
   expected$(0) = ye$ + "' Comment 1" + rs$
   expected$(1) = wh$ + "foo " + ye$ + "'Comment2" + rs$
   expected$(2) = wh$ + "bar " + ye$ + "REM Comment 3" + rs$
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' Empty lines - ignore if previous line was empty.
+Sub test_empty_lines_1()
+  in$(0) = "foo"
+  in$(1) = ""
+  in$(2) = ""
+  in$(3) = "bar"
+
+  parse_lines()
+
+  expected$(0) = "foo"
+  expected$(1) = ""
+  expected$(2) = "bar"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' Empty lines - ignore if empty-lines option is 0.
+Sub test_empty_lines_2()
+  in$(0) = "foo"
+  in$(1) = ""
+  in$(2) = ""
+  in$(3) = "bar"
+
+  opt.empty_lines = 0
+  parse_lines()
+
+  expected$(0) = "foo"
+  expected$(1) = "bar"
   assert_string_array_equals(expected$(), out$())
 End Sub
