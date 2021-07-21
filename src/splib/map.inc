@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
+'!remove_if NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.requires("array")
 sys.provides("map")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 ' Gets the upper-bound that should be used to dimension an array to hold a map
 ' of the given capacity, irrespective of OPTION BASE.

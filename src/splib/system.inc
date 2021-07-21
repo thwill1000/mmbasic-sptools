@@ -4,10 +4,12 @@
 
 Const sys.VERSION$ = "r1b3"
 Const sys.NO_DATA$ = Chr$(&h7F)
-Const sys.MAX_INCLUDES% = 20
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 
 Dim sys.err$
+
+'!remove_if NO_INCLUDE_GUARDS
+Const sys.MAX_INCLUDES% = 20
 Dim sys.includes$(sys.MAX_INCLUDES%) Length 20
 
 Sub sys.provides(f$)
@@ -53,6 +55,7 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
     EndIf
   Next
 End Sub
+'!endif
 
 ' Formats a firmware version as a 5-digit number, e.g.
 '   5.05.06 => 50506

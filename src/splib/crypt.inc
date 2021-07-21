@@ -5,11 +5,13 @@
 ' MD5 algorithm from https://en.wikipedia.org/wiki/MD5
 ' XXTEA algorithm from https://en.wikipedia.org/wiki/XXTEA
 
+'!remove_if NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.requires("array")
 sys.provides("crypt")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 ' Calculates the MD5 hash of bytes held in a buffer.
 '

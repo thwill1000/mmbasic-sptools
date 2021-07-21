@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
+'!remove_if NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.requires("map", "string")
 sys.provides("inifile")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 ' Reads key/value pairs from a .INI file into a map.
 '
