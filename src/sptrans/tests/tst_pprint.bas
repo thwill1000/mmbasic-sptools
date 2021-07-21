@@ -64,7 +64,7 @@ add_test("Spacing - before comments", "test_comment_spacing")
 add_test("Keyword capitalisation", "test_keyword_capitalisation")
 add_test("Syntax highlighting - CSUBs", "test_syntax_highlight_1")
 add_test("Syntax highlighting - comments", "test_syntax_highlight_2")
-add_test("Empty lines - ignore if previous line was empty", "test_empty_lines_1")
+add_test("Empty lines - preserve if empty-lines option is -1", "test_empty_lines_1")
 add_test("Empty lines - ignore if empty-lines option is 0", "test_empty_lines_2")
 
 run_tests()
@@ -115,10 +115,12 @@ Sub test_comments_1()
   opt.comments = 0
   parse_lines()
 
-  expected$(0) = "If a = b Then"
-  expected$(1) = "  Print c"
-  expected$(2) = "EndIf"
-  expected$(3) = ""
+  expected$(0) = ""
+  expected$(1) = ""
+  expected$(2) = "If a = b Then"
+  expected$(3) = "  Print c"
+  expected$(4) = "EndIf"
+  expected$(5) = ""
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -563,27 +565,35 @@ Sub test_syntax_highlight_2()
   assert_string_array_equals(expected$(), out$())
 End Sub
 
-' Empty lines - ignore if previous line was empty.
+' Empty lines - preserve if empty-lines option is -1.
 Sub test_empty_lines_1()
-  in$(0) = "foo"
-  in$(1) = ""
+  in$(0) = ""
+  in$(1) = "foo"
   in$(2) = ""
-  in$(3) = "bar"
+  in$(3) = ""
+  in$(4) = "bar"
+  in$(5) = ""
 
+  opt.empty_lines = -1
   parse_lines()
 
-  expected$(0) = "foo"
-  expected$(1) = ""
-  expected$(2) = "bar"
+  expected$(0) = ""
+  expected$(1) = "foo"
+  expected$(2) = ""
+  expected$(3) = ""
+  expected$(4) = "bar"
+  expected$(5) = ""
   assert_string_array_equals(expected$(), out$())
 End Sub
 
 ' Empty lines - ignore if empty-lines option is 0.
 Sub test_empty_lines_2()
-  in$(0) = "foo"
-  in$(1) = ""
+  in$(0) = ""
+  in$(1) = "foo"
   in$(2) = ""
-  in$(3) = "bar"
+  in$(3) = ""
+  in$(4) = "bar"
+  in$(5) = ""
 
   opt.empty_lines = 0
   parse_lines()

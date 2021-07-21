@@ -41,9 +41,8 @@ Sub pp.print_line()
     EndIf
   EndIf
 
-  ' Ignore empty lines if the 'empty-lines' option is set or the previous line
-  ' was empty.
-  If (opt.empty_lines > -1 Or pp.previous = 0) And lx.num = 0 Then Exit Sub
+  ' Ignore empty lines if the 'empty-lines' option is set > -1.
+  If opt.empty_lines > -1 And lx.num = 0 Then Exit Sub
 
   ' Nothing more to do for empty lines.
   If lx.num = 0 Then pp.previous = 0 : out.endl() : Exit Sub
