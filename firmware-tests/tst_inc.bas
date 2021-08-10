@@ -23,6 +23,7 @@ add_test("test_inc_1d_string_array")
 add_test("test_inc_2d_int_array")
 add_test("test_inc_2d_float_array")
 add_test("test_inc_2d_string_array")
+add_test("test_inc_given_string_too_long")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -181,3 +182,16 @@ Sub test_inc_2d_string_array()
   assert_string_equals("i33", a$(base% + 2, base% + 2))
 End Sub
 
+Sub test_inc_given_string_too_long()
+  Local a$ = String$(128, "a")
+  Local b$ = String$(128, "b")
+
+  On Error Skip
+  a$ = a$ + b$
+  assert_raw_error("String too long")
+
+  a$ = String$(128, "a")
+  On Error Skip
+  Inc a$, b$
+  assert_raw_error("String too long")
+End Sub
