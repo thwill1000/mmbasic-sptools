@@ -5,7 +5,6 @@
 '!remove_if NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("list")
 sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -60,44 +59,41 @@ End Function
 '       file returned by the previous call and restarts the search from there, however
 '       that would be much slower and probably better implemented as a CSUB.
 Function file.find$(path$, pattern$, type$)
-  Static stack$(list.new%(1000)) Length 128 ' 128K workspace.
+  Static stack$(1000) Length 128 ' ~128K workspace.
+  Static stack_ptr% = Bound(stack$(), 0)
   Static pattern_$
   Static type_$
-  Local base% = Mm.Info(Option Base)
   Local f$, is_dir%, lb%, name$, num%
 
   If path$ <> "" Then
-    list.init(stack$())
     f$ = file.get_canonical$(path$)
-    list.push(stack$(), f$)
+    stack$(stack_ptr%) = f$ : Inc stack_ptr%
     pattern_$ = pattern$
     If pattern_$ = "" Then pattern_$ = "*"
-    type_$ = UCase$(type$)
-    If type_$ = "" Then type_$ = "FILE"
+    type_$ = Choice(type$ = "", "FILE", UCase$(type$))
     If InStr("|ALL|DIR|FILE|", "|" + type_$ + "|") < 1 Then Error "unknown type: " + type_$
   EndIf
 
   Do
-'    list.dump(stack$())
     Do
-      file.find$ = list.pop$(stack$())
-      If file.find$ = sys.NO_DATA$ Then file.find$ = "" : Exit Function
+      If stack_ptr% = Mm.Info(Option Base) Then file.find$ = "" : Exit Function
+      Inc stack_ptr%, -1 : file.find$ = stack$(stack_ptr%)
       name$ = file.get_name$(file.find$)
     Loop Until name$ <> ".git" ' Doesn't recurse into .git directories.
 
     ' If it is a directory then expand it.
-    is_dir% = file.is_directory%(file.find$)
+    is_dir% = (file.find$ = "A:") Or (Mm.Info(FileSize file.find$) = -2)
     If is_dir% Then
-      lb% = base% + list.size%(stack$())
-      If type_$ = "DIR" Then f$ = Dir$(file.find$ + "/*", Dir) Else f$ = Dir$(file.find$ + "/*", All)
+      lb% = stack_ptr%
+      f$ = Choice(type_$ = "DIR", Dir$(file.find$ + "/*", Dir), Dir$(file.find$ + "/*", All))
       Do While f$ <> ""
-        list.push(stack$(), file.find$ + "/" + f$)
+        stack$(stack_ptr%) = file.find$  + "/" + f$ : Inc stack_ptr%
         f$ = Dir$()
       Loop
 
       ' Sort the newly pushed dirs/files so that those beginning 'a|A'
       ' are at the top and those beginning 'z|Z' are near the bottom.
-      num% = base% + list.size%(stack$()) - lb%
+      num% = stack_ptr% - lb%
       If num% > 0 Then Sort stack$(), , &b11, lb%, num%)
     EndIf
 
