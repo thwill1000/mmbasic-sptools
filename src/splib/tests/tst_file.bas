@@ -66,25 +66,39 @@ Sub test_get_name()
 End Sub
 
 Sub test_get_canonical()
-  Local root$ = Mm.Info(Directory)
-  assert_string_equals(root$ + "foo.bas", file.get_canonical$("foo.bas"))
-  assert_string_equals(root$ + "dir/foo.bas", file.get_canonical$("dir/foo.bas"))
-  assert_string_equals(root$ + "dir/foo.bas", file.get_canonical$("dir\foo.bas"))
+  Local root$ = Left$(Mm.Info(Directory), Len(Mm.Info(Directory)) - 1)
+  assert_string_equals(root$ + "/foo.bas", file.get_canonical$("foo.bas"))
+  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir/foo.bas"))
+  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir\foo.bas"))
   assert_string_equals("A:/dir/foo.bas", file.get_canonical$("A:/dir/foo.bas"))
   assert_string_equals("A:/dir/foo.bas", file.get_canonical$("A:\dir\foo.bas"))
   assert_string_equals("A:/dir/foo.bas", file.get_canonical$("a:/dir/foo.bas"))
   assert_string_equals("A:/dir/foo.bas", file.get_canonical$("a:\dir\foo.bas"))
   assert_string_equals("A:/dir/foo.bas", file.get_canonical$("/dir/foo.bas"))
   assert_string_equals("A:/dir/foo.bas", file.get_canonical$("\dir\foo.bas"))
-  assert_string_equals(root$ + "foo.bas", file.get_canonical$("dir/../foo.bas"))
-  assert_string_equals(root$ + "foo.bas", file.get_canonical$("dir\..\foo.bas"))
-  assert_string_equals(root$ + "dir/foo.bas", file.get_canonical$("dir/./foo.bas"))
-  assert_string_equals(root$ + "dir/foo.bas", file.get_canonical$("dir\.\foo.bas"))
+  assert_string_equals(root$ + "/foo.bas", file.get_canonical$("dir/../foo.bas"))
+  assert_string_equals(root$ + "/foo.bas", file.get_canonical$("dir\..\foo.bas"))
+  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir/./foo.bas"))
+  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir\.\foo.bas"))
   assert_string_equals("A:", file.get_canonical$("A:"))
   assert_string_equals("A:", file.get_canonical$("A:/"))
   assert_string_equals("A:", file.get_canonical$("A:\"))
   assert_string_equals("A:", file.get_canonical$("/"))
   assert_string_equals("A:", file.get_canonical$("\"))
+
+  ' Trailing .
+  assert_string_equals("A:", file.get_canonical$("A:/."))
+  assert_string_equals("A:/dir", file.get_canonical$("A:/dir/."))
+  assert_string_equals(root$, file.get_canonical$("."))
+
+  ' Trailing ..
+  assert_string_equals("A:", file.get_canonical$("A:/.."))
+  assert_string_equals("A:", file.get_canonical$("A:/dir/.."))
+
+  ' TODO: should the parent of "A:" be "" or should it be "A:" ?
+  Local parent$ = file.get_parent$(root$)
+  If parent$ = "" Then parent$ = "A:"
+  assert_string_equals(parent$, file.get_canonical$(".."))
 End Sub
 
 Sub test_exists()

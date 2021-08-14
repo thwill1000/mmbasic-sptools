@@ -5,7 +5,7 @@
 '!remove_if NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("array", "list", "string")
+sys.requires("list")
 sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -182,40 +182,58 @@ Function file.fnmatch%(pattern$, name$)
 End Function
 
 ' Gets the canonical path for file/directory 'f$'.
-Function file.get_canonical$(f_$)
-  Local f$ = f_$
+Function file.get_canonical$(f$)
 
-  If file.is_absolute%(f$) Then
-    If Instr(UCase$(f$), "A:") <> 1 Then f$ = "A:" + f$
+  Local f2$ = UCase$(f$), i%
+  If f2$ = "A:" Then
+    file.get_canonical$ = f2$
+    Exit Function
+  ElseIf Left$(f2$, 3) = "A:\" Or Left$(f2$, 3) = "A:/" Then
+    f2$ = "A:"
+    i% = 4
+  ElseIf Left$(f2$, 1) = "\" Or Left$(f2$, 1) = "/" Then
+    f2$ = "A:"
+    i% = 2
   Else
-    f$ = Mm.Info$(Directory) + f$
+    f2$ = Left$(Mm.Info$(Directory), Len(Mm.Info$(Directory)) - 1)
+    i% = 1
   EndIf
 
-  Local elements$(list.new%(20)) Length 128
-  list.init(elements$())
-  Local lb% = Bound(elements$(), 0)
-  Local tk$ = str.next_token$(f$, "/\", 1)
-  Do While tk$ <> sys.NO_DATA$
-    list.add(elements$(), tk$)
-    tk$ = str.next_token$()
-  Loop
-  elements$(lb%) = "A:"
+  ' Copy characters from f$ into f2$:
+  '   - replace \ by /
+  '   - if encounter /./ replace with /
+  '   - if encounter /../ then backtrack to previous /
+  Local ch%, j%, s$ = "/"
+  For i% = i% To Len(f$)
+    ch% = Peek(Var f$, i%)
+    Select Case ch%
+      Case 47, 92 ' / or \
+        Select Case s$
+          Case "/." : ' Do nothing
+          Case "/.."
+            ' Back track
+            For j% = Len(f2$) To 1 Step -1
+              If Peek(Var f2$, j%) = 47 Then Poke Var f2$, 0, j% - 1 : Exit For
+            Next
+          Case Else : Cat f2$, s$
+        End Select
+        s$ = "/"
+      Case Else
+        Cat s$, Chr$(ch%)
+    End Select
+  Next
 
-  Local num_elements% = list.size%(elements$())
-  Local i% = lb%
-  Do While i% < lb% + num_elements%
-    If elements$(i%) = "." Then
-      list.remove(elements$(), i%)
-    ElseIf elements$(i%) = ".." Then
-      list.remove(elements$(), i%)
-      list.remove(elements$(), i% - 1)
-      Inc i%, -1
-    Else
-      Inc i%
-    EndIf
-  Loop
+  Select Case s$
+    Case "/", "/." : ' Do nothing
+    Case "/.."
+      ' Back track
+      For j% = Len(f2$) To 1 Step -1
+        If Peek(Var f2$, j%) = 47 Then Poke Var f2$, 0, j% - 1 : Exit For
+      Next
+    Case Else : Cat f2$, s$
+  End Select
 
-  file.get_canonical$ = array.join_strings$(elements$(), "/", lb%, list.size%(elements$()))
+  file.get_canonical$ = f2$
 End Function
 
 ' Gets the dot file-extension, from filename f$.
@@ -286,13 +304,14 @@ Function file.get_parent$(f$)
 End Function
 
 Function file.is_absolute%(f$)
-  file.is_absolute% = 1
-  If InStr(f$, "/") = 1 Then Exit Function
-  If InStr(f$, "\") = 1 Then Exit Function
-  If InStr(UCase$(f$), "A:\") = 1 Then Exit Function
-  If InStr(UCase$(f$), "A:/") = 1 Then Exit Function
-  If UCase$(f$) = "A:" Then Exit Function
-  file.is_absolute% = 0
+  Select Case Left$(f$, 1)
+    Case "a", "A"
+      Select Case Mid$(f$, 2, 2)
+        Case ":", ":\", ":/" : file.is_absolute% = 1
+      End Select
+    Case "/", "\"
+      file.is_absolute% = 1
+  End Select
 End Function
 
 Function file.is_directory%(f$)
