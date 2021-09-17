@@ -22,6 +22,7 @@ add_test("test_peek_integer")
 add_test("test_peek_short")
 add_test("test_peek_var")
 add_test("test_peek_word")
+add_test("test_peek_cfunaddr")
 
 run_tests()
 'If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
@@ -145,3 +146,33 @@ Sub test_peek_word()
   assert_hex_equals(&h01020304, Peek(Word num_addr% + 7), 8)
 End Sub
 
+Sub test_peek_cfunaddr()
+  Local ad%, i%, offset%
+
+  ad% = Peek(CFunAddr data1())
+  offset% = 0
+  For i% = 1 To &hC
+    assert_hex_equals(i%, Peek(Word ad% + 4 * offset%))
+    Inc offset%
+  Next
+
+  ad% = Peek(CFunAddr data2())
+  offset% = 0
+  For i% = &hD To &hA Step -1
+    assert_hex_equals(i%, Peek(Word ad% + 4 * offset%))
+    Inc offset%
+  Next
+End Sub
+
+CSub data1()
+  00000000
+  00000001 00000002 00000003 00000004
+  00000005 00000006 00000007 00000008
+  00000009 0000000A 0000000B 0000000C
+End CSub
+
+CSub data2()
+  00000002
+  0000000F 0000000E 0000000D 0000000C
+  0000000B 0000000A
+End CSub
