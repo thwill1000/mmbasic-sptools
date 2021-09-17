@@ -228,7 +228,7 @@ End Sub
 Sub assert_raw_error(expected$)
   Inc ut.asserts_count%
   If InStr(Mm.ErrMsg$, expected$) < 1 Then
-    Local s$ = "Expected Error " + str.quote$(expected$) 
+    Local s$ = "Expected Error " + str.quote$(expected$)
     Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 3))
     ut.add_failure(s$)
   EndIf
@@ -330,8 +330,8 @@ End Function
 
 ' Should verbose output be generated?
 Function ut.is_verbose%()
-  ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --all ") < 1 
-  If Not ut.is_verbose% Then ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0 
+  ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --all ") < 1
+  If Not ut.is_verbose% Then ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0
 End Function
 
 ' Should MMBasic errors be caught and reported as assertion failures?
@@ -405,7 +405,7 @@ Sub ut.run_next()
 
   Do
     Line Input #1, f$
-    If f$ = Mm.Info$(Current) Then Exit Do
+    If f$ = file.get_canonical$(Mm.Info$(Current)) Then Exit Do
   Loop While Not Eof(#1)
 
   If Eof(#1) Then
