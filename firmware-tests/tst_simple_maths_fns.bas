@@ -1,6 +1,9 @@
 ' Copyright (c) 2021 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For Colour Maximite 2, MMBasic 5.07.01
+'
+' Includes with permission tests derived from code by @Volhout on
+' https://www.thebackshed.com
 
 Option Explicit On
 Option Default None
@@ -20,6 +23,11 @@ add_test("test_min_given_ints")
 add_test("test_min_given_floats")
 add_test("test_max_given_ints")
 add_test("test_max_given_floats")
+add_test("test_abs")
+add_test("test_exp")
+add_test("test_log")
+add_test("test_sin")
+add_test("test_sqr")
 
 run_tests()
 'If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
@@ -80,3 +88,22 @@ Sub test_max_given_floats()
   assert_float_equals(6.02214086e23, Max(6.02214086e23, -3.412, -6.02214086e23, 3.412))
 End Sub
 
+Sub test_abs()
+  assert_float_equals(3, Abs(-3), 1e-10)
+End Sub
+
+Sub test_exp()
+  assert_float_equals(2.718281828459045, Exp(1), 1e-10)
+End Sub
+
+Sub test_log()
+  assert_float_equals(3, Log(Exp(3)), 1e-10)
+End Sub
+
+Sub test_sin()
+  assert_float_equals(Sqr(1/2), Sin(Pi/4), 1e-10)
+End Sub
+
+Sub test_sqr()
+  assert_float_equals(2, Sqr(4), 1e-10)
+End Sub
