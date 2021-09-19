@@ -27,8 +27,7 @@ add_test("test_lof")
 add_test("test_rename")
 add_test("test_seek")
 
-' If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
-run_tests()
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 

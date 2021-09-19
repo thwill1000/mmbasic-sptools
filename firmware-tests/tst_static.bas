@@ -16,8 +16,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 add_test("test_static_given_fn_value")
 
-run_tests()
-'If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 

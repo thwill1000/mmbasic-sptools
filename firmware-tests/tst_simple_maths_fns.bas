@@ -17,7 +17,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../src/splib/vt100.inc"
 #Include "../src/sptest/unittest.inc"
 
-Const base% = Mm.Info(Option Base)
+Const BASE% = Mm.Info(Option Base)
 
 add_test("test_min_given_ints")
 add_test("test_min_given_floats")
@@ -29,8 +29,7 @@ add_test("test_log")
 add_test("test_sin")
 add_test("test_sqr")
 
-run_tests()
-'If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 

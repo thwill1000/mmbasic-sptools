@@ -14,7 +14,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../src/splib/vt100.inc"
 #Include "../src/sptest/unittest.inc"
 
-Const base% = Mm.Info(Option Base)
+Const BASE% = Mm.Info(Option Base)
 
 add_test("test_set")
 add_test("test_set_byte")
@@ -29,8 +29,7 @@ add_test("test_copy")
 ' add_test("test_copy_integer")
 ' add_test("test_copy_float")
 
-run_tests()
-'If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 
@@ -83,11 +82,11 @@ Sub test_set_short()
 End Sub
 
 Sub test_copy()
-  Local dst%(31), src%(31) ' 256-bytes
+  Local dst%(array.new%(32)), src%(array.new%(32)) ' 256-bytes
   Local dst_addr% = Peek(VarAddr dst%())
   Local src_addr% = Peek(VarAddr src%())
   Local i%
-  For i% = 0 To 31
+  For i% = Bound(src%(), 0) To Bound(src%(), 1)
     src%(i%) = &h0102030405060708
   Next
 

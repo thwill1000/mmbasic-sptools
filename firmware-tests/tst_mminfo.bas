@@ -46,8 +46,7 @@ add_test("test_version")
 add_test("test_vpos")
 add_test("test_vres")
 
-run_tests()
-'If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
+If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 
