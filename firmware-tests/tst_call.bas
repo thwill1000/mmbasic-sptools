@@ -58,7 +58,7 @@ Sub test_call_2()
   Line Input #1, s$
 
   ' The difference seems to be something to do with how tabs are handled.
-  If Mm.Device$ = "Linux" Then
+  If Mm.Device$ = "MMB4L" Then
     assert_string_equals(" 3   3.12   foo", s$)
   Else
     assert_string_equals(" 3   3.12 foo", s$)

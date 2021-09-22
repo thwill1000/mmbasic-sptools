@@ -17,8 +17,16 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 Const BASE% = Mm.Info(Option Base)
 Const EXPECTED_FONT_HEIGHT% = 12
 Const EXPECTED_FONT_WIDTH% = 8
+Const EXPECTED_ARCH$ = "Linux x86_64"
+Const EXPECTED_DEVICE$ = "MMB4L"
+Const EXPECTED_HOME$ = "/home/thwill"
+Const EXPECTED_HPOS% = 53
+Const EXPECTED_HRES% = 80
 Const EXPECTED_DIR$ = "/home/thwill/github/mmbasic-firmware/linux/build"
 Const EXPECTED_PATH$ = "/home/thwill/github/sptools/firmware-tests"
+Const EXPECTED_VERSION! = 2021.01
+Const EXPECTED_VPOS% = 23
+Const EXPECTED_VRES% = 24
 
 add_test("test_architecture")
 add_test("test_current")
@@ -57,8 +65,8 @@ Sub teardown_test()
 End Sub
 
 Sub test_architecture()
-  assert_string_equals("x86_64", Mm.Info$(Arch))
-  assert_string_equals("x86_64", Mm.Info$(Architecture))
+  assert_string_equals(EXPECTED_ARCH$, Mm.Info$(Arch))
+  assert_string_equals(Mm.Info$(Arch), Mm.Info$(Architecture))
 End Sub
 
 Sub test_current()
@@ -66,17 +74,18 @@ Sub test_current()
 End Sub
 
 Sub test_device()
-  assert_string_equals("Linux", Mm.Device$)
-  assert_string_equals("Linux", Mm.Info$(Device))
+  assert_string_equals(EXPECTED_DEVICE$, Mm.Info(Device))
+  assert_string_equals(Mm.Info$(Device), Mm.Device$)
 End Sub
 
 Sub test_directory()
-  assert_string_equals(EXPECTED_DIR$ + "/", MM.Info$(Directory))
-  assert_string_equals(EXPECTED_DIR$, Cwd$)
+  Local actual$ = Mm.Info$(Directory)
+  assert_string_equals(EXPECTED_DIR$ + "/", actual$)
+  assert_string_equals(Left$(actual$, Len(actual$) - 1), Cwd$)
 End Sub
 
 Sub test_envvar()
-  assert_string_equals("/home/thwill", Mm.Info$(ENVVAR "HOME"))
+  assert_string_equals(EXPECTED_HOME$, Mm.Info$(ENVVAR "HOME"))
 End Sub
 
 Sub test_errmsg()
@@ -96,11 +105,11 @@ Sub test_errno()
 End Sub
 
 Sub test_exists()
-  Local existing_dir$ = EXPECTED_PATH$
-  Local existing_file$ = EXPECTED_PATH$ + "/tst_mminfo.bas"
-  Local non_existing$ = EXPECTED_PATH$ + "/does_not_exist"
+  Local existing_dir$ = Mm.Info$(Path)
+  Local existing_file$ = Mm.Info$(Path) + "tst_mminfo.bas"
+  Local non_existing$ = Mm.Info$(Path) + "does_not_exist"
   Local root$ = "/"
-  Local sym_link_dir$ = EXPECTED_DIR$ + "/firmware-tests"
+'   Local sym_link_dir$ = Mm.Info$(Directory) + "firmware-tests"
 
   ' TODO: what about directory paths with trailing '/' ?
 
@@ -108,25 +117,25 @@ Sub test_exists()
   assert_int_equals(1, Mm.Info(Exists existing_file$))
   assert_int_equals(0, Mm.Info(Exists non_existing$))
   assert_int_equals(1, Mm.Info(Exists root$))
-  assert_int_equals(1, Mm.Info(Exists sym_link_dir$))
+'   assert_int_equals(1, Mm.Info(Exists sym_link_dir$))
 
   assert_int_equals(0, Mm.Info(Exists File existing_dir$))
   assert_int_equals(1, Mm.Info(Exists File existing_file$))
   assert_int_equals(0, Mm.Info(Exists File non_existing$))
   assert_int_equals(0, Mm.Info(Exists File root$))
-  assert_int_equals(0, Mm.Info(Exists File sym_link_dir$))
+'   assert_int_equals(0, Mm.Info(Exists File sym_link_dir$))
 
   assert_int_equals(1, Mm.Info(Exists Dir existing_dir$))
   assert_int_equals(0, Mm.Info(Exists Dir existing_file$))
   assert_int_equals(0, Mm.Info(Exists Dir non_existing$))
   assert_int_equals(1, Mm.Info(Exists Dir root$))
-  assert_int_equals(1, Mm.Info(Exists Dir sym_link_dir$))
+'   assert_int_equals(1, Mm.Info(Exists Dir sym_link_dir$))
 
   assert_int_equals(0, Mm.Info(Exists SymLink existing_dir$))
   assert_int_equals(0, Mm.Info(Exists SymLink existing_file$))
   assert_int_equals(0, Mm.Info(Exists SymLink non_existing$))
   assert_int_equals(0, Mm.Info(Exists SymLink root$))
-  assert_int_equals(1, Mm.Info(Exists SymLink sym_link_dir$))
+'   assert_int_equals(1, Mm.Info(Exists SymLink sym_link_dir$))
 End Sub
 
 Sub test_filesize()
@@ -161,7 +170,7 @@ End Sub
 Sub test_hpos()
   Option Resolution Character
   Local actual% = Mm.Info(HPos)
-  assert_int_equals(0, actual%)
+  assert_int_equals(EXPECTED_HPOS%, actual%)
 
   Option Resolution Pixel
   assert_int_equals(actual% * EXPECTED_FONT_WIDTH%, Mm.Info(HPos))
@@ -170,7 +179,7 @@ End Sub
 Sub test_hres()
   Option Resolution Character
   Local actual% = Mm.Info(HRes)
-  assert_int_equals(0, actual%)
+  assert_int_equals(EXPECTED_HRES%, actual%)
   assert_int_equals(actual%, Mm.HRes)
 
   Option Resolution Pixel
@@ -285,24 +294,24 @@ End Sub
 Sub test_vpos()
   Option Resolution Character
   Local actual% = Mm.Info(VPos)
-  assert_int_equals(0, actual%)
+  assert_int_equals(EXPECTED_VPOS%, actual%)
 
   Option Resolution Pixel
-  assert_int_equals(actual% * EXPECTED_FONT_HEIGHT%, Mm.Info(VPos))
+  assert_int_equals(actual% * Mm.Info(FontHeight), Mm.Info(VPos))
 End Sub
 
 Sub test_vres()
   Option Resolution Character
   Local actual% = Mm.Info(VRes)
-  assert_int_equals(0, actual%)
+  assert_int_equals(EXPECTED_VRES%, actual%)
   assert_int_equals(actual%, Mm.VRes)
 
   Option Resolution Pixel
-  assert_int_equals(actual% * EXPECTED_FONT_HEIGHT%, Mm.Info(VRes))
-  assert_int_equals(actual% * EXPECTED_FONT_HEIGHT%, Mm.VRes)
+  assert_int_equals(actual% * Mm.Info(FontHeight), Mm.Info(VRes))
+  assert_int_equals(actual% * Mm.Info(FontHeight), Mm.VRes)
 End Sub
 
 Sub test_version()
-  assert_float_equals(2021.0, Mm.Info(Version))
-  assert_float_equals(2021.0, Mm.Info(Ver))
+  assert_float_equals(EXPECTED_VERSION!, Mm.Info(Version))
+  assert_float_equals(Mm.Info(Version), Mm.Info(Ver))
 End Sub

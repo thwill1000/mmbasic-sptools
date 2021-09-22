@@ -257,7 +257,7 @@ Sub run_tests(repeat$)
     Print "  Execution time: " Str$((Timer - t%) / 1000) " s"
     Print "  ";
   Else
-    Print Space$(85 - Len(test$));
+    Print Space$(Max(1, 85 - Len(test$)));
   EndIf
 
   If num_failed_tests% = 0 Then
@@ -282,7 +282,7 @@ Function ut.run_single_test%(idx%)
   Local catch_errors% = ut.is_catch_errors%()
 
   If ut.is_verbose%() Then
-    Print "  " + ut.test_names$(idx%); ":"; Space$(Max(0, 50 - Len(ut.test_names$(idx%))));
+    Print "  " + ut.test_names$(idx%); ":"; Space$(Max(1, 50 - Len(ut.test_names$(idx%))));
   EndIf
 
   ut.asserts_count% = 0
