@@ -229,7 +229,11 @@ Sub assert_raw_error(expected$)
   Inc ut.asserts_count%
   If InStr(Mm.ErrMsg$, expected$) < 1 Then
     Local s$ = "Expected Error " + str.quote$(expected$)
-    Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 3))
+    If Mm.Device$ = "MMB4L" Then
+      Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 1))
+    Else
+      Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 3))
+    EndIf
     ut.add_failure(s$)
   EndIf
 End Sub
@@ -352,6 +356,7 @@ End Sub
 Sub ut.run_first()
   Print "Building list of tests ..."
   Open "/tmp/sptest.lst" For Output As #1
+  Print #1, Time$
   Local f$ = file.find$(Cwd$, "*st*.bas", "file")
   Local first$
   Do While f$ <> ""
@@ -399,9 +404,16 @@ Function ut.is_test_file%(f$)
 
 End Function
 
+Function ut.parse_time%(t$)
+  Inc ut.parse_time%, Val(Mid$(t$, 1, 2)) * 60 * 60
+  Inc ut.parse_time%, Val(Mid$(t$, 4, 2)) * 60
+  Inc ut.parse_time%, Val(Mid$(t$, 7, 2))
+End Function
+
 Sub ut.run_next()
-  Local f$
+  Local f$, start_time$
   Open "/tmp/sptest.lst" For Input As #1
+  Line Input #1, start_time$
 
   Do
     Line Input #1, f$
@@ -410,6 +422,9 @@ Sub ut.run_next()
 
   If Eof(#1) Then
     Close #1
+    Local start% = ut.parse_time%(start_time$)
+    Local end% = ut.parse_time%(Time$)
+    Print "Total execution time: " + Str$(end% - start%) + " s"
   Else
     Line Input #1, f$
     Close #1
