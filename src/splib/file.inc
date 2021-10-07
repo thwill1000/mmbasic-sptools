@@ -59,7 +59,11 @@ End Function
 '       file returned by the previous call and restarts the search from there, however
 '       that would be much slower and probably better implemented as a CSUB.
 Function file.find$(path$, pattern$, type$)
-  Static stack$(1000) Length 128 ' ~128K workspace.
+  If Mm.Device$ = "MMB4L" Then
+    Static stack$(1000) Length 255 ' ~256K workspace.
+  Else
+    Static stack$(1000) Length 128 ' ~128K workspace.
+  EndIf
   Static stack_ptr% = Bound(stack$(), 0)
   Static pattern_$
   Static type_$
@@ -85,7 +89,9 @@ Function file.find$(path$, pattern$, type$)
     is_dir% = (file.find$ = "A:") Or (Mm.Info(FileSize file.find$) = -2)
     If is_dir% Then
       lb% = stack_ptr%
+      ' On Error Skip 1
       f$ = Choice(type_$ = "DIR", Dir$(file.find$ + "/*", Dir), Dir$(file.find$ + "/*", All))
+      ' If Mm.ErrMsg$ <> "" Then Print MM.ErrMsg$ : Print file.find$ : End
       Do While f$ <> ""
         stack$(stack_ptr%) = file.find$  + "/" + f$ : Inc stack_ptr%
         f$ = Dir$()
