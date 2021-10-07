@@ -46,7 +46,9 @@ Sub test_chdir_mkdir_rmdir()
     MkDir new_dir$
     ChDir new_dir$
 
-    assert_string_equals(TMP_DIR$ + "/" + new_dir$ + "/", Mm.Info$(Directory))
+    Local expected$ = TMP_DIR$ + "/" + new_dir$ + "/"
+    If Mm.Device$ <> "MMB4L" Then expected$ = "A:" + UCase$(expected$)
+    assert_string_equals(expected$, Mm.Info$(Directory))
 
     ChDir ".."
     RmDir new_dir$
@@ -135,6 +137,8 @@ Sub test_rename()
     Print #1, "Goodbye World"
     Close #1
 
+    ' CMM2 will not RENAME over an existing file.
+    If file.exists%(f_new$) Then Kill f_new$
     Rename f$ As f_new$
 
     assert_false(file.exists%(f$))
