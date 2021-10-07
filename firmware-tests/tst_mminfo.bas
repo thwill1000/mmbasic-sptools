@@ -100,8 +100,13 @@ End Sub
 Sub test_errno()
   On Error Skip 1
   Error "foo"
-  assert_int_equals(16, Mm.ErrNo);
-  assert_int_equals(16, Mm.Info$(ErrNo));
+  If Mm.Device$ = "MMB4L" Then
+    assert_int_equals(1000, Mm.ErrNo);
+    assert_int_equals(1000, Mm.Info$(ErrNo));
+  Else
+    assert_int_equals(16, Mm.ErrNo);
+    assert_int_equals(16, Mm.Info$(ErrNo));
+  EndIf
 End Sub
 
 Sub test_exists()
