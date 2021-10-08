@@ -264,7 +264,10 @@ Sub run_tests(repeat$)
     Print Space$(Max(1, 85 - Len(test$)));
   EndIf
 
-  If num_failed_tests% = 0 Then
+  If num_tests% = 0 Then
+    ut.print_colour("magenta")
+    Print "NO TESTS";
+  Else If num_failed_tests% = 0 Then
     ut.print_colour("green")
     Print "PASS (" Str$(num_tests%) "/" Str$(num_tests%) ")";
   Else
@@ -306,7 +309,10 @@ Function ut.run_single_test%(idx%)
   EndIf
 
   If ut.is_verbose%() Then
-    If ut.failure_count% = 0 Then
+    If ut.asserts_count% = 0 Then
+      ut.print_colour("magenta")
+      Print "NO TESTS";
+    Else If ut.failure_count% = 0 Then
       ut.print_colour("green")
       Print "PASS ("; Str$(ut.asserts_count%); "/"; Str$(ut.asserts_count%); ")";
     Else If ut.failure_count% > 0 Then
@@ -452,9 +458,10 @@ Sub ut.print_colour(c$)
   Option Console Both
 
   Select Case c$
-    Case "green" : Colour(RGB(Green))
-    Case "red"   : Colour(RGB(Red))
-    Case "reset" : Colour(RGB(White))
-    Case Else    : Error "unsupported colour: " + c$
+    Case "green"   : Colour(RGB(Green))
+    Case "magenta" : Colour(RGB(Magenta))
+    Case "red"     : Colour(RGB(Red))
+    Case "reset"   : Colour(RGB(White))
+    Case Else      : Error "unsupported colour: " + c$
   End Select
 End Sub

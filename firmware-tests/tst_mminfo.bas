@@ -35,11 +35,11 @@ EndIf
 Const EXPECTED_VPOS% = 23
 Const EXPECTED_VRES% = 24
 
-If Mm.Device$ = "MMB4L" Then add_test("test_architecture")
+add_test("test_architecture")
 add_test("test_current")
 add_test("test_device")
 add_test("test_directory")
-If Mm.Device$ = "MMB4L" Then add_test("test_envvar")
+add_test("test_envvar")
 add_test("test_errmsg")
 add_test("test_errno")
 add_test("test_exists")
@@ -50,12 +50,12 @@ add_test("test_hpos")
 add_test("test_hres")
 add_test("test_option_base")
 add_test("test_option_break")
-If Mm.Device$ = "MMB4L" Then add_test("test_option_case")
+add_test("test_option_case")
 add_test("test_option_default")
 add_test("test_option_explicit")
-If Mm.Device$ = "MMB4L" Then add_test("test_option_resolution")
+add_test("test_option_resolution")
 add_test("test_option_serial")
-If Mm.Device$ = "MMB4L" Then add_test("test_option_tab")
+add_test("test_option_tab")
 add_test("test_path")
 add_test("test_version")
 add_test("test_vpos")
@@ -72,6 +72,8 @@ Sub teardown_test()
 End Sub
 
 Sub test_architecture()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
   assert_string_equals(EXPECTED_ARCH$, Mm.Info$(Arch))
   assert_string_equals(Mm.Info$(Arch), Mm.Info$(Architecture))
 End Sub
@@ -92,6 +94,8 @@ Sub test_directory()
 End Sub
 
 Sub test_envvar()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
   assert_string_equals(EXPECTED_HOME$, Mm.Info$(ENVVAR "HOME"))
 End Sub
 
@@ -202,27 +206,27 @@ Sub test_fontwidth()
 End Sub
 
 Sub test_hpos()
-  If Mm.Device$ = "MMB4L" Then
-    Option Resolution Character
-    Local actual% = Mm.Info(HPos)
-    assert_int_equals(EXPECTED_HPOS%, actual%)
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
 
-    Option Resolution Pixel
-    assert_int_equals(actual% * EXPECTED_FONT_WIDTH%, Mm.Info(HPos))
-  EndIf
+  Option Resolution Character
+  Local actual% = Mm.Info(HPos)
+  assert_int_equals(EXPECTED_HPOS%, actual%)
+
+  Option Resolution Pixel
+  assert_int_equals(actual% * EXPECTED_FONT_WIDTH%, Mm.Info(HPos))
 End Sub
 
 Sub test_hres()
-  If Mm.Device$ = "MMB4L" Then
-    Option Resolution Character
-    Local actual% = Mm.Info(HRes)
-    assert_int_equals(EXPECTED_HRES%, actual%)
-    assert_int_equals(actual%, Mm.HRes)
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
 
-    Option Resolution Pixel
-    assert_int_equals(actual% * EXPECTED_FONT_WIDTH%, Mm.Info(HRes))
-    assert_int_equals(actual% * EXPECTED_FONT_WIDTH%, Mm.HRes)
-  EndIf
+  Option Resolution Character
+  Local actual% = Mm.Info(HRes)
+  assert_int_equals(EXPECTED_HRES%, actual%)
+  assert_int_equals(actual%, Mm.HRes)
+
+  Option Resolution Pixel
+  assert_int_equals(actual% * EXPECTED_FONT_WIDTH%, Mm.Info(HRes))
+  assert_int_equals(actual% * EXPECTED_FONT_WIDTH%, Mm.HRes)
 End Sub
 
 Sub test_option_base()
@@ -240,6 +244,8 @@ Sub test_option_break()
 End Sub
 
 Sub test_option_case()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
   assert_string_equals("Title", Mm.Info(Option Case))
 
   Option Case Lower
@@ -293,6 +299,8 @@ Sub test_option_explicit()
 End Sub
 
 Sub test_option_resolution()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
   Option Resolution Pixel
   assert_string_equals("Pixel", Mm.Info(Option Resolution))
 
@@ -334,6 +342,8 @@ Sub test_option_serial()
 End Sub
 
 Sub test_option_tab()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
   assert_int_equals(4, Mm.Info(Option Tab))
 
   Option Tab 2
