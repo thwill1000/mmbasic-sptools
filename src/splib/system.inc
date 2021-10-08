@@ -2,7 +2,7 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
-Const sys.VERSION$ = "r1b3"
+Const sys.VERSION$ = "2.0.0-a1"
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 

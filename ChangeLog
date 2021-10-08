@@ -1,14 +1,17 @@
 ChangeLog
 ---------
 
-Release 1b3:
+Version 2.0.0-a1 - ??-???-2021:
+ - Many changes that I failed to record as they were being done :-(
+
+Version 1b3 - Unreleased:
  - Changed maximum number of tokens supported per line from 100 => 255.
  - Fixed bug where internal error was reported when input file was not found.
  - Added additional utility code to 'src/common'.
  - Changed naming standard for all code to use a '.' instead of an '_' to
    separate the 'package' prefix from the function/subroutine/variable name.
 
-Release 1b2:
+Version 1b2 - 18-Aug-2020:
  - The package has been renamed to "SP Tools" and the GitHub address changed
    correspondingly: https://github.com/thwill1000/sptools
 
@@ -29,5 +32,5 @@ Release 1b2:
  - Increased maximum number of tokens supported per line from 50 => 100.
  - Added support for identifiers with ! or % suffixes; $ was already supported.
 
-Release 1b1:
+Version 1b1 - 22-Jul-2020:
  - Initial public beta.
