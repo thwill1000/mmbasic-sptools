@@ -102,19 +102,10 @@ End Sub
 Sub test_errmsg()
   On Error Skip 1
   Error "foo"
-  If Mm.Device$ = "MMB4L" Then
-    assert_string_equals("Error in line", Left$(Mm.ErrMsg$, 13));
-    assert_string_equals("foo", Right$(Mm.ErrMsg$, 3));
-    assert_string_equals("Error in line", Left$(Mm.Info(ErrMsg), 13));
-    assert_string_equals("foo", Right$(Mm.Info$(ErrMsg), 3));
-  Else
-    ' I am unsure why the error message begins with CRLF on the CMM2,
-    ' and to make it stranger it only seems to do so within the 'sptest' framework.
-    assert_string_equals(Chr$(13) + Chr$(10) + "Error in line", Left$(Mm.ErrMsg$, 15));
-    assert_string_equals("foo", Right$(Mm.ErrMsg$, 3));
-    assert_string_equals(Chr$(13) + Chr$(10) + "Error in line", Left$(Mm.Info(ErrMsg), 15));
-    assert_string_equals("foo", Right$(Mm.Info$(ErrMsg), 3));
-  EndIf
+  assert_string_equals("Error in line", Left$(Mm.ErrMsg$, 13));
+  assert_string_equals("foo", Right$(Mm.ErrMsg$, 3));
+  assert_string_equals("Error in line", Left$(Mm.Info(ErrMsg), 13));
+  assert_string_equals("foo", Right$(Mm.Info$(ErrMsg), 3));
 End Sub
 
 Sub test_errno()

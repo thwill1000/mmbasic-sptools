@@ -217,9 +217,6 @@ Sub test_replace()
 End Sub
 
 Sub test_resize()
-  ' CMM2 5.07.01 has buggy, OPTION BASE dependent behaviour.
-  If Mm.Device$ <> "MMB4L" Then Exit Sub
-
   Local array%(100 + BASE) ' 8 bytes for the size and 800 bytes for the data
   LongString Append array%(), "Hello World"
 

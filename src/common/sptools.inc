@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2021 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For Colour Maximite 2, MMBasic 5.07.02
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -31,7 +31,7 @@ Function spt.get_install_dir$()
 End Function
 
 Sub spt.print_version(name$)
-  Print name$ " (SP Tools) Version " + sys.VERSION$ + " for Colour Maximite 2, MMBasic 5.07.01"
+  Print name$ " (SP Tools) Version " + sys.VERSION$ + " for Colour Maximite 2, MMBasic 5.07.02"
   Print "Copyright (c) 2020-2021 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"

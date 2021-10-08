@@ -229,11 +229,7 @@ Sub assert_raw_error(expected$)
   Inc ut.asserts_count%
   If InStr(Mm.ErrMsg$, expected$) < 1 Then
     Local s$ = "Expected Error " + str.quote$(expected$)
-    If Mm.Device$ = "MMB4L" Then
-      Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 1))
-    Else
-      Cat s$, ", but actually " + str.quote$(Mid$(Mm.ErrMsg$, 3))
-    EndIf
+    Cat s$, ", but actually " + str.quote$(Mm.ErrMsg$)
     ut.add_failure(s$)
   EndIf
 End Sub
