@@ -86,7 +86,7 @@ Function file.find$(path$, pattern$, type$)
     Loop Until name$ <> ".git" ' Doesn't recurse into .git directories.
 
     ' If it is a directory then expand it.
-    is_dir% = (file.find$ = "A:") Or (Mm.Info(FileSize file.find$) = -2)
+    is_dir% = Choice(file.find$ = "A:", 1, Mm.Info(FileSize file.find$) = -2)
     If is_dir% Then
       lb% = stack_ptr%
       ' On Error Skip 1
