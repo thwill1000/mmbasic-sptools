@@ -102,6 +102,8 @@ End Sub
 
 Function sys.string_prop$(key$)
   Select Case LCase$(key$)
+    Case "home"
+      sys.string_prop$ = Choice(Mm.Device$ = "MMB4L", Mm.Info$(EnvVar "HOME"), "A:")
     Case "tmpdir"
       If Mm.Device$ = "MMB4L" Then
         sys.string_prop$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))

@@ -99,6 +99,11 @@ Sub test_get_canonical()
   Local parent$ = file.get_parent$(root$)
   If parent$ = "" Then parent$ = "A:"
   assert_string_equals(parent$, file.get_canonical$(".."))
+
+  ' Tilde expansion
+  assert_string_equals(sys.string_prop$("home"), file.get_canonical$("~"))
+  assert_string_equals(sys.string_prop$("home") + "/dir", file.get_canonical$("~/dir"))
+  assert_string_equals(sys.string_prop$("home") + "/dir", file.get_canonical$("~\dir"))
 End Sub
 
 Sub test_exists()

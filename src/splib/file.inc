@@ -188,7 +188,7 @@ Function file.get_canonical$(f$)
 
   Local f2$ = UCase$(f$), i%
   If f2$ = "A:" Then
-    file.get_canonical$ = f2$
+    file.get_canonical$ = "A:"
     Exit Function
   ElseIf Left$(f2$, 3) = "A:\" Or Left$(f2$, 3) = "A:/" Then
     f2$ = "A:"
@@ -196,6 +196,12 @@ Function file.get_canonical$(f$)
   ElseIf Left$(f2$, 1) = "\" Or Left$(f2$, 1) = "/" Then
     f2$ = "A:"
     i% = 2
+  ElseIf f2$ = "~" Then
+    file.get_canonical$ = sys.string_prop$("home")
+    Exit Function
+  ElseIf Left$(f2$, 2) = "~\" Or Left$(f2$, 2) = "~/" Then
+    f2$ = sys.string_prop$("home")
+    i% = 3
   Else
     f2$ = Left$(Mm.Info$(Directory), Len(Mm.Info$(Directory)) - 1)
     i% = 1
@@ -226,13 +232,15 @@ Function file.get_canonical$(f$)
   Next
 
   Select Case s$
-    Case "/", "/." : ' Do nothing
+    Case "/", "/."
+      ' Do nothing
     Case "/.."
       ' Back track
       For j% = Len(f2$) To 1 Step -1
         If Peek(Var f2$, j%) = 47 Then Poke Var f2$, 0, j% - 1 : Exit For
       Next
-    Case Else : Cat f2$, s$
+    Case Else
+      Cat f2$, s$
   End Select
 
   file.get_canonical$ = f2$
