@@ -99,3 +99,16 @@ Sub sys.restore_break()
   On Key 3, 0
   Option Break 3
 End Sub
+
+Function sys.string_prop$(key$)
+  Select Case LCase$(key$)
+    Case "tmpdir"
+      If Mm.Device$ = "MMB4L" Then
+        sys.string_prop$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
+      Else
+        sys.string_prop$ = "A:/tmp"
+      EndIf
+    Case Else
+      Error "Unknown property: " + key$
+  End Select
+End Function
