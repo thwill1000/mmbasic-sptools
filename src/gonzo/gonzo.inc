@@ -519,41 +519,51 @@ Sub gonzo.cmd_term(cmd$, argc%, argv$())
   If sys.err$ <> "" Then Exit Sub
 
   gonzo.update_title("TERMINAL")
+  con.println("(Connected to remote host, type ^]C to get back.)")
   con.foreground("white")
 
   Do While Inkey$ <> "" : Loop
 
   On Error Ignore
 
-  Local break_time%, ch%, s$
+  Local ch%, escape_flag%, s$
   Do
-    ' On a Ctrl-C:
-    '   - if it is more than 500 ms since the last Ctrl-C then send to remote,
-    '   - otherwise exit terminal mode.
+    ' Pass Ctrl-C onto the remote.
     If sys.break_flag% Then
-      sys.break_flag% = 0
-      If Timer - break_time% > 500 Then
-        gonzo.write(Chr$(3))
-        break_time% = Timer
-      Else
-        Exit Do
-      EndIf
+      sys.break_flag% = 0 ' Need to clear this before calling gonzo.write().
+      gonzo.write(Chr$(3))
     EndIf
 
-    ' Read from remote.
+    ' Read from remote, write to local.
     ch% = gonzo.getc%(0)
     If ch% > 0 Then con.print(Chr$(ch%));
 
-    ' Write to remote.
+    ' Read from local.
     s$ = Inkey$
-    Select Case s$
-      Case "" ' Do nothing.
-      Case Chr$(&h0A) : gonzo.write(Chr$(&h0D)) ' Use CR '\r' to end lines.
-      Case Else : gonzo.write(s$)
-    End Select
+    If Mm.ErrNo Then Exit Do
+    If s$ = "" Then Continue Do
+    If escape_flag% Then
+      escape_flag% = 0
+      Select Case LCase$(s$)
+        Case "c"        : Exit Do ' Exit from terminal.
+        Case Chr$(&h1D)           ' Write escape character to the remote.
+        Case Else       : s$ = "" ' Ignore unrecognised escape.
+      End Select
+    Else
+      Select Case s$
+        Case Chr$(&h0A) : s$ = Chr$(&h0D)  ' Use CR '\r' to end lines.
+        Case Chr$(&h1D) : escape_flag% = 1 ' Ctrl-]
+      End Select
+    EndIf
+
+    ' Write to remote.
+    If Not escape_flag% And s$ <> "" Then gonzo.write(s$)
+
   Loop While Mm.ErrNo = 0
 
   con.foreground("yellow")
+  ' If Pos > 1 Then con.println()
+  con.println("(Back at local Gonzo.)")
 
   Select Case Mm.ErrNo
     Case 0
