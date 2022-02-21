@@ -235,8 +235,11 @@ End Sub
 Sub assert_no_error()
   Inc ut.asserts_count%
   If sys.err$ <> "" Then
-    Local s$ = "Expected no error, but actually " + str.quote$(sys.err$)
-    ut.add_failure(s$)
+    ut.add_failure("Expected no error, but actually sys.err$ = " + str.quote$(sys.err$))
+  EndIf
+
+  If Mm.ErrMsg$ <> "" Then
+    ut.add_failure("Expected no error, but actually Mm.ErrMsg$ = " + str.quote$(Mm.ErrMsg$))
   EndIf
 End Sub
 
@@ -305,6 +308,7 @@ End Sub
 
 ' @return 1 if the test passes, 0 if it fails.
 Function ut.run_single_test%(idx%)
+  On Error Clear
   Local catch_errors% = ut.is_catch_errors%()
 
   If ut.is_verbose%() Then
