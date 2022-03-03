@@ -1,6 +1,6 @@
-' Copyright (c) 2021 Thomas Hugo Williams
+' Copyright (c) 2021-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.03
 
 Option Explicit On
 Option Default None
@@ -70,6 +70,7 @@ Sub test_md5_given_string()
 
   Restore data_test_md5
   Do
+    restore_data_test_md5(filename$)
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
     If size% > 255 Then Continue Do
@@ -82,12 +83,28 @@ Sub test_md5_given_string()
   Loop
 End Sub
 
+' Restores the global DATA pointer to a given entry in the 'data_test_md5' DATA.
+' Needed on platforms that do not yet implement READ SAVE and READ RESTORE
+' because crypt.md5%() and friends also manipulate the global DATA pointer.
+Sub restore_data_test_md5(filename$)
+  If Mm.Device$ <> "MMBasic For Windows" Then
+    Restore data_test_md5
+    If filename$ = "" Then Exit Sub
+    Local s$, size%, enc$, dec$
+    Do
+      Read s$, size%, enc$, dec$
+      If s$ = filename$ Then Exit Do
+    Loop
+  EndIf
+End Sub
+
 Sub test_md5_given_long_string()
   Local filename$, size%, md5_decrypted$, md5_encrypted$
   Local i%, ls%(100), md5%(array.new%(2)), s$
 
   Restore data_test_md5
   Do
+    restore_data_test_md5(filename$)
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
     LongString Clear ls%()
@@ -108,6 +125,7 @@ Sub test_md5_file()
 
   Restore data_test_md5
   Do
+    restore_data_test_md5(filename$)
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
     Open file.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
@@ -204,6 +222,7 @@ Sub test_xxtea_file()
 
   Restore data_test_md5
   Do
+    restore_data_test_md5(filename$)
     Read filename$, size%, md5_decrypted$, md5_encrypted$
     If filename$ = "END" Then Exit Do
     original_file$ = file.PROG_DIR$ + "/resources/tst_crypt/" + filename$
