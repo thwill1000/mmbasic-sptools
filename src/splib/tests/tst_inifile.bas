@@ -1,6 +1,6 @@
-' Copyright (c) 2021 Thomas Hugo Williams
+' Copyright (c) 2021-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.03
 
 Option Explicit On
 Option Default None
@@ -17,7 +17,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../../sptest/unittest.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const TEST_FILE$ = "/tmp/tst_inifile.ini"
+Const TEST_FILE$ = sys.string_prop$("tmpdir") + "/tst_inifile.ini"
 
 add_test("test_read")
 add_test("test_read_given_map_overflow")

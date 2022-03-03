@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.03
 
 Option Explicit On
 Option Default None
@@ -67,29 +67,34 @@ End Sub
 
 Sub test_get_canonical()
   Local root$ = Left$(Mm.Info(Directory), Len(Mm.Info(Directory)) - 1)
-  assert_string_equals(root$ + "/foo.bas", file.get_canonical$("foo.bas"))
-  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir/foo.bas"))
-  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir\foo.bas"))
-  assert_string_equals("A:/dir/foo.bas", file.get_canonical$("A:/dir/foo.bas"))
-  assert_string_equals("A:/dir/foo.bas", file.get_canonical$("A:\dir\foo.bas"))
-  assert_string_equals("A:/dir/foo.bas", file.get_canonical$("a:/dir/foo.bas"))
-  assert_string_equals("A:/dir/foo.bas", file.get_canonical$("a:\dir\foo.bas"))
-  assert_string_equals("A:/dir/foo.bas", file.get_canonical$("/dir/foo.bas"))
-  assert_string_equals("A:/dir/foo.bas", file.get_canonical$("\dir\foo.bas"))
-  assert_string_equals(root$ + "/foo.bas", file.get_canonical$("dir/../foo.bas"))
-  assert_string_equals(root$ + "/foo.bas", file.get_canonical$("dir\..\foo.bas"))
-  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir/./foo.bas"))
-  assert_string_equals(root$ + "/dir/foo.bas", file.get_canonical$("dir\.\foo.bas"))
+
   assert_string_equals("A:", file.get_canonical$("A:"))
   assert_string_equals("A:", file.get_canonical$("A:/"))
   assert_string_equals("A:", file.get_canonical$("A:\"))
   assert_string_equals("A:", file.get_canonical$("/"))
   assert_string_equals("A:", file.get_canonical$("\"))
+  assert_string_equals("C:", file.get_canonical$("C:"))
+  assert_string_equals("C:", file.get_canonical$("C:/"))
+  assert_string_equals("C:", file.get_canonical$("C:\"))
+
+  assert_string_equals(expected_path$(root$ + "/foo.bas"), file.get_canonical$("foo.bas"))
+  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir/foo.bas"))
+  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir\foo.bas"))
+  assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("A:/dir/foo.bas"))
+  assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("A:\dir\foo.bas"))
+  assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("a:/dir/foo.bas"))
+  assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("a:\dir\foo.bas"))
+  assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("/dir/foo.bas"))
+  assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("\dir\foo.bas"))
+  assert_string_equals(expected_path$(root$ + "/foo.bas"), file.get_canonical$("dir/../foo.bas"))
+  assert_string_equals(expected_path$(root$ + "/foo.bas"), file.get_canonical$("dir\..\foo.bas"))
+  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir/./foo.bas"))
+  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir\.\foo.bas"))
 
   ' Trailing .
   assert_string_equals("A:", file.get_canonical$("A:/."))
-  assert_string_equals("A:/dir", file.get_canonical$("A:/dir/."))
-  assert_string_equals(root$, file.get_canonical$("."))
+  assert_string_equals(expected_path$("A:/dir"), file.get_canonical$("A:/dir/."))
+  assert_string_equals(expected_path$(root$), file.get_canonical$("."))
 
   ' Trailing ..
   assert_string_equals("A:", file.get_canonical$("A:/.."))
@@ -98,13 +103,24 @@ Sub test_get_canonical()
   ' TODO: should the parent of "A:" be "" or should it be "A:" ?
   Local parent$ = file.get_parent$(root$)
   If parent$ = "" Then parent$ = "A:"
-  assert_string_equals(parent$, file.get_canonical$(".."))
+  assert_string_equals(expected_path$(parent$), file.get_canonical$(".."))
 
   ' Tilde expansion
-  assert_string_equals(sys.string_prop$("home"), file.get_canonical$("~"))
-  assert_string_equals(sys.string_prop$("home") + "/dir", file.get_canonical$("~/dir"))
-  assert_string_equals(sys.string_prop$("home") + "/dir", file.get_canonical$("~\dir"))
+  assert_string_equals(expected_path$(sys.string_prop$("home")), file.get_canonical$("~"))
+  assert_string_equals(expected_path$(sys.string_prop$("home") + "/dir"), file.get_canonical$("~/dir"))
+  assert_string_equals(expected_path$(sys.string_prop$("home") + "/dir"), file.get_canonical$("~\dir"))
 End Sub
+
+Function expected_path$(f$)
+  expected_path$ = f$
+  If Mm.Device$ = "MMBasic for Windows" Then
+    ' Convert slash to backslash.
+    Local i%
+    For i% = 1 To Len(expected_path$)
+      If Peek(Var expected_path$, i%) = 47 Then Poke Var expected_path$, i%, 92
+    Next
+  EndIf
+End Function
 
 Sub test_exists()
   Local f$ = Mm.Info$(Current)
@@ -145,9 +161,17 @@ End Sub
 
 Sub test_is_directory()
   assert_true(file.is_directory%(file.PROG_DIR$))
-  assert_true(file.is_directory%("A:"))
-  assert_true(file.is_directory%("A:/"))
-  assert_true(file.is_directory%("A:\"))
+
+  Const has_a% = Left$(Mm.Device$, 17) = "Colour Maximite 2" Or Mm.Device$ = "PicoMite"
+  assert_int_equals(has_a%, file.is_directory%("A:"))
+  assert_int_equals(has_a%, file.is_directory%("A:/"))
+  assert_int_equals(has_a%, file.is_directory%("A:\"))
+
+  Const has_c% = Mm.Device$ <> "MMB4L"
+  assert_int_equals(has_c%, file.is_directory%("C:"))
+  assert_int_equals(has_c%, file.is_directory%("C:/"))
+  assert_int_equals(has_c%, file.is_directory%("C:\"))
+
   assert_true(file.is_directory%("/"))
   assert_true(file.is_directory%("\"))
 

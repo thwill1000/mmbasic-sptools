@@ -1,5 +1,5 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.03
 
-Execute "run " + Chr$(34)+"src/sptrans/main.bas" + Chr$(34) + ", " + Mm.CmdLine$
+Execute "run " + Chr$(34) + Mm.Info$(Path) + "src/sptrans/main.bas" + Chr$(34) + ", " + Mm.CmdLine$
