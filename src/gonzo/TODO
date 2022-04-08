@@ -1,0 +1,12 @@
+TODO
+====
+
+ - Implement local LIST/TYPE command
+ - Implement DUMP and RDUMP commands
+ - Try to reconnect (using dmesg?) to device if we lose connection
+   - i.e. when setting OPTIONs
+ - Timeout on and retry connections at least once
+   - first connection to PicoMite always seems to fail on my {X}Ubuntu VMs
+   - does DTR need asserting ? See https://www.thebackshed.com/forum/ViewTopic.php?TID=14155&PID=180669
+ - Implement progress reporting for XMODEM SEND and RECEIVE
+
