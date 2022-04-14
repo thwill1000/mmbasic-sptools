@@ -16,10 +16,12 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 Const BASE% = Mm.Info(Option Base)
 Const RSRC$ = file.get_canonical$(file.PROG_DIR$ + "/resources/tst_file")
+Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_file"
 
 add_test("test_get_parent")
 add_test("test_get_name")
 add_test("test_is_absolute")
+add_test("test_is_symlink")
 add_test("test_get_canonical")
 add_test("test_exists")
 add_test("test_is_directory")
@@ -30,6 +32,7 @@ add_test("test_find_dirs")
 add_test("test_find_all_matching")
 add_test("test_find_files_matching")
 add_test("test_find_dirs_matching")
+add_test("test_find_does_not_follow_symlinks", "test_find_with_symlinks")
 add_test("test_count_files")
 add_test("test_get_extension")
 add_test("test_get_files")
@@ -40,9 +43,11 @@ If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 End
 
 Sub setup_test()
+  If Not file.is_directory%(TMPDIR$) Then MkDir TMPDIR$
 End Sub
 
 Sub teardown_test()
+  ' TODO: recursive deletion of TMPDIR$
 End Sub
 
 Sub test_get_parent()
@@ -157,6 +162,32 @@ Sub test_is_absolute()
   assert_true(file.is_absolute%("A:\"))
   assert_true(file.is_absolute%("/"))
   assert_true(file.is_absolute%("\"))
+End Sub
+
+Sub test_is_symlink()
+  ' Test on directory.
+  assert_false(file.is_symlink%(TMPDIR$))
+
+  ' Test on actual file.
+  Local filename$ = TMPDIR$ + "/test_is_symlink.txt"
+  given_non_empty_file(filename$)
+  assert_false(file.is_symlink%(filename$))
+
+  ' Test on symbolic link to file.
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+  Local symlink$ = TMPDIR$ + "/test_is_symlink.lnk"
+  If file.exists%(symlink$) Then Kill symlink$
+  System("ln -s " + filename$ + " " + symlink$)
+  assert_true(file.is_symlink%(symlink$))
+  Kill symlink$
+  Kill filename$
+End Sub
+
+Sub given_non_empty_file(f$)
+  If file.exists%(f$) Then Kill f$
+  Open f$ For Output As #1
+  Print #1, "Hello World"
+  Close #1
 End Sub
 
 Sub test_is_directory()
@@ -275,6 +306,39 @@ Sub test_find_dirs_matching()
   assert_string_equals(RSRC$ + "/snafu-dir/subdir",  file.find$(RSRC$, "*ub*", "dir"))
   assert_string_equals(RSRC$ + "/wombat-dir/subdir", file.find$())
   assert_string_equals("",                           file.find$())
+End Sub
+
+Sub test_find_with_symlinks()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
+  ' Setup.
+  Local foo_dir$ = TMPDIR$ + "/foo"
+  If file.exists%(foo_dir$) Then RmDir foo_dir$
+  MkDir foo_dir$
+  given_non_empty_file(TMPDIR$ + "/foo/one.txt")
+  given_non_empty_file(TMPDIR$ + "/foo/two.txt")
+  MkDir TMPDIR$ + "/bar"
+  given_non_empty_file(TMPDIR$ + "/bar/one.txt")
+  given_non_empty_file(TMPDIR$ + "/bar/two.txt")
+  Local symlink$ = TMPDIR$ + "/foo.lnk"
+  If file.exists%(symlink$) Then Kill symlink$
+  System("ln -s " + foo_dir$ + " " + symlink$)
+
+  ' Test.
+  assert_string_equals("A:" + TMPDIR$ + "/bar/one.txt", file.find$(TMPDIR$, "*.txt", "all"))
+  assert_string_equals("A:" + TMPDIR$ + "/bar/two.txt", file.find$())
+  assert_string_equals("A:" + TMPDIR$ + "/foo/one.txt", file.find$())
+  assert_string_equals("A:" + TMPDIR$ + "/foo/two.txt", file.find$())
+  assert_string_equals("",                              file.find$())
+
+  ' Teardown.
+  Kill TMPDIR$ + "/foo/one.txt"
+  Kill TMPDIR$ + "/foo/two.txt"
+  RmDir TMPDIR$ + "/foo"
+  Kill TMPDIR$ + "/bar/one.txt"
+  Kill TMPDIR$ + "/bar/two.txt"
+  RmDir TMPDIR$ + "/bar"
+  Kill symlink$
 End Sub
 
 Sub test_count_files()

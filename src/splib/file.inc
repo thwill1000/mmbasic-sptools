@@ -56,10 +56,13 @@ End Function
 '          matches call this function with no parameters, i.e. f$ = file.find().
 '          Returns the empty string if there are no more matches.
 '
-' TODO: In order to return the files in alphabetical order this uses a 128K workspace.
-'       I think there is another potential implementation where it just records the last
-'       file returned by the previous call and restarts the search from there, however
-'       that would be much slower and probably better implemented as a CSUB.
+' TODO: In order to return the files in alphabetical order this uses a 128K
+'       workspace. I think there is an alternative implementation where it
+'       just records the last file returned by the previous call and restarts
+'       the search from there, however that would be much slower and probably
+'       better implemented as a CSUB.
+'       Alternatively need to use a more efficient way to store strings
+'       (a pool?), or take advantage of the fact they have common prefixes.
 Function file.find$(path$, pattern$, type$)
   If Mm.Device$ = "MMB4L" Or Mm.Device$ = "MMBasic for Windows" Then
     Static stack$(1000) Length 255 ' ~256K workspace.
@@ -83,26 +86,29 @@ Function file.find$(path$, pattern$, type$)
   Do
     Do
       If stack_ptr% = Mm.Info(Option Base) Then file.find$ = "" : Exit Function
-      Inc stack_ptr%, -1 : file.find$ = stack$(stack_ptr%)
+      Inc stack_ptr%, -1
+      file.find$ = stack$(stack_ptr%)
       name$ = file.get_name$(file.find$)
     Loop Until name$ <> ".git" ' Doesn't recurse into .git directories.
 
-    ' If it is a directory then expand it.
-    is_dir% = file.is_directory%(file.find$)
-    If is_dir% Then
-      lb% = stack_ptr%
-      ' On Error Skip 1
-      f$ = Choice(type_$ = "DIR", Dir$(file.find$ + "/*", Dir), Dir$(file.find$ + "/*", All))
-      ' If Mm.ErrMsg$ <> "" Then Print MM.ErrMsg$ : Print file.find$ : End
-      Do While f$ <> ""
-        stack$(stack_ptr%) = file.find$  + "/" + f$ : Inc stack_ptr%
-        f$ = Dir$()
-      Loop
+    ' If it is a directory and not a symbolic-link then expand it.
+    is_dir% = 0
+    If file.is_directory%(file.find$) Then
+      If Not file.is_symlink%(file.find$) Then
+        is_dir% = 1
+        lb% = stack_ptr%
+        f$ = Choice(type_$ = "DIR", Dir$(file.find$ + "/*", Dir), Dir$(file.find$ + "/*", All))
+        Do While f$ <> ""
+          stack$(stack_ptr%) = file.find$  + "/" + f$
+          Inc stack_ptr%
+          f$ = Dir$()
+        Loop
 
-      ' Sort the newly pushed dirs/files so that those beginning 'a|A'
-      ' are at the top and those beginning 'z|Z' are near the bottom.
-      num% = stack_ptr% - lb%
-      If num% > 0 Then Sort stack$(), , &b11, lb%, num%)
+        ' Sort the newly pushed dirs/files so that those beginning 'a|A'
+        ' are at the top and those beginning 'z|Z' are near the bottom.
+        num% = stack_ptr% - lb%
+        If num% > 0 Then Sort stack$(), , &b11, lb%, num%)
+      EndIf
     EndIf
 
     ' I've profiled it and its faster to do the name checks before the type checks.
@@ -343,6 +349,13 @@ Function file.is_directory%(f$)
   ' TODO: handle ~ prefix
   ' TODO: does this work on PicoMite
   file.is_directory% = Mm.Info(Exists Dir f$)
+End Function
+
+Function file.is_symlink%(f$)
+  ' If MM.INFO(EXISTS SYMLINK f$) is not implemented then the error
+  ' will be ignored and the default 0 returned.
+  On Error Skip 1
+  file.is_symlink% = Mm.Info(Exists SymLink f$)
 End Function
 
 ' Makes directory 'f$' if it does not already exist.
