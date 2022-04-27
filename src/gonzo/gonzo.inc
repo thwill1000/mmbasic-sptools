@@ -496,7 +496,9 @@ Sub gonzo.send_file(in_file$, out_file$, verbose%)
     command$ = "Save " + str.quote$(out_file$)
     gonzo.writeln(command$)
     gonzo.read_until_match("> " + command$)
-    If (gonzo.getln%(s$)) Then sys.err$ = gonzo.extract_error$(s$)
+    gonzo.clear_buf()
+    gonzo.read_until_prompt(COLLECT% Or SKIP_EMPTY%)
+    sys.err$ = gonzo.extract_error_ls$(gonzo.buf%())
   EndIf
 
   If verbose% And sys.err$ = "" Then
