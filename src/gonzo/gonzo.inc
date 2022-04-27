@@ -512,10 +512,10 @@ End Sub
 
 Sub gonzo.cmd_send(cmd$, argc%, argv$())
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$)
+  If argc% < 0 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
   If sys.err$ <> "" Then Exit Sub
   Local in_file$ = str.unquote$(argv$(0))
-  Local out_file$ = file.get_name$(in_file$)
+  Local out_file$ = Choice(argc% = 1, file.get_name$(in_file$), str.unquote$(argv$(1)))
   gonzo.send_file(in_file$, out_file$, 1)
 End Sub
 
@@ -674,13 +674,13 @@ End Sub
 
 Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$)
+  If argc% < 0 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
   If sys.err$ = "" Then
     Local local_file$ = str.unquote$(argv$(0))
     If Not file.exists%(local_file$) Then sys.err$ = "Error: file not found"
   EndIf
   If sys.err$ <> "" Then Exit Sub
-  Local remote_file$ = file.get_name$(local_file$)
+  Local remote_file$ = Choice(argc% = 1, file.get_name$(local_file$), str.unquote$(argv$(1)))
 
   ' Cleanup for a new command.
   gonzo.break()
@@ -918,11 +918,11 @@ Data "|rpwd|",              "",                      "display current remote dir
 Data "|rrename|rmv|",       "<old-file> <new-file>", "rename a remote file or directory"
 Data "|rsize|",             "<file>",                "display size of a remote file"
 Data "|rtype|rcat|rlist|",  "<file>",                "list remote file contents"
-Data "|send|put|",          "<file>",                "send a file to the remote using AUTOSAVE"
+Data "|send|put|",          "<src-file> [<dst-file>]", "send a file to the remote using AUTOSAVE"
 Data "|term|",              "",                      "open serial terminal"
 Data "|version|",           "",                      "display current gonzo version"
 Data "|xreceive|xget|",     "<file>",                "receive a file from the remote using XMODEM"
-Data "|xsend|xput|",        "<file>",                "send a file from to the remote using XMODEM"
+Data "|xsend|xput|",        "<src-file> [<dst-file>]", "send a file from to the remote using XMODEM"
 Data "<END>", "", ""
 
 Sub dump(s$)
