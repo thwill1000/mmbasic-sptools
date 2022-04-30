@@ -193,12 +193,15 @@ End Sub
 Sub test_is_directory()
   assert_true(file.is_directory%(file.PROG_DIR$))
 
-  Const has_a% = Left$(Mm.Device$, 17) = "Colour Maximite 2" Or Mm.Device$ = "PicoMite"
+  Select Case Mm.Device$
+    Case "MMBasic for Windows" : Const has_a% = 0
+    Case Else                  : Const has_a% = 1 ' MMB4L pretends to have an A: drive
+  End Select
   assert_int_equals(has_a%, file.is_directory%("A:"))
   assert_int_equals(has_a%, file.is_directory%("A:/"))
   assert_int_equals(has_a%, file.is_directory%("A:\"))
 
-  Const has_c% = Mm.Device$ <> "MMB4L"
+  Const has_c% = 1 ' MMB4L pretends to have a C: drive
   assert_int_equals(has_c%, file.is_directory%("C:"))
   assert_int_equals(has_c%, file.is_directory%("C:/"))
   assert_int_equals(has_c%, file.is_directory%("C:\"))
