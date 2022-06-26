@@ -19,6 +19,7 @@ add_test("test_equals_ignore_case")
 add_test("test_lpad")
 add_test("test_is_plain_ascii")
 add_test("test_next_token")
+add_test("test_next_token_given_quotes")
 add_test("test_quote")
 add_test("test_replace")
 add_test("test_rpad")
@@ -77,6 +78,8 @@ Sub test_next_token()
   assert_string_equals("@@snafu@!", str.next_token$())
   assert_string_equals("@", str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+Exit Sub
 
   ' ! separator keeping empty tokens.
   assert_string_equals("", str.next_token$(test$, "!"))
@@ -144,6 +147,55 @@ Sub test_next_token()
   assert_string_equals(sys.NO_DATA$, str.next_token$("", "@", 1))
 End Sub
 
+Sub test_next_token_given_quotes()
+  Local test$ = str.replace$("@token1@ @token 2@", "@", Chr$(34))
+  assert_string_equals(Chr$(34) + "token1" + Chr$(34), str.next_token$(test$))
+  assert_string_equals(Chr$(34) + "token 2" + Chr$(34), str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ = str.replace$("@token1", "@", Chr$(34))
+  assert_string_equals(test$, str.next_token$(test$))
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ = str.replace$("token1@", "@", Chr$(34))
+  assert_string_equals(test$, str.next_token$(test$))
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ = Chr$(34)
+  assert_string_equals(test$, str.next_token$(test$))
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ = Chr$(34) + Chr$(34)
+  assert_string_equals(test$, str.next_token$(test$))
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ = Chr$(34) + Chr$(34) + Chr$(34)
+  assert_string_equals(test$, str.next_token$(test$))
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ =  Chr$(34) + Chr$(34) + Chr$(34) + Chr$(34)
+  assert_string_equals(test$, str.next_token$(test$))
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ = str.replace$("@\@\@\@\@@", "@", Chr$(34))
+  assert_string_equals(test$, str.next_token$(test$))
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+
+  test$ = str.replace$("foo@bar", "@", Chr$(34))
+  assert_string_equals(test$, str.next_token$(test$))
+
+  test$ = str.replace$("@foo@bar@", "@", Chr$(34))
+  assert_string_equals(test$, str.next_token$(test$))
+
+  test$ = str.replace$("@foo\@bar@", "@", Chr$(34))
+  assert_string_equals(test$, str.next_token$(test$))
+
+  test$ = str.replace$("rcmd @RUN \@foo bar.bas\@@", "@", Chr$(34))
+  assert_string_equals("rcmd", str.next_token$(test$))
+  assert_string_equals(Chr$(34) + "RUN \" + Chr$(34) + "foo bar.bas\" + Chr$(34) + Chr$(34), str.next_token$())
+  assert_string_equals(sys.NO_DATA$, str.next_token$())
+End Sub
+
 Sub test_quote()
   Const QU$ = Chr$(34)
   assert_string_equals(QU$ + "hello" + QU$, str.quote$("hello"))
@@ -195,4 +247,5 @@ Sub test_unquote()
   assert_string_equals("foo" + QU$, str.unquote$("foo" + QU$))
   assert_string_equals(" " + QU$ + "foo" + QU$, str.unquote$(" " + QU$ + "foo" + QU$))
   assert_string_equals(QU$ + "foo" + QU$ + " ", str.unquote$(QU$ + "foo" + QU$ + " "))
+  assert_string_equals(QU$, str.unquote$(QU$))
 End Sub

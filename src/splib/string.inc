@@ -51,10 +51,15 @@ Function str.lpad$(s$, x%)
   If Len(s$) < x% Then str.lpad$ = Space$(x% - Len(s$)) + s$
 End Function
 
-' Tokenises a string.
+' Tokenises a string separated by delimiters.
+'
+'  - delimiters are ignored between pairs of double-quotes.
+'  - a double-quote preceeded by a backslash does not end a pair of
+'    double-quotes.
+'  - double-quotes and backslashes are included verbatim in the returned tokens.
 '
 ' @param   s$     string to tokenise.
-' @param   sep$   one or more token separator characters.
+' @param   dlm$   one or more token delimiter characters.
 '                 If empty then use space and skip empty tokens.
 ' @param   skip%  1 to skip empty tokens, 0 to return them.
 ' @return  the first token. To retrieve subsequent tokens call this function
@@ -65,33 +70,53 @@ End Function
 ' be the empty string as that will return data from a previously incomplete
 ' tokenisation. If necessary call str.next_token$(sys.NO_DATA$) to clear the
 ' internal state first.
-Function str.next_token$(s$, sep$, skip%)
-  Static s_$ = sys.NO_DATA$, sep_$, skip_%, st%
+Function str.next_token$(s$, dlm$, skip%)
+  Static s_$ = sys.NO_DATA$, dlm_$, skip_%, p%
 
   If s$ <> "" Then
     s_$ = s$
-    sep_$ = Choice(sep$ = "", " ", sep$)
-    skip_% = Choice(sep$ = "", 1, skip%)
-    st% = 1
+    dlm_$ = Choice(dlm$ = "", " ", dlm$)
+    skip_% = Choice(dlm$ = "", 1, skip%)
+    p% = 1 ' Index to process from.
   EndIf
 
   ' Have we already processed then entire string?
   If s_$ = sys.NO_DATA$ Then str.next_token$ = sys.NO_DATA$ : Exit Function
 
-  Local i%
-  For i% = st% To Len(s_$)
-    If InStr(sep_$, Mid$(s_$, i%, 1)) > 0 Then
-      str.next_token$ = Mid$(s_$, st%, i% - st%)
-      st% = i% + 1
-      If skip_% And str.next_token$ = "" Then Continue For
-      Exit Function
-    EndIf
+  Local ch%, state% = 0
+  For p% = p% To Len(s_$)
+    ch% = Peek(Var s_$, p%)
+
+    Select Case state%
+      Case 0  ' Base state
+        If ch% = &h22 Then
+          state% = 1
+        ElseIf InStr(dlm_$, Chr$(ch%)) Then
+          If skip_% Then
+            If Len(str.next_token$) = 0 Then Continue For
+          EndIf
+          Exit For
+        EndIf
+
+      Case 1  ' Inside double-quote
+        Select Case ch%
+          Case &h22 : state% = 0  ' double-quote
+          Case &h5C : state% = 2  ' backslash
+        End Select
+
+      Case 2  ' Inside double-quote and following backslash
+        state% = 1
+
+    End Select
+
+    Cat str.next_token$, Chr$(ch%)
   Next
 
-  ' Return the last token.
-  Local tmp$ = Mid$(s_$, st%, i% - st%)
-  str.next_token$ = Choice(tmp$ = "" And skip_%, sys.NO_DATA$, tmp$)
-  s_$ = sys.NO_DATA$
+  Inc p%
+
+  If p% > Len(s$) Then
+    If Len(str.next_token$) = 0 Then str.next_token$ = sys.NO_DATA$
+  EndIf
 End Function
 
 Function str.quote$(s$, begin$, end$)
@@ -134,11 +159,10 @@ End Function
 ' If s$ both begins and ends with " then returns a copy of s$ with those characters removed,
 ' otherwise returns an unmodified copy of s$.
 Function str.unquote$(s$)
-  If Peek(Var s$, 1) = 34 Then
-    If Peek(var s$, Len(s$)) = 34 Then
-      str.unquote$ = Mid$(s$, 2, Len(s$) - 2)
-      Exit Function
-    EndIf
-  EndIf
   str.unquote$ = s$
+  If Len(s$) < 2 Then Exit Function
+  If Peek(Var s$, 1) <> 34 Then Exit Function
+  If Peek(var s$, Len(s$)) = 34 Then
+    str.unquote$ = Mid$(s$, 2, Len(s$) - 2)
+  EndIf
 End Function
