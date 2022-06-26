@@ -263,7 +263,7 @@ Sub gonzo.remote_file_cmd(command$)
   gonzo.read_until_prompt()
   gonzo.writeln(command$)
   gonzo.read_until_match("> " + command$)
-  LongString Clear gonzo.buf%()
+  gonzo.clear_buf()
   gonzo.read_until_prompt(COLLECT% Or SKIP_EMPTY%)
   If LInStr(gonzo.buf%(), "Could not find") Then
     con.println("Error: file or directory not found")
@@ -504,6 +504,10 @@ Sub gonzo.send_file(in_file$, out_file$, verbose%)
   EndIf
 End Sub
 
+Sub gonzo.clear_buf()
+  LongString Clear gonzo.buf%()
+End Sub
+
 Sub gonzo.cmd_send(cmd$, argc%, argv$())
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
   If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$)
@@ -732,7 +736,7 @@ Function gonzo.get_device$()
   gonzo.read_until_prompt()
   gonzo.writeln("? Mm.Device$")
   gonzo.read_until_match("> ? Mm.Device$")
-  LongString Clear gonzo.buf%()
+  gonzo.clear_buf()
   gonzo.read_until_prompt(COLLECT% Or SKIP_EMPTY%)
   If sys.break_flag% Then
     con.println("Interrupted by user")
@@ -748,7 +752,7 @@ Function gonzo.get_file_size%(file$)
   Local command$ = "? Str$(Mm.Info(FileSize " + str.quote$(file$) + "))"
   gonzo.writeln(command$)
   gonzo.read_until_match("> " + command$)
-  LongString Clear gonzo.buf%()
+  gonzo.clear_buf()
   gonzo.read_until_prompt(COLLECT% Or SKIP_EMPTY%)
   gonzo.get_file_size% = Val(LGetStr$(gonzo.buf%(), 1, 255))
   Select Case gonzo.get_file_size%
