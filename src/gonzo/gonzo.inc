@@ -275,6 +275,25 @@ Sub gonzo.remote_file_cmd(command$)
   EndIf
 End Sub
 
+Sub gonzo.cmd_rexec(cmd$, argc%, argv$())
+  If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection" : Exit Sub
+
+  gonzo.send_break()
+  gonzo.read_until_prompt()
+  Local command$
+  If argc% = 1 Then
+    command$ = str.replace$(str.unquote$(argv$(0)), "\" + Chr$(34), Chr$(34))
+  Else
+    command$ = array.join_strings$(argv$(), " ", 0, argc%)
+  EndIf
+  gonzo.writeln(command$)
+  gonzo.read_until_match("> " + command$)
+  gonzo.clear_buf()
+  con.foreground("white")
+  gonzo.read_until_prompt(ECHO% Or SKIP_EMPTY%)
+  con.foreground("yellow")
+End Sub
+
 Sub gonzo.cmd_rcopy(cmd$, argc%, argv$())
   Local src$, dst$
   Select Case argc%
@@ -835,7 +854,15 @@ End Function
 
 Sub gonzo.read_until_match(pattern$)
   Local s$, x%
-  Do While Not sys.break_flag%
+  Do
+    ' Pass Ctrl-C onto the remote.
+    If sys.break_flag% Then
+      sys.break_flag% = 0
+      gonzo.send_break()
+    EndIf
+
+    ' TODO: support ^]C to exit without sending a break to the remote.
+
     x% = gonzo.getln%(s$)
     If file.fnmatch%(pattern$, s$) Then Exit Do
   Loop
@@ -845,7 +872,15 @@ End Sub
 Sub gonzo.read_until_prompt(flags%)
   Const CMM2_MESS$ = Chr$(&h1B) + "[?25h" + Chr$(&h1B) + "[37m" + Chr$(&h1B) + "[m"
   Local x%, s$, i%
-  Do While Not sys.break_flag%
+  Do
+    ' Pass Ctrl-C onto the remote.
+    If sys.break_flag% Then
+      sys.break_flag% = 0
+      gonzo.send_break()
+    EndIf
+
+    ' TODO: support ^]C to exit without sending a break to the remote.
+
     x% = gonzo.getln%(s$)
     If x% Then
       If InStr(s$, CMM2_MESS$) = 1 Then s$ = Mid$(s$, Len(CMM2_MESS$) + 1)
@@ -889,6 +924,8 @@ Function gonzo.usage$(cmd$)
   Local synonyms$, usage$, description$
   Do
     Read synonyms$, usage$, description$
+    ' MMBasic does not allow double-quote in DATA so we use @ signs as place-holders.
+    usage$ = str.replace$(usage$, "@", Chr$(34))
     If synonyms$ = "<END>" Then Error "No usage information for: " + cmd$
     If InStr(synonyms$, "|" + LCase$(cmd$) + "|") Then
       gonzo.usage$ = "Usage: " + cmd$
@@ -909,6 +946,7 @@ Data "|help|",              "[<command>]",           "display help text"
 Data "|log|",               "[clear]",               "show (or clear) receive log"
 Data "|pwd|",               "",                      "display current local directory"
 Data "|rchdir|rcd|",        "<directory>",           "change remote directory"
+Data "|rexec|rex|",         "<command string>",      "execute command on remote"
 Data "|rcopy|rcp|",         "<src-file> <dst-file>", "copy remote file"
 Data "|rdelete|rkill|rrm|", "<file|directory>",      "delete remote file or (empty) directory"
 Data "|receive|get|",       "<file>",                "receive file from remote using AUTOSAVE"
