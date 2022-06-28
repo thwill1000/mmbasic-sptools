@@ -122,7 +122,7 @@ End Function
 Sub gonzo.cmd_break(cmd$, argc%, argv$())
   If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
 
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
 End Sub
 
@@ -259,7 +259,7 @@ End Sub
 Sub gonzo.remote_file_cmd(command$)
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection" : Exit Sub
 
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
   gonzo.writeln(command$)
   gonzo.read_until_match("> " + command$)
@@ -355,7 +355,7 @@ Sub gonzo.cmd_rfiles(cmd$, argc%, argv$())
   Local d$ = Choice(argv$(0) = "", "*", str.unquote$(argv$(0)))
   If file.is_directory%(d$) Then Cat d$, "/*"
 
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
   Local command$ = Choice(gonzo.device% = gonzo.DEVICE_CMM2%, "Ls ", "Files ") + str.quote$(d$)
   gonzo.writeln(command$)
@@ -383,7 +383,7 @@ End Sub
 Sub gonzo.cmd_rpwd(cmd$, argc%, argv$())
   If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
 
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
   Local command$ = "? Cwd$"
   gonzo.writeln(command$)
@@ -424,7 +424,7 @@ Sub gonzo.cmd_rtype(cmd$, argc%, argv$())
   If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
   Local file$ = str.unquote$(argv$(0))
 
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
   Local command$ = "List " + str.quote$(file$)
   gonzo.writeln(command$)
@@ -454,7 +454,7 @@ Sub gonzo.send_file(in_file$, out_file$, verbose%)
   Open in_file$ For Input As #gonzo.IN_FNBR%
 
   ' Cleanup for a new command.
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
 
   ' Send AUTOSAVE command.
@@ -536,8 +536,8 @@ Sub gonzo.cmd_term(cmd$, argc%, argv$())
   Do
     ' Pass Ctrl-C onto the remote.
     If sys.break_flag% Then
-      sys.break_flag% = 0 ' Need to clear this before calling gonzo.write().
-      gonzo.write(Chr$(3))
+      sys.break_flag% = 0
+      gonzo.send_break()
     EndIf
 
     ' Read from remote, write to local.
@@ -683,7 +683,7 @@ Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
   Local remote_file$ = Choice(argc% = 1, file.get_name$(local_file$), str.unquote$(argv$(1)))
 
   ' Cleanup for a new command.
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
 
   ' Send XMODEM RECEIVE command to remote.
@@ -710,7 +710,7 @@ Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
 End Sub
 
 ' Sends a Ctrl-C to the remote.
-Sub gonzo.break()
+Sub gonzo.send_break()
   gonzo.write(Chr$(3))
 End Sub
 
@@ -734,7 +734,7 @@ Function gonzo.extract_error_ls$(buf%())
 End Function
 
 Function gonzo.get_device$()
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
   gonzo.writeln("? Mm.Device$")
   gonzo.read_until_match("> ? Mm.Device$")
@@ -749,7 +749,7 @@ Function gonzo.get_device$()
 End Function
 
 Function gonzo.get_file_size%(file$)
-  gonzo.break()
+  gonzo.send_break()
   gonzo.read_until_prompt()
   Local command$ = "? Str$(Mm.Info(FileSize " + str.quote$(file$) + "))"
   gonzo.writeln(command$)
