@@ -79,8 +79,6 @@ Sub test_next_token()
   assert_string_equals("@", str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-Exit Sub
-
   ' ! separator keeping empty tokens.
   assert_string_equals("", str.next_token$(in$, "!"))
   assert_string_equals("foo ", str.next_token$())

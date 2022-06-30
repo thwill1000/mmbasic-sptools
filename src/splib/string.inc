@@ -71,7 +71,7 @@ End Function
 ' tokenisation. If necessary call str.next_token$(sys.NO_DATA$) to clear the
 ' internal state first.
 Function str.next_token$(s$, dlm$, skip%)
-  Static s_$ = sys.NO_DATA$, dlm_$, skip_%, p%
+  Static s_$, dlm_$, skip_%, p%
 
   If s$ <> "" Then
     s_$ = s$
@@ -80,8 +80,13 @@ Function str.next_token$(s$, dlm$, skip%)
     p% = 1 ' Index to process from.
   EndIf
 
-  ' Have we already processed then entire string?
-  If s_$ = sys.NO_DATA$ Then str.next_token$ = sys.NO_DATA$ : Exit Function
+  ' If we've reached the end of the string then return either NO_DATA or an
+  ' empty token depending on the value of skip_% and then force skip_% =
+  If p% > Len(s_$) Then
+    str.next_token$ = Choice(skip_%, sys.NO_DATA$, "")
+    skip_% = 1
+    Exit Function
+  EndIf
 
   Local ch%, state% = 0
   For p% = p% To Len(s_$)
@@ -95,6 +100,7 @@ Function str.next_token$(s$, dlm$, skip%)
           If skip_% Then
             If Len(str.next_token$) = 0 Then Continue For
           EndIf
+          Inc p%
           Exit For
         EndIf
 
@@ -112,10 +118,10 @@ Function str.next_token$(s$, dlm$, skip%)
     Cat str.next_token$, Chr$(ch%)
   Next
 
-  Inc p%
-
-  If p% > Len(s$) Then
-    If Len(str.next_token$) = 0 Then str.next_token$ = sys.NO_DATA$
+  ' If we reach the end of the string and the last character is not a delimiter
+  ' then force skip_% = 1 so we do not return an empty token on the next call.
+  If p% > Len(s_$) Then
+    If Not InStr(dlm_$, Chr$(ch%)) Then skip_% = 1
   EndIf
 End Function
 
