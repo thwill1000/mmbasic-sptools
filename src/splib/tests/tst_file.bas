@@ -137,7 +137,12 @@ Sub test_exists()
   assert_true(file.exists%("A:/"))
   assert_true(file.exists%("A:\"))
   assert_true(file.exists%("/"))
+  assert_true(file.exists%("/."))
   assert_true(file.exists%("\"))
+  assert_true(file.exists%("\."))
+  assert_true(file.exists%("\."))
+  assert_true(file.exists%("."))
+  assert_true(file.exists%(".."))
 
   assert_false(file.exists%(file.get_parent$(f$) + "/foo/" + file.get_name$(f$)))
 End Sub
@@ -161,7 +166,12 @@ Sub test_is_absolute()
   assert_true(file.is_absolute%("A:/"))
   assert_true(file.is_absolute%("A:\"))
   assert_true(file.is_absolute%("/"))
+  assert_true(file.is_absolute%("/."))
   assert_true(file.is_absolute%("\"))
+  assert_true(file.is_absolute%("\."))
+
+  assert_false(file.is_absolute%("."))
+  assert_false(file.is_absolute%(".."))
 End Sub
 
 Sub test_is_symlink()
@@ -181,6 +191,13 @@ Sub test_is_symlink()
   assert_true(file.is_symlink%(symlink$))
   Kill symlink$
   Kill filename$
+
+  assert_false(file.is_symlink%("/"))
+  assert_false(file.is_symlink%("/."))
+  assert_false(file.is_symlink%("\"))
+  assert_false(file.is_symlink%("\."))
+  assert_false(file.is_symlink%("."))
+  assert_false(file.is_symlink%(".."))
 End Sub
 
 Sub given_non_empty_file(f$)
@@ -207,7 +224,11 @@ Sub test_is_directory()
   assert_int_equals(has_c%, file.is_directory%("C:\"))
 
   assert_true(file.is_directory%("/"))
+  assert_true(file.is_directory%("/."))
   assert_true(file.is_directory%("\"))
+  assert_true(file.is_directory%("\."))
+  assert_true(file.is_directory%("."))
+  assert_true(file.is_directory%(".."))
 
   assert_false(file.is_directory%(Mm.Info$(Current)))
 End Sub
