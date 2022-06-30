@@ -68,10 +68,10 @@ Sub test_is_plain_ascii()
 End Sub
 
 Sub test_next_token()
-  Local test$ = "!foo !@bar !!  wombat$ @@snafu@! @"
+  Local in$ = "!foo !@bar !!  wombat$ @@snafu@! @"
 
   ' Default space separator and no empty tokens.
-  assert_string_equals("!foo", str.next_token$(test$))
+  assert_string_equals("!foo", str.next_token$(in$))
   assert_string_equals("!@bar", str.next_token$())
   assert_string_equals("!!", str.next_token$())
   assert_string_equals("wombat$", str.next_token$())
@@ -82,7 +82,7 @@ Sub test_next_token()
 Exit Sub
 
   ' ! separator keeping empty tokens.
-  assert_string_equals("", str.next_token$(test$, "!"))
+  assert_string_equals("", str.next_token$(in$, "!"))
   assert_string_equals("foo ", str.next_token$())
   assert_string_equals("@bar ", str.next_token$())
   assert_string_equals("", str.next_token$())
@@ -91,14 +91,14 @@ Exit Sub
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' ! separator skipping empty tokens.
-  assert_string_equals("foo ", str.next_token$(test$, "!", 1))
+  assert_string_equals("foo ", str.next_token$(in$, "!", 1))
   assert_string_equals("@bar ", str.next_token$())
   assert_string_equals("  wombat$ @@snafu@", str.next_token$())
   assert_string_equals(" @", str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ separator keeping empty tokens.
-  assert_string_equals("!foo !", str.next_token$(test$, "@"))
+  assert_string_equals("!foo !", str.next_token$(in$, "@"))
   assert_string_equals("bar !!  wombat$ ", str.next_token$())
   assert_string_equals("", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
@@ -107,14 +107,14 @@ Exit Sub
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ separator skipping empty tokens.
-  assert_string_equals("!foo !", str.next_token$(test$, "@", 1))
+  assert_string_equals("!foo !", str.next_token$(in$, "@", 1))
   assert_string_equals("bar !!  wombat$ ", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
   assert_string_equals("! ", str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ or ! separators keeping empty tokens.
-  assert_string_equals("", str.next_token$(test$, "@!"))
+  assert_string_equals("", str.next_token$(in$, "@!"))
   assert_string_equals("foo ", str.next_token$())
   assert_string_equals("", str.next_token$())
   assert_string_equals("bar ", str.next_token$())
@@ -128,7 +128,7 @@ Exit Sub
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ or ! separators skipping empty tokens.
-  assert_string_equals("foo ", str.next_token$(test$, "@!", 1))
+  assert_string_equals("foo ", str.next_token$(in$, "@!", 1))
   assert_string_equals("bar ", str.next_token$())
   assert_string_equals("  wombat$ ", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
@@ -148,50 +148,50 @@ Exit Sub
 End Sub
 
 Sub test_next_token_given_quotes()
-  Local test$ = str.replace$("@token1@ @token 2@", "@", Chr$(34))
-  assert_string_equals(Chr$(34) + "token1" + Chr$(34), str.next_token$(test$))
+  Local in$ = str.replace$("@token1@ @token 2@", "@", Chr$(34))
+  assert_string_equals(Chr$(34) + "token1" + Chr$(34), str.next_token$(in$))
   assert_string_equals(Chr$(34) + "token 2" + Chr$(34), str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ = str.replace$("@token1", "@", Chr$(34))
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = str.replace$("@token1", "@", Chr$(34))
+  assert_string_equals(in$, str.next_token$(in$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ = str.replace$("token1@", "@", Chr$(34))
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = str.replace$("token1@", "@", Chr$(34))
+  assert_string_equals(in$, str.next_token$(in$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ = Chr$(34)
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = Chr$(34)
+  assert_string_equals(in$, str.next_token$(in$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ = Chr$(34) + Chr$(34)
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = Chr$(34) + Chr$(34)
+  assert_string_equals(in$, str.next_token$(in$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ = Chr$(34) + Chr$(34) + Chr$(34)
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = Chr$(34) + Chr$(34) + Chr$(34)
+  assert_string_equals(in$, str.next_token$(in$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ =  Chr$(34) + Chr$(34) + Chr$(34) + Chr$(34)
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ =  Chr$(34) + Chr$(34) + Chr$(34) + Chr$(34)
+  assert_string_equals(in$, str.next_token$(in$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ = str.replace$("@\@\@\@\@@", "@", Chr$(34))
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = str.replace$("@\@\@\@\@@", "@", Chr$(34))
+  assert_string_equals(in$, str.next_token$(in$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  test$ = str.replace$("foo@bar", "@", Chr$(34))
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = str.replace$("foo@bar", "@", Chr$(34))
+  assert_string_equals(in$, str.next_token$(in$))
 
-  test$ = str.replace$("@foo@bar@", "@", Chr$(34))
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = str.replace$("@foo@bar@", "@", Chr$(34))
+  assert_string_equals(in$, str.next_token$(in$))
 
-  test$ = str.replace$("@foo\@bar@", "@", Chr$(34))
-  assert_string_equals(test$, str.next_token$(test$))
+  in$ = str.replace$("@foo\@bar@", "@", Chr$(34))
+  assert_string_equals(in$, str.next_token$(in$))
 
-  test$ = str.replace$("rcmd @RUN \@foo bar.bas\@@", "@", Chr$(34))
-  assert_string_equals("rcmd", str.next_token$(test$))
+  in$ = str.replace$("rcmd @RUN \@foo bar.bas\@@", "@", Chr$(34))
+  assert_string_equals("rcmd", str.next_token$(in$))
   assert_string_equals(Chr$(34) + "RUN \" + Chr$(34) + "foo bar.bas\" + Chr$(34) + Chr$(34), str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 End Sub
