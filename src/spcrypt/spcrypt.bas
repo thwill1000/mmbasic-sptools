@@ -1,4 +1,4 @@
-' Copyright (c) 2021 Thomas Hugo Williams
+' Copyright (c) 2021-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 '
@@ -136,8 +136,8 @@ Function parse_option%(token$)
 End Function
 
 Sub print_usage()
-  Local in$ = str.quote$("input file")
-  Local out$ = str.quote$("output file")
+  Local in$ = "<input-file>"
+  Local out$ = "<output-file>"
 
   If sys.err$ <> "" Then Print PROG_NAME$ + ": " + sys.err$ : Print
 
