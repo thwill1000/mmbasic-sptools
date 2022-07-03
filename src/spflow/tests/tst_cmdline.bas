@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
@@ -20,8 +20,8 @@ Option Default Integer
 #Include "../options.inc"
 #Include "../cmdline.inc"
 
-Const input_file$ = str.quote$("input.bas")
-Const output_file$ = str.quote$("output.bas")
+Const INPUT_FILE$ = str.quote$("input.bas")
+Const OUTPUT_FILE$ = str.quote$("output.bas")
 
 add_test("test_no_input_file")
 add_test("test_input_file")
@@ -52,7 +52,7 @@ Sub test_no_input_file()
 End Sub
 
 Sub test_input_file()
-  cli.parse(input_file$)
+  cli.parse(INPUT_FILE$)
 
   assert_no_error()
   assert_string_equals("input.bas", opt.infile$)
@@ -65,7 +65,7 @@ Sub test_unquoted_input_file()
 End Sub
 
 Sub test_output_file()
-  cli.parse(input_file$ + " " + output_file$)
+  cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_string_equals("input.bas", opt.infile$)
@@ -73,46 +73,46 @@ Sub test_output_file()
 End Sub
 
 Sub test_unquoted_output_file()
-  cli.parse(input_file$ + " output.bas")
+  cli.parse(INPUT_FILE$ + " output.bas")
 
   assert_error("output file name must be quoted")
 End Sub
 
 Sub test_all()
-  cli.parse("--all " + input_file$)
+  cli.parse("--all " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.all)
 
-  cli.parse("-A=1 " + input_file$)
+  cli.parse("-A=1 " + INPUT_FILE$)
   assert_error("option '-A' does not expect argument")
 End Sub
 
 Sub test_brief()
-  cli.parse("--brief " + input_file$)
+  cli.parse("--brief " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.brief)
 
-  cli.parse("-b=1 " + input_file$)
+  cli.parse("-b=1 " + INPUT_FILE$)
   assert_error("option '-b' does not expect argument")
 End Sub
 
 Sub test_no_location()
-  cli.parse("--no-location " + input_file$)
+  cli.parse("--no-location " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.no_location)
 
-  cli.parse("--no-location=1 " + input_file$)
+  cli.parse("--no-location=1 " + INPUT_FILE$)
   assert_error("option '--no-location' does not expect argument")
 End Sub
 
 Sub test_unknown_option()
-  cli.parse("--wombat " + input_file$)
+  cli.parse("--wombat " + INPUT_FILE$)
 
   assert_error("option '--wombat' is unknown")
 End Sub
 
 Sub test_too_many_arguments()
-  cli.parse(input_file$ + " " + output_file$ + " wombat")
+  cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$ + " wombat")
 
   assert_error("unexpected argument 'wombat'")
 End Sub
