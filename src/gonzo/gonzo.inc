@@ -609,6 +609,11 @@ Sub gonzo.cmd_term(cmd$, argc%, argv$())
   gonzo.update_title()
 End Sub
 
+Sub gonzo.cmd_type(cmd$, argc%, argv$())
+  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  spsh.cmd_type(cmd$, argc%, argv$())
+End Sub
+
 Sub gonzo.cmd_version(cmd$, argc%, argv$())
   If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
 
@@ -958,6 +963,7 @@ Data "|rsize|",             "<file>",                "display size of remote fil
 Data "|rtype|rcat|rlist|",  "<file>",                "list remote file contents"
 Data "|send|put|",          "<src-file> [<dst-file>]", "send file to remote using AUTOSAVE"
 Data "|term|",              "",                      "open serial terminal"
+Data "|type|cat|list|",     "<file>",                "list local file contents"
 Data "|version|",           "",                      "display current gonzo version"
 Data "|xreceive|xget|",     "<file>",                "receive file from remote using XMODEM"
 Data "|xsend|xput|",        "<src-file> [<dst-file>]", "send file from to remote using XMODEM"

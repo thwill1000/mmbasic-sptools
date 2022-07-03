@@ -8,6 +8,7 @@ sys.requires("console", "file", "string")
 sys.provides("spsh")
 If sys.err$ <> "" Then Error sys.err$
 
+Const spsh.IN_FNBR% = 2
 Const spsh.MAX_FILES% = 200
 
 Sub spsh.cmd_chdir(cmd$, argc%, argv$())
@@ -28,6 +29,10 @@ End Sub
 
 Sub spsh.error_not_a_directory(f$)
   sys.err$ = "Error: not a directory: " + f$
+End Sub
+
+Sub spsh.error_not_a_file(f$)
+  sys.err$ = "Error: not a file: " + f$
 End Sub
 
 Sub spsh.cmd_files(cmd$, argc%, argv$())
@@ -80,4 +85,25 @@ End Function
 Sub spsh.cmd_pwd(cmd$, argc%, argv$())
   If argc% <> 0 Then Error "expects 0 arguments")
   con.println(Cwd$)
+End Sub
+
+Sub spsh.cmd_type(cmd$, argc%, argv$())
+  If argc% < 1 Then Error "expects 1 or more arguments")
+
+  Local i%, f$, s$
+  For i% = 0 To argc% - 1
+    f$ = str.unquote$(argv$(i%))
+    If Not file.exists%(f$) Then
+      spsh.error_no_such_file(f$)
+    ElseIf file.is_directory%(f$) Then
+      spsh.error_not_a_file(f$)
+    Else
+      Open f$ For Input As #spsh.IN_FNBR%
+      Do While Not Eof(#spsh.IN_FNBR%)
+        Line Input #spsh.IN_FNBR%, s$
+        con.println(s$)
+      Loop
+      Close #spsh.IN_FNBR%
+    EndIf
+  Next
 End Sub
