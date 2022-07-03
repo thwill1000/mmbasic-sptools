@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
@@ -20,8 +20,8 @@ Option Default Integer
 #Include "../options.inc"
 #Include "../cmdline.inc"
 
-Const input_file$ = str.quote$("input.bas")
-Const output_file$ = str.quote$("output.bas")
+Const INPUT_FILE$ = str.quote$("input.bas")
+Const OUTPUT_FILE$ = str.quote$("output.bas")
 
 add_test("test_no_input_file")
 add_test("test_input_file")
@@ -58,7 +58,7 @@ Sub test_no_input_file()
 End Sub
 
 Sub test_input_file()
-  cli.parse(input_file$)
+  cli.parse(INPUT_FILE$)
 
   assert_no_error()
   assert_string_equals("input.bas", opt.infile$)
@@ -71,11 +71,11 @@ Sub test_unquoted_input_file()
 End Sub
 
 Sub test_colour()
-  cli.parse("--colour " + input_file$)
+  cli.parse("--colour " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.colour)
 
-  cli.parse("-C=1 " + input_file$)
+  cli.parse("-C=1 " + INPUT_FILE$)
   assert_error("option '-C' does not expect argument")
 End Sub
 
@@ -85,7 +85,7 @@ Sub test_crunch()
   opt.indent_sz = 999
   opt.spacing = 999
 
-  cli.parse("--crunch " + input_file$)
+  cli.parse("--crunch " + INPUT_FILE$)
 
   assert_no_error()
   assert_int_equals(0, opt.comments)
@@ -93,109 +93,109 @@ Sub test_crunch()
   assert_int_equals(0, opt.indent_sz)
   assert_int_equals(0, opt.spacing)
 
-  cli.parse("--crunch=1 " + input_file$)
+  cli.parse("--crunch=1 " + INPUT_FILE$)
   assert_error("option '--crunch' does not expect argument")
 End Sub
 
 Sub test_no_comments()
   opt.comments = 999
-  cli.parse("--no-comments " + input_file$)
+  cli.parse("--no-comments " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(0, opt.comments)
 
   opt.comments = 999
-  cli.parse("-n " + input_file$)
+  cli.parse("-n " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(0, opt.comments)
 
-  cli.parse("--no-comments=1" + input_file$)
+  cli.parse("--no-comments=1" + INPUT_FILE$)
   assert_error("option '--no-comments' does not expect argument")
 End Sub
 
 Sub test_empty_lines()
-  cli.parse("--empty-lines=0 " + input_file$)
+  cli.parse("--empty-lines=0 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(0, opt.empty_lines)
 
-  cli.parse("--empty-lines=1 " + input_file$)
+  cli.parse("--empty-lines=1 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.empty_lines)
 
-  cli.parse("--empty-lines " + input_file$)
+  cli.parse("--empty-lines " + INPUT_FILE$)
   assert_error("option '--empty-lines' expects {0|1} argument")
 
-  cli.parse("--empty-lines=3" + input_file$)
+  cli.parse("--empty-lines=3" + INPUT_FILE$)
   assert_error("option '--empty-lines' expects {0|1} argument")
 End Sub
 
 Sub test_format_only()
-  cli.parse("--format-only " + input_file$)
+  cli.parse("--format-only " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.format_only)
 
-  cli.parse("-f=1 " + input_file$)
+  cli.parse("-f=1 " + INPUT_FILE$)
   assert_error("option '-f' does not expect argument")
 End Sub
 
 Sub test_indent()
-  cli.parse("--indent=0 " + input_file$)
+  cli.parse("--indent=0 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(0, opt.indent_sz)
 
-  cli.parse("--indent=1 " + input_file$)
+  cli.parse("--indent=1 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.indent_sz)
 
-  cli.parse("--indent " + input_file$)
+  cli.parse("--indent " + INPUT_FILE$)
   assert_error("option '--indent' expects <number> argument")
 
-  cli.parse("--indent=3 " + input_file$)
+  cli.parse("--indent=3 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(3, opt.indent_sz)
 End Sub
 
 Sub test_keywords()
-  cli.parse("--keywords=l " + input_file$)
+  cli.parse("--keywords=l " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(0, opt.keywords)
 
-  cli.parse("--keywords=p " + input_file$)
+  cli.parse("--keywords=p " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.keywords)
 
-  cli.parse("--keywords=u " + input_file$)
+  cli.parse("--keywords=u " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(2, opt.keywords)
 
-  cli.parse("--keywords " + input_file$)
+  cli.parse("--keywords " + INPUT_FILE$)
   assert_error("option '--keywords' expects {l|p|u} argument")
 
-  cli.parse("--keywords=3 " + input_file$)
+  cli.parse("--keywords=3 " + INPUT_FILE$)
   assert_error("option '--keywords' expects {l|p|u} argument")
 End Sub
 
 Sub test_spacing()
-  cli.parse("--spacing=0 " + input_file$)
+  cli.parse("--spacing=0 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(0, opt.spacing)
 
-  cli.parse("--spacing=1 " + input_file$)
+  cli.parse("--spacing=1 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(1, opt.spacing)
 
-  cli.parse("--spacing=2 " + input_file$)
+  cli.parse("--spacing=2 " + INPUT_FILE$)
   assert_no_error()
   assert_int_equals(2, opt.spacing)
 
-  cli.parse("--spacing " + input_file$)
+  cli.parse("--spacing " + INPUT_FILE$)
   assert_error("option '--spacing' expects {0|1|2} argument")
 
-  cli.parse("--spacing=3 " + input_file$)
+  cli.parse("--spacing=3 " + INPUT_FILE$)
   assert_error("option '--spacing' expects {0|1|2} argument")
 End Sub
 
 Sub test_output_file()
-  cli.parse(input_file$ + " " + output_file$)
+  cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_string_equals("input.bas", opt.infile$)
@@ -203,25 +203,25 @@ Sub test_output_file()
 End Sub
 
 Sub test_unquoted_output_file()
-  cli.parse(input_file$ + " output.bas")
+  cli.parse(INPUT_FILE$ + " output.bas")
 
   assert_error("output file name must be quoted")
 End Sub
 
 Sub test_unknown_option()
-  cli.parse("--wombat " + input_file$)
+  cli.parse("--wombat " + INPUT_FILE$)
 
   assert_error("option '--wombat' is unknown")
 End Sub
 
 Sub test_too_many_arguments()
-  cli.parse(input_file$ + " " + output_file$ + " wombat")
+  cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$ + " wombat")
 
   assert_error("unexpected argument 'wombat'")
 End Sub
 
 Sub test_everything()
-  cli.parse("-f -C -e=1 -i=2 -s=0 -n " + input_file$ + " " + output_file$)
+  cli.parse("-f -C -e=1 -i=2 -s=0 -n " + INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_int_equals(1, opt.format_only)
