@@ -643,7 +643,7 @@ Sub gonzo.cmd_xreceive(cmd$, argc%, argv$())
 
   con.println("XModem receiving " + Str$(file_size%) + " bytes ...")
   Local t% = Timer
-  XModem Receive local_file$, #gonzo.SERIAL_FNBR%
+  XModem Receive local_file$, #gonzo.SERIAL_FNBR%, 1
 
   If sys.err$ = "" Then
     ' Trim padding off received file.
@@ -719,7 +719,7 @@ Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
   Local file_size% = Mm.Info(FileSize local_file$)
   con.println("XModem sending " + Str$(file_size%) + " bytes ...")
   Local t% = Timer
-  XModem Send local_file$, #gonzo.SERIAL_FNBR%
+  XModem Send local_file$, #gonzo.SERIAL_FNBR%, 1
 
   ' Trim file on remote to remove padding.
   gonzo.trim_remote_file(remote_file$, file_size%)
