@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For Colour Maximite 2, MMBasic 5.07
 
@@ -41,14 +41,18 @@ Sub cli.parse(s$)
   ' Process arguments.
 
   If i >= lx.num Then sys.err$ = "no input file specified" : Exit Sub
-  If lx.type(i) <> TK_STRING Then sys.err$ = "input file name must be quoted" : Exit Sub
-  opt.set("infile", lx.string$(i))
-  i = i + 1
+  Select Case lx.type(i)
+    Case TK_STRING: opt.set("infile", lx.string$(i))
+    Case Else:      opt.set("infile", lx.token$(i))
+  End Select
+  Inc i
 
   If i >= lx.num Then Exit Sub
-  If lx.type(i) <> TK_STRING Then sys.err$ = "output file name must be quoted" : Exit Sub
-  opt.set("outfile", lx.string$(i))
-  i = i + 1
+  Select Case lx.type(i)
+    Case TK_STRING: opt.set("outfile", lx.string$(i))
+    Case Else:      opt.set("outfile", lx.token$(i))
+  End Select
+  Inc i
 
   If i <> lx.num Then sys.err$ = "unexpected argument '" + lx.token$(i) + "'"
 End Sub
@@ -75,8 +79,8 @@ Sub cli.parse_no_arg(option$, i)
 End Sub
 
 Sub cli.usage()
-  Local in$ = str.quote$("input file")
-  Local out$ = str.quote$("output file")
+  Local in$ = "<input-file>"
+  Local out$ = "<output-file>"
   Print "Usage: RUN " str.quote$("sptrans.bas") ", [OPTION]... " in$ " [" out$ "]"
   Print
   Print "Transcompile the given " in$ " flattening any #Include hierarchy and processing"

@@ -20,12 +20,11 @@ Option Default Integer
 #Include "../options.inc"
 #Include "../cmdline.inc"
 
-Const INPUT_FILE$ = str.quote$("input.bas")
-Const OUTPUT_FILE$ = str.quote$("output.bas")
+Const INPUT_FILE$ = "input.bas"
+Const OUTPUT_FILE$ = "output.bas"
 
 add_test("test_no_input_file")
 add_test("test_input_file")
-add_test("test_unquoted_input_file")
 add_test("test_colour")
 add_test("test_crunch")
 add_test("test_no_comments")
@@ -35,7 +34,6 @@ add_test("test_indent")
 add_test("test_keywords")
 add_test("test_spacing")
 add_test("test_output_file")
-add_test("test_unquoted_output_file")
 add_test("test_unknown_option")
 add_test("test_too_many_arguments")
 add_test("test_everything")
@@ -58,16 +56,17 @@ Sub test_no_input_file()
 End Sub
 
 Sub test_input_file()
+  ' Test with unquoted filename.
   cli.parse(INPUT_FILE$)
 
   assert_no_error()
   assert_string_equals("input.bas", opt.infile$)
-End Sub
 
-Sub test_unquoted_input_file()
-  cli.parse("input.bas")
+  ' Test with quoted multi-word filename.
+  cli.parse(str.quote$("my input.bas"))
 
-  assert_error("input file name must be quoted")
+  assert_no_error()
+  assert_string_equals("my input.bas", opt.infile$)
 End Sub
 
 Sub test_colour()
@@ -195,17 +194,19 @@ Sub test_spacing()
 End Sub
 
 Sub test_output_file()
+  ' Test with unquoted filename.
   cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_string_equals("input.bas", opt.infile$)
   assert_string_equals("output.bas", opt.outfile$)
-End Sub
 
-Sub test_unquoted_output_file()
-  cli.parse(INPUT_FILE$ + " output.bas")
+  ' Test with quoted multi-word filename.
+  cli.parse(INPUT_FILE$ + " " + str.quote$("my output.bas"))
 
-  assert_error("output file name must be quoted")
+  assert_no_error()
+  assert_string_equals("input.bas", opt.infile$)
+  assert_string_equals("my output.bas", opt.outfile$)
 End Sub
 
 Sub test_unknown_option()
