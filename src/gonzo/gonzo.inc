@@ -640,6 +640,14 @@ Sub gonzo.cmd_term(cmd$, argc%, argv$())
   gonzo.update_title()
 End Sub
 
+Sub gonzo.cmd_trans(cmd$, argc%, argv$())
+  If argc% < 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+
+  Local command$ = "mmbasic " + Mm.Info$(Path) + "../sptrans/sptrans.bas"
+  Local cmdline$ = array.join_strings$(argv$(), " ", 0, argc%)
+  System command$ + " " + cmdline$
+End Sub
+
 Sub gonzo.cmd_type(cmd$, argc%, argv$())
   If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
   spsh.cmd_type(cmd$, argc%, argv$())
@@ -1040,6 +1048,7 @@ Data "|rsize|",             "<file>",                "display size of remote fil
 Data "|rtype|rcat|rlist|",  "<file>",                "list remote file contents"
 Data "|send|put|",          "[OPTION]... <src-file> [<dst-file>]", "send file to remote using AUTOSAVE"
 Data "|term|",              "",                      "open serial terminal"
+Data "|trans|sptrans|",     "[OPTION]... <src-file> [<dst-file>]", "transpile local file"
 Data "|type|cat|list|",     "<file>",                "list local file contents"
 Data "|version|",           "",                      "display current gonzo version"
 Data "|xreceive|xget|",     "<file>",                "receive file from remote using XMODEM"
