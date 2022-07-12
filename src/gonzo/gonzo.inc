@@ -678,6 +678,7 @@ End Sub
 ' Trim the size of the file on the remote.
 Sub gonzo.trim_remote_file(file$, size%)
   If gonzo.send_rizzo%() <> 0 Then Exit Sub
+
   gonzo.writeln("Run " + str.quote$(gonzo.RIZZO_FILE$))
   gonzo.writeln(file$)
   gonzo.writeln(Str$(size%))
@@ -749,6 +750,12 @@ Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
   ' Trim file on remote to remove padding.
   gonzo.trim_remote_file(remote_file$, file_size%)
   If sys.err$ <> "" Then Exit Sub
+
+  ' If we just sent a .bas file then LOAD it so that RUN with no argument will execute it.
+  If LCase$(file.get_extension$(remote_file$)) = ".bas" Then
+    gonzo.writeln("Load " + str.quote$(remote_file$))
+    gonzo.read_until_prompt()
+  EndIf
 
   con.println("OK, " + Str$((file_size% * 8000) / (Timer - t%), 0, 1) + " bit/s")
 End Sub
