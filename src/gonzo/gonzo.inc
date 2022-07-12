@@ -24,6 +24,8 @@ Const gonzo.LOG_FNBR% = 3
 Const gonzo.INI_FNBR% = 4
 Const gonzo.OUT_FNBR% = 5
 
+Const gonzo.RIZZO_FILE$ = "/tmp/rizzo.bas"
+
 Dim gonzo.comspec$
 Dim gonzo.device_name$ = "DISCONNECTED"
 Dim gonzo.device% = gonzo.DEVICE_DISCONNECTED%
@@ -31,6 +33,7 @@ Dim gonzo.logfile$ = file.PROG_DIR$ + "/gonzo.log"
 Dim gonzo.rx_buf$
 Dim gonzo.buf%(1000)
 Dim gonzo.exit_flag%
+Dim gonzo.rizzo_sent%
 
 Sub gonzo.connect(verbose%)
   con.println("Connecting to " + gonzo.comspec$ + " ...")
@@ -69,6 +72,9 @@ Sub gonzo.connect(verbose%)
     EndIf
     gonzo.update_title()
   EndIf
+
+  ' New connection so 'rizzo' needs to be resent.
+  gonzo.rizzo_sent% = 0
 End Sub
 
 Sub gonzo.update_title(prefix$)
@@ -669,15 +675,27 @@ Sub gonzo.cmd_xreceive(cmd$, argc%, argv$())
   If sys.err$ = "" Then con.println("OK, " + Str$((file_size% * 8000) / (Timer - t%), 0, 1) + " bit/s")
 End Sub
 
-' Write, send and run 'rizzo.bas' to the remote to trim size of file.
+' Trim the size of the file on the remote.
 Sub gonzo.trim_remote_file(file$, size%)
-  Const rizzo_file$ = "/tmp/rizzo.bas"
-  Const tmp_file$ = "/tmp/" + file$
-  Open rizzo_file$ For Output As #gonzo.OUT_FNBR%
-  Print #gonzo.OUT_FNBR%, "Open " str.quote$(file$) " For Input As #1"
-  Print #gonzo.OUT_FNBR%, "Open " str.quote$(tmp_file$) " For Output As #2"
-  Print #gonzo.OUT_FNBR%, "Dim x% = " Str$(size%)
-  Print #gonzo.OUT_FNBR%, "Dim s$"
+  If gonzo.send_rizzo%() <> 0 Then Exit Sub
+  gonzo.writeln("Run " + str.quote$(gonzo.RIZZO_FILE$))
+  gonzo.writeln(file$)
+  gonzo.writeln(Str$(size%))
+  gonzo.read_until_prompt()
+End Sub
+
+' Write and send 'rizzo.bas' to the remote.
+Function gonzo.send_rizzo%()
+  ' Only send the file once per session.
+  If gonzo.rizzo_sent% Then Exit Function
+
+  Open gonzo.RIZZO_FILE$ For Output As #gonzo.OUT_FNBR%
+  Print #gonzo.OUT_FNBR%, "Dim f$, s$, x%"
+  Print #gonzo.OUT_FNBR%, "Line Input " + str.quote$("Filename? ") + ", f$"
+  Print #gonzo.OUT_FNBR%, "Line Input " + str.quote$("Size? ") + ", s$"
+  Print #gonzo.OUT_FNBR%, "x% = Val(s$)"
+  Print #gonzo.OUT_FNBR%, "Open f$ For Input As #1"
+  Print #gonzo.OUT_FNBR%, "Open " str.quote$("/tmp/") " + f$ For Output As #2"
   Print #gonzo.OUT_FNBR%, "Do While x% > 0"
   Print #gonzo.OUT_FNBR%, "  s$ = Input$(Min(255, x%), #1)"
   Print #gonzo.OUT_FNBR%, "  Print #2, s$;"
@@ -685,16 +703,18 @@ Sub gonzo.trim_remote_file(file$, size%)
   Print #gonzo.OUT_FNBR%, "Loop"
   Print #gonzo.OUT_FNBR%, "Close #2"
   Print #gonzo.OUT_FNBR%, "Close #1"
-  Print #gonzo.OUT_FNBR%, "Copy " str.quote$(tmp_file$) " To " str.quote$(file$)
+  Print #gonzo.OUT_FNBR%, "Copy " str.quote$("/tmp/") " + f$ To f$"
   Print #gonzo.OUT_FNBR%, "End"
   Close #gonzo.OUT_FNBR%
 
-  gonzo.send_file(rizzo_file$, rizzo_file$, 0)
-  If sys.err$ <> "" Then Exit Sub
+  gonzo.send_file(gonzo.RIZZO_FILE$, gonzo.RIZZO_FILE$, 0)
+  If sys.err$ <> "" Then
+    gonzo.send_rizzo% = -1
+    Exit Function
+  EndIf
 
-  gonzo.writeln("Run " + str.quote$(rizzo_file$))
-  gonzo.read_until_prompt()
-End Sub
+  gonzo.rizzo_sent% = 1
+End Function
 
 Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
