@@ -40,7 +40,12 @@ Sub spsh.cmd_files(cmd$, argc%, argv$())
 
   Local d$ = Choice(argv$(0) = "", ".", argv$(0))
   If file.is_directory%(d$) Then Cat d$, "/*"
-  Local files$(spsh.MAX_FILES% - 1) Length 64
+  Select Case Mm.Device$
+    Case "MMB4L", "MMBasic for Windows"
+      Local files$(spsh.MAX_FILES% - 1)
+    Case Else
+      Local files$(spsh.MAX_FILES% - 1) Length 64
+  End Select
   d$ = spsh.get_files$(d$, files$())
 
   Local f$, fg$, i%, sz%
