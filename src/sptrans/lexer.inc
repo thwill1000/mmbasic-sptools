@@ -28,9 +28,9 @@ Dim lx.len(LX_MAX_TOKENS - 1)
 Dim lx.char$
 Dim lx.line$
 Dim lx.next_char$
-Dim lx.num
+Dim lx.num         ' number of tokens.
 Dim lx.pos
-Dim lx.csub ' 1 if we are tokenising within a CSUB definition, otherwise 0.
+Dim lx.csub        ' 1 if we are tokenising within a CSUB definition, otherwise 0.
 
 Sub lx.parse_basic(line$)
   lx.reset(line$)
@@ -355,3 +355,23 @@ Function lx.option$(i)
   Local sz% = Choice(Mid$(lx.line$, lx.start(i), 2) = "--", 2, 1)
   lx.option$ = Mid$(lx.line$, lx.start(i) + sz%, lx.len(i) - sz%)
 End Function
+
+Sub lx.dump()
+  Local i%, type$
+  Print "[[[" lx.line$ "]]]"
+  For i% = 0 To lx.num - 1
+    Select Case lx.type%(i%)
+      Case TK_IDENTIFIER : type$ = "IDENTIFIER"
+      Case TK_NUMBER     : type$ = "NUMBER    "
+      Case TK_COMMENT    : type$ = "COMMENT   "
+      Case TK_STRING     : type$ = "STRING    "
+      Case TK_KEYWORD    : type$ = "KEYWORD   "
+      Case TK_SYMBOL     : type$ = "SYMBOL    "
+      Case TK_DIRECTIVE  : type$ = "DIRECTIVE "
+      Case TK_LABEL      : type$ = "LABEL     "
+      Case TK_OPTION     : type$ = "OPTION    "
+      Case Else          : type$ = "<UNKNOWN> "
+    End Select
+    Print Str$(i%) ": " type$ ", " Str$(lx.start%(i%)) ", " Str$(lx.len%(i%)) ", [[[" lx.token$(i%) "]]]"
+  Next
+End Sub
