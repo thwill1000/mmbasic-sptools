@@ -294,8 +294,8 @@ Sub gonzo.cmd_rexec(cmd$, argc%, argv$())
   EndIf
   gonzo.writeln(command$)
   gonzo.read_until_match("> " + command$)
-  gonzo.clear_buf()
   con.foreground("white")
+  gonzo.clear_buf()
   gonzo.read_until_prompt(ECHO% Or SKIP_EMPTY%)
   con.foreground("yellow")
 End Sub
@@ -536,12 +536,37 @@ Sub gonzo.clear_buf()
 End Sub
 
 Sub gonzo.cmd_send(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
-  If argc% < 0 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
-  Local in_file$ = str.unquote$(argv$(0))
-  Local out_file$ = Choice(argc% = 1, file.get_name$(in_file$), str.unquote$(argv$(1)))
-  gonzo.send_file(in_file$, out_file$, 1)
+  If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then
+    sys.err$ = "Error: no connection"
+    Exit Sub
+  EndIf
+
+  Local i%, run_flag%
+  For i% = 0 To argc% - 1
+    If Left$(argv$(i%), 1) <> "-" Then Exit For
+    Select Case LCase$(argv$(i%))
+      Case "-r", "--run"
+        run_flag% = 1
+      Case Else
+        sys.err$ = "Error: unknown option '" + argv$(i%) + "'"
+        Exit Sub
+    End Select
+  Next
+
+  If argc% - i% <= 0 Or argc% - i% > 2 Then
+    sys.err$ = gonzo.usage$(cmd$)
+    Exit Sub
+  EndIf
+
+  Local local_file$ = str.unquote$(argv$(i%))
+  Local remote_file$ = Choice(argc% - i% = 1, file.get_name$(local_file$), str.unquote$(argv$(i% + 1)))
+  gonzo.send_file(local_file$, remote_file$, 1)
+
+  If run_flag% Then
+    Local command$ = "Run " + str.quote$(remote_file$)
+    gonzo.writeln(command$)
+    gonzo.read_until_match("> " + command$)
+  EndIf
 End Sub
 
 Sub gonzo.cmd_term(cmd$, argc%, argv$())
@@ -718,14 +743,35 @@ Function gonzo.send_rizzo%()
 End Function
 
 Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
-  If argc% < 0 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ = "" Then
-    Local local_file$ = str.unquote$(argv$(0))
-    If Not file.exists%(local_file$) Then sys.err$ = "Error: file not found"
+  If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then
+    sys.err$ = "Error: no connection"
+    Exit Sub
   EndIf
-  If sys.err$ <> "" Then Exit Sub
-  Local remote_file$ = Choice(argc% = 1, file.get_name$(local_file$), str.unquote$(argv$(1)))
+
+  Local i%, run_flag%
+  For i% = 0 To argc% - 1
+    If Left$(argv$(i%), 1) <> "-" Then Exit For
+    Select Case LCase$(argv$(i%))
+      Case "-r", "--run"
+        run_flag% = 1
+      Case Else
+        sys.err$ = "Error: unknown option '" + argv$(i%) + "'"
+        Exit Sub
+    End Select
+  Next
+
+  If argc% - i% <= 0 Or argc% - i% > 2 Then
+    sys.err$ = gonzo.usage$(cmd$)
+    Exit Sub
+  EndIf
+
+  Local local_file$ = str.unquote$(argv$(i%))
+  If Not file.exists%(local_file$) Then
+    sys.err$ = "Error: file not found"
+    Exit Sub
+  EndIf
+
+  Local remote_file$ = Choice(argc% - i% = 1, file.get_name$(local_file$), str.unquote$(argv$(i% + 1)))
 
   ' Cleanup for a new command.
   gonzo.send_break()
@@ -751,13 +797,17 @@ Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
   gonzo.trim_remote_file(remote_file$, file_size%)
   If sys.err$ <> "" Then Exit Sub
 
-  ' If we just sent a .bas file then LOAD it so that RUN with no argument will execute it.
-  If LCase$(file.get_extension$(remote_file$)) = ".bas" Then
+  con.println("OK, " + Str$((file_size% * 8000) / (Timer - t%), 0, 1) + " bit/s")
+
+  If run_flag% Then
+    command$ = "Run " + str.quote$(remote_file$)
+    gonzo.writeln(command$)
+    gonzo.read_until_match("> " + command$)
+  ElseIf LCase$(file.get_extension$(remote_file$)) = ".bas" Then
+    ' If we just sent a .bas file then LOAD it so that RUN with no argument will execute it.
     gonzo.writeln("Load " + str.quote$(remote_file$))
     gonzo.read_until_prompt()
   EndIf
-
-  con.println("OK, " + Str$((file_size% * 8000) / (Timer - t%), 0, 1) + " bit/s")
 End Sub
 
 ' Sends a Ctrl-C to the remote.
@@ -988,12 +1038,12 @@ Data "|rpwd|",              "",                      "display current remote dir
 Data "|rrename|rmv|",       "<old-file> <new-file>", "rename remote file or directory"
 Data "|rsize|",             "<file>",                "display size of remote file"
 Data "|rtype|rcat|rlist|",  "<file>",                "list remote file contents"
-Data "|send|put|",          "<src-file> [<dst-file>]", "send file to remote using AUTOSAVE"
+Data "|send|put|",          "[OPTION]... <src-file> [<dst-file>]", "send file to remote using AUTOSAVE"
 Data "|term|",              "",                      "open serial terminal"
 Data "|type|cat|list|",     "<file>",                "list local file contents"
 Data "|version|",           "",                      "display current gonzo version"
 Data "|xreceive|xget|",     "<file>",                "receive file from remote using XMODEM"
-Data "|xsend|xput|",        "<src-file> [<dst-file>]", "send file from to remote using XMODEM"
+Data "|xsend|xput|",        "[OPTION]... <src-file> [<dst-file>]", "send file from to remote using XMODEM"
 Data "<END>", "", ""
 
 Sub dump(s$)
