@@ -36,6 +36,7 @@ add_test("test_comment_if")
 add_test("test_comment_if_not")
 add_test("test_uncomment_if")
 add_test("test_uncomment_if_not")
+add_test("test_unknown_directive")
 
 run_tests()
 
@@ -478,6 +479,11 @@ Sub test_uncomment_if_not()
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
   lx.parse_basic("'!endif") : tr.transpile()
+End Sub
+
+Sub test_unknown_directive()
+  lx.parse_basic("'!wombat foo") : tr.transpile()
+  assert_error("unknown !wombat directive")
 End Sub
 
 Sub expect_replacement(i%, from$, to_$)

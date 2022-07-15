@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -25,8 +25,9 @@ Dim tr.flags$(set.new%(10))
 set.init(tr.flags$())
 
 ' The list of replacements (from -> to).
+Const tr.MAX_REPLACEMENTS% = 200
 Dim tr.num_replacements
-Dim tr.replacements$(199, 1) Length 80
+Dim tr.replacements$(tr.MAX_REPLACEMENTS% - 1, 1) Length 80
 
 ' Set to name of file after processing #Include
 Dim tr.include$
@@ -50,18 +51,18 @@ Sub tr.transpile()
 
   If lx.type(0) <> TK_DIRECTIVE Then Exit Sub
 
-  Local t$ = lx.directive$(0)
-  If     t$ = "!clear"        Then : tr.process_clear()
-  ElseIf t$ = "!comments"     Then : tr.process_comments()
-  ElseIf t$ = "!comment_if"   Then : tr.process_if()
-  ElseIf t$ = "!empty-lines"  Then : tr.process_empty_lines()
-  ElseIf t$ = "!indent"       Then : tr.process_indent()
-  ElseIf t$ = "!uncomment_if" Then : tr.process_if()
-  ElseIf t$ = "!replace"      Then : tr.process_replace()
-  ElseIf t$ = "!set"          Then : tr.process_set()
-  ElseIf t$ = "!spacing"      Then : tr.process_spacing()
-  Else : sys.err$ = "unknown " + Mid$(t$, 2) + " directive"
-  EndIf
+  Select Case lx.directive$(0)
+    Case "!clear"        : tr.process_clear()
+    Case "!comments"     : tr.process_comments()
+    Case "!comment_if"   : tr.process_if()
+    Case "!empty-lines"  : tr.process_empty_lines()
+    Case "!indent"       : tr.process_indent()
+    Case "!uncomment_if" : tr.process_if()  ' Same SUB for !comment_if and !uncomment_if.
+    Case "!replace"      : tr.process_replace()
+    Case "!set"          : tr.process_set()
+    Case "!spacing"      : tr.process_spacing()
+    Case Else            : sys.err$ = "unknown " + Mid$(lx.directive$(0), 1) + " directive"
+  End Select
 
   If sys.err$ <> "" Then Exit Sub
 
