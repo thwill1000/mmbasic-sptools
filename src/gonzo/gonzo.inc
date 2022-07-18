@@ -541,12 +541,25 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
     Exit Sub
   EndIf
 
-  Local i%, run_flag%
+  Local xcmd%
+  Select Case cmd$
+    Case "put", "send"
+      xcmd% = 0
+    Case "xput", "xsend"
+      xcmd% = 1
+    Case Else
+      sys.err$ "Error: invalid '" + cmd$ + "' command"
+      Exit Sub
+  End Select
+
+  Local i%, run_flag%, transpile_flag%
   For i% = 0 To argc% - 1
     If Left$(argv$(i%), 1) <> "-" Then Exit For
     Select Case LCase$(argv$(i%))
       Case "-r", "--run"
         run_flag% = 1
+      Case "-t", "--trans"
+        transpile_flag% = 1
       Case Else
         sys.err$ = "Error: unknown option '" + argv$(i%) + "'"
         Exit Sub
@@ -559,13 +572,38 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
   EndIf
 
   Local local_file$ = str.unquote$(argv$(i%))
+  If Not file.exists%(local_file$) Then
+    sys.err$ = "Error: file not found"
+    Exit Sub
+  EndIf
+
+  ' Transpile file if requested.
+  Local command$, tmp_file$
+  If transpile_flag% Then
+    tmp_file$ = sys.string_prop$("tmpdir") + "/gonzo.trans"
+    On Error Skip 1
+    Kill tmp_file$
+    gonzo.transpile(local_file$, tmp_file$)
+    local_file$ = tmp_file$
+  EndIf
+
   Local remote_file$ = Choice(argc% - i% = 1, file.get_name$(local_file$), str.unquote$(argv$(i% + 1)))
-  gonzo.send_file(local_file$, remote_file$, 1)
+
+  If xcmd% Then
+    gonzo.xsend_file(local_file$, remote_file$)
+  Else
+    gonzo.send_file(local_file$, remote_file$, 1)
+  EndIf
+  If sys.err$ <> "" Then Exit Sub
 
   If run_flag% Then
-    Local command$ = "Run " + str.quote$(remote_file$)
+    command$ = "Run " + str.quote$(remote_file$)
     gonzo.writeln(command$)
     gonzo.read_until_match("> " + command$)
+  ElseIf xcmd% And LCase$(file.get_extension$(remote_file$)) = ".bas" Then
+    ' If we just sent a .bas file then LOAD it so that RUN with no argument will execute it.
+    gonzo.writeln("Load " + str.quote$(remote_file$))
+    gonzo.read_until_prompt()
   EndIf
 End Sub
 
@@ -751,35 +789,14 @@ Function gonzo.send_rizzo%()
 End Function
 
 Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then
-    sys.err$ = "Error: no connection"
-    Exit Sub
-  EndIf
+  gonzo.cmd_send(cmd$, argc%, argv$())
+End Sub
 
-  Local i%, run_flag%
-  For i% = 0 To argc% - 1
-    If Left$(argv$(i%), 1) <> "-" Then Exit For
-    Select Case LCase$(argv$(i%))
-      Case "-r", "--run"
-        run_flag% = 1
-      Case Else
-        sys.err$ = "Error: unknown option '" + argv$(i%) + "'"
-        Exit Sub
-    End Select
-  Next
-
-  If argc% - i% <= 0 Or argc% - i% > 2 Then
-    sys.err$ = gonzo.usage$(cmd$)
-    Exit Sub
-  EndIf
-
-  Local local_file$ = str.unquote$(argv$(i%))
+Sub gonzo.xsend_file(local_file$, remote_file$)
   If Not file.exists%(local_file$) Then
-    sys.err$ = "Error: file not found"
+    sys.err$ = "Error: file '" + local_file$ + "' not found"
     Exit Sub
   EndIf
-
-  Local remote_file$ = Choice(argc% - i% = 1, file.get_name$(local_file$), str.unquote$(argv$(i% + 1)))
 
   ' Cleanup for a new command.
   gonzo.send_break()
@@ -806,16 +823,15 @@ Sub gonzo.cmd_xsend(cmd$, argc%, argv$())
   If sys.err$ <> "" Then Exit Sub
 
   con.println("OK, " + Str$((file_size% * 8000) / (Timer - t%), 0, 1) + " bit/s")
+End Sub
 
-  If run_flag% Then
-    command$ = "Run " + str.quote$(remote_file$)
-    gonzo.writeln(command$)
-    gonzo.read_until_match("> " + command$)
-  ElseIf LCase$(file.get_extension$(remote_file$)) = ".bas" Then
-    ' If we just sent a .bas file then LOAD it so that RUN with no argument will execute it.
-    gonzo.writeln("Load " + str.quote$(remote_file$))
-    gonzo.read_until_prompt()
-  EndIf
+Sub gonzo.transpile(in_file$, out_file$)
+  ' Note that double-quotes have to be escaped in the command.
+  Local command$ = "mmbasic " + Mm.Info$(Path) + "../sptrans/sptrans.bas "
+  Cat command$, "\" + Chr$(34) + in_file$ + "\" + Chr$(34) + " "
+  Cat command$, "\" + Chr$(34) + out_file$ + "\" + Chr$(34)
+  System command$
+  con.foreground("yellow")
 End Sub
 
 ' Sends a Ctrl-C to the remote.
@@ -954,9 +970,20 @@ Sub gonzo.read_until_match(pattern$)
     ' TODO: support ^]C to exit without sending a break to the remote.
 
     x% = gonzo.getln%(s$)
+    s$ = gonzo.strip_garbage$(s$)
     If file.fnmatch%(pattern$, s$) Then Exit Do
   Loop
 End Sub
+
+' Strips leading ESC[?25h (show cursor) control sequences that the PicoMite
+' uses to keep USB connection alive.
+Function gonzo.strip_garbage$(s$)
+  Const garbage$ = Chr$(&h1B) + "[?25h"
+  Do While InStr(s$, garbage$) = 1
+    s$ = Mid$(s$, Len(garbage$) + 1)
+  Loop
+  gonzo.strip_garbage$ = s$
+End Function
 
 ' Reads input until there is a command-prompt.
 Sub gonzo.read_until_prompt(flags%)
