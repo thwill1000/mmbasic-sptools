@@ -60,7 +60,6 @@ Sub main()
     If file.exists%(opt.outfile$)) Then
       Line Input "Overwrite existing '" + opt.outfile$ + "' [y|N] ? ", s$
       If LCase$(s$) <> "y" Then Print "CANCELLED" : End
-      Print
     EndIf
     opt.colour = 0
   EndIf
@@ -112,8 +111,7 @@ Sub main()
 
   Loop Until in.num_open_files% = 0
 
-  Print
-  Print "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
+  Print BS$ "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
 
   out.close()
 
