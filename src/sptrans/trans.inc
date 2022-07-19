@@ -40,9 +40,28 @@ Dim tr.omit_code%
 Const tr.STATUS_INCLUDE% = 2
 Const tr.STATUS_OMIT_LINE% = 3
 
+' Just transpile/inline #INCLUDE statements.
+'
+' @return  0  on error, see 'sys.err$' for details.
+' @return  1  if current line did not start with #INCLUDE statement.
+' @return  2  if current line started with #INCLUDE statement,
+'             the filename/path is returned in 'tr.include$'.
+Function tr.transpile_includes%()
+  tr.include$ = ""
+  If lx.token_lc$(0) = "#include" Then
+    tr.process_include()
+    tr.transpile_includes% = Choice(sys.err$ = "", tr.STATUS_INCLUDE%, 0)
+  Else
+    tr.transpile_includes% = 1
+  EndIf
+End Function
+
+' Full transpilation.
+'
 ' @return  0  on error, see 'sys.err$' for details.
 '          1  on general success.
-'          2  if processed a #INCLUDE, see 'tr.include$' for the filename/path
+'          2  if current line started with #INCLUDE statement,
+'             the filename/path is returned in 'tr.include$'.
 '          3  if line was deleted/omitted by the transpiler.
 Function tr.transpile%()
   tr.include$ = ""
@@ -325,7 +344,7 @@ End Sub
 
 Sub tr.process_include()
   If lx.num <> 2 Or lx.type(1) <> TK_STRING Then
-    sys.err$ = "#Include expects a <file> argument"
+    sys.err$ = "#INCLUDE expects a <file> argument"
   Else
     tr.include$ = lx.string$(1)
   EndIf

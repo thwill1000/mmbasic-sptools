@@ -49,7 +49,7 @@ Sub main()
   opt.init()
 
   cli.parse(Mm.CmdLine$)
-  If sys.err$ <> "" Then Print "sptrans: "; sys.err$ : Print : cli.usage() : End
+  If sys.err$ <> "" Then Print "sptrans: "; sys.err$ : End
 
   If Not file.exists%(opt.infile$) Then
     Print "sptrans: input file '" opt.infile$ "' not found."
@@ -92,8 +92,16 @@ Sub main()
 
     s$ = in.readln$()
     lx.parse_basic(s$)
-    trok% = 0 ' Error
-    If sys.err$ = "" Then trok% = Choice(opt.format_only, 1, tr.transpile%())
+    trok% = 0
+    If sys.err$ = "" Then
+      If opt.format_only Then
+        trok% = 1
+      ElseIf opt.include_only Then
+        trok% = tr.transpile_includes%()
+      Else
+        trok% = tr.transpile%()
+      EndIf
+    EndIf
 
     Select Case trok%
       Case 0                    : cerror(sys.err$)

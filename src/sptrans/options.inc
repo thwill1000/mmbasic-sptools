@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -16,6 +16,8 @@ Dim opt.empty_lines  ' -1    : preserve empty lines
                      '  1    : include empty line between each Function/Sub
 Dim opt.format_only  '  0    : transpile
                      '  1    : just format / pretty-print
+Dim opt.include_only '  0    : transpile
+                     '  1    : just inline #INCLUDEd files
 Dim opt.indent_sz    ' -1    : preserve indenting
                      '  0..N : automatically indent by N spaces per level
 Dim opt.keywords     ' -1    : preserve keyword capitalisation
@@ -34,6 +36,7 @@ Sub opt.init()
   opt.comments = -1
   opt.empty_lines = -1
   opt.format_only = 0
+  opt.include_only = 0
   opt.indent_sz = -1
   opt.keywords = -1
   opt.spacing = -1
@@ -46,17 +49,18 @@ End Sub
 ' If name$ or value$ are invalid then sets sys.err$.
 Sub opt.set(name$, value$)
   Select Case LCase$(name$)
-    Case "colour"      : opt.set_colour(value$)
-    Case "comments"    : opt.set_comments(value$)
-    Case "crunch"      : opt.set_crunch(value$)
-    Case "empty-lines" : opt.set_empty_lines(value$)
-    Case "format-only" : opt.set_format_only(value$)
-    Case "indent"      : opt.set_indent_sz(value$)
-    Case "keywords"    : opt.set_keywords(value$)
-    Case "no-comments" : opt.set_no_comments(value$)
-    Case "spacing"     : opt.set_spacing(value$)
-    Case "infile"      : opt.set_infile(value$)
-    Case "outfile"     : opt.set_outfile(value$)
+    Case "colour"       : opt.set_colour(value$)
+    Case "comments"     : opt.set_comments(value$)
+    Case "crunch"       : opt.set_crunch(value$)
+    Case "empty-lines"  : opt.set_empty_lines(value$)
+    Case "format-only"  : opt.set_format_only(value$)
+    Case "include-only" : opt.set_include_only(value$)
+    Case "indent"       : opt.set_indent_sz(value$)
+    Case "keywords"     : opt.set_keywords(value$)
+    Case "no-comments"  : opt.set_no_comments(value$)
+    Case "spacing"      : opt.set_spacing(value$)
+    Case "infile"        : opt.set_infile(value$)
+    Case "outfile"       : opt.set_outfile(value$)
     Case Else
       sys.err$ = "unknown option: " + name$
   End Select
@@ -96,7 +100,7 @@ End Sub
 Sub opt.set_empty_lines(value$)
   Select Case LCase$(value$)
     Case "preserve", "default", "on", "-1", "" : opt.empty_lines = -1
-    Case "none", "omit", "off", "0"            : opt.empty_lines = 0
+    Case "none", "omit", "off", "0"             : opt.empty_lines = 0
     Case "single", "1"                         : opt.empty_lines = 1
     Case Else
       sys.err$ = "expects 'on|off|single' argument"
@@ -106,8 +110,16 @@ End Sub
 Sub opt.set_format_only(value$)
   Select Case LCase$(value$)
     Case "default", "off", "0", "" : opt.format_only = 0
-    Case "on", "1"                 : opt.format_only = 1
-    Case Else                      : sys.err$ = "expects 'on|off' argument"
+    Case "on", "1"                : opt.format_only = 1
+    Case Else                     : sys.err$ = "expects 'on|off' argument"
+  End Select
+End Sub
+
+Sub opt.set_include_only(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.include_only = 0
+    Case "on", "1"                : opt.include_only = 1
+    Case Else                     : sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 

@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 Option Explicit On
 Option Default Integer
@@ -30,12 +30,14 @@ add_test("test_crunch")
 add_test("test_no_comments")
 add_test("test_empty_lines")
 add_test("test_format_only")
+add_test("test_include_only")
 add_test("test_indent")
 add_test("test_keywords")
 add_test("test_spacing")
 add_test("test_output_file")
 add_test("test_unknown_option")
 add_test("test_too_many_arguments")
+add_test("test_incompatible_arguments")
 add_test("test_everything")
 
 run_tests()
@@ -75,7 +77,7 @@ Sub test_colour()
   assert_int_equals(1, opt.colour)
 
   cli.parse("-C=1 " + INPUT_FILE$)
-  assert_error("option '-C' does not expect argument")
+  assert_error("option -C does not expect argument")
 End Sub
 
 Sub test_crunch()
@@ -93,7 +95,7 @@ Sub test_crunch()
   assert_int_equals(0, opt.spacing)
 
   cli.parse("--crunch=1 " + INPUT_FILE$)
-  assert_error("option '--crunch' does not expect argument")
+  assert_error("option --crunch does not expect argument")
 End Sub
 
 Sub test_no_comments()
@@ -108,7 +110,7 @@ Sub test_no_comments()
   assert_int_equals(0, opt.comments)
 
   cli.parse("--no-comments=1" + INPUT_FILE$)
-  assert_error("option '--no-comments' does not expect argument")
+  assert_error("option --no-comments does not expect argument")
 End Sub
 
 Sub test_empty_lines()
@@ -121,10 +123,10 @@ Sub test_empty_lines()
   assert_int_equals(1, opt.empty_lines)
 
   cli.parse("--empty-lines " + INPUT_FILE$)
-  assert_error("option '--empty-lines' expects {0|1} argument")
+  assert_error("option --empty-lines expects {0|1} argument")
 
   cli.parse("--empty-lines=3" + INPUT_FILE$)
-  assert_error("option '--empty-lines' expects {0|1} argument")
+  assert_error("option --empty-lines expects {0|1} argument")
 End Sub
 
 Sub test_format_only()
@@ -133,7 +135,16 @@ Sub test_format_only()
   assert_int_equals(1, opt.format_only)
 
   cli.parse("-f=1 " + INPUT_FILE$)
-  assert_error("option '-f' does not expect argument")
+  assert_error("option -f does not expect argument")
+End Sub
+
+Sub test_include_only()
+  cli.parse("--include-only " + INPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.include_only)
+
+  cli.parse("-I=1 " + INPUT_FILE$)
+  assert_error("option -I does not expect argument")
 End Sub
 
 Sub test_indent()
@@ -146,7 +157,7 @@ Sub test_indent()
   assert_int_equals(1, opt.indent_sz)
 
   cli.parse("--indent " + INPUT_FILE$)
-  assert_error("option '--indent' expects <number> argument")
+  assert_error("option --indent expects <number> argument")
 
   cli.parse("--indent=3 " + INPUT_FILE$)
   assert_no_error()
@@ -167,10 +178,10 @@ Sub test_keywords()
   assert_int_equals(2, opt.keywords)
 
   cli.parse("--keywords " + INPUT_FILE$)
-  assert_error("option '--keywords' expects {l|p|u} argument")
+  assert_error("option --keywords expects {l|p|u} argument")
 
   cli.parse("--keywords=3 " + INPUT_FILE$)
-  assert_error("option '--keywords' expects {l|p|u} argument")
+  assert_error("option --keywords expects {l|p|u} argument")
 End Sub
 
 Sub test_spacing()
@@ -187,10 +198,10 @@ Sub test_spacing()
   assert_int_equals(2, opt.spacing)
 
   cli.parse("--spacing " + INPUT_FILE$)
-  assert_error("option '--spacing' expects {0|1|2} argument")
+  assert_error("option --spacing expects {0|1|2} argument")
 
   cli.parse("--spacing=3 " + INPUT_FILE$)
-  assert_error("option '--spacing' expects {0|1|2} argument")
+  assert_error("option --spacing expects {0|1|2} argument")
 End Sub
 
 Sub test_output_file()
@@ -212,13 +223,19 @@ End Sub
 Sub test_unknown_option()
   cli.parse("--wombat " + INPUT_FILE$)
 
-  assert_error("option '--wombat' is unknown")
+  assert_error("option --wombat is unknown")
 End Sub
 
 Sub test_too_many_arguments()
   cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$ + " wombat")
 
   assert_error("unexpected argument 'wombat'")
+End Sub
+
+Sub test_incompatible_arguments()
+  cli.parse("-f -I " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+
+  assert_error("--format-only and --include-only options are mutually exclusive")
 End Sub
 
 Sub test_everything()

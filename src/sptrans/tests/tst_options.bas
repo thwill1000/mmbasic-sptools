@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 Option Explicit On
 Option Default Integer
@@ -19,6 +19,7 @@ add_test("test_comments")
 add_test("test_crunch")
 add_test("test_empty_lines")
 add_test("test_format_only")
+add_test("test_include_only")
 add_test("test_indent")
 add_test("test_keywords")
 add_test("test_spacing")
@@ -52,7 +53,7 @@ Sub test_colour()
     opt.colour = 999
     opt.set("colour", elements$(i))
     assert_int_equals(0, opt.colour)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "1"
@@ -63,7 +64,7 @@ Sub test_colour()
     opt.colour = 999
     opt.set("colour", elements$(i))
     assert_int_equals(1, opt.colour)
-    i = i + 1
+    Inc i
   Loop
 
   opt.set("colour", "foo")
@@ -86,7 +87,7 @@ Sub test_comments()
     opt.comments = 999
     opt.set("comments", elements$(i))
     assert_int_equals(-1, opt.comments)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "omit"
@@ -99,7 +100,7 @@ Sub test_comments()
     opt.comments = 999
     opt.set("comments", elements$(i))
     assert_int_equals(0, opt.comments)
-    i = i + 1
+    Inc i
   Loop
 
   opt.set("comments", "foo")
@@ -167,7 +168,7 @@ Sub test_empty_lines()
     opt.empty_lines = 999
     opt.set("empty-lines", elements$(i))
     assert_int_equals(-1, opt.empty_lines)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "none"
@@ -180,7 +181,7 @@ Sub test_empty_lines()
     opt.comments = 999
     opt.set("empty-lines", elements$(i))
     assert_int_equals(0, opt.empty_lines)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "single"
@@ -191,7 +192,7 @@ Sub test_empty_lines()
     opt.comments = 999
     opt.set("empty-lines", elements$(i))
     assert_int_equals(1, opt.empty_lines)
-    i = i + 1
+    Inc i
   Loop
 
   opt.set("empty-lines", "foo")
@@ -213,7 +214,7 @@ Sub test_format_only()
     opt.format_only = 999
     opt.set("format-only", elements$(i))
     assert_int_equals(0, opt.format_only)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "1"
@@ -224,10 +225,43 @@ Sub test_format_only()
     opt.format_only = 999
     opt.set("format-only", elements$(i))
     assert_int_equals(1, opt.format_only)
-    i = i + 1
+    Inc i
   Loop
 
   opt.set("format-only", "foo")
+  assert_error("expects 'on|off' argument")
+End Sub
+
+Sub test_include_only()
+  Local elements$(10) Length 10, i
+
+  assert_int_equals(0, opt.format_only)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.include_only = 999
+    opt.set("include-only", elements$(i))
+    assert_int_equals(0, opt.include_only)
+    Inc i
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.include_only = 999
+    opt.set("include-only", elements$(i))
+    assert_int_equals(1, opt.include_only)
+    Inc i
+  Loop
+
+  opt.set("include-only", "foo")
   assert_error("expects 'on|off' argument")
 End Sub
 
@@ -247,7 +281,7 @@ Sub test_indent()
     opt.indent_sz = 999
     opt.set("indent", elements$(i))
     assert_int_equals(-1, opt.indent_sz)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "0"
@@ -261,7 +295,7 @@ Sub test_indent()
     opt.indent_sz = 999
     opt.set("indent", elements$(i))
     assert_int_equals(i, opt.indent_sz)
-    i = i + 1
+    Inc i
   Loop
 
   sys.err$ = ""
@@ -354,7 +388,7 @@ Sub test_spacing()
     opt.spacing = 999
     opt.set("spacing", elements$(i))
     assert_int_equals(-1, opt.spacing)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "minimal"
@@ -365,7 +399,7 @@ Sub test_spacing()
     opt.spacing = 999
     opt.set("spacing", elements$(i))
     assert_int_equals(0, opt.spacing)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "compact"
@@ -376,7 +410,7 @@ Sub test_spacing()
     opt.spacing = 999
     opt.set("spacing", elements$(i))
     assert_int_equals(1, opt.spacing)
-    i = i + 1
+    Inc i
   Loop
 
   elements$(0) = "generous"
@@ -387,7 +421,7 @@ Sub test_spacing()
     opt.spacing = 999
     opt.set("spacing", elements$(i))
     assert_int_equals(2, opt.spacing)
-    i = i + 1
+    Inc i
   Loop
 
   sys.err$ = ""

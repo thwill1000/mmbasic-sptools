@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -21,20 +21,25 @@ Sub cli.parse(s$)
 
   Do While i < lx.num And sys.err$ = "" And lx.type(i) = TK_OPTION
     Select Case lx.option$(i)
-      Case "C", "colour"      : cli.parse_no_arg("colour", i)
-      Case "crunch"           : cli.parse_no_arg("crunch", i)
-      Case "e", "empty-lines" : cli.parse_arg("empty-lines", i, "{0|1}")
-      Case "f", "format-only" : cli.parse_no_arg("format-only", i)
-      Case "i", "indent"      : cli.parse_arg("indent", i, "<number>")
-      Case "k", "keywords"    : cli.parse_arg("keywords", i, "{l|p|u}")
-      Case "h", "help"        : cli.usage() : End
-      Case "n", "no-comments" : cli.parse_no_arg("no-comments", i)
-      Case "s", "spacing"     : cli.parse_arg("spacing", i, "{0|1|2}")
-      Case "v", "version"     : spt.print_version("sptrans") : End
+      Case "C", "colour"       : cli.parse_no_arg("colour", i)
+      Case "crunch"            : cli.parse_no_arg("crunch", i)
+      Case "e", "empty-lines"  : cli.parse_arg("empty-lines", i, "{0|1}")
+      Case "f", "format-only"  : cli.parse_no_arg("format-only", i)
+      Case "I", "include-only" : cli.parse_no_arg("include-only", i)
+      Case "i", "indent"       : cli.parse_arg("indent", i, "<number>")
+      Case "k", "keywords"     : cli.parse_arg("keywords", i, "{l|p|u}")
+      Case "h", "help"         : cli.usage() : End
+      Case "n", "no-comments"  : cli.parse_no_arg("no-comments", i)
+      Case "s", "spacing"      : cli.parse_arg("spacing", i, "{0|1|2}")
+      Case "v", "version"      : spt.print_version("sptrans") : End
       Case Else:
-        sys.err$ = "option '" + lx.token$(i) + "' is unknown"
+        sys.err$ = "option " + lx.token$(i) + " is unknown"
     End Select
   Loop
+
+  If opt.format_only And opt.include_only Then
+    sys.err$ = "--format-only and --include-only options are mutually exclusive"
+  EndIf
 
   If sys.err$ <> "" Then Exit Sub
 
@@ -64,14 +69,14 @@ Sub cli.parse_arg(option$, i, arg$)
   Else
     opt.set(option$, lx.token$(i + 2))
   EndIf
-  If sys.err$ <> "" Then sys.err$ = "option '" + lx.token$(i) + "' expects " + arg$ + " argument"
+  If sys.err$ <> "" Then sys.err$ = "option " + lx.token$(i) + " expects " + arg$ + " argument"
   i = i + 3
 End Sub
 
 ' Parses an option without an argument.
 Sub cli.parse_no_arg(option$, i)
   If lx.token$(i + 1) = "=" Then
-    sys.err$ = "option '" + lx.token$(i) + "' does not expect argument"
+    sys.err$ = "option " + lx.token$(i) + " does not expect argument"
   Else
     opt.set(option$, "on")
   EndIf
@@ -83,7 +88,7 @@ Sub cli.usage()
   Local out$ = "<output-file>"
   Print "Usage: RUN " str.quote$("sptrans.bas") ", [OPTION]... " in$ " [" out$ "]"
   Print
-  Print "Transcompile the given " in$ " flattening any #Include hierarchy and"
+  Print "Transcompile the given " in$ " flattening any #INCLUDE hierarchy and"
   Print "processing any !directives encountered. The transpiled output is written to"
   Print "the " out$ ", or the console if unspecified. By using the --format-only"
   Print "option it can also be used as a simple BASIC code formatter."
@@ -97,11 +102,13 @@ Sub cli.usage()
   Print "                           0 - omit all empty lines"
   Print "                           1 - include one empty line between each Function/Sub"
   Print "                         if omitted then original line spacing will be preserved"
-  Print "  -f, --format-only      only format the output, do not follow #Includes or"
+  Print "  -f, --format-only      only format the output, do not follow #INCLUDEs or"
   Print "                         process directives"
   Print "  -h, --help             display this help and exit"
   Print "  -i, --indent=NUM       automatically indent output by NUM spaces per level,"
   Print "                         if omitted then original formatting will be preserved"
+  Print "  -I, --include-only     inline #INCLUDEd files and format the output,"
+  Print "                         without processing directives"
   Print "  -k, --keywords=l|p|u   controls keyword capitalisation:"
   Print "                           l - lowercase"
   Print "                           p - PascalCase"
