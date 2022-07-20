@@ -2,7 +2,7 @@
 
 ' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 Option Explicit On
 Option Default Integer
@@ -85,6 +85,7 @@ Sub main()
   cout(in.files$(0)) : cendl()
   cout("   ")
 
+  Local pretty_print% = opt.pretty_print%() Or opt.process_directives%()
   Local trok%
   t = Timer
   Do
@@ -105,8 +106,8 @@ Sub main()
 
     Select Case trok%
       Case 0                    : cerror(sys.err$)
-      Case 1                    : pp.print_line()
-      Case tr.STATUS_INCLUDE%   : open_include() : pp.print_line()
+      Case 1                    : pp.print_line(pretty_print%)
+      Case tr.STATUS_INCLUDE%   : open_include() : pp.print_line(pretty_print%)
       Case tr.STATUS_OMIT_LINE% : ' Do nothing
       Case Else                 : Error "Unknown status: " + Str(trok%)
     End Select
@@ -141,7 +142,7 @@ Sub close_include()
   Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
   lx.parse_basic(s$)
-  If sys.err$ = "" Then pp.print_line()
+  If sys.err$ = "" Then pp.print_line(1)
   If sys.err$ = "" Then in.close()
 End Sub
 

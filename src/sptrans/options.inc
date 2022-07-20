@@ -44,6 +44,18 @@ Sub opt.init()
   opt.outfile$ = ""
 End Sub
 
+' Do the options require pretty-printing ?
+Function opt.pretty_print%()
+  Local z% = opt.colour Or opt.comments <> -1 Or opt.empty_lines <> -1
+  z% = z% Or opt.indent_sz <> -1 Or opt.keywords <> -1 Or opt.spacing <> -1
+  opt.pretty_print% = z%
+End Function
+
+' Do the options require !directives to be processed ?
+Function opt.process_directives%()
+  opt.process_directives% = Not (opt.include_only Or opt.format_only)
+End Function
+
 ' Sets the value for an option.
 '
 ' If name$ or value$ are invalid then sets sys.err$.
@@ -150,8 +162,8 @@ End Sub
 Sub opt.set_no_comments(value$)
   Select Case LCase$(value$)
     Case "default", "off", "0", "" : opt.comments = -1
-    Case "on", "1"                 : opt.comments = 0
-    Case Else                      : sys.err$ = "expects 'on|off' argument"
+    Case "on", "1"                : opt.comments = 0
+    Case Else                     : sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 

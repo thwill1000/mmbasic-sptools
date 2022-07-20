@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 Option Explicit On
 Option Default Integer
@@ -22,6 +22,13 @@ Dim in.num_open_files = 1
 #Include "../lexer.inc"
 #Include "../options.inc"
 
+Const CY$ = vt100.colour$("cyan")
+Const GR$ = vt100.colour$("green")
+Const MA$ = vt100.colour$("magenta")
+Const RS$ = vt100.colour$("reset")
+Const WH$ = vt100.colour$("white")
+Const YE$ = vt100.colour$("yellow")
+
 ' Stub "../output.inc"
 Dim out.buf$
 
@@ -32,6 +39,11 @@ End Sub
 Sub out.print(s$)
   If out.buf$ = Chr$(0) Then out.buf$ = ""
   Cat out.buf$, s$
+End Sub
+
+Sub out.println(s$)
+  out.print(s$)
+  out.endl()
 End Sub
 
 sys.provides("output")
@@ -66,6 +78,7 @@ add_test("Syntax highlighting - CSUBs", "test_syntax_highlight_1")
 add_test("Syntax highlighting - comments", "test_syntax_highlight_2")
 add_test("Empty lines - preserve if empty-lines option is -1", "test_empty_lines_1")
 add_test("Empty lines - ignore if empty-lines option is 0", "test_empty_lines_2")
+add_test("No pretty-printing", "test_no_pretty_print")
 
 run_tests()
 
@@ -93,7 +106,7 @@ Sub parse_lines()
   For i% = Bound(in$(), 0) To Bound(in$(), 1)
     out.buf$ = Chr$(0)
     lx.parse_basic(in$(i%))
-    pp.print_line()
+    pp.print_line(1)
     If out.buf$ <> Chr$(0) Then
       out$(j%) = out.buf$
       ' Trim trailing CRLF.
@@ -531,19 +544,13 @@ Sub test_syntax_highlight_1()
   opt.colour = 1
   parse_lines()
 
-  Const cy$ = vt100.colour$("cyan")
-  Const gr$ = vt100.colour$("green")
-  Const ma$ = vt100.colour$("magenta")
-  Const rs$ = vt100.colour$("reset")
-  Const wh$ = vt100.colour$("white")
-  Const ye$ = vt100.colour$("yellow")
-  expected$(0) = cy$ + "CSub " + wh$ + "abcdef" + wh$ +"(" + wh$ + ")" + rs$
-  expected$(1) = "  " + gr$ + "00000000" + rs$
-  expected$(2) = "  " + gr$ + "00AABBCC " + gr$ + "FFFFFFFF" + rs$
-  expected$(3) = "  " + ye$ + "' comment" + rs$
-  expected$(5) = "  " + wh$ + "not_valid " + wh$ + "= " + gr$ + "5" + rs$
-  expected$(6) = "  " + wh$ + "not_valid_either " + wh$ + "= " + ma$ + Chr$(34) + "wombat" + Chr$(34) + rs$
-  expected$(7) = cy$ + "End " + cy$ + "CSub" + rs$
+  expected$(0) = CY$ + "CSub " + WH$ + "abcdef" + WH$ +"(" + WH$ + ")" + RS$
+  expected$(1) = "  " + GR$ + "00000000" + RS$
+  expected$(2) = "  " + GR$ + "00AABBCC " + GR$ + "FFFFFFFF" + RS$
+  expected$(3) = "  " + YE$ + "' comment" + RS$
+  expected$(5) = "  " + WH$ + "not_valid " + WH$ + "= " + GR$ + "5" + RS$
+  expected$(6) = "  " + WH$ + "not_valid_either " + WH$ + "= " + ma$ + Chr$(34) + "wombat" + Chr$(34) + RS$
+  expected$(7) = CY$ + "End " + CY$ + "CSub" + RS$
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -556,12 +563,9 @@ Sub test_syntax_highlight_2()
   opt.colour = 1
   parse_lines()
 
-  Const rs$ = vt100.colour$("reset")
-  Const wh$ = vt100.colour$("white")
-  Const ye$ = vt100.colour$("yellow")
-  expected$(0) = ye$ + "' Comment 1" + rs$
-  expected$(1) = wh$ + "foo " + ye$ + "'Comment2" + rs$
-  expected$(2) = wh$ + "bar " + ye$ + "REM Comment 3" + rs$
+  expected$(0) = YE$ + "' Comment 1" + RS$
+  expected$(1) = WH$ + "foo " + YE$ + "'Comment2" + RS$
+  expected$(2) = WH$ + "bar " + YE$ + "REM Comment 3" + RS$
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -601,4 +605,17 @@ Sub test_empty_lines_2()
   expected$(0) = "foo"
   expected$(1) = "bar"
   assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_no_pretty_print()
+  Local in$ = "Dim x% = 1 ' This is a comment"
+  lx.parse_basic(in$)
+  opt.colour = 1
+
+  pp.print_line(1)
+  assert_string_equals(CY$ + "Dim " + WH$ + "x% " + WH$ + "= " + GR$ + "1 " + YE$ + "' This is a comment" + RS$ + sys.CRLF$, out.buf$)
+
+  out.buf$ = ""
+  pp.print_line(0)
+  assert_string_equals(in$ + sys.CRLF$, out.buf$)
 End Sub

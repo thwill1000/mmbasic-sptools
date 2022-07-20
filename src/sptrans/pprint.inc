@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -27,7 +27,9 @@ Dim pp.within_csub = 0
 ' TODO: control with option.
 Const pp.LINE_NUM_WIDTH% = 6
 
-Sub pp.print_line()
+Sub pp.print_line(pretty_print%)
+  If Not pretty_print% Then out.println(lx.line$) : Exit Sub
+
   Local i, t$, u$
 
   ' If excluding comments then remove any trailing comment on the line.
