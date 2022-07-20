@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -330,7 +330,7 @@ Sub lx.parse_command_line(line$)
     ElseIf lx.char$ = Chr$(34) Then
       lx.parse_string()
     ElseIf InStr("@#_abcdefghijklmnopqrstuvwxyz", lx.char$) Then
-      lx.parse_identifier()
+      lx.parse_argument()
     ElseIf InStr("-/", lx.char$) Then
       lx.parse_option()
     Else
@@ -367,6 +367,13 @@ Sub lx.parse_option()
     sys.err$ = "Illegal command-line option format: " + Mid$(lx.line$, start, lx.pos - start)
   EndIf
 
+End Sub
+
+Sub lx.parse_argument()
+  Local start% = lx.pos
+  lx.advance()
+  lx.advance_while(".-_/abcdefghijklmnopqrstuvwxyz0123456789")
+  lx.store(TK_IDENTIFIER, start, lx.pos - start)
 End Sub
 
 ' Gets the command-line option corresponding to token 'i'.

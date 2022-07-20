@@ -58,17 +58,25 @@ Sub test_no_input_file()
 End Sub
 
 Sub test_input_file()
-  ' Test with unquoted filename.
+  ' Given unquoted filename.
   cli.parse(INPUT_FILE$)
-
   assert_no_error()
   assert_string_equals("input.bas", opt.infile$)
 
-  ' Test with quoted multi-word filename.
+  ' Given quoted multi-word filename.
   cli.parse(str.quote$("my input.bas"))
-
   assert_no_error()
   assert_string_equals("my input.bas", opt.infile$)
+
+  ' Given unquoted hyphenated filename.
+  cli.parse("my-input.bas")
+  assert_no_error()
+  assert_string_equals("my-input.bas", opt.infile$)
+
+  ' Given unquoted file path.
+  cli.parse("my/input.bas")
+  assert_no_error()
+  assert_string_equals("my/input.bas", opt.infile$)
 End Sub
 
 Sub test_colour()

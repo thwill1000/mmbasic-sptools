@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07.05
 
 Option Explicit On
 Option Default Integer
@@ -426,6 +426,16 @@ Sub test_parse_command_line()
 
   lx.parse_command_line("--foo@ bar")
   assert_error("Illegal command-line option format: --foo@")
+
+  ' Given hyphen in unquoted argument.
+  lx.parse_command_line("foo-bar.bas")
+  assert_string_equals("foo-bar.bas", lx.token$(0))
+  assert_int_equals(TK_IDENTIFIER, lx.type(0))
+
+  ' Given forward slash in unquoted argument.
+  lx.parse_command_line("foo/bar.bas")
+  assert_string_equals("foo/bar.bas", lx.token$(0))
+  assert_int_equals(TK_IDENTIFIER, lx.type(0))
 End Sub
 
 Sub test_old_tokens_cleared()
