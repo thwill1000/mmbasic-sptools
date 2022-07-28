@@ -153,18 +153,20 @@ End Sub
 
 Sub ut.add_array_content_failure(count%, indexes%(), e$(), a$())
   Local i%, width%
-  For i% = Bound(indexes%(), 0) To Bound(indexes%(), 1)
+  Local lb% = Bound(indexes%(), 0)
+  Local ub% = Min(count% + lb% - 1, Bound(indexes%(), 1))
+  For i% = lb% To ub%
     width% = Max(width%, Len(Str$(indexes%(i%))))
   Next
 
   ut.add_failure("Assert array equals failed, expected:")
-  For i% = Bound(indexes%(), 0) To Bound(indexes%(), 1)
+  For i% = lb% To ub%
     ut.array_diff(width%, indexes%(i%), e$(i%))
   Next
   ut.and_more(count%)
 
   LongString Append ut.failure_txt%(), sys.CRLF$ + "    but actually:")
-  For i% = Bound(indexes%(), 0) To Bound(indexes%(), 1)
+  For i% = lb% To ub%
     ut.array_diff(width%, indexes%(i%), a$(i%))
   Next
   ut.and_more(count%)
