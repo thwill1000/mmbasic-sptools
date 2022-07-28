@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.03
+' For MMBasic 5.07.05
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -318,7 +318,6 @@ End Sub
 
 ' @return 1 if the test passes, 0 if it fails.
 Function ut.run_single_test%(idx%)
-  On Error Clear
   Local catch_errors% = ut.is_catch_errors%()
 
   If ut.is_verbose%() Then
@@ -329,17 +328,18 @@ Function ut.run_single_test%(idx%)
   ut.failure_count% = 0
   LongString Clear ut.failure_txt%()
 
-  If catch_errors% Then On Error Ignore
-
-  sys.err$ = ""
+  On Error Skip 1 ' Skip error caused by missing optional setup_test() function.
   setup_test()
-  Call ut.test_subs$(idx%)
-  teardown_test()
 
-  If catch_errors% Then
-    If Mm.ErrNo <> 0 Then add_mmbasic_error()
-    On Error Abort
-  EndIf
+  On Error Clear
+  If catch_errors% Then On Error Ignore
+  sys.err$ = ""
+  Call ut.test_subs$(idx%)
+  If catch_errors% And Mm.ErrNo <> 0 Then add_mmbasic_error()
+  On Error Abort
+
+  On Error Skip 1 ' Skip error caused by missing optional teardown_test() function.
+  teardown_test()
 
   If ut.is_verbose%() Then
     If ut.asserts_count% = 0 Then
