@@ -923,7 +923,7 @@ Function gonzo.getln%(s$)
         gonzo.getln% = 1
         Exit Function
       ElseIf ch% <> &h0D Then
-        Cat gonzo.rx_buf$, Chr$(ch%)
+        If Len(gonzo.rx_buf$) < 255 Then Cat gonzo.rx_buf$, Chr$(ch%)
       EndIf
     EndIf
   Loop Until Eof(#gonzo.SERIAL_FNBR%)
