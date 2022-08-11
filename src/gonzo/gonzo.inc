@@ -583,6 +583,7 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
     tmp_file$ = sys.string_prop$("tmpdir") + "/gonzo.trans"
     On Error Skip 1
     Kill tmp_file$
+    On Error Clear
     gonzo.transpile(local_file$, tmp_file$)
     local_file$ = tmp_file$
   EndIf
