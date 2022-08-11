@@ -55,8 +55,9 @@ Sub test_clear()
 End Sub
 
 Sub test_get()
-  Local x% = &b11010000
+  Local i%, x%
 
+  x% = &b11010000
   assert_true (bits.get%(x%, 7))
   assert_true (bits.get%(x%, 6))
   assert_false(bits.get%(x%, 5))
@@ -65,4 +66,14 @@ Sub test_get()
   assert_false(bits.get%(x%, 2))
   assert_false(bits.get%(x%, 1))
   assert_false(bits.get%(x%, 0))
+
+  x% = &hFFFFFFFFFFFFFFFF
+  For i% = 0 To 63
+    assert_true(bits.get%(x%, i%))
+  Next
+
+  x% = 0
+  For i% = 0 To 63
+    assert_false(bits.get%(x%, i%))
+  Next
 End Sub

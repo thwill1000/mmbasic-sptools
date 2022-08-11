@@ -24,6 +24,5 @@ End Sub
 ' Gets bit i% of x%.
 Function bits.get%(x%, i%)
   If i% < 0 Or i% > 63 Then Error "i% out of 0 .. 63 range"
-  bits.get% = (x% And 1 << i%) > 0
+  bits.get% = (x% And 1 << i%) <> 0
 End Function
-
