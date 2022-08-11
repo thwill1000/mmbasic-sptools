@@ -37,6 +37,8 @@ add_test("test_count_files")
 add_test("test_get_extension")
 add_test("test_get_files")
 add_test("test_trim_extension")
+add_test("test_mkdir_abs_path")
+add_test("test_mkdir_rel_path")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -133,18 +135,28 @@ Sub test_exists()
   assert_true(file.exists%(f$))
   assert_true(file.exists%(file.get_parent$(f$) + "/foo/../" + file.get_name$(f$)))
   assert_true(file.exists%(file.PROG_DIR$))
-  assert_true(file.exists%("A:"))
-  assert_true(file.exists%("A:/"))
-  assert_true(file.exists%("A:\"))
+  assert_false(file.exists%(file.get_parent$(f$) + "/foo/" + file.get_name$(f$)))
+
+  ' Given A: drive.
+  Local expected% = Mm.Device$ <> "MMBasic for Windows"
+  assert_int_equals(expected%, file.exists%("A:"))
+  assert_int_equals(expected%, file.exists%("A:/"))
+  assert_int_equals(expected%, file.exists%("A:\"))
+
+  ' Given C: drive.
+  assert_int_equals(1, file.exists%("C:"))
+  assert_int_equals(1, file.exists%("C:/"))
+  assert_int_equals(1, file.exists%("C:\"))
+
+  ' Given UNIX absolute paths.
   assert_true(file.exists%("/"))
   assert_true(file.exists%("/."))
   assert_true(file.exists%("\"))
   assert_true(file.exists%("\."))
-  assert_true(file.exists%("\."))
+
+  ' Given relative paths.
   assert_true(file.exists%("."))
   assert_true(file.exists%(".."))
-
-  assert_false(file.exists%(file.get_parent$(f$) + "/foo/" + file.get_name$(f$)))
 End Sub
 
 Sub test_is_absolute()
@@ -517,4 +529,113 @@ Sub test_trim_extension()
   assert_string_equals("\foo",        file.trim_extension$("\foo.dat"))
   assert_string_equals("foo",         file.trim_extension$("foo.longer"))
   assert_string_equals("foo",         file.trim_extension$("foo."))
+End Sub
+
+Sub test_mkdir_abs_path()
+  On Error Skip
+  RmDir TMPDIR$ + "/test_mkdir_abs_path"
+  On Error Clear
+
+  ' Given parent exists.
+  sys.err$ = ""
+  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path")
+  assert_no_error()
+  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path"))
+
+  ' Given parent does not exist.
+  sys.err$ = ""
+  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path/a/b")
+  assert_no_error()
+  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path/a/b"))
+
+  ' Given exists and is a directory.
+  sys.err$ = ""
+  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path")
+  assert_no_error()
+  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path"))
+
+  ' Given exists and is a file.
+  sys.err$ = ""
+  Open TMPDIR$ + "/test_mkdir_abs_path/file" For Output As #1
+  Close #1
+  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path/file")
+  assert_error("File exists")
+  assert_false(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path/file"))
+
+  ' Given parent exists and is a file.
+  sys.err$ = ""
+  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path/file/a")
+  assert_error("File exists")
+  assert_false(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path/file/a"))
+
+  ' Given root directory.
+  sys.err$ = ""
+  file.mkdir("C:/")
+  assert_no_error()
+  file.mkdir("C:\")
+  assert_no_error()
+  file.mkdir("C:")
+  assert_no_error()
+  If Mm.Device$ <> "MMBasic for Windows" Then
+    file.mkdir("/")
+    assert_no_error()
+    file.mkdir("\")
+    assert_no_error()
+  EndIf
+
+  ' Cleanup.
+  RmDir TMPDIR$ + "/test_mkdir_abs_path/a/b"
+  RmDir TMPDIR$ + "/test_mkdir_abs_path/a"
+  Kill  TMPDIR$ + "/test_mkdir_abs_path/file"
+  RmDir TMPDIR$ + "/test_mkdir_abs_path"
+End Sub
+
+Sub test_mkdir_rel_path()
+  On Error Skip
+  RmDir TMPDIR$ + "/test_mkdir_rel_path"
+  On Error Clear
+
+  file.mkdir(TMPDIR$ + "/test_mkdir_rel_path")
+  Local old_cwd$ = Cwd$
+  ChDir TMPDIR$ + "/test_mkdir_rel_path"
+
+  ' Given parent exists.
+  sys.err$ = ""
+  file.mkdir("./subdir")
+  assert_no_error()
+  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/subdir"))
+
+  ' Given parent does not exist.
+  sys.err$ = ""
+  file.mkdir("a/b")
+  assert_no_error()
+  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/a/b"))
+
+  ' Given exists and is a directory.
+  sys.err$ = ""
+  file.mkdir("a")
+  assert_no_error()
+  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/a"))
+
+  ' Given exists and is a file.
+  sys.err$ = ""
+  Open "file" For Output As #1
+  Close #1
+  file.mkdir(TMPDIR$ + "/test_mkdir_rel_path/file")
+  assert_error("File exists")
+  assert_false(file.is_directory%("file"))
+
+  ' Given parent exists and is a file.
+  sys.err$ = ""
+  file.mkdir("file/a")
+  assert_error("File exists")
+  assert_false(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/file/a"))
+
+  ' Cleanup.
+  ChDir old_cwd$
+  RmDir TMPDIR$ + "/test_mkdir_rel_path/subdir"
+  RmDir TMPDIR$ + "/test_mkdir_rel_path/a/b"
+  RmDir TMPDIR$ + "/test_mkdir_rel_path/a"
+  Kill  TMPDIR$ + "/test_mkdir_rel_path/file"
+  RmDir TMPDIR$ + "/test_mkdir_rel_path"
 End Sub

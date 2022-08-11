@@ -37,14 +37,18 @@ End Function
 '
 ' @return 1 if the file exists, otherwise 0
 Function file.exists%(f$)
-  Local f_$ = file.get_canonical$(f$)
-  If f_$ = "A:" Then
-    file.exists% = 1
-  ElseIf Mm.Device$ = "MMB4L" Or Mm.Device$ = "MMBasic for Windows" Then
-    file.exists% = Mm.Info(Exists f$)
-  Else
-    file.exists% = Mm.Info(Exists File f$) Or Mm.Info(Exists Dir f$)
-  EndIf
+  Select Case f$
+    Case ""
+      ' file.exists% = 0
+    Case "."
+      file.exists% = 1
+    Case Else
+      If Mm.Device$ = "MMB4L" Or Mm.Device$ = "MMBasic for Windows" Then
+        file.exists% = Mm.Info(Exists f$)
+      Else
+        file.exists% = Mm.Info(Exists File f$) Or Mm.Info(Exists Dir f$)
+    EndIf
+  End Select
 End Function
 
 ' Find files whose names match pattern$
@@ -348,7 +352,14 @@ End Function
 Function file.is_directory%(f$)
   ' TODO: handle ~ prefix
   ' TODO: does this work on PicoMite
-  file.is_directory% = Mm.Info(Exists Dir f$)
+  Select Case f$
+    Case ""
+      ' file.is_directory% = 0
+    Case "."
+      file.is_directory% = 1
+    Case Else
+      file.is_directory% = Mm.Info(Exists Dir f$)
+  End Select
 End Function
 
 Function file.is_symlink%(f$)
@@ -358,9 +369,28 @@ Function file.is_symlink%(f$)
   file.is_symlink% = Mm.Info(Exists SymLink f$)
 End Function
 
-' Makes directory 'f$' if it does not already exist.
+' Makes directory 'f$' and its parents if they do not already exist.
 Sub file.mkdir(f$)
-  If Not file.exists%(f$) Then MkDir f$
+  Local ad%, faddr% = Peek(VarAddr f$), parent$
+  For ad% = faddr% To faddr% + Len(f$)
+    Select Case Peek(Byte ad%)
+      Case 47, 92 ' / and \
+        parent$ = Left$(f$, ad% - faddr% - 1)
+        If file.exists%(parent$) Then
+          If Not file.is_directory%(parent$) Then
+            sys.err$ = "File exists"
+            Exit Sub
+          EndIf
+        Else
+          If parent$ <> "" Then MkDir parent$
+        EndIf
+    End Select
+  Next
+  If file.exists%(f$) Then
+    If Not file.is_directory%(f$) Then sys.err$ = "File exists"
+  Else
+    MkDir f$
+  EndIf
 End Sub
 
 ' Returns a copy of f$ with any dot file-extension removed.
