@@ -584,18 +584,22 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
     Exit Sub
   EndIf
 
+  Local remote_file$ = Choice(argc% - i% = 1, file.get_name$(local_file$), str.unquote$(argv$(i% + 1)))
+
   ' Transpile file if requested.
   Local command$, tmp_file$
   If trans_flag% Then
-    tmp_file$ = sys.string_prop$("tmpdir") + "/gonzo.trans"
+    tmp_file$ = sys.string_prop$("tmpdir") + "/gonzo.trans." + Str$(Int(Rnd() * 1e6))
     On Error Skip 1
     Kill tmp_file$
     On Error Clear
     gonzo.transpile(local_file$, tmp_file$, trans_args$)
     local_file$ = tmp_file$
+    ' Replace .bpp file-extension with .bas.
+    If LCase$(file.get_extension$(remote_file$)) = ".bpp" Then
+      remote_file$ = Left$(remote_file$, Len(remote_file$) - 4) + ".bas"
+    EndIf
   EndIf
-
-  Local remote_file$ = Choice(argc% - i% = 1, file.get_name$(local_file$), str.unquote$(argv$(i% + 1)))
 
   If xcmd% Then
     gonzo.xsend_file(local_file$, remote_file$)
