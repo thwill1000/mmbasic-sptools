@@ -552,14 +552,21 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
       Exit Sub
   End Select
 
-  Local i%, run_flag%, transpile_flag%
+  Local i%, p%, run_flag%, trans_args$, trans_flag%
   For i% = 0 To argc% - 1
     If Left$(argv$(i%), 1) <> "-" Then Exit For
+
+    If InStr(argv$(i%), "-t=") = 1 Or InStr(argv$(i%), "--trans=") = 1) Then
+      p% = InStr(argv$(i%), "=")
+      trans_args$ = str.unquote$(Mid$(argv$(i%), p% + 1))
+      argv$(i%) = "-t"
+    EndIf
+
     Select Case LCase$(argv$(i%))
       Case "-r", "--run"
         run_flag% = 1
       Case "-t", "--trans"
-        transpile_flag% = 1
+        trans_flag% = 1
       Case Else
         sys.err$ = "Error: unknown option '" + argv$(i%) + "'"
         Exit Sub
@@ -579,12 +586,12 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
 
   ' Transpile file if requested.
   Local command$, tmp_file$
-  If transpile_flag% Then
+  If trans_flag% Then
     tmp_file$ = sys.string_prop$("tmpdir") + "/gonzo.trans"
     On Error Skip 1
     Kill tmp_file$
     On Error Clear
-    gonzo.transpile(local_file$, tmp_file$)
+    gonzo.transpile(local_file$, tmp_file$, trans_args$)
     local_file$ = tmp_file$
   EndIf
 
@@ -826,9 +833,10 @@ Sub gonzo.xsend_file(local_file$, remote_file$)
   con.println("OK, " + Str$((file_size% * 8000) / (Timer - t%), 0, 1) + " bit/s")
 End Sub
 
-Sub gonzo.transpile(in_file$, out_file$)
+Sub gonzo.transpile(in_file$, out_file$, args$)
   ' Note that double-quotes have to be escaped in the command.
   Local command$ = "mmbasic " + Mm.Info$(Path) + "../sptrans/sptrans.bas "
+  Cat command$, args$ + " "
   Cat command$, "\" + Chr$(34) + in_file$ + "\" + Chr$(34) + " "
   Cat command$, "\" + Chr$(34) + out_file$ + "\" + Chr$(34)
   System command$
