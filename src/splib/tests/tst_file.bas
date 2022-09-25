@@ -4,6 +4,8 @@
 
 Option Explicit On
 Option Default None
+' TODO: this is just a placeholder.
+If InStr(Mm.Device$, "PicoMite") > 0 Then Dim Mm.CmdLine$ = ""
 Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 #Include "../system.inc"
