@@ -396,10 +396,10 @@ End Sub
 
 Sub test_get_number()
   lx.parse_basic("1 2 3.14 3.14e-15")
-  assert_float_equals(1, lx.number(0))
-  assert_float_equals(2, lx.number(1))
-  assert_float_equals(3.14, lx.number(2))
-  assert_float_equals(3.14e-15, lx.number(3))
+  assert_float_equals(1, lx.number!(0))
+  assert_float_equals(2, lx.number!(1))
+  assert_float_equals(3.14, lx.number!(2))
+  assert_float_equals(3.14e-15, lx.number!(3))
 End Sub
 
 Sub test_get_string()

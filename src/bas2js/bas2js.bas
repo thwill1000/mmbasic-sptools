@@ -1,4 +1,4 @@
-#!/usr/local/bin/mmbasic -i
+#!/usr/local/bin/mmbasic
 
 ' Copyright (c) 2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
@@ -74,7 +74,7 @@ Sub main()
 
   If Not opt.format_only Then
     If opt.colour Then out.print(TK_COLOUR$(TK_COMMENT))
-    out.print("' Transpiled on " + DateTime$(Now))
+    out.print("// Transpiled on " + DateTime$(Now))
     If opt.colour Then out.print(vt100.colour$("reset"))
     out.endl()
     out.endl()
@@ -98,7 +98,7 @@ Sub main()
     EndIf
     If sys.err$ <> "" Then cerror(sys.err$)
 
-    pp.print_line()
+    pp.print_line(1)
 
     If Eof(#in.num_open_files%) Then
       If in.num_open_files% > 1 Then close_include() Else in.close()
@@ -131,7 +131,7 @@ Sub close_include()
   Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
   lx.parse_basic(s$)
-  If sys.err$ = "" Then pp.print_line()
+  If sys.err$ = "" Then pp.print_line(1)
   If sys.err$ = "" Then in.close()
 End Sub
 

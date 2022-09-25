@@ -311,9 +311,9 @@ End Function
 ' Gets the number corresponding to token 'i'.
 '
 ' Throws an Error if token 'i' is not a number literal.
-Function lx.number(i) As Float
+Function lx.number!(i) As Float
   If lx.type(i) <> TK_NUMBER Then Error "{" + lx.token$(i) + "} is not a number literal"
-  lx.number = Val(lx.token$(i))
+  lx.number! = Val(lx.token$(i))
 End Function
 
 Sub lx.parse_command_line(line$)
