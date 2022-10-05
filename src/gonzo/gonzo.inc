@@ -140,14 +140,39 @@ Sub gonzo.cmd_chdir(cmd$, argc%, argv$())
 End Sub
 
 Function gonzo.prompt_for_comspec$()
-  Local history%(array.new%(128)), s$
-  Local devices$(array.new%(5)) = ( "/dev/ttyS0", "/dev/ttyS1", "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2" )
+  Local count% = 0, i%, s$
+
+  Restore device_name_data
+  Do
+    Read s$
+    If s$ = "" Then Exit Do
+    Inc count%
+  Loop
+  Local devices$(array.new%(count%))
+  Restore device_name_data
+  For i% = 0 To count% - 1
+    Read devices$(i%)
+  Next
+
+  Local history%(array.new%(128))
   con.history_fill(history%(), devices$())
   con.print("Device? ")
   Local device$ = con.readln$("/dev/ttyS0", history%())
   If sys.break_flag% Then Exit Sub
 
-  Local baud_rates$(array.new%(11)) = ( "9600", "19200", "28800", "38400", "57600", "76800", "115200", "230400", "460800", "576000", "921600" )
+  Restore baud_rate_data
+  count% =0
+  Do
+    Read s$
+    If s$ = "" Then Exit Do
+    Inc count%
+  Loop
+  Local baud_rates$(array.new%(count%))
+  Restore baud_rate_data
+  For i% = 0 To count% - 1
+    Read baud_rates$(i%)
+  Next
+
   con.history_fill(history%(), baud_rates$())
   con.print("Baud? ")
   Local baud$ = con.readln$("115200", history%())
@@ -1101,3 +1126,15 @@ Sub dump(s$)
     con.print(Hex$(Asc(Mid$(s$, i%, 1)), 2) + " ")
   Next
 End Sub
+
+device_name_data:
+
+Data "/dev/ttyS0",   "/dev/ttyS1"
+Data "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2"
+Data "/dev/ttyUSB0"
+Data ""
+
+baud_rate_data:
+
+Data "9600", "19200", "28800", "38400", "57600", "76800"
+Data "115200", "230400", "460800", "576000", "921600", ""
