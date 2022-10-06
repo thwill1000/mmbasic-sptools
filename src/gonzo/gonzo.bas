@@ -20,7 +20,7 @@ Option Explicit On
 
 Option CodePage "CMM2"
 
-Const INI_FILE$ = file.PROG_DIR$ + "/gonzo.ini"
+Const INI_FILE$ = gonzo.DOT_DIR$ + "/gonzo.ini"
 
 Dim cmd$
 Dim argc%
@@ -30,6 +30,8 @@ main()
 End
 
 Sub main()
+  file.mkdir("~/.gonzo")
+
   If Not gonzo.load_inifile%(INI_FILE$) Then
     con.errorln(sys.err$)
     Exit Sub

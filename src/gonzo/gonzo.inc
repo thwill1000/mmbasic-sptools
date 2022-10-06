@@ -24,12 +24,13 @@ Const gonzo.LOG_FNBR% = 3
 Const gonzo.INI_FNBR% = 4
 Const gonzo.OUT_FNBR% = 5
 
+Const gonzo.DOT_DIR$ = "~/.gonzo"
+Const gonzo.LOG_FILE$ = gonzo.DOT_DIR$ + "/gonzo.log"
 Const gonzo.RIZZO_FILE$ = "/tmp/rizzo.bas"
 
 Dim gonzo.comspec$
 Dim gonzo.device_name$ = "DISCONNECTED"
 Dim gonzo.device% = gonzo.DEVICE_DISCONNECTED%
-Dim gonzo.logfile$ = file.PROG_DIR$ + "/gonzo.log"
 Dim gonzo.rx_buf$
 Dim gonzo.buf%(1000)
 Dim gonzo.exit_flag%
@@ -47,7 +48,7 @@ Sub gonzo.connect(verbose%)
   Close #gonzo.SERIAL_FNBR%
   On Error Clear
 
-  Open gonzo.logfile$ For Output As #gonzo.LOG_FNBR%
+  Open gonzo.LOG_FILE$ For Output As #gonzo.LOG_FNBR%
 
   On Error Skip 1
   Open gonzo.comspec$ As #gonzo.SERIAL_FNBR%
@@ -248,14 +249,14 @@ End Sub
 Sub gonzo.cmd_log(cmd$, argc%, argv$())
   If argc% = 1 And UCase$(argv$(0)) = "CLEAR" Then
     Close #gonzo.LOG_FNBR%
-    Open gonzo.logfile$ For Output As gonzo.LOG_FNBR%
+    Open gonzo.LOG_FILE$ For Output As gonzo.LOG_FNBR%
     Exit Sub
   ElseIf argc% <> 0 Then
     sys.err$ = gonzo.usage$(cmd$)
     Exit Sub
   EndIf
 
-  Open gonzo.logfile$ For Input As #gonzo.IN_FNBR%
+  Open gonzo.LOG_FILE$ For Input As #gonzo.IN_FNBR%
   con.foreground("white")
   Local c%, ch$
   Do While Not Eof(#gonzo.IN_FNBR%)
