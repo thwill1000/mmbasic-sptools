@@ -133,10 +133,13 @@ Sub gonzo.cmd_break(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_chdir(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
-
+  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
   spsh.cmd_chdir(cmd$, argc%, argv$())
+End Sub
+
+Sub gonzo.cmd_cls(cmd$, argc%, argv$())
+  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  Cls
 End Sub
 
 Function gonzo.prompt_for_comspec$()
@@ -285,6 +288,14 @@ Sub gonzo.cmd_rchdir(cmd$, argc%, argv$())
   Local file$ = str.unquote$(argv$(0))
 
   gonzo.remote_file_cmd("ChDir " + str.quote$(file$))
+End Sub
+
+Sub gonzo.cmd_rcls(cmd$, argc%, argv$())
+  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  gonzo.send_break()
+  gonzo.read_until_prompt()
+  gonzo.writeln("cls")
+  gonzo.read_until_match("> cls")
 End Sub
 
 Sub gonzo.remote_file_cmd(command$)
@@ -1096,6 +1107,7 @@ End Function
 gonzo_commands:
 Data "|break|",             "",                      "send a Ctrl-C to remote"
 Data "|chdir|cd|",          "<directory>",           "change local directory"
+Data "|cls|",               "",                      "clear local terminal"
 Data "|connect|",           "",                      "connect to remote"
 Data "|device|",            "",                      "report type of remote device"
 Data "|exit|quit|",         "",                      "exit the gonzo shell"
@@ -1104,6 +1116,7 @@ Data "|help|",              "[<command>]",           "display help text"
 Data "|log|",               "[clear]",               "show (or clear) receive log"
 Data "|pwd|",               "",                      "display current local directory"
 Data "|rchdir|rcd|",        "<directory>",           "change remote directory"
+Data "|rcls|",               "",                     "clear remote terminal"
 Data "|rexec|rex|",         "<command string>",      "execute command on remote"
 Data "|rcopy|rcp|",         "<src-file> <dst-file>", "copy remote file"
 Data "|rdelete|rkill|rrm|", "<file|directory>",      "delete remote file or (empty) directory"
