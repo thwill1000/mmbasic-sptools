@@ -788,6 +788,9 @@ Sub gonzo.trim_remote_file(file$, size%)
   If gonzo.send_rizzo%() <> 0 Then Exit Sub
 
   gonzo.writeln("Run " + str.quote$(gonzo.RIZZO_FILE$))
+  ' If the remote is a CMM2 then we need to wait for the program to start.
+  ' TODO: Wait for "Filename? " prompt to be written instead on all remote types ?
+  If gonzo.device% = gonzo.DEVICE_CMM2% Then Pause 1000
   gonzo.writeln(file$)
   gonzo.writeln(Str$(size%))
   gonzo.read_until_prompt()
