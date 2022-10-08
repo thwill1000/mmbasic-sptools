@@ -21,6 +21,8 @@ Option Explicit On
 Option CodePage "CMM2"
 
 Const INI_FILE$ = gonzo.DOT_DIR$ + "/gonzo.ini"
+Const HISTORY_FILE$ = gonzo.DOT_DIR$ + "/gonzo.history"
+Const HISTORY_FNBR% = gonzo.INI_FNBR%
 
 Dim cmd$
 Dim argc%
@@ -68,12 +70,15 @@ Sub main()
   EndIf
 
   Local history%(array.new%(128)) ' 1K
+  If file.exists%(HISTORY_FILE$) Then
+    con.history_load(history%(), HISTORY_FILE$, HISTORY_FNBR%)
+  EndIf
 
   Do
     sys.break_flag% = 0
     con.foreground("yellow")
     con.print("gonzo$ ")
-    cmd_line$ = con.readln$("", history%())
+    cmd_line$ = con.readln$("", history%(), HISTORY_FILE$, HISTORY_FNBR%)
     If sys.break_flag% Then con.println() : Exit Do
     parse(cmd_line$)
     ' con.foreground("default")

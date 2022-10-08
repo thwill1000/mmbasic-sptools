@@ -8,22 +8,31 @@ sys.requires("array")
 sys.provides("console")
 If sys.err$ <> "" Then Error sys.err$
 
+' Sounds the console bell.
 Sub con.bell()
   Console Bell
 End Sub
 
+' Clears the console.
 Sub con.cls()
   Cls
 End Sub
 
+' Moves cursor to the beginning of the previous line.
 Sub con.cursor_previous()
   Print Chr$(27) "[F";
 End Sub
 
+' Writes an error string to the console followed by a newline.
+'
+' @param  s$  the string to write.
 Sub con.errorln(s$)
   Print s$
 End Sub
 
+' Sets the console foreground colour.
+'
+' @param  fg$  new foreground colour.
 Sub con.foreground(fg$)
   Select Case LCase$(fg$)
     Case "black"   : ? Chr$(27) "[30m";
@@ -40,13 +49,46 @@ Sub con.foreground(fg$)
   End Select
 End Sub
 
+' Writes an string to the console without a newline.
+'
+' @param  s$  the string to write.
 Sub con.print(s$)
   Print s$;
 End Sub
 
+' Writes a string to the console followed by a newline.
+'
+' @param  s$  the string to write.
 Sub con.println(s$)
   Print s$
 End Sub
+
+' Clears the command history.
+'
+' @param  h%()  buffer containing the command history.
+Sub con.history_clear(h%())
+  ' TODO: strictly speaking it should be sufficient to write &h00 to the first byte.
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  Memory Set h_addr%, &h00, h_size%
+End Sub
+
+' Gets the number of elements in the command history.
+'
+' @param  h%()  buffer containing the command history.
+' @return       the number of elements.
+Function con.history_count%(h%())
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  Local slen%, p% = h_addr%
+  Do
+    slen% = Peek(Byte p%)
+    If slen% = 0 Then Exit Do ' End of history.
+    Inc p%, slen% + 1
+    If p% >= h_addr% + h_size% Then Exit Do ' Incomplete element, end of history.
+    Inc con.history_count%
+  Loop
+End Function
 
 ' Gets a string element from the command history.
 '
@@ -69,16 +111,24 @@ Function con.history_get$(h%(), idx%)
   EndIf
 End Function
 
-Sub con.history_fill(h%(), items$())
-  Local h_addr% = Peek(VarAddr h%())
-  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
-  Memory Set h_addr%, &h00, h_size%
+' Fills the command history from an array of elements.
+'
+' @param  h%()         buffer containing the command history.
+' @param  elements$()  the elements. The first element in this array
+'                      will become the newest element in the history.
+Sub con.history_fill(h%(), elements$())
+  con.history_clear(h%())
   Local i%
-  For i% = Bound(items$(), 1) To Bound(items$(), 0) Step -1
-    con.history_put(h%(), items$(i%))
+  For i% = Bound(elements$(), 1) To Bound(elements$(), 0) Step -1
+    con.history_put(h%(), elements$(i%))
   Next
 End Sub
 
+' Finds the index of an element in the command history.
+'
+' @param  h%()     buffer containing the command history.
+' @param  needle$  element to find.
+' @return          index of the element, or -1 if not found.
 Function con.history_find%(h%(), needle$)
   If needle$ = "" Then Error "invalid argument: needle$"
 
@@ -92,7 +142,37 @@ Function con.history_find%(h%(), needle$)
   con.history_find% = Choice(s$ = "", -1, i%)
 End Function
 
-Sub con.history_put(h%(), s$)
+' Reads the command history from a file.
+'
+' @param  h%()       buffer containing the command history.
+' @param  filename$  the file to read from.
+' @param  fnbr%      the file number to use.
+Sub con.history_load(h%(), filename$, fnbr%)
+  con.history_clear(h%())
+  Open filename$ For Input As #fnbr%
+  Local count%, s$
+  Do While Not Eof(#fnbr%)
+    Line Input #fnbr%, s$
+    If s$ <> "" Then
+      con.history_put(h%(), s$)
+      Inc count%
+    EndIf
+  Loop
+  Close #fnbr%
+
+  ' This will prevent the history file from growing in an unbound manner.
+  If count% > 200 Then con.history_save(h%(), filename$, fnbr%)
+End Sub
+
+' Adds an element to the command history. The new element will appear at
+' index 0 and the remaining elements will all be shifted one space.
+' Optionally a history file is updated with the new element.
+'
+' @param  h%()       buffer containing the command history.
+' @param  s$         the element.
+' @param  filename$  the history file to update, this is optional.
+' @param  fnbr%      the file number to use, this is optional.
+Sub con.history_put(h%(), s$, filename$, fnbr%)
   If s$ = "" Then Error "invalid empty string"
   If s$ = con.history_get$(h%(), 0) Then Exit Sub  ' Don't insert duplicate entry.
 
@@ -102,9 +182,61 @@ Sub con.history_put(h%(), s$)
     Memory Copy h_addr%, h_addr% + 1 + Len(s$), h_size% - 1 - Len(s$)
   EndIf
   Memory Copy Peek(VarAddr s$), h_addr%, Len(s$) + 1
+
+  ' Append to history file.
+  If filename$ <> "" Then
+    Open filename$ For Append As #fnbr%
+    Print #fnbr%, s$
+    Close #fnbr%
+  EndIf
 End Sub
 
-Function con.readln$(initial$, history%())
+' Writes the command history to a file.
+'
+' @param  h%()       buffer containing the command history.
+' @param  filename$  the file to write to.
+' @param  fnbr%      the file number to use.
+Sub con.history_save(h%(), filename$, fnbr%)
+  Open filename$ For Output As #fnbr%
+  Local i%, s$
+  For i% = con.history_count%(h%()) - 1 To 0 Step -1
+    s$ = con.history_get$(h%(), i%)
+    Print #fnbr%, s$
+  Next
+  Close #fnbr%
+End Sub
+
+' Trims the size of the command history.
+'
+' TODO: Currently unused, consider removing.
+'
+' @param  h%()    buffer containing the command history.
+' @param  count%  number of elements to trim the command history to.
+Sub con.history_trim(h%(), count%)
+  If count% < 0 Then Error "invalid argument: count%"
+
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  Local i%, slen%, p% = h_addr%
+  Do While i% < count%
+    slen% = Peek(Byte p%)
+    If slen% = 0 Then Exit Do ' End of history.
+    Inc p%, slen% + 1
+    If p% >= h_addr% + h_size% Then Exit Do ' Incomplete element, end of history.
+    Inc i%
+  Loop
+
+  Poke Byte p%, &h00
+End Sub
+
+' Read a line of text from the console supporting basic line editing controls.
+'
+' @param  initial$           initial text, may be empty.
+' @param  history%()         buffer containing the command history.
+' @param  history_filename$  optional file to write updated command history to.
+' @param  history_fnbr%      optional file number to use.
+' @return                    the line of text read.
+Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
   Local ch$, hidx%, p%, old$, overwrite%, s$
 
   con.readln$ = initial$
@@ -130,7 +262,9 @@ Function con.readln$(initial$, history%())
 
       Case 10, 13 ' Enter
         Print
-        If con.readln$ <> "" Then con.history_put(history%(), con.readln$)
+        If con.readln$ <> "" Then
+          con.history_put(history%(), con.readln$, history_filename$, history_fnbr%)
+        EndIf
         Exit Do
 
       Case 127 ' Delete
