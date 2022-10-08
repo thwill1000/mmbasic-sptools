@@ -18,6 +18,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 Const BASE% = Mm.Info(Option Base)
 
 add_test("test_history_put")
+add_test("test_history_put_given_duplicate")
 add_test("test_history_get")
 add_test("test_history_given_overflow")
 
@@ -45,7 +46,7 @@ Sub test_history_put()
 
   con.history_put(h%(), "snafu")
 
-  assert_int_equals(5, Peek(Byte h_addr% + 0)))
+  assert_int_equals(5,        Peek(Byte h_addr% + 0)))
   assert_int_equals(Asc("s"), Peek(Byte h_addr% + 1)))
   assert_int_equals(Asc("n"), Peek(Byte h_addr% + 2)))
   assert_int_equals(Asc("a"), Peek(Byte h_addr% + 3)))
@@ -63,6 +64,34 @@ Sub test_history_put()
       Exit For
     EndIf
   Next
+End Sub
+
+Sub test_history_put_given_duplicate()
+  Local h%(array.new%(128))
+  Local h_addr% = Peek(VarAddr h%())
+  con.history_put(h%(), "foo")
+  con.history_put(h%(), "bar")
+
+  ' Duplicate item.
+  con.history_put(h%(), "bar")
+
+  assert_int_equals(3,        Peek(Byte h_addr% + 0)))
+  assert_int_equals(Asc("b"), Peek(Byte h_addr% + 1)))
+  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 2)))
+  assert_int_equals(Asc("r"), Peek(Byte h_addr% + 3)))
+  assert_int_equals(3,        Peek(Byte h_addr% + 4)))
+  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 5)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 6)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 7)))
+
+  Local i%
+  For i% = 8 To 1023
+    If Peek(Byte h_addr% + i%) <> 0 Then
+      assert_fail("Assert failed, byte " + Str$(i%) + " of h%() is non-zero")
+      Exit For
+    EndIf
+  Next
+
 End Sub
 
 Sub test_history_get()

@@ -94,6 +94,7 @@ End Function
 
 Sub con.history_put(h%(), s$)
   If s$ = "" Then Error "invalid empty string"
+  If s$ = con.history_get$(h%(), 0) Then Exit Sub  ' Don't insert duplicate entry.
 
   Local h_addr% = Peek(VarAddr h%())
   Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
