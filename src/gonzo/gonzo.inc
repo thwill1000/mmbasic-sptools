@@ -31,6 +31,7 @@ Const gonzo.RIZZO_FILE$ = "/tmp/rizzo.bas"
 Dim gonzo.comspec$
 Dim gonzo.device_name$ = "DISCONNECTED"
 Dim gonzo.device% = gonzo.DEVICE_DISCONNECTED%
+Dim gonzo.history%(array.new%(128)) ' 1K
 Dim gonzo.rx_buf$
 Dim gonzo.buf%(1000)
 Dim gonzo.exit_flag%
@@ -114,6 +115,7 @@ Function gonzo.do_command%(cmd$, argc%, argv$())
 
   sys.err$ = ""
   If call_cmd$ = "" Then sys.err$ = "Unknown command '" + cmd$ + "'"
+  If call_cmd$ = "!" Then call_cmd$ = "bang"
 
   If sys.err$ = "" Then
     On Error Skip 1
@@ -125,6 +127,20 @@ Function gonzo.do_command%(cmd$, argc%, argv$())
 
   gonzo.do_command% = gonzo.exit_flag%
 End Function
+
+Sub gonzo.cmd_bang(cmd$, argc%, argv$())
+  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  Local idx% = Val(argv$(0))
+  If idx% <= 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  idx% = con.history_newest%(gonzo.history%()) - idx%
+  Local cmd_line$ = Choice(idx% < 0, "", con.history_get$(gonzo.history%(), idx%))
+  If cmd_line$ = "" Then sys.err$ = "Event not found" : Exit Sub
+  If Left$(cmd_line$, 1) = "!" Then sys.err$ = "Unexpected ! event" : Exit Sub
+  con.history_put(gonzo.history%(), cmd_line$)
+  gonzo.parse_cmd_line(cmd_line$, cmd$, argc%, argv$())
+  If cmd$ <> "" Then gonzo.exit_flag% = gonzo.do_command%(cmd$, argc%, argv$())
+  sys.err$ = "" ' So that we don't repeat error message twice.
+End Sub
 
 Sub gonzo.cmd_break(cmd$, argc%, argv$())
   If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
@@ -244,6 +260,16 @@ Sub gonzo.cmd_help(cmd$, argc%, argv$())
     synonyms$ = Mid$(synonyms$, 2, InStr(2, synonyms$, "|") - 2)
     con.println("  " + str.rpad$(synonyms$, 10) + "  " + description$)
   Loop
+End Sub
+
+Sub gonzo.cmd_history(cmd$, argc%, argv$())
+  If argc% > 0 Then sys.err$ = gonzo.usage(cmd$) : Exit Sub
+  Local i%, s$, newest% = con.history_newest%(gonzo.history%())
+  For i% = con.history_count%(gonzo.history%()) - 1 To 0 Step -1
+    s$ = con.history_get$(gonzo.history%(), i%)
+    If s$ = "" Then Exit Do
+    con.println(" " + str.lpad$(Str$(newest% - i%), 3) + " " + s$)
+  Next
 End Sub
 
 Sub gonzo.cmd_log(cmd$, argc%, argv$())
@@ -1011,6 +1037,37 @@ Function gonzo.load_inifile%(f$)
   If gonzo.comspec$ = sys.NO_DATA$ Then gonzo.comspec$ = "/dev/ttyS0: 115200"
 End Function
 
+' Parses command line.
+'
+' @param       cmd_line$  command line to parse.
+' @param[out]  cmd$       on exit the command.
+' @param[out]  argc%      on exit the number of additional arguments.
+' @param[out]  argv$()    on exit the additional arguments.
+Sub gonzo.parse_cmd_line(cmd_line$, cmd$, argc%, argv$())
+  cmd$ = str.next_token$(cmd_line$)
+  If cmd$ = sys.NO_DATA$ Or cmd$ = Chr$(0) Then
+    cmd$ = ""
+    Exit Sub
+  EndIf
+
+  argc% = 0
+  Select Case Left$(cmd$, 1)
+    Case "*"
+      cmd$ = Mid$(cmd$, 2) ' Ignore leading *
+    Case "!"
+      argv$(argc%) = Mid$(cmd$, 2)
+      If argv$(argc%) <> "" Then Inc argc%
+      cmd$ = "!"
+  End Select
+
+  ' Read no more arguments than will fit in array and fill remainder with empty strings.
+  Local i% = argc%
+  For i% = argc%  To Bound(argv$(), 1)
+    argv$(i%) = str.next_token$()
+    If argv$(i%) = sys.NO_DATA$ Then argv$(i%) = "" Else Inc argc%
+  Next
+End Sub
+
 Sub gonzo.read_until_match(pattern$)
   Local s$, x%
   Do
@@ -1106,6 +1163,7 @@ Function gonzo.usage$(cmd$)
 End Function
 
 gonzo_commands:
+Data "|!|",                 "<index>",               "repeats a previous command from the history"
 Data "|break|",             "",                      "send a Ctrl-C to remote"
 Data "|chdir|cd|",          "<directory>",           "change local directory"
 Data "|cls|",               "",                      "clear local terminal"
@@ -1114,6 +1172,7 @@ Data "|device|",            "",                      "report type of remote devi
 Data "|exit|quit|",         "",                      "exit the gonzo shell"
 Data "|files|dir|ls|",      "[<file|directory>]",    "list local directory contents"
 Data "|help|",              "[<command>]",           "display help text"
+Data "|history|",           "",                      "display history of recent commands"
 Data "|log|",               "[clear]",               "show (or clear) receive log"
 Data "|pwd|",               "",                      "display current local directory"
 Data "|rchdir|rcd|",        "<directory>",           "change remote directory"

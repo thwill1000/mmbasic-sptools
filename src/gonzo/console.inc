@@ -80,7 +80,7 @@ End Sub
 Function con.history_count%(h%())
   Local h_addr% = Peek(VarAddr h%())
   Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
-  Local slen%, p% = h_addr%
+  Local slen%, p% = h_addr% + 2
   Do
     slen% = Peek(Byte p%)
     If slen% = 0 Then Exit Do ' End of history.
@@ -101,7 +101,7 @@ Function con.history_get$(h%(), idx%)
 
   Local h_addr% = Peek(VarAddr h%())
   Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
-  Local i%, p% = h_addr%
+  Local i%, p% = h_addr% + 2
   For i% = 0 To idx%
     If Peek(Byte p%) = 0 Then Exit Function ' Return empty string.
     If i% < idx% Then Inc p%, Peek(Byte p%) + 1
@@ -153,10 +153,8 @@ Sub con.history_load(h%(), filename$, fnbr%)
   Local count%, s$
   Do While Not Eof(#fnbr%)
     Line Input #fnbr%, s$
-    If s$ <> "" Then
-      con.history_put(h%(), s$)
-      Inc count%
-    EndIf
+    con.history_put(h%(), s$)
+    Inc count%
   Loop
   Close #fnbr%
 
@@ -164,24 +162,57 @@ Sub con.history_load(h%(), filename$, fnbr%)
   If count% > 200 Then con.history_save(h%(), filename$, fnbr%)
 End Sub
 
+' Gets the id of the newest in the command history buffer,
+' for use with the ! command.
+'
+' @param  h%()  buffer containing the command history.
+' @return       the id of element 0, or 0 if the history is empty.
+Function con.history_newest%(h%())
+  Local h_addr% = Peek(VarAddr h%())
+  con.history_newest% = Peek(Short h_addr%)
+End Function
+
+' Gets and removes the newest element from the command history.
+' Note the history file is not adjusted accordingly.
+'
+' TODO: Currently unused, consider removing.
+'
+' @param  h%()  buffer containing the command history.
+Function con.history_pop$(h%())
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  Local sz% = Peek(Byte h_addr% + 2)
+  If sz% > 0 Then
+    Memory Copy h_addr% + 2, Peek(VarAddr con.history_pop$), sz% + 1
+    Memory Copy h_addr% + sz% + 3, h_addr% + 2, h_size% - sz% - 3
+    Poke Short h_addr%, Peek(Short h_addr%) - 1
+  EndIf
+End Function
+
 ' Adds an element to the command history. The new element will appear at
 ' index 0 and the remaining elements will all be shifted one space.
 ' Optionally a history file is updated with the new element.
 '
 ' @param  h%()       buffer containing the command history.
-' @param  s$         the element.
+' @param  cmd$       the element.
 ' @param  filename$  the history file to update, this is optional.
 ' @param  fnbr%      the file number to use, this is optional.
-Sub con.history_put(h%(), s$, filename$, fnbr%)
-  If s$ = "" Then Error "invalid empty string"
-  If s$ = con.history_get$(h%(), 0) Then Exit Sub  ' Don't insert duplicate entry.
+Sub con.history_put(h%(), cmd$, filename$, fnbr%)
+  Local s$ = str.trim$(cmd$)
+  If s$ = "" Then Exit Sub
+  If s$ = con.history_get$(h%(), 0) Then Exit Sub ' Don't insert duplicate entry.
+  If Left$(s$, 1) = "!" Then Exit Sub ' Don't insert elements beginning !
 
   Local h_addr% = Peek(VarAddr h%())
   Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
-  If Peek(Byte h_addr%) > 0 Then
-    Memory Copy h_addr%, h_addr% + 1 + Len(s$), h_size% - 1 - Len(s$)
+  ' Update first 2 bytes which contain id of the newest element.
+  Poke Short h_addr%, Peek(Short h_addr%) + 1
+  ' Shift existing elements right by length + 1 of new element.
+  If Peek(Byte h_addr% + 2) > 0 Then
+    Memory Copy h_addr% + 2, h_addr% + 3 + Len(s$), h_size% - 3 - Len(s$)
   EndIf
-  Memory Copy Peek(VarAddr s$), h_addr%, Len(s$) + 1
+  ' Copy new element into the buffer.
+  Memory Copy Peek(VarAddr s$), h_addr% + 2, Len(s$) + 1
 
   ' Append to history file.
   If filename$ <> "" Then
@@ -217,7 +248,7 @@ Sub con.history_trim(h%(), count%)
 
   Local h_addr% = Peek(VarAddr h%())
   Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
-  Local i%, slen%, p% = h_addr%
+  Local i%, slen%, p% = h_addr% + 2
   Do While i% < count%
     slen% = Peek(Byte p%)
     If slen% = 0 Then Exit Do ' End of history.

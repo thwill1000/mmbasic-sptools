@@ -21,9 +21,16 @@ Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_console"
 add_test("test_history_clear")
 add_test("test_history_count")
 add_test("test_history_fill")
+add_test("test_history_newest")
+add_test("test_history_newest_gvn_overflow")
+add_test("test_history_pop")
+add_test("test_history_pop_gvn_overflow")
 add_test("test_history_put")
 add_test("test_history_put_given_duplicate")
 add_test("test_history_put_appends_to_file")
+add_test("test_history_put_trims_spaces")
+add_test("test_history_put_ignores_bangs")
+add_test("test_history_put_ignores_empty")
 add_test("test_history_get")
 add_test("test_history_given_overflow")
 add_test("test_history_save")
@@ -119,21 +126,18 @@ Sub test_history_get()
 End Sub
 
 Sub test_history_given_overflow()
-  Local i%
   Local h%(array.new%(2)) ' 16 bytes
   Local h_addr% = Peek(VarAddr h%())
   Local check% = Peek(Byte h_addr% + 16) ' The byte one beyond the end of the array
 
   given_some_elements(h%())
-
   ' Array should have the values:
-  '   <6>wombat<5>snafu<3>ba
+  '   <4><0><6>wombat<5>snafu<3>
 
-  assert_int_equals(6,        Peek(Byte h_addr% + 0))
-  assert_int_equals(Asc("u"), Peek(Byte h_addr% + 12))
-  assert_int_equals(3,        Peek(Byte h_addr% + 13))
-  assert_int_equals(Asc("b"), Peek(Byte h_addr% + 14))
-  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 15))
+  assert_int_equals(4,        Peek(Short h_addr%))
+  assert_int_equals(6,        Peek(Byte h_addr% + 2))
+  assert_int_equals(Asc("u"), Peek(Byte h_addr% + 14))
+  assert_int_equals(3,        Peek(Byte h_addr% + 15))
   assert_int_equals(check%,   Peek(Byte h_addr% + 16))
 
   assert_string_equals("wombat", con.history_get$(h%(), 0))
@@ -141,11 +145,12 @@ Sub test_history_given_overflow()
   assert_string_equals("",       con.history_get$(h%(), 2))
 
   con.history_put(h%(), "a")
+  ' Array should have the values:
+  '   <5><0><1>a<6>wombat<5>snaf
 
   assert_string_equals("a",      con.history_get$(h%(), 0))
   assert_string_equals("wombat", con.history_get$(h%(), 1))
-  assert_string_equals("snafu",  con.history_get$(h%(), 2))
-  assert_string_equals("",       con.history_get$(h%(), 3))
+  assert_string_equals("",       con.history_get$(h%(), 2))
 End Sub
 
 Sub test_history_load()
@@ -202,33 +207,105 @@ Sub test_history_load_trims_count()
   assert_string_equals("foo_101", con.history_get$(h%(), 99)))
 End Sub
 
+Sub test_history_newest()
+  Local h%(array.new%(128))
+
+  assert_int_equals(0, con.history_newest%(h%()))
+
+  con.history_put(h%(), "foo")
+  assert_int_equals(1, con.history_newest%(h%()))
+
+  con.history_put(h%(), "wom")
+  con.history_put(h%(), "bat")
+  assert_int_equals(3, con.history_newest%(h%()))
+End Sub
+
+Sub test_history_newest_gvn_overflow()
+  Local h%(array.new%(2)) ' 16 bytes
+  con.history_put(h%(), "foo")
+  con.history_put(h%(), "bar")
+  con.history_put(h%(), "wom")
+  con.history_put(h%(), "bat")
+  con.history_put(h%(), "snafu")
+
+  assert_int_equals(2, con.history_count%(h%()))
+  assert_int_equals(5, con.history_newest%(h%()))
+End Sub
+
+Sub test_history_pop()
+  Local h%(array.new%(128))
+  con.history_put(h%(), "foo")
+
+  assert_string_equals("foo", con.history_pop$(h%()))
+  assert_int_equals(0, con.history_count%(h%()))
+  assert_int_equals(0, con.history_newest%(h%()))
+
+  con.history_put(h%(), "foo")
+  con.history_put(h%(), "bar")
+  con.history_put(h%(), "wombat")
+
+  assert_string_equals("wombat", con.history_pop$(h%()))
+  assert_int_equals(2, con.history_count%(h%()))
+  assert_int_equals(2, con.history_newest%(h%()))
+  assert_string_equals("bar", con.history_get$(h%(), 0))
+
+  assert_string_equals("bar", con.history_pop$(h%()))
+  assert_int_equals(1, con.history_count%(h%()))
+  assert_int_equals(1, con.history_newest%(h%()))
+  assert_string_equals("foo", con.history_get$(h%(), 0))
+
+  assert_string_equals("foo", con.history_pop$(h%()))
+  assert_int_equals(0, con.history_count%(h%()))
+  assert_int_equals(0, con.history_newest%(h%()))
+  assert_string_equals("", con.history_get$(h%(), 0))
+
+  ' Popping an empty history buffer is harmless.
+  assert_string_equals("", con.history_pop$(h%()))
+  assert_int_equals(0, con.history_count%(h%()))
+  assert_int_equals(0, con.history_newest%(h%()))
+  assert_string_equals("", con.history_get$(h%(), 0))
+End Sub
+
+Sub test_history_pop_gvn_overflow()
+  Local h%(array.new%(2)) ' 16 bytes
+  con.history_put(h%(), "foo")
+  con.history_put(h%(), "bar")
+  con.history_put(h%(), "wom")
+  con.history_put(h%(), "bat")
+  con.history_put(h%(), "snafu")
+
+  assert_string_equals("snafu", con.history_pop$(h%()))
+End Sub
+
 Sub test_history_put()
   Local h%(array.new%(128))
   Local h_addr% = Peek(VarAddr h%())
 
   con.history_put(h%(), "foo")
 
-  assert_int_equals(3,        Peek(Byte h_addr% + 0)))
-  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 1)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 2)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 3)))
-  assert_int_equals(0,        Peek(Byte h_addr% + 4)))
+  assert_int_equals(1,        Peek(Short h_addr%)))
+  assert_int_equals(3,        Peek(Byte h_addr% + 2)))
+  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 3)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 4)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 5)))
+  assert_int_equals(0,        Peek(Byte h_addr% + 6)))
 
   con.history_put(h%(), "snafu")
 
-  assert_int_equals(5,        Peek(Byte h_addr% + 0)))
-  assert_int_equals(Asc("s"), Peek(Byte h_addr% + 1)))
-  assert_int_equals(Asc("n"), Peek(Byte h_addr% + 2)))
-  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 3)))
-  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 4)))
-  assert_int_equals(Asc("u"), Peek(Byte h_addr% + 5)))
-  assert_int_equals(3,        Peek(Byte h_addr% + 6)))
-  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 7)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 8)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 9)))
+  assert_int_equals(2,        Peek(Short h_addr%)))
+  assert_int_equals(5,        Peek(Byte h_addr% + 2)))
+  assert_int_equals(Asc("s"), Peek(Byte h_addr% + 3)))
+  assert_int_equals(Asc("n"), Peek(Byte h_addr% + 4)))
+  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 5)))
+  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 6)))
+  assert_int_equals(Asc("u"), Peek(Byte h_addr% + 7)))
+  assert_int_equals(3,        Peek(Byte h_addr% + 8)))
+  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 9)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 10)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 11)))
 
   Local i%
-  For i% = 10 To 1023
+  For i% = 12 To 1023
     If Peek(Byte h_addr% + i%) <> 0 Then
       assert_fail("Assert failed, byte " + Str$(i%) + " of h%() is non-zero")
       Exit For
@@ -245,17 +322,18 @@ Sub test_history_put_given_duplicate()
   ' Duplicate item.
   con.history_put(h%(), "bar")
 
-  assert_int_equals(3,        Peek(Byte h_addr% + 0)))
-  assert_int_equals(Asc("b"), Peek(Byte h_addr% + 1)))
-  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 2)))
-  assert_int_equals(Asc("r"), Peek(Byte h_addr% + 3)))
-  assert_int_equals(3,        Peek(Byte h_addr% + 4)))
-  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 5)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 6)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 7)))
+  assert_int_equals(2,        Peek(Short h_addr%)))
+  assert_int_equals(3,        Peek(Byte h_addr% + 2)))
+  assert_int_equals(Asc("b"), Peek(Byte h_addr% + 3)))
+  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 4)))
+  assert_int_equals(Asc("r"), Peek(Byte h_addr% + 5)))
+  assert_int_equals(3,        Peek(Byte h_addr% + 6)))
+  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 7)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 8)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 9)))
 
   Local i%
-  For i% = 8 To 1023
+  For i% = 10 To 1023
     If Peek(Byte h_addr% + i%) <> 0 Then
       assert_fail("Assert failed, byte " + Str$(i%) + " of h%() is non-zero")
       Exit For
@@ -265,7 +343,6 @@ End Sub
 
 Sub test_history_put_appends_to_file()
   Local h%(array.new%(128))
-  Local h_addr% = Peek(VarAddr h%())
   Local filename$ = TMPDIR$ + "/test_history_put_appends_to_file"
   On Error Skip 1
   Kill filename$
@@ -294,6 +371,35 @@ Sub test_history_put_appends_to_file()
   assert_string_equals("wombat", s$)
   assert_int_equals(1, Eof(#5))
   Close #5
+End Sub
+
+Sub test_history_put_ignores_bangs()
+  Local h%(array.new%(128))
+  Local h_addr% = Peek(VarAddr h%())
+
+  con.history_put(h%(), "!foo")
+  con.history_put(h%(), "  !foo  ")
+
+  assert_int_equals(0, con.history_count%(h%()))
+End Sub
+
+Sub test_history_put_ignores_empty()
+  Local h%(array.new%(128))
+  Local h_addr% = Peek(VarAddr h%())
+
+  con.history_put(h%(), "")
+  con.history_put(h%(), "  ")
+
+  assert_int_equals(0, con.history_count%(h%()))
+End Sub
+
+Sub test_history_put_trims_spaces()
+  Local h%(array.new%(128))
+  Local h_addr% = Peek(VarAddr h%())
+
+  con.history_put(h%(), "  foo  ")
+
+  assert_string_equals("foo", con.history_get$(h%(), 0))
 End Sub
 
 Sub test_history_save()
