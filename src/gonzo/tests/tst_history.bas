@@ -25,7 +25,7 @@ add_test("test_get")
 add_test("test_get_given_overlow")
 add_test("test_load")
 add_test("test_load_given_empty")
-add_test("test_load_trims_count")
+add_test("test_load_trims_long_file")
 add_test("test_newest")
 add_test("test_newest_given_overlow")
 add_test("test_pop")
@@ -187,24 +187,30 @@ Sub test_load_given_empty()
   assert_int_equals(0, history.count%(h%()))
 End Sub
 
-Sub test_load_trims_count()
+Sub test_load_trims_long_file()
   Local h%(array.new%(128))
   fill_with_ones(h%())
-  Local filename$ = TMPDIR$ + "/test_load_trims_count"
-  Local i%
+  Local filename$ = TMPDIR$ + "/test_load_trims_long_file"
+  Local i%, s$
 
   Open filename$ For Output As #5
-  For i% = 1 To 200
+  For i% = 1 To 300
     Print #5, "foo_" + Str$(i%)
   Next
   Close #5
 
   history.load(h%(), filename$, 5)
 
-  assert_int_equals(100, history.count%(h%()))
-  assert_string_equals("foo_200", history.get$(h%(), 0)))
-  assert_string_equals("foo_199", history.get$(h%(), 1)))
-  assert_string_equals("foo_101", history.get$(h%(), 99)))
+  assert_int_equals(127, history.count%(h%()))
+
+  Open filename$ For Input As #5
+  i% = 0
+  Do While Not Eof(#5)
+    Line Input #5, s$
+    Inc i%
+  Loop
+  Close #5
+  assert_int_equals(history.count%(h%()), i%)
 End Sub
 
 Sub test_newest()
