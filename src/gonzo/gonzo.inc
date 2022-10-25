@@ -4,7 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("console", "file", "inifile", "map", "string", "spsh")
+sys.requires("array", "console", "file", "history", "inifile", "map", "string", "spsh")
 sys.provides("gonzo")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -132,11 +132,11 @@ Sub gonzo.cmd_bang(cmd$, argc%, argv$())
   If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
   Local idx% = Val(argv$(0))
   If idx% <= 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
-  idx% = con.history_newest%(gonzo.history%()) - idx%
-  Local cmd_line$ = Choice(idx% < 0, "", con.history_get$(gonzo.history%(), idx%))
+  idx% = history.newest%(gonzo.history%()) - idx%
+  Local cmd_line$ = Choice(idx% < 0, "", history.get$(gonzo.history%(), idx%))
   If cmd_line$ = "" Then sys.err$ = "Event not found" : Exit Sub
   If Left$(cmd_line$, 1) = "!" Then sys.err$ = "Unexpected ! event" : Exit Sub
-  con.history_push(gonzo.history%(), cmd_line$)
+  history.push(gonzo.history%(), cmd_line$)
   gonzo.parse_cmd_line(cmd_line$, cmd$, argc%, argv$())
   If cmd$ <> "" Then gonzo.exit_flag% = gonzo.do_command%(cmd$, argc%, argv$())
   sys.err$ = "" ' So that we don't repeat error message twice.
@@ -175,7 +175,7 @@ Function gonzo.prompt_for_comspec$()
   Next
 
   Local history%(array.new%(128))
-  con.history_fill(history%(), devices$())
+  history.fill(history%(), devices$())
   con.print("Device? ")
   Local device$ = con.readln$("/dev/ttyS0", history%())
   If sys.break_flag% Then Exit Sub
@@ -193,7 +193,7 @@ Function gonzo.prompt_for_comspec$()
     Read baud_rates$(i%)
   Next
 
-  con.history_fill(history%(), baud_rates$())
+  history.fill(history%(), baud_rates$())
   con.print("Baud? ")
   Local baud$ = con.readln$("115200", history%())
   If sys.break_flag% Then Exit Sub
@@ -264,9 +264,9 @@ End Sub
 
 Sub gonzo.cmd_history(cmd$, argc%, argv$())
   If argc% > 0 Then sys.err$ = gonzo.usage(cmd$) : Exit Sub
-  Local i%, s$, newest% = con.history_newest%(gonzo.history%())
-  For i% = con.history_count%(gonzo.history%()) - 1 To 0 Step -1
-    s$ = con.history_get$(gonzo.history%(), i%)
+  Local i%, s$, newest% = history.newest%(gonzo.history%())
+  For i% = history.count%(gonzo.history%()) - 1 To 0 Step -1
+    s$ = history.get$(gonzo.history%(), i%)
     If s$ = "" Then Exit Do
     con.println(" " + str.lpad$(Str$(newest% - i%), 3) + " " + s$)
   Next

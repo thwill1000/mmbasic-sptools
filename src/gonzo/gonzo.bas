@@ -14,6 +14,7 @@ Option Explicit On
 #Include "../splib/string.inc"
 #Include "../splib/inifile.inc"
 #Include "../splib/file.inc"
+#Include "history.inc"
 #Include "console.inc"
 #Include "spsh.inc"
 #Include "gonzo.inc"
@@ -70,7 +71,7 @@ Sub main()
   EndIf
 
   If file.exists%(HISTORY_FILE$) Then
-    con.history_load(gonzo.history%(), HISTORY_FILE$, HISTORY_FNBR%)
+    history.load(gonzo.history%(), HISTORY_FILE$, HISTORY_FNBR%)
   EndIf
 
   Do
