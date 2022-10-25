@@ -31,7 +31,7 @@ End
 Sub main()
   Local cmd$
   Local argc%
-  Local argv$(9)
+  Local argv$(array.new%(10))
   Local cmd_line$ = str.trim$(Mm.CmdLine$)
 
   file.mkdir("~/.gonzo")

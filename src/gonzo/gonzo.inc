@@ -1044,25 +1044,24 @@ End Function
 ' @param[out]  argc%      on exit the number of additional arguments.
 ' @param[out]  argv$()    on exit the additional arguments.
 Sub gonzo.parse_cmd_line(cmd_line$, cmd$, argc%, argv$())
-  cmd$ = str.next_token$(cmd_line$)
-  If cmd$ = sys.NO_DATA$ Or cmd$ = Chr$(0) Then
-    cmd$ = ""
-    Exit Sub
-  EndIf
+  Local s$ = str.trim$(cmd_line$)
+  argc% = 0 : cmd$ = ""
+  If s$ = "" Then Exit Sub
 
-  argc% = 0
+  cmd$ = str.next_token$(s$)
+
   Select Case Left$(cmd$, 1)
     Case "*"
       cmd$ = Mid$(cmd$, 2) ' Ignore leading *
     Case "!"
-      argv$(argc%) = Mid$(cmd$, 2)
-      If argv$(argc%) <> "" Then Inc argc%
+      argv$(argc% + Bound(argv$(), 0)) = Mid$(cmd$, 2)
+      If argv$(argc% + Bound(argv$(), 0)) <> "" Then Inc argc%
       cmd$ = "!"
   End Select
 
   ' Read no more arguments than will fit in array and fill remainder with empty strings.
   Local i% = argc%
-  For i% = argc%  To Bound(argv$(), 1)
+  For i% = argc% + Bound(argv$(), 0) To Bound(argv$(), 1)
     argv$(i%) = str.next_token$()
     If argv$(i%) = sys.NO_DATA$ Then argv$(i%) = "" Else Inc argc%
   Next
