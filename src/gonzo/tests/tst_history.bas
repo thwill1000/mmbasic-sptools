@@ -21,23 +21,23 @@ Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_history"
 add_test("test_clear")
 add_test("test_count")
 add_test("test_fill")
-add_test("test_newest")
-add_test("test_newest_gvn_overflow")
-add_test("test_pop")
-add_test("test_pop_gvn_overflow")
-add_test("test_push")
-add_test("test_push_given_duplicate")
-add_test("test_push_appends_to_file")
-add_test("test_push_trims_spaces")
-add_test("test_push_ignores_bangs")
-add_test("test_push_ignores_empty")
 add_test("test_get")
-add_test("test_given_overflow")
-add_test("test_save")
-add_test("test_save_given_empty")
+add_test("test_get_given_overlow")
 add_test("test_load")
 add_test("test_load_given_empty")
 add_test("test_load_trims_count")
+add_test("test_newest")
+add_test("test_newest_given_overlow")
+add_test("test_pop")
+add_test("test_pop_given_overflow")
+add_test("test_push")
+add_test("test_push_appends_to_file")
+add_test("test_push_ignores_bangs")
+add_test("test_push_ignores_empty")
+add_test("test_push_given_duplicate")
+add_test("test_push_trims_spaces")
+add_test("test_save")
+add_test("test_save_given_empty")
 add_test("test_trim")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
@@ -125,7 +125,7 @@ Sub test_get()
   On Error Abort
 End Sub
 
-Sub test_given_overflow()
+Sub test_get_given_overlow()
   Local h%(array.new%(2)) ' 16 bytes
   Local h_addr% = Peek(VarAddr h%())
   Local check% = Peek(Byte h_addr% + 16) ' The byte one beyond the end of the array
@@ -220,7 +220,7 @@ Sub test_newest()
   assert_int_equals(3, history.newest%(h%()))
 End Sub
 
-Sub test_newest_gvn_overflow()
+Sub test_newest_given_overlow()
   Local h%(array.new%(2)) ' 16 bytes
   history.push(h%(), "foo")
   history.push(h%(), "bar")
@@ -266,7 +266,7 @@ Sub test_pop()
   assert_string_equals("", history.get$(h%(), 0))
 End Sub
 
-Sub test_pop_gvn_overflow()
+Sub test_pop_given_overflow()
   Local h%(array.new%(2)) ' 16 bytes
   history.push(h%(), "foo")
   history.push(h%(), "bar")
@@ -313,34 +313,6 @@ Sub test_push()
   Next
 End Sub
 
-Sub test_push_given_duplicate()
-  Local h%(array.new%(128))
-  Local h_addr% = Peek(VarAddr h%())
-  history.push(h%(), "foo")
-  history.push(h%(), "bar")
-
-  ' Duplicate item.
-  history.push(h%(), "bar")
-
-  assert_int_equals(2,        Peek(Short h_addr%)))
-  assert_int_equals(3,        Peek(Byte h_addr% + 2)))
-  assert_int_equals(Asc("b"), Peek(Byte h_addr% + 3)))
-  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 4)))
-  assert_int_equals(Asc("r"), Peek(Byte h_addr% + 5)))
-  assert_int_equals(3,        Peek(Byte h_addr% + 6)))
-  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 7)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 8)))
-  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 9)))
-
-  Local i%
-  For i% = 10 To 1023
-    If Peek(Byte h_addr% + i%) <> 0 Then
-      assert_fail("Assert failed, byte " + Str$(i%) + " of h%() is non-zero")
-      Exit For
-    EndIf
-  Next
-End Sub
-
 Sub test_push_appends_to_file()
   Local h%(array.new%(128))
   Local filename$ = TMPDIR$ + "/test_push_appends_to_file"
@@ -371,6 +343,34 @@ Sub test_push_appends_to_file()
   assert_string_equals("wombat", s$)
   assert_int_equals(1, Eof(#5))
   Close #5
+End Sub
+
+Sub test_push_given_duplicate()
+  Local h%(array.new%(128))
+  Local h_addr% = Peek(VarAddr h%())
+  history.push(h%(), "foo")
+  history.push(h%(), "bar")
+
+  ' Duplicate item.
+  history.push(h%(), "bar")
+
+  assert_int_equals(2,        Peek(Short h_addr%)))
+  assert_int_equals(3,        Peek(Byte h_addr% + 2)))
+  assert_int_equals(Asc("b"), Peek(Byte h_addr% + 3)))
+  assert_int_equals(Asc("a"), Peek(Byte h_addr% + 4)))
+  assert_int_equals(Asc("r"), Peek(Byte h_addr% + 5)))
+  assert_int_equals(3,        Peek(Byte h_addr% + 6)))
+  assert_int_equals(Asc("f"), Peek(Byte h_addr% + 7)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 8)))
+  assert_int_equals(Asc("o"), Peek(Byte h_addr% + 9)))
+
+  Local i%
+  For i% = 10 To 1023
+    If Peek(Byte h_addr% + i%) <> 0 Then
+      assert_fail("Assert failed, byte " + Str$(i%) + " of h%() is non-zero")
+      Exit For
+    EndIf
+  Next
 End Sub
 
 Sub test_push_ignores_bangs()

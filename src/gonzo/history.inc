@@ -46,27 +46,6 @@ Function history.count%(h%())
   Loop
 End Function
 
-' Gets a string element from the command history.
-'
-' @param  h%()  buffer containing the command history.
-' @param  idx%  index of the element to retrieve, the first element is always
-'               idx% = 0 irrespective of OPTION BASE.
-' @return       string element, or empty string if idx% >= number of elements.
-Function history.get$(h%(), idx%)
-  If idx% < 0 Then Error "index out of bounds: " + Str$(idx%)
-
-  Local h_addr% = Peek(VarAddr h%())
-  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
-  Local i%, p% = h_addr% + 2
-  For i% = 0 To idx%
-    If Peek(Byte p%) = 0 Then Exit Function ' Return empty string.
-    If i% < idx% Then Inc p%, Peek(Byte p%) + 1
-  Next
-  If p% + Peek(Byte p%) < h_addr% + h_size% Then
-    Memory Copy p%, Peek(VarAddr history.get$), Peek(Byte p%) + 1
-  EndIf
-End Function
-
 ' Fills the command history from an array of elements.
 '
 ' @param  h%()         buffer containing the command history.
@@ -96,6 +75,27 @@ Function history.find%(h%(), needle$)
   Loop Until s$ = "" Or s$ = needle$
 
   history.find% = Choice(s$ = "", -1, i%)
+End Function
+
+' Gets a string element from the command history.
+'
+' @param  h%()  buffer containing the command history.
+' @param  idx%  index of the element to retrieve, the first element is always
+'               idx% = 0 irrespective of OPTION BASE.
+' @return       string element, or empty string if idx% >= number of elements.
+Function history.get$(h%(), idx%)
+  If idx% < 0 Then Error "index out of bounds: " + Str$(idx%)
+
+  Local h_addr% = Peek(VarAddr h%())
+  Local h_size% = (Bound(h%(), 1) - Bound(h%(), 0) + 1) * 8
+  Local i%, p% = h_addr% + 2
+  For i% = 0 To idx%
+    If Peek(Byte p%) = 0 Then Exit Function ' Return empty string.
+    If i% < idx% Then Inc p%, Peek(Byte p%) + 1
+  Next
+  If p% + Peek(Byte p%) < h_addr% + h_size% Then
+    Memory Copy p%, Peek(VarAddr history.get$), Peek(Byte p%) + 1
+  EndIf
 End Function
 
 ' Reads the command history from a file.
