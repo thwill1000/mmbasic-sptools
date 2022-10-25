@@ -120,7 +120,7 @@ Sub con.history_fill(h%(), elements$())
   con.history_clear(h%())
   Local i%
   For i% = Bound(elements$(), 1) To Bound(elements$(), 0) Step -1
-    con.history_put(h%(), elements$(i%))
+    con.history_push(h%(), elements$(i%))
   Next
 End Sub
 
@@ -153,7 +153,7 @@ Sub con.history_load(h%(), filename$, fnbr%)
   Local count%, s$
   Do While Not Eof(#fnbr%)
     Line Input #fnbr%, s$
-    con.history_put(h%(), s$)
+    con.history_push(h%(), s$)
     Inc count%
   Loop
   Close #fnbr%
@@ -197,7 +197,7 @@ End Function
 ' @param  cmd$       the element.
 ' @param  filename$  the history file to update, this is optional.
 ' @param  fnbr%      the file number to use, this is optional.
-Sub con.history_put(h%(), cmd$, filename$, fnbr%)
+Sub con.history_push(h%(), cmd$, filename$, fnbr%)
   Local s$ = str.trim$(cmd$)
   If s$ = "" Then Exit Sub
   If s$ = con.history_get$(h%(), 0) Then Exit Sub ' Don't insert duplicate entry.
@@ -294,7 +294,7 @@ Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
       Case 10, 13 ' Enter
         Print
         If con.readln$ <> "" Then
-          con.history_put(history%(), con.readln$, history_filename$, history_fnbr%)
+          con.history_push(history%(), con.readln$, history_filename$, history_fnbr%)
         EndIf
         Exit Do
 

@@ -136,7 +136,7 @@ Sub gonzo.cmd_bang(cmd$, argc%, argv$())
   Local cmd_line$ = Choice(idx% < 0, "", con.history_get$(gonzo.history%(), idx%))
   If cmd_line$ = "" Then sys.err$ = "Event not found" : Exit Sub
   If Left$(cmd_line$, 1) = "!" Then sys.err$ = "Unexpected ! event" : Exit Sub
-  con.history_put(gonzo.history%(), cmd_line$)
+  con.history_push(gonzo.history%(), cmd_line$)
   gonzo.parse_cmd_line(cmd_line$, cmd$, argc%, argv$())
   If cmd$ <> "" Then gonzo.exit_flag% = gonzo.do_command%(cmd$, argc%, argv$())
   sys.err$ = "" ' So that we don't repeat error message twice.
