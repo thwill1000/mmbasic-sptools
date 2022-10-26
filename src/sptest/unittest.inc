@@ -79,6 +79,14 @@ Sub assert_int_equals(expected%, actual%)
   EndIf
 End Sub
 
+Sub assert_int_neq(unexpected%, actual%)
+  Inc ut.asserts_count%
+  If unexpected% = actual% Then
+    Local s$ = "Assert not equals failed, did not expect " + Str$(unexpected%)
+    ut.add_failure(s$)
+  EndIf
+End Sub
+
 Sub assert_float_equals(expected!, actual!, delta!)
   Inc ut.asserts_count%
   If Not equals_float%(expected!, actual!, delta!) Then
