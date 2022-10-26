@@ -10,6 +10,7 @@ Option Default Integer
 #Include "../../splib/list.inc"
 #Include "../../splib/string.inc"
 #Include "../../splib/file.inc"
+#Include "../../splib/set.inc"
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../options.inc"
@@ -17,6 +18,11 @@ Option Default Integer
 add_test("test_colour")
 add_test("test_comments")
 add_test("test_crunch")
+add_test("test_add_flag")
+add_test("test_add_flag_given_already_set")
+add_test("test_add_flag_given_invalid")
+add_test("test_add_flag_given_too_long")
+add_test("test_add_flag_given_too_many")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_include_only")
@@ -152,6 +158,59 @@ Sub test_crunch()
 
   opt.set("crunch", "foo")
   assert_error("expects 'on|off' argument")
+End Sub
+
+Sub test_add_flag()
+  assert_int_equals(0, set.size%(opt.flags$()))
+
+  opt.add_flag("foo")
+
+  assert_no_error()
+  assert_int_neq(-1, set.get%(opt.flags$(), "foo"))
+  assert_int_equals(-1, set.get%(opt.flags$(), "bar"))
+End Sub
+
+Sub test_add_flag_given_already_set()
+  opt.add_flag("foo")
+  opt.add_flag("foo")
+
+  assert_error("flag 'foo' is already set")
+End Sub
+
+Sub test_add_flag_given_invalid()
+  sys.err$ = ""
+  opt.add_flag("")
+  assert_error("invalid flag")
+
+  sys.err$ = ""
+  opt.add_flag(" ")
+  assert_error("invalid flag")
+
+  sys.err$ = ""
+  opt.add_flag("?")
+  assert_error("invalid flag")
+
+  sys.err$ = ""
+  opt.add_flag("1hello")
+  assert_error("invalid flag")
+End Sub
+
+Sub test_add_flag_given_too_long()
+  opt.add_flag("flag567890123456789012345678901234567890123456789012345678901234")
+  assert_no_error()
+
+  opt.add_flag("flag5678901234567890123456789012345678901234567890123456789012345")
+  assert_error("flag too long, max 64 chars")
+End Sub
+
+Sub test_add_flag_given_too_many()
+  Local i%
+  For i% = 1 To 10
+    opt.add_flag("item" + Str$(i%))
+  Next
+
+  opt.add_flag("sausage")
+  assert_error("too many flags")
 End Sub
 
 Sub test_empty_lines()

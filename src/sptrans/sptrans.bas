@@ -1,4 +1,4 @@
-#!/usr/local/bin/mmbasic -i
+#!/usr/local/bin/mmbasic
 
 ' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>

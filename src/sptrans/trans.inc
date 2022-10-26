@@ -4,7 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("set")
+sys.requires("options", "set")
 sys.provides("trans")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -20,10 +20,6 @@ Dim tr.num_comments(MAX_NUM_FILES - 1)
 Const tr.MAX_NUM_IFS = 10
 Dim tr.if_stack(MAX_NUM_FILES - 1, tr.MAX_NUM_IFS - 1)
 Dim tr.if_stack_sz(MAX_NUM_FILES - 1)
-
-' The set of active flags.
-Dim tr.flags$(set.new%(10))
-set.init(tr.flags$())
 
 ' The list of replacements (from -> to).
 Const tr.MAX_REPLACEMENTS% = 200
@@ -269,9 +265,9 @@ Sub tr.process_clear()
   If sys.err$ = "" Then
     t$ = lx.token_lc$(1)
     ' TODO: Is this really the behaviour we want?
-    If set.get%(tr.flags$(), t$) < 0 Then sys.err$ = "flag '" + t$ + "' is not set"
+    If set.get%(opt.flags$(), t$) < 0 Then sys.err$ = "flag '" + t$ + "' is not set"
   EndIf
-  If sys.err$ = "" Then set.remove(tr.flags$(), t$)
+  If sys.err$ = "" Then set.remove(opt.flags$(), t$)
   If sys.err$ <> "" Then sys.err$ = "!clear directive " + sys.err$
 End Sub
 
@@ -303,7 +299,7 @@ Sub tr.process_if()
     Exit Sub
   EndIf
 
-  Local x = set.get%(tr.flags$(), t$) > -1
+  Local x = set.get%(opt.flags$(), t$) > -1
   If invert Then x = Not x
 
   Select Case lx.directive$(0)
@@ -412,12 +408,8 @@ End Sub
 Sub tr.process_set()
   If lx.num < 2 Then sys.err$ = "expects <flag> argument"
   If lx.num > 2 Then sys.err$ = "has too many arguments"
-  Local t$
-  If sys.err$ = "" Then
-    t$ = lx.token_lc$(1)
-    If set.get%(tr.flags$(), t$) > -1 Then sys.err$ = "flag '" + t$ + "' is already set"
-  EndIf
-  If sys.err$ = "" Then set.put(tr.flags$(), t$)
+  If sys.err$ = "" Then Local t$ = lx.token_lc$(1)
+  If sys.err$ = "" Then opt.add_flag(t$)
   If sys.err$ <> "" Then sys.err$ = "!set directive " + sys.err$
 End Sub
 

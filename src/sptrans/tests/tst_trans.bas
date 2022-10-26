@@ -20,6 +20,7 @@ Dim in.num_open_files = 1
 #Include "../../common/sptools.inc"
 #Include "../keywords.inc"
 #Include "../lexer.inc"
+#Include "../options.inc"
 #Include "../trans.inc"
 
 keywords.load()
@@ -45,13 +46,15 @@ add_test("test_uncomment_if_not")
 add_test("test_unknown_directive")
 add_test("test_remove_if")
 add_test("test_remove_if_not")
+add_test("test_set_given_flag_already_set")
+add_test("test_set_given_flag_too_long")
 
 run_tests()
 
 End
 
 Sub setup_test()
-  set.clear(tr.flags$())
+  opt.init()
   tr.clear_replacements()
   tr.include$ = ""
 End Sub
@@ -714,6 +717,34 @@ Sub test_remove_if_not()
   lx.parse_basic("three") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_set_given_flag_already_set()
+  Local ok%
+  Local flag$ = "foo"
+
+  lx.parse_basic("'!set " + flag$)
+  ok% = tr.transpile%()
+  assert_no_error()
+  assert_int_neq(-1, set.get%(opt.flags$(), flag$))
+
+  lx.parse_basic("'!set " + flag$)
+  ok% = tr.transpile%()
+  assert_error("!set directive flag 'foo' is already set")
+End Sub
+
+Sub test_set_given_flag_too_long()
+  Local ok%
+  Local flag$ = "flag567890123456789012345678901234567890123456789012345678901234"
+
+  lx.parse_basic("'!set " + flag$)
+  ok% = tr.transpile%()
+  assert_no_error()
+  assert_int_neq(-1, set.get%(opt.flags$(), flag$))
+
+  lx.parse_basic("'!set " + flag$ + "5")
+  ok% = tr.transpile%()
+  assert_error("!set directive flag too long, max 64 chars")
 End Sub
 
 Sub test_unknown_directive()

@@ -33,7 +33,11 @@ Sub cli.parse(s$)
       Case "s", "spacing"      : cli.parse_arg("spacing", i, "{0|1|2}")
       Case "v", "version"      : spt.print_version("sptrans") : End
       Case Else:
-        sys.err$ = "option " + lx.token$(i) + " is unknown"
+        If Left$(lx.option$(i), 1) = "D" Then
+          cli.parse_no_arg("flag", i);
+        Else
+          sys.err$ = "option " + lx.token$(i) + " is unknown"
+        EndIf
     End Select
   Loop
 
@@ -70,17 +74,26 @@ Sub cli.parse_arg(option$, i, arg$)
     opt.set(option$, lx.token$(i + 2))
   EndIf
   If sys.err$ <> "" Then sys.err$ = "option " + lx.token$(i) + " expects " + arg$ + " argument"
-  i = i + 3
+  Inc i, 3
 End Sub
 
 ' Parses an option without an argument.
 Sub cli.parse_no_arg(option$, i)
   If lx.token$(i + 1) = "=" Then
-    sys.err$ = "option " + lx.token$(i) + " does not expect argument"
+    sys.err$ = "option "
+    Cat sys.err$, Choice(option$ = "flag", "-D<flag>", lx.token$(i))
+    Cat sys.err$, " does not expect argument"
+  Else If option$ = "flag" Then
+    Local flag$ = Mid$(lx.token$(i), 3)
+    If flag$ = "" Then
+      sys.err$ = "option -D<flag> expects flag"
+    Else
+      opt.add_flag(flag$)
+    EndIf
   Else
     opt.set(option$, "on")
   EndIf
-  i = i + 1
+  Inc i
 End Sub
 
 Sub cli.usage()
@@ -98,6 +111,7 @@ Sub cli.usage()
   Print "                           --empty-lines=0 --indent=0 --no-comments --spacing=0"
   Print "  -C, --colour           syntax highlight the output,"
   Print "                         only valid for output to VT100 serial console"
+  Print "  -D<flag>               sets flag, equivalent to !set <flag> directive"
   Print "  -e, --empty-lines=0|1  controls output of empty lines:"
   Print "                           0 - omit all empty lines"
   Print "                           1 - include one empty line between each Function/Sub"

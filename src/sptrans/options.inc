@@ -4,6 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("set")
 sys.provides("options")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -31,6 +32,12 @@ Dim opt.spacing      ' -1    : preserve spacing
 Dim opt.infile$      ' input file/path
 Dim opt.outfile$     ' output file/path, empty for output to console
 
+' Set of active flags
+'   - set at command line using -D<flag>,
+'   - or in program using !set directive.
+Const opt.FLAG_MAX_LENGTH% = 64
+Dim opt.flags$(set.new%(10)) Length opt.FLAG_MAX_LENGTH%
+
 Sub opt.init()
   opt.colour = 0
   opt.comments = -1
@@ -42,6 +49,36 @@ Sub opt.init()
   opt.spacing = -1
   opt.infile$ = ""
   opt.outfile$ = ""
+  set.init(opt.flags$())
+End Sub
+
+Sub opt.add_flag(flag$)
+  Local i%, flag_$ = str.trim$(flag$), lower$ = LCase$(flag_$)
+
+  If Len(flag_$) > opt.FLAG_MAX_LENGTH% Then
+    sys.err$ = "flag too long, max 64 chars"
+    Exit Sub
+  EndIf
+
+  sys.err$ = "invalid flag"
+  If flag_$ = "" Then Exit Sub
+  If Not InStr("_abcdefghijklmnopqrstuvwxyz", Mid$(lower$, 1, 1)) Then Exit Sub
+  For i% = 2 To Len(lower$)
+    If Not InStr("_abcdefghijklmnopqrstuvwxyz0123456789", Mid$(lower$, i%, 1)) Then Exit Sub
+  Next
+
+  If set.get%(opt.flags$(), lower$) <> -1 Then
+    sys.err$ = "flag '" + flag_$ + "' is already set"
+    Exit Sub
+  EndIf
+
+  If set.is_full%(opt.flags$()) Then
+     sys.err$ = "too many flags"
+     Exit Sub
+  EndIf
+
+  sys.err$ = ""
+  set.put(opt.flags$(), lower$)
 End Sub
 
 ' Do the options require pretty-printing ?

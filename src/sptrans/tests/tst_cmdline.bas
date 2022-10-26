@@ -27,6 +27,7 @@ add_test("test_no_input_file")
 add_test("test_input_file")
 add_test("test_colour")
 add_test("test_crunch")
+add_test("test_flag")
 add_test("test_no_comments")
 add_test("test_empty_lines")
 add_test("test_format_only")
@@ -104,6 +105,25 @@ Sub test_crunch()
 
   cli.parse("--crunch=1 " + INPUT_FILE$)
   assert_error("option --crunch does not expect argument")
+End Sub
+
+Sub test_flag()
+  cli.parse("-Dfoo " + INPUT_FILE$)
+
+  assert_no_error()
+  assert_int_neq(-1, set.get%(opt.flags$(), "foo"))
+
+  setup_test()
+  cli.parse("-D " + INPUT_FILE$)
+
+  assert_error("option -D<flag> expects flag")
+  assert_int_equals(0, set.size%(opt.flags$()))
+
+  setup_test()
+  cli.parse("-Dfoo=bar " + INPUT_FILE$)
+
+  assert_error("option -D<flag> does not expect argument")
+  assert_int_equals(0, set.size%(opt.flags$()))
 End Sub
 
 Sub test_no_comments()
