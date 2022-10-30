@@ -64,6 +64,7 @@ add_test("test_ifndef_nested_3")
 add_test("test_ifndef_nested_4")
 add_test("test_set_given_flag_already_set")
 add_test("test_set_given_flag_too_long")
+add_test("test_omit_directives_from_output")
 
 run_tests()
 
@@ -71,9 +72,21 @@ End
 
 Sub setup_test()
   opt.init()
+
+  ' TODO: extract into trans.init() or trans.reset().
   tr.clear_replacements()
   tr.include$ = ""
   tr.omit_code = 0
+  Local i%, j%
+  For i% = Bound(tr.num_comments(), 0) To Bound(tr.num_comments(), 1)
+    tr.num_comments(i%) = 0
+  Next
+  For i% = Bound(tr.if_stack(), 0) To Bound(tr.if_stack(), 1)
+    For j% = Bound(tr.if_stack(), 0) To Bound(tr.if_stack(), 2)
+      tr.if_stack(i%, j%) = 0
+    Next
+    tr.if_stack_sz(i%) = 0
+  Next
 End Sub
 
 Sub teardown_test()
@@ -1031,6 +1044,108 @@ Sub test_set_given_flag_too_long()
   lx.parse_basic("'!set " + flag$ + "5")
   ok% = tr.transpile%()
   assert_error("!set directive flag too long, max 64 chars")
+End Sub
+
+Sub test_omit_directives_from_output()
+  Local ok%
+
+  setup_test()
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!clear FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!comments on") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!comment_if FOO") : ok% = tr.transpile%()
+  assert_int_equals(ok%, tr.STATUS_OMIT_LINE%)
+  expect_tokens(0)
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!comment_if FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!empty-lines 1") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!indent 1") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!replace FOO BAR") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!remove_if FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!remove_if FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!spacing 1") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!uncomment_if FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!uncomment_if FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!replace FOO BAR") : ok% = tr.transpile%()
+  lx.parse_basic("'!unreplace FOO") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+
+  setup_test()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
 End Sub
 
 Sub test_unknown_directive()

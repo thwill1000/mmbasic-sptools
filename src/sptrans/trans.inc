@@ -63,8 +63,8 @@ Function tr.transpile%()
   tr.include$ = ""
 
   If lx.token_lc$(0) = "'!endif" Then
-    tr.process_endif()
-    If sys.err$ <> "" Then Exit Function
+    tr.transpile% = tr.process_endif%()
+    Exit Function
   EndIf
 
   If tr.omit_code% Then
@@ -103,12 +103,13 @@ Function tr.transpile%()
   End Select
 
   If sys.err$ = "" Then
-    lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
-    tr.transpile% = 1
+'    lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
+    lx.parse_basic("")
+    tr.transpile% = tr.STATUS_OMIT_LINE%
   EndIf
 End Function
 
-Sub tr.process_endif()
+Function tr.process_endif%()
   Local x% = tr.pop_if()
   Select Case x%
     Case 0     : ' Do nothing.
@@ -116,9 +117,11 @@ Sub tr.process_endif()
     Case 2     : tr.omit_code = 0
     Case Else  : Error
   End Select
-  If sys.err$ <> "" Then Exit Sub
-  lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
-End Sub
+  If sys.err$ <> "" Then Exit Function
+'  lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
+  lx.parse_basic("")
+  tr.process_endif% = tr.STATUS_OMIT_LINE%
+End Function
 
 Sub tr.update_num_comments(x)
   Local i = in.num_open_files% - 1
@@ -442,33 +445,35 @@ End Sub
 '   - if to_$ = Chr$(0) then expects entry to exist and flags it as "dead".
 Sub tr.add_replacement(from$, to_$)
   Local f_lower$ = LCase$(from$)
-  Local i%
+  Local existing% = -1, i%
 
   ' Find existing replacement (if any) and flag entry dead.
   For i% = 0 To tr.num_replacements% - 1
     If f_lower$ = tr.replacements$(i%, 0) Then
-      tr.replacements$(i%, 0) = Chr$(0)
-      tr.replacements$(i%, 1) = Chr$(0)
-      Inc i%
+      existing% = i%
       Exit For
     EndIf
   Next
 
-  ' Handle clearing an entry.
-  If to_$ = Chr$(0) Then
-    If i% = tr.num_replacements% Then sys.err$ = "could not find '" + from$ + "'"
+  If existing% > -1 Then
+    ' Flag existing entry as dead.
+    tr.replacements$(existing%, 0) = Chr$(0)
+    tr.replacements$(existing%, 1) = Chr$(0)
+    If to_$ = Chr$(0) Then Exit Sub
+  Else If to_$ = Chr$(0) Then
+    sys.err$ = "could not find '" + from$ + "'"
     Exit Sub
   EndIf
 
   ' Handle too many entries.
-  If i% >= tr.MAX_REPLACEMENTS% Then
+  If tr.num_replacements% >= tr.MAX_REPLACEMENTS% Then
     sys.err$ = "too many replacements (max " + Str$(tr.MAX_REPLACEMENTS%) + ")"
     Exit Sub
   EndIf
 
   ' Actually add the new entry.
-  tr.replacements$(i%, 0) = f_lower$
-  tr.replacements$(i%, 1) = to_$
+  tr.replacements$(tr.num_replacements%, 0) = f_lower$
+  tr.replacements$(tr.num_replacements%, 1) = to_$
   Inc tr.num_replacements%
 End Sub
 
