@@ -68,6 +68,12 @@ Function tr.transpile%()
   EndIf
 
   If tr.omit_code% Then
+    If lx.type(0) = TK_DIRECTIVE Then
+      Select Case lx.directive$(0)
+        Case "!comment_if", "!ifdef", "!ifndef", "!remove_if", "!uncomment_if"
+          tr.push_if(0) ' Still need to record omitted !if's.
+      End Select
+    EndIf
     lx.parse_basic("") ' Not really necessary since it should be ignored by the caller.
     tr.transpile% = tr.STATUS_OMIT_LINE%
     Exit Function

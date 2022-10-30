@@ -65,6 +65,7 @@ add_test("test_ifndef_nested_4")
 add_test("test_set_given_flag_already_set")
 add_test("test_set_given_flag_too_long")
 add_test("test_omit_directives_from_output")
+add_test("test_unbalanced_endif")
 
 run_tests()
 
@@ -762,6 +763,7 @@ Sub test_ifdef_given_set()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -779,6 +781,7 @@ Sub test_ifdef_given_unset()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -811,7 +814,9 @@ Sub test_ifdef_nested_1()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -832,7 +837,9 @@ Sub test_ifdef_nested_2()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -852,7 +859,9 @@ Sub test_ifdef_nested_3()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -875,7 +884,9 @@ Sub test_ifdef_nested_4()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -894,6 +905,7 @@ Sub test_ifndef_given_set()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -913,6 +925,7 @@ Sub test_ifndef_given_unset()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -947,7 +960,9 @@ Sub test_ifndef_nested_1()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -967,7 +982,9 @@ Sub test_ifndef_nested_2()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -988,7 +1005,9 @@ Sub test_ifndef_nested_3()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
@@ -1009,14 +1028,15 @@ Sub test_ifndef_nested_4()
   lx.parse_basic("two") : ok% = tr.transpile%()
   expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  expect_tokens(0)
 
   ' Code outside the block is included.
   lx.parse_basic("three") : ok% = tr.transpile%()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
-
 
 Sub test_set_given_flag_already_set()
   Local ok%
@@ -1152,6 +1172,18 @@ Sub test_unknown_directive()
   lx.parse_basic("'!wombat foo")
   assert_int_equals(0, tr.transpile%())
   assert_error("unknown !wombat directive")
+End Sub
+
+Sub test_unbalanced_endif()
+  Local ok%
+
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_error("unmatched !endif")
 End Sub
 
 Sub expect_replacement(i%, from$, to_$)
