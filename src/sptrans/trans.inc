@@ -90,12 +90,14 @@ Function tr.transpile%()
     Case "!comments"     : tr.process_comments()
     Case "!comment_if"   : tr.process_if()
     Case "!empty-lines"  : tr.process_empty_lines()
+    Case "!ifdef"        : tr.process_if()
+    Case "!ifndef"       : tr.process_if()
     Case "!indent"       : tr.process_indent()
     Case "!replace"      : tr.process_replace()
     Case "!remove_if"    : tr.process_if()
     Case "!set"          : tr.process_set()
     Case "!spacing"      : tr.process_spacing()
-    Case "!uncomment_if" : tr.process_if()       ' Same SUB for !comment_if and !uncomment_if.
+    Case "!uncomment_if" : tr.process_if()
     Case "!unreplace"    : tr.process_replace()  ' Same SUB for !replace & !unreplace.
     Case Else            : sys.err$ = "unknown " + Mid$(lx.directive$(0), 1) + " directive"
   End Select
@@ -281,18 +283,24 @@ Sub tr.process_if()
   Local invert
   Local t$ = lx.token_lc$(1)
 
-  If lx.num = 2 Then
-    ' Do nothing
-  ElseIf lx.num = 3 Then
-    If t$ = "not" Then
-      invert = 1
-      t$ = lx.token_lc$(2)
-    Else
-      sys.err$ = "followed by unexpected token {" + lx.token$(1) + "}"
-    EndIf
-  Else
-    sys.err$ = "has too many arguments"
-  EndIf
+  Select Case lx.directive$(0)
+    Case "!ifdef", "!ifndef"
+      If lx.num <> 2 Then sys.err$ = "expects 1 argument"
+
+    Case Else
+      If lx.num = 2 Then
+        ' Do nothing
+      ElseIf lx.num = 3 Then
+        If t$ = "not" Then
+          invert = 1
+          t$ = lx.token_lc$(2)
+        Else
+          sys.err$ = "followed by unexpected token {" + lx.token$(1) + "}"
+        EndIf
+      Else
+        sys.err$ = "has too many arguments"
+      EndIf
+  End Select
 
   If sys.err$ <> "" Then
     sys.err$ = lx.directive$(0) + " directive " + sys.err$
@@ -307,14 +315,13 @@ Sub tr.process_if()
       tr.push_if(x)
       If x Then tr.update_num_comments(+1)
 
-    Case "!remove_if"
-      ' TODO: support nested !remove_if directives.
-      If tr.omit_code Then
-        sys.err$ = "nested !remove_if directives are not supported"
-      Else
-        tr.push_if(x * 2)
-        If x Then tr.omit_code = 1
-      EndIf
+    Case "!ifdef"
+      tr.push_if(Choice(x, 0, 2))
+      If Not x Then tr.omit_code = 1
+
+    Case "!ifndef", "!remove_if"
+      tr.push_if(Choice(x, 2, 0))
+      If x Then tr.omit_code = 1
 
     Case "!uncomment_if"
       tr.push_if(-x)

@@ -46,6 +46,22 @@ add_test("test_uncomment_if_not")
 add_test("test_unknown_directive")
 add_test("test_remove_if")
 add_test("test_remove_if_not")
+add_test("test_ifdef_given_set")
+add_test("test_ifdef_given_unset")
+add_test("test_ifdef_given_0_args")
+add_test("test_ifdef_given_2_args")
+add_test("test_ifdef_nested_1")
+add_test("test_ifdef_nested_2")
+add_test("test_ifdef_nested_3")
+add_test("test_ifdef_nested_4")
+add_test("test_ifndef_given_set")
+add_test("test_ifndef_given_unset")
+add_test("test_ifndef_given_0_args")
+add_test("test_ifndef_given_2_args")
+add_test("test_ifndef_nested_1")
+add_test("test_ifndef_nested_2")
+add_test("test_ifndef_nested_3")
+add_test("test_ifndef_nested_4")
 add_test("test_set_given_flag_already_set")
 add_test("test_set_given_flag_too_long")
 
@@ -57,6 +73,7 @@ Sub setup_test()
   opt.init()
   tr.clear_replacements()
   tr.include$ = ""
+  tr.omit_code = 0
 End Sub
 
 Sub teardown_test()
@@ -718,6 +735,275 @@ Sub test_remove_if_not()
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
+
+Sub test_ifdef_given_set()
+  Local ok%
+
+  ' FOO is set so all code within !ifdef FOO is included.
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "two")
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifdef_given_unset()
+  Local ok%
+
+  ' FOO is unset so all code within !ifdef FOO is excluded.
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifdef_given_0_args()
+  Local ok%
+  lx.parse_basic("'!ifdef") : ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_string_equals("!ifdef directive expects 1 argument", sys.err$)
+End Sub
+
+Sub test_ifdef_given_2_args()
+  Local ok%
+  lx.parse_basic("'!ifdef not bar") : ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_string_equals("!ifdef directive expects 1 argument", sys.err$)
+End Sub
+
+Sub test_ifdef_nested_1()
+  Local ok%
+
+  ' FOO and BAR are both unset so all code within !ifdef FOO is excluded.
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifdef_nested_2()
+  Local ok%
+
+  ' FOO is set and BAR is unset so code within !ifdef BAR is excluded.
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifdef_nested_3()
+  Local ok%
+
+  ' BAR is set and FOO is unset so all code within !ifdef FOO is excluded.
+  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifdef_nested_4()
+  Local ok%
+
+  ' FOO and BAR are both set so all code within !ifdef FOO and !ifdef BAR is included.
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "two")
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifndef_given_set()
+  Local ok%
+
+  ' FOO is set so all code within !ifndef FOO is excluded.
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifndef_given_unset()
+  Local ok%
+
+  ' FOO is unset so all code within !ifndef FOO is included.
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "two")
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifndef_given_0_args()
+  Local ok%
+  lx.parse_basic("'!ifndef") : ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_string_equals("!ifndef directive expects 1 argument", sys.err$)
+End Sub
+
+Sub test_ifndef_given_2_args()
+  Local ok%
+  lx.parse_basic("'!ifndef not bar") : ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_string_equals("!ifndef directive expects 1 argument", sys.err$)
+End Sub
+
+Sub test_ifndef_nested_1()
+  Local ok%
+
+  ' FOO and BAR are both unset so all code within !ifndef FOO is included.
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "two")
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifndef_nested_2()
+  Local ok%
+
+  ' FOO is set and BAR is unset so all code within !ifndef FOO is excluded.
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifndef_nested_3()
+  Local ok%
+
+  ' BAR is set and FOO is unset so all code within !ifndef BAR is excluded.
+  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
+Sub test_ifndef_nested_4()
+  Local ok%
+
+  ' FOO and BAR are both set so all code within !ifndef FOO and !ifndef BAR is excluded.
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
+  lx.parse_basic("two") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  ' Code outside the block is included.
+  lx.parse_basic("three") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "three")
+End Sub
+
 
 Sub test_set_given_flag_already_set()
   Local ok%

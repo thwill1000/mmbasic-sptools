@@ -94,6 +94,20 @@ Sub test_directives()
   expect_success(2)
   expect_tk(0, TK_DIRECTIVE, "'!remove_if")
   expect_tk(1, TK_IDENTIFIER, "foo")
+
+  lx.parse_basic("'!ifdef foo")
+  expect_success(2)
+  expect_tk(0, TK_DIRECTIVE, "'!ifdef")
+  expect_tk(1, TK_IDENTIFIER, "foo")
+
+  lx.parse_basic("'!ifndef foo")
+  expect_success(2)
+  expect_tk(0, TK_DIRECTIVE, "'!ifndef")
+  expect_tk(1, TK_IDENTIFIER, "foo")
+
+  lx.parse_basic("'!endif")
+  expect_success(1)
+  expect_tk(0, TK_DIRECTIVE, "'!endif")
 End Sub
 
 Sub test_replace_directives()
