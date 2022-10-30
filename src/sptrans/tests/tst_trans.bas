@@ -66,6 +66,7 @@ add_test("test_set_given_flag_already_set")
 add_test("test_set_given_flag_too_long")
 add_test("test_omit_directives_from_output")
 add_test("test_unbalanced_endif")
+add_test("test_sptrans_flag_is_set")
 
 run_tests()
 
@@ -1184,6 +1185,19 @@ Sub test_unbalanced_endif()
   lx.parse_basic("'!endif") : ok% = tr.transpile%()
   assert_int_equals(0, ok%)
   assert_error("unmatched !endif")
+End Sub
+
+Sub test_sptrans_flag_is_set()
+  Local ok%
+
+  ' The SPTRANS flag is always considered set by the transpiler.
+  lx.parse_basic("'!ifdef SPTRANS") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
 End Sub
 
 Sub expect_replacement(i%, from$, to_$)

@@ -316,7 +316,8 @@ Sub tr.process_if()
     Exit Sub
   EndIf
 
-  Local x = set.get%(opt.flags$(), t$) > -1
+  ' SPTRANS flag is always considered set.
+  Local x = Choice(t$ = "sptrans", 1, set.get%(opt.flags$(), t$) > -1)
   If invert Then x = Not x
 
   Select Case lx.directive$(0)
