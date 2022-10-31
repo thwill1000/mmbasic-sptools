@@ -40,7 +40,11 @@ Sub cerror(msg$)
   Local i = in.num_open_files% - 1
   Print
   Print "[" + in.files$(i) + ":" + Str$(in.line_num(i)) + "] Error: " + msg$
-  End
+  If Mm.Device$ = "MMB4L" Then
+    End 1
+  Else
+    End
+  EndIf
 End Sub
 
 Sub main()
