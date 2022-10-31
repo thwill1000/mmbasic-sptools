@@ -656,7 +656,7 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
     On Error Skip 1
     Kill tmp_file$
     On Error Clear
-    gonzo.transpile(local_file$, tmp_file$, trans_args$)
+    If gonzo.transpile%(local_file$, tmp_file$, trans_args$) <> 0 Then Exit Sub
     local_file$ = tmp_file$
     ' Replace .bpp file-extension with .bas.
     If LCase$(file.get_extension$(remote_file$)) = ".bpp" Then
@@ -903,15 +903,18 @@ Sub gonzo.xsend_file(local_file$, remote_file$)
   con.println("OK, " + Str$((file_size% * 8000) / (Timer - t%), 0, 1) + " bit/s")
 End Sub
 
-Sub gonzo.transpile(in_file$, out_file$, args$)
+' @return  0 on success, -1 on failure.
+Function gonzo.transpile%(in_file$, out_file$, args$)
   ' Note that double-quotes have to be escaped in the command.
   Local command$ = "mmbasic " + Mm.Info$(Path) + "../sptrans/sptrans.bas "
   Cat command$, args$ + " "
   Cat command$, "\" + Chr$(34) + in_file$ + "\" + Chr$(34) + " "
   Cat command$, "\" + Chr$(34) + out_file$ + "\" + Chr$(34)
-  System command$
+  Local exit_status%
+  System command$, , exit_status%
   con.foreground("yellow")
-End Sub
+  gonzo.transpile% = Choice(exit_status%, -1, 0)
+End Function
 
 ' Sends a Ctrl-C to the remote.
 Sub gonzo.send_break()
