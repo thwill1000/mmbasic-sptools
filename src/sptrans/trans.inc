@@ -96,6 +96,7 @@ Function tr.transpile%()
     Case "!comments"     : tr.process_comments()
     Case "!comment_if"   : tr.process_if()
     Case "!empty-lines"  : tr.process_empty_lines()
+    Case "!error"        : tr.process_error()
     Case "!ifdef"        : tr.process_if()
     Case "!ifndef"       : tr.process_if()
     Case "!indent"       : tr.process_indent()
@@ -353,6 +354,14 @@ Sub tr.process_empty_lines()
   If lx.num > 2 Then sys.err$ = "has too many arguments"
   If sys.err$ = "" Then opt.set_empty_lines(lx.token_lc$(1))
   If sys.err$ <> "" Then sys.err$ = "!empty-lines directive " + sys.err$
+End Sub
+
+Sub tr.process_error()
+  If lx.num <> 2 Or lx.type(1) <> TK_STRING Then
+    sys.err$ = "!error directive has missing " + str.quote$("message") + " argument"
+  Else
+    sys.err$ = lx.string$(1)
+  EndIf
 End Sub
 
 Sub tr.process_include()
