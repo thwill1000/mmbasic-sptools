@@ -892,7 +892,7 @@ Sub gonzo.xsend_file(local_file$, remote_file$)
 
   ' Perform XMODEM SEND.
   Local file_size% = Mm.Info(FileSize local_file$)
-  con.println("XModem sending " + Str$(file_size%) + " bytes ...")
+  con.println("XModem sending " + Str$(file_size%) + " bytes to '" + remote_file$ + "' ...")
   Local t% = Timer
   XModem Send local_file$, #gonzo.SERIAL_FNBR%, 1
 
