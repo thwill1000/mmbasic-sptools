@@ -39,6 +39,10 @@ add_test("test_replace_with_fewer_tokens")
 add_test("test_replace_with_more_tokens")
 add_test("test_replace_given_new_rpl")
 add_test("test_apply_unreplace")
+add_test("test_clear_given_flag_set")
+add_test("test_clear_given_flag_unset")
+add_test("test_clear_given_flag_too_long")
+add_test("test_clear_is_case_insensitive")
 add_test("test_comment_if")
 add_test("test_comment_if_not")
 add_test("test_uncomment_if")
@@ -50,6 +54,7 @@ add_test("test_ifdef_given_set")
 add_test("test_ifdef_given_unset")
 add_test("test_ifdef_given_0_args")
 add_test("test_ifdef_given_2_args")
+add_test("test_ifdef_is_case_insensitive")
 add_test("test_ifdef_nested_1")
 add_test("test_ifdef_nested_2")
 add_test("test_ifdef_nested_3")
@@ -58,12 +63,15 @@ add_test("test_ifndef_given_set")
 add_test("test_ifndef_given_unset")
 add_test("test_ifndef_given_0_args")
 add_test("test_ifndef_given_2_args")
+add_test("test_ifndef_is_case_insensitive")
 add_test("test_ifndef_nested_1")
 add_test("test_ifndef_nested_2")
 add_test("test_ifndef_nested_3")
 add_test("test_ifndef_nested_4")
-add_test("test_set_given_flag_already_set")
+add_test("test_set_given_flag_set")
+add_test("test_set_given_flag_unset")
 add_test("test_set_given_flag_too_long")
+add_test("test_set_is_case_insensitive")
 add_test("test_omit_directives_from_output")
 add_test("test_unbalanced_endif")
 add_test("test_sptrans_flag_is_set")
@@ -612,6 +620,55 @@ Sub test_apply_unreplace()
   expect_tk(2, TK_IDENTIFIER, "ben")
 End Sub
 
+Sub test_clear_given_flag_set()
+  Local ok%
+
+  opt.set_flag("foo")
+  opt.set_flag("bar")
+
+  lx.parse_basic("'!clear foo") : ok% = tr.transpile%()
+  assert_int_equals(0, opt.is_flag_set%("foo"))
+  assert_int_equals(1, opt.is_flag_set%("bar"))
+
+  lx.parse_basic("'!clear bar") : ok% = tr.transpile%()
+  assert_int_equals(0, opt.is_flag_set%("foo"))
+  assert_int_equals(0, opt.is_flag_set%("bar"))
+End Sub
+
+Sub test_clear_given_flag_unset()
+  Local ok%
+
+  lx.parse_basic("'!clear foo") : ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_error("!clear directive flag 'foo' is not set")
+
+  lx.parse_basic("'!clear BAR") : ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_error("!clear directive flag 'BAR' is not set")
+End Sub
+
+Sub test_clear_given_flag_too_long()
+  lx.parse_basic("'!clear flag5678901234567890123456789012345678901234567890123456789012345")
+  Local ok% = tr.transpile%()
+  assert_int_equals(0, ok%)
+  assert_error("!clear directive flag too long, max 64 chars")
+End Sub
+
+Sub test_clear_is_case_insensitive()
+  Local ok%
+
+  opt.set_flag("foo")
+  opt.set_flag("BAR")
+
+  lx.parse_basic("'!clear FOO") : ok% = tr.transpile%()
+  assert_int_equals(0, opt.is_flag_set%("foo"))
+  assert_int_equals(1, opt.is_flag_set%("BAR"))
+
+  lx.parse_basic("'!clear bar") : ok% = tr.transpile%()
+  assert_int_equals(0, opt.is_flag_set%("foo"))
+  assert_int_equals(0, opt.is_flag_set%("BAR"))
+End Sub
+
 Sub test_comment_if()
   Local ok%
 
@@ -805,6 +862,16 @@ Sub test_ifdef_given_2_args()
   assert_string_equals("!ifdef directive expects 1 argument", sys.err$)
 End Sub
 
+Sub test_ifdef_is_case_insensitive()
+  Local ok%
+  opt.set_flag("foo")
+  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "one")
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+End Sub
+
 Sub test_ifdef_nested_1()
   Local ok%
 
@@ -949,6 +1016,15 @@ Sub test_ifndef_given_2_args()
   assert_string_equals("!ifndef directive expects 1 argument", sys.err$)
 End Sub
 
+Sub test_ifndef_is_case_insensitive()
+  Local ok%
+  opt.set_flag("foo")
+  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  lx.parse_basic("one") : ok% = tr.transpile%()
+  expect_tokens(0)
+  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+End Sub
+
 Sub test_ifndef_nested_1()
   Local ok%
 
@@ -1040,32 +1116,50 @@ Sub test_ifndef_nested_4()
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
 
-Sub test_set_given_flag_already_set()
+Sub test_set_given_flag_set()
   Local ok%
-  Local flag$ = "foo"
 
-  lx.parse_basic("'!set " + flag$)
-  ok% = tr.transpile%()
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
   assert_no_error()
-  assert_int_neq(-1, set.get%(opt.flags$(), flag$))
+  assert_int_equals(1, opt.is_flag_set%("foo"))
 
-  lx.parse_basic("'!set " + flag$)
-  ok% = tr.transpile%()
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
   assert_error("!set directive flag 'foo' is already set")
+End Sub
+
+Sub test_set_given_flag_unset()
+  Local ok%
+
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  assert_no_error()
+  assert_int_equals(1, opt.is_flag_set%("foo"))
+
+  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
+  assert_no_error()
+  assert_int_equals(1, opt.is_flag_set%("BAR"))
 End Sub
 
 Sub test_set_given_flag_too_long()
   Local ok%
   Local flag$ = "flag567890123456789012345678901234567890123456789012345678901234"
 
-  lx.parse_basic("'!set " + flag$)
-  ok% = tr.transpile%()
+  lx.parse_basic("'!set " + flag$) : ok% = tr.transpile%()
   assert_no_error()
-  assert_int_neq(-1, set.get%(opt.flags$(), flag$))
+  assert_int_equals(1, opt.is_flag_set%(flag$))
 
-  lx.parse_basic("'!set " + flag$ + "5")
-  ok% = tr.transpile%()
+  lx.parse_basic("'!set " + flag$ + "5") : ok% = tr.transpile%()
   assert_error("!set directive flag too long, max 64 chars")
+End Sub
+
+Sub test_set_is_case_insensitive()
+  Local ok%
+
+  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  assert_no_error()
+  assert_int_equals(1, opt.is_flag_set%("FOO"))
+
+  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  assert_error("!set directive flag 'FOO' is already set")
 End Sub
 
 Sub test_omit_directives_from_output()

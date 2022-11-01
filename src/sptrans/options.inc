@@ -52,23 +52,47 @@ Sub opt.init()
   set.init(opt.flags$())
 End Sub
 
-Sub opt.add_flag(flag$)
-  Local i%, flag_$ = str.trim$(flag$), lower$ = LCase$(flag_$)
+Sub opt.clear_flag(flag$)
+  Local s$ = str.trim$(flag$)
+  If Len(s$) > opt.FLAG_MAX_LENGTH% Then
+    sys.err$ = "flag too long, max 64 chars"
+  Else If opt.is_flag_set%(LCase$(s$)) Then
+    set.remove(opt.flags$(), LCase$(s$))
+  Else
+    sys.err$ = "flag '" + s$ + "' is not set"
+  EndIf
+End Sub
 
-  If Len(flag_$) > opt.FLAG_MAX_LENGTH% Then
+' @return  1 if the flag$ is set, 0 if it is not.
+Function opt.is_flag_set%(flag$)
+  Local s$ = str.trim$(flag$)
+  If Len(s$) > opt.FLAG_MAX_LENGTH% Then
+    sys.err$ = "flag too long, max 64 chars"
+  Else If LCase$(s$) = "sptrans" Then
+    ' SPTRANS flag is always considered set.
+    opt.is_flag_set% = 1
+  Else
+    opt.is_flag_set% = set.get%(opt.flags$(), LCase$(s$)) <> -1
+  Endif
+End Function
+
+Sub opt.set_flag(flag$)
+  Local i%, s$ = str.trim$(flag$), lower$ = LCase$(s$)
+
+  If Len(s$) > opt.FLAG_MAX_LENGTH% Then
     sys.err$ = "flag too long, max 64 chars"
     Exit Sub
   EndIf
 
   sys.err$ = "invalid flag"
-  If flag_$ = "" Then Exit Sub
+  If s$ = "" Then Exit Sub
   If Not InStr("_abcdefghijklmnopqrstuvwxyz", Mid$(lower$, 1, 1)) Then Exit Sub
   For i% = 2 To Len(lower$)
     If Not InStr("_abcdefghijklmnopqrstuvwxyz0123456789", Mid$(lower$, i%, 1)) Then Exit Sub
   Next
 
   If set.get%(opt.flags$(), lower$) <> -1 Then
-    sys.err$ = "flag '" + flag_$ + "' is already set"
+    sys.err$ = "flag '" + s$ + "' is already set"
     Exit Sub
   EndIf
 

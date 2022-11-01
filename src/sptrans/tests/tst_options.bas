@@ -18,11 +18,15 @@ Option Default Integer
 add_test("test_colour")
 add_test("test_comments")
 add_test("test_crunch")
-add_test("test_add_flag")
-add_test("test_add_flag_given_already_set")
-add_test("test_add_flag_given_invalid")
-add_test("test_add_flag_given_too_long")
-add_test("test_add_flag_given_too_many")
+add_test("test_set_flag")
+add_test("test_set_flag_given_already_set")
+add_test("test_set_flag_given_invalid")
+add_test("test_set_flag_given_too_long")
+add_test("test_set_flag_given_too_many")
+add_test("test_set_flag_case_insensitive")
+add_test("test_clear_flag_given_set")
+add_test("test_clear_flag_given_unset")
+add_test("test_clear_flag_case_insensitive")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_include_only")
@@ -160,57 +164,97 @@ Sub test_crunch()
   assert_error("expects 'on|off' argument")
 End Sub
 
-Sub test_add_flag()
+Sub test_set_flag()
   assert_int_equals(0, set.size%(opt.flags$()))
 
-  opt.add_flag("foo")
+  opt.set_flag("foo")
 
   assert_no_error()
-  assert_int_neq(-1, set.get%(opt.flags$(), "foo"))
-  assert_int_equals(-1, set.get%(opt.flags$(), "bar"))
+  assert_int_equals(1, opt.is_flag_set%("foo"))
+  assert_int_equals(0, opt.is_flag_set%("bar"))
 End Sub
 
-Sub test_add_flag_given_already_set()
-  opt.add_flag("foo")
-  opt.add_flag("foo")
+Sub test_set_flag_given_already_set()
+  opt.set_flag("foo")
+  opt.set_flag("foo")
 
   assert_error("flag 'foo' is already set")
 End Sub
 
-Sub test_add_flag_given_invalid()
+Sub test_set_flag_given_invalid()
   sys.err$ = ""
-  opt.add_flag("")
+  opt.set_flag("")
   assert_error("invalid flag")
 
   sys.err$ = ""
-  opt.add_flag(" ")
+  opt.set_flag(" ")
   assert_error("invalid flag")
 
   sys.err$ = ""
-  opt.add_flag("?")
+  opt.set_flag("?")
   assert_error("invalid flag")
 
   sys.err$ = ""
-  opt.add_flag("1hello")
+  opt.set_flag("1hello")
   assert_error("invalid flag")
 End Sub
 
-Sub test_add_flag_given_too_long()
-  opt.add_flag("flag567890123456789012345678901234567890123456789012345678901234")
+Sub test_set_flag_given_too_long()
+  opt.set_flag("flag567890123456789012345678901234567890123456789012345678901234")
   assert_no_error()
 
-  opt.add_flag("flag5678901234567890123456789012345678901234567890123456789012345")
+  opt.set_flag("flag5678901234567890123456789012345678901234567890123456789012345")
   assert_error("flag too long, max 64 chars")
 End Sub
 
-Sub test_add_flag_given_too_many()
+Sub test_set_flag_given_too_many()
   Local i%
   For i% = 1 To 10
-    opt.add_flag("item" + Str$(i%))
+    opt.set_flag("item" + Str$(i%))
   Next
 
-  opt.add_flag("sausage")
+  opt.set_flag("sausage")
   assert_error("too many flags")
+End Sub
+
+Sub test_set_flag_case_insensitive()
+  opt.set_flag("foo")
+  opt.set_flag("bar")
+
+  assert_int_equals(1, opt.is_flag_set%("FOO"))
+  assert_int_equals(1, opt.is_flag_set%("BAR"))
+End Sub
+
+Sub test_clear_flag_given_set()
+  opt.set_flag("foo")
+  opt.set_flag("bar")
+
+  opt.clear_flag("foo")
+  assert_int_equals(0, opt.is_flag_set%("foo"))
+  assert_int_equals(1, opt.is_flag_set%("bar"))
+
+  opt.clear_flag("bar")
+  assert_int_equals(0, opt.is_flag_set%("bar"))
+End Sub
+
+Sub test_clear_flag_given_unset()
+  opt.clear_flag("foo")
+  assert_error("flag 'foo' is not set")
+
+  opt.clear_flag("BAR")
+  assert_error("flag 'BAR' is not set")
+End Sub
+
+Sub test_clear_flag_case_insensitive()
+  opt.set_flag("foo")
+  opt.set_flag("bar")
+
+  opt.clear_flag("FOO")
+  assert_int_equals(0, opt.is_flag_set%("FOO"))
+  assert_int_equals(1, opt.is_flag_set%("BAR"))
+
+  opt.clear_flag("BAR")
+  assert_int_equals(0, opt.is_flag_set%("BAR"))
 End Sub
 
 Sub test_empty_lines()

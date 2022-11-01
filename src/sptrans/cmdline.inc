@@ -88,7 +88,7 @@ Sub cli.parse_no_arg(option$, i)
     If flag$ = "" Then
       sys.err$ = "option -D<flag> expects flag"
     Else
-      opt.add_flag(flag$)
+      opt.set_flag(flag$)
     EndIf
   Else
     opt.set(option$, "on")
