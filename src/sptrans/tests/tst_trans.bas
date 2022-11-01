@@ -382,24 +382,24 @@ Sub test_apply_replace_patterns()
 
   setup_test()
   ok% = parse_and_transpile%("'!replace { PRINT '%% } { ? : ? %1 }")
-  ok% = parse_and_transpile%("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar")
+  ok% = parse_and_transpile%("foo PRINT '" + str.quote$("wombat") + " bar")
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_SYMBOL,     "?")
   expect_tk(2, TK_SYMBOL,     ":")
   expect_tk(3, TK_SYMBOL,     "?")
-  expect_tk(4, TK_STRING,     Chr$(34) + "wombat" + Chr$(34))
+  expect_tk(4, TK_STRING,     str.quote$("wombat"))
   expect_tk(5, TK_IDENTIFIER, "bar")
 
   setup_test()
   ok% = parse_and_transpile%("'!replace '%% { : ? %1 }")
-  ok% = parse_and_transpile%("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar")
+  ok% = parse_and_transpile%("foo PRINT '" + str.quote$("wombat") + " bar")
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "PRINT")
   expect_tk(2, TK_SYMBOL,     ":")
   expect_tk(3, TK_SYMBOL,     "?")
-  expect_tk(4, TK_STRING,     Chr$(34) + "wombat" + Chr$(34))
+  expect_tk(4, TK_STRING,     str.quote$("wombat"))
   expect_tk(5, TK_IDENTIFIER, "bar")
 
   setup_test()
@@ -1292,7 +1292,7 @@ End Sub
 Sub test_error_directive()
   Local ok%
 
-  ok% = parse_and_transpile%("'!error " + Chr$(34) + "This is an error" + Chr$(34))
+  ok% = parse_and_transpile%("'!error " + str.quote$("This is an error"))
   assert_int_equals(0, ok%)
   assert_error("This is an error")
 
