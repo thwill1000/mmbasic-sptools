@@ -164,53 +164,46 @@ End Sub
 Sub test_parse_replace()
   Local ok%
 
-  lx.parse_basic("'!replace DEF Sub")
-  ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace DEF Sub")
   assert_no_error()
   expect_replacement(0, "def", "Sub")
 
-  lx.parse_basic("'!replace ENDPROC { End Sub }")
-  ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace ENDPROC { End Sub }")
   assert_no_error()
   expect_replacement(1, "endproc", "End|Sub")
 
-  lx.parse_basic("'!replace { THEN ENDPROC } { Then Exit Sub }")
-  ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { THEN ENDPROC } { Then Exit Sub }")
   assert_no_error()
   expect_replacement(2, "then|endproc", "Then|Exit|Sub")
 
-  lx.parse_basic("'!replace GOTO%% { Goto %1 }")
-  ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace GOTO%% { Goto %1 }")
   assert_no_error()
   expect_replacement(3, "goto%%", "Goto|%1")
 
-  lx.parse_basic("'!replace { THEN %% } { Then Goto %1 }")
-  ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { THEN %% } { Then Goto %1 }")
   assert_no_error()
   expect_replacement(4, "then|%%", "Then|Goto|%1")
 
-  lx.parse_basic("'!replace '%% { CRLF$ %1 }")
-  ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace '%% { CRLF$ %1 }")
   assert_no_error()
   expect_replacement(5, "'%%", "CRLF$|%1")
 
-  lx.parse_basic("'!replace &%h &h%1")
-  ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace &%h &h%1")
   assert_no_error()
   expect_replacement(6, "&%h", "&h%1")
 
-  lx.parse_basic("'!replace foo")
+  ok% = parse_and_transpile%("'!replace foo")
   ok% = tr.transpile%()
   assert_no_error()
   expect_replacement(7, "foo", "")
 
-  lx.parse_basic("'!replace {foo}")
+  ok% = parse_and_transpile%("'!replace {foo}")
   ok% = tr.transpile%()
   assert_no_error()
   expect_replacement(7, Chr$(0), Chr$(0))
   expect_replacement(8, "foo", "")
 
-  lx.parse_basic("'!replace foo {}")
+  ok% = parse_and_transpile%("'!replace foo {}")
   ok% = tr.transpile%()
   assert_no_error()
   expect_replacement(8, Chr$(0), Chr$(0))
@@ -220,47 +213,47 @@ End Sub
 Sub test_parse_replace_given_errors()
   Local ok%
 
-  lx.parse_basic("'!replace")
+  ok% = parse_and_transpile%("'!replace")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive expects <from> argument")
 
-  lx.parse_basic("'!replace {}")
+  ok% = parse_and_transpile%("'!replace {}")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has empty <from> group")
 
-  lx.parse_basic("'!replace {} y")
+  ok% = parse_and_transpile%("'!replace {} y")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has empty <from> group")
 
-  lx.parse_basic("'!replace { x y")
+  ok% = parse_and_transpile%("'!replace { x y")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has missing '}'")
 
-  lx.parse_basic("'!replace { x } { y z")
+  ok% = parse_and_transpile%("'!replace { x } { y z")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has missing '}'")
 
-  lx.parse_basic("'!replace { x } { y } z")
+  ok% = parse_and_transpile%("'!replace { x } { y } z")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has too many arguments")
 
-  lx.parse_basic("'!replace { x } { y } { z }")
+  ok% = parse_and_transpile%("'!replace { x } { y } { z }")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has too many arguments")
 
-  lx.parse_basic("'!replace { {")
+  ok% = parse_and_transpile%("'!replace { {")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has unexpected '{'")
 
-  lx.parse_basic("'!replace foo }")
+  ok% = parse_and_transpile%("'!replace foo }")
   ok% = tr.transpile%()
   assert_int_equals(0, tr.num_replacements%)
   assert_error("!replace directive has unexpected '}'")
@@ -270,20 +263,20 @@ Sub test_parse_given_too_many_rpl()
   Local i%, ok%
 
   For i% = 0 To tr.MAX_REPLACEMENTS% - 1
-    lx.parse_basic("'!replace a" + Str$(i%) + " b") : ok% = tr.transpile%()
+    ok% = parse_and_transpile%("'!replace a" + Str$(i%) + " b")
   Next
   assert_no_error()
 
-  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo bar")
   assert_error("!replace directive too many replacements (max 200)")
 End Sub
 
 Sub test_parse_unreplace()
   Local ok%
 
-  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
-  lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
-  lx.parse_basic("'!unreplace foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo bar")
+  ok% = parse_and_transpile%("'!replace wom bat")
+  ok% = parse_and_transpile%("'!unreplace foo")
 
   assert_no_error()
   assert_int_equals(2, tr.num_replacements%)
@@ -295,16 +288,16 @@ Sub test_parse_unreplace_given_errs()
   Local ok%
 
   ' Test given missing argument to directive.
-  lx.parse_basic("'!unreplace") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!unreplace")
   assert_error("!unreplace directive expects <from> argument")
 
   ' Test given directive has too many arguments.
-  lx.parse_basic("'!unreplace { a b } c") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!unreplace { a b } c")
   assert_error("!unreplace directive has too many arguments")
 
   ' Test given replacement not present.
-  lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
-  lx.parse_basic("'!unreplace foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace wom bat")
+  ok% = parse_and_transpile%("'!unreplace foo")
   assert_error("!unreplace directive could not find 'foo'")
   assert_int_equals(1, tr.num_replacements%)
   expect_replacement(0, "wom", "bat")
@@ -313,9 +306,9 @@ End Sub
 Sub test_apply_replace()
   Local ok%
 
-  lx.parse_basic("'!replace x      y") : ok% = tr.transpile%()
-  lx.parse_basic("'!replace &hFFFF z") : ok% = tr.transpile%()
-  lx.parse_basic("Dim x = &hFFFF ' comment") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace x      y")
+  ok% = parse_and_transpile%("'!replace &hFFFF z")
+  ok% = parse_and_transpile%("Dim x = &hFFFF ' comment")
 
   expect_tokens(5)
   expect_tk(0, TK_KEYWORD, "Dim")
@@ -329,8 +322,8 @@ End Sub
 Sub test_apply_replace_groups()
   Local ok%
 
-  lx.parse_basic("'!replace ab { cd ef }") : ok% = tr.transpile%()
-  lx.parse_basic("ab gh ij") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace ab { cd ef }")
+  ok% = parse_and_transpile%("ab gh ij")
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "cd")
   expect_tk(1, TK_IDENTIFIER, "ef")
@@ -338,8 +331,8 @@ Sub test_apply_replace_groups()
   expect_tk(3, TK_IDENTIFIER, "ij")
 
   setup_test()
-  lx.parse_basic("'!replace {ab cd} ef") : ok% = tr.transpile%()
-  lx.parse_basic("ab cd gh ij") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace {ab cd} ef")
+  ok% = parse_and_transpile%("ab cd gh ij")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "ef")
   expect_tk(1, TK_IDENTIFIER, "gh")
@@ -350,8 +343,8 @@ Sub test_apply_replace_patterns()
   Local ok%
 
   setup_test()
-  lx.parse_basic("'!replace { DEF PROC%% } { SUB proc%1 }") : ok% = tr.transpile%()
-  lx.parse_basic("foo DEF PROCWOMBAT bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { DEF PROC%% } { SUB proc%1 }")
+  ok% = parse_and_transpile%("foo DEF PROCWOMBAT bar")
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "SUB")
@@ -359,8 +352,8 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar")
 
   setup_test()
-  lx.parse_basic("'!replace GOTO%d { Goto %1 }") : ok% = tr.transpile%()
-  lx.parse_basic("foo GOTO1234 bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace GOTO%d { Goto %1 }")
+  ok% = parse_and_transpile%("foo GOTO1234 bar")
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD   , "Goto")
@@ -368,10 +361,10 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar") 
 
   setup_test()
-  lx.parse_basic("'!replace { THEN %d } { Then Goto %1 }") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { THEN %d } { Then Goto %1 }")
 
   ' Test %d pattern matches decimal digits ...
-  lx.parse_basic("foo THEN 1234 bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("foo THEN 1234 bar")
   expect_tokens(5)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD   , "Then")
@@ -380,7 +373,7 @@ Sub test_apply_replace_patterns()
   expect_tk(4, TK_IDENTIFIER, "bar") 
 
   ' ... but it should not match other characters.
-  lx.parse_basic("foo THEN wombat bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("foo THEN wombat bar")
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD   , "THEN")
@@ -388,8 +381,8 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar") 
 
   setup_test()
-  lx.parse_basic("'!replace { PRINT '%% } { ? : ? %1 }") : ok% = tr.transpile%()
-  lx.parse_basic("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { PRINT '%% } { ? : ? %1 }")
+  ok% = parse_and_transpile%("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar")
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_SYMBOL,     "?")
@@ -399,8 +392,8 @@ Sub test_apply_replace_patterns()
   expect_tk(5, TK_IDENTIFIER, "bar")
 
   setup_test()
-  lx.parse_basic("'!replace '%% { : ? %1 }") : ok% = tr.transpile%()
-  lx.parse_basic("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace '%% { : ? %1 }")
+  ok% = parse_and_transpile%("foo PRINT '" + Chr$(34) + "wombat" + Chr$(34) + " bar")
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "PRINT")
@@ -410,15 +403,15 @@ Sub test_apply_replace_patterns()
   expect_tk(5, TK_IDENTIFIER, "bar")
 
   setup_test()
-  lx.parse_basic("'!replace REM%% { ' %1 }") : ok% = tr.transpile%()
-  lx.parse_basic("foo REM This is a comment") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace REM%% { ' %1 }")
+  ok% = parse_and_transpile%("foo REM This is a comment")
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_COMMENT, "' This is a comment")
 
   setup_test()
-  lx.parse_basic("'!replace { Spc ( } { Space$ ( }") : ok% = tr.transpile%()
-  lx.parse_basic("foo Spc(5) bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { Spc ( } { Space$ ( }")
+  ok% = parse_and_transpile%("foo Spc(5) bar")
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "Space$")
@@ -429,8 +422,8 @@ Sub test_apply_replace_patterns()
 
   ' Test %h pattern matches hex digits ...
   setup_test()
-  lx.parse_basic("'!replace GOTO%h { Goto %1 }") : ok% = tr.transpile%()
-  lx.parse_basic("foo GOTOabcdef0123456789 bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace GOTO%h { Goto %1 }")
+  ok% = parse_and_transpile%("foo GOTOabcdef0123456789 bar")
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_KEYWORD,    "Goto")
@@ -438,7 +431,7 @@ Sub test_apply_replace_patterns()
   expect_tk(3, TK_IDENTIFIER, "bar")
 
   ' ... but it should not match other characters.
-  lx.parse_basic("foo GOTOxyz bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("foo GOTOxyz bar")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "GOTOxyz")
@@ -448,13 +441,13 @@ End Sub
 Sub test_replace_fails_if_too_long()
   Local ok%, s$
 
-  lx.parse_basic("'!replace foo foobar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo foobar")
 
   ' Test where replaced string should be 255 characters.
   s$ = String$(248, "a")
   Cat s$, " foo"
   assert_int_equals(252, Len(s$))
-  lx.parse_basic(s$)
+  ok% = parse_and_transpile%(s$)
   ok% = tr.transpile%()
   assert_no_error()
   expect_tokens(2)
@@ -466,7 +459,7 @@ Sub test_replace_fails_if_too_long()
   s$ = String$(251, "a")
   Cat s$, " foo"
   assert_int_equals(255, Len(s$))
-  lx.parse_basic(s$)
+  ok% = parse_and_transpile%(s$)
   ok% = tr.transpile%()
   assert_error("applying replacement makes line > 255 characters")
 End Sub
@@ -475,22 +468,22 @@ Sub test_replace_with_fewer_tokens()
   Local ok%
 
   ' Replace 1 token with 0.
-  lx.parse_basic("'!replace bar") : ok% = tr.transpile%()
-  lx.parse_basic("foo bar wom") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace bar")
+  ok% = parse_and_transpile%("foo bar wom")
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "wom")
 
   ' Removal of all tokens.
   setup_test()
-  lx.parse_basic("'!replace bar") : ok% = tr.transpile%()
-  lx.parse_basic("bar bar bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace bar")
+  ok% = parse_and_transpile%("bar bar bar")
   expect_tokens(0)
 
   ' Replace 2 tokens with 1.
   setup_test()
-  lx.parse_basic("'!replace { foo bar } wom") : ok% = tr.transpile%()
-  lx.parse_basic("foo bar foo bar snafu") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { foo bar } wom")
+  ok% = parse_and_transpile%("foo bar foo bar snafu")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "wom")
   expect_tk(1, TK_IDENTIFIER, "wom")
@@ -500,16 +493,16 @@ Sub test_replace_with_fewer_tokens()
   ' applied a replacement we do not recursively apply that replacement to the
   ' already replaced text.
   setup_test()
-  lx.parse_basic("'!replace { foo bar } foo") : ok% = tr.transpile%()
-  lx.parse_basic("foo bar bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { foo bar } foo")
+  ok% = parse_and_transpile%("foo bar bar")
   expect_tokens(2)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
 
   ' Replace 3 tokens with 1 - again note we don't just end up with "foo".
   setup_test()
-  lx.parse_basic("'!replace { foo bar wom } foo") : ok% = tr.transpile%()
-  lx.parse_basic("foo bar wom bar wom") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { foo bar wom } foo")
+  ok% = parse_and_transpile%("foo bar wom bar wom")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
@@ -517,8 +510,8 @@ Sub test_replace_with_fewer_tokens()
 
   ' Replace 3 tokens with 2 - and again we don't just end up with "foo bar".
   setup_test()
-  lx.parse_basic("'!replace { foo bar wom } { foo bar }") : ok% = tr.transpile%()
-  lx.parse_basic("foo bar wom wom") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { foo bar wom } { foo bar }")
+  ok% = parse_and_transpile%("foo bar wom wom")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
@@ -531,16 +524,16 @@ Sub test_replace_with_more_tokens()
   ' Replace 1 token with 2 - note that we don't get infinite recursion because
   ' once we have applied the replacement text we not not recusively apply the
   ' replacement to the already replaced text.
-  lx.parse_basic("'!replace foo { foo bar }") : ok% = tr.transpile%()
-  lx.parse_basic("foo wom") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo { foo bar }")
+  ok% = parse_and_transpile%("foo wom")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
   expect_tk(2, TK_IDENTIFIER, "wom")
 
   setup_test()
-  lx.parse_basic("'!replace foo { bar foo }") : ok% = tr.transpile%()
-  lx.parse_basic("foo wom foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo { bar foo }")
+  ok% = parse_and_transpile%("foo wom foo")
   expect_tokens(5)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "foo")
@@ -550,8 +543,8 @@ Sub test_replace_with_more_tokens()
 
   ' Ensure replacement applied for multiple matches.
   setup_test()
-  lx.parse_basic("'!replace foo { bar foo }") : ok% = tr.transpile%()
-  lx.parse_basic("foo foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo { bar foo }")
+  ok% = parse_and_transpile%("foo foo")
   expect_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "foo")
@@ -560,8 +553,8 @@ Sub test_replace_with_more_tokens()
 
   ' Replace 3 tokens with 4.
   setup_test()
-  lx.parse_basic("'!replace { foo bar wom } { foo bar wom foo }") : ok% = tr.transpile%()
-  lx.parse_basic("foo bar wom bar wom") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace { foo bar wom } { foo bar wom foo }")
+  ok% = parse_and_transpile%("foo bar wom bar wom")
   expect_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_IDENTIFIER, "bar")
@@ -574,15 +567,15 @@ End Sub
 Sub test_replace_given_new_rpl()
   Local ok%
 
-  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
-  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo bar")
+  ok% = parse_and_transpile%("foo wom bill")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "wom")
   expect_tk(2, TK_IDENTIFIER, "bill")
 
-  lx.parse_basic("'!replace foo snafu") : ok% = tr.transpile%()
-  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo snafu")
+  ok% = parse_and_transpile%("foo wom bill")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "snafu")
   expect_tk(1, TK_IDENTIFIER, "wom")
@@ -592,28 +585,28 @@ End Sub
 Sub test_apply_unreplace()
   Local ok%
 
-  lx.parse_basic("'!replace foo bar") : ok% = tr.transpile%()
-  lx.parse_basic("'!replace wom bat") : ok% = tr.transpile%()
-  lx.parse_basic("'!replace bill ben") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace foo bar")
+  ok% = parse_and_transpile%("'!replace wom bat")
+  ok% = parse_and_transpile%("'!replace bill ben")
   expect_replacement(0, "foo", "bar")
   expect_replacement(1, "wom", "bat")
   expect_replacement(2, "bill", "ben")
   expect_replacement(3, "", "")
 
-  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("foo wom bill")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "bat")
   expect_tk(2, TK_IDENTIFIER, "ben")
 
-  lx.parse_basic("'!unreplace wom") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!unreplace wom")
   assert_no_error()
   expect_replacement(0, "foo", "bar")
   expect_replacement(1, Chr$(0), Chr$(0))
   expect_replacement(2, "bill", "ben")
   expect_replacement(3, "", "")
 
-  lx.parse_basic("foo wom bill") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("foo wom bill")
   expect_tokens(3)
   expect_tk(0, TK_IDENTIFIER, "bar")
   expect_tk(1, TK_IDENTIFIER, "wom")
@@ -626,11 +619,11 @@ Sub test_clear_given_flag_set()
   opt.set_flag("foo")
   opt.set_flag("bar")
 
-  lx.parse_basic("'!clear foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!clear foo")
   assert_int_equals(0, opt.is_flag_set%("foo"))
   assert_int_equals(1, opt.is_flag_set%("bar"))
 
-  lx.parse_basic("'!clear bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!clear bar")
   assert_int_equals(0, opt.is_flag_set%("foo"))
   assert_int_equals(0, opt.is_flag_set%("bar"))
 End Sub
@@ -638,18 +631,19 @@ End Sub
 Sub test_clear_given_flag_unset()
   Local ok%
 
-  lx.parse_basic("'!clear foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!clear foo")
   assert_int_equals(0, ok%)
   assert_error("!clear directive flag 'foo' is not set")
 
-  lx.parse_basic("'!clear BAR") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!clear BAR")
   assert_int_equals(0, ok%)
   assert_error("!clear directive flag 'BAR' is not set")
 End Sub
 
 Sub test_clear_given_flag_too_long()
-  lx.parse_basic("'!clear flag5678901234567890123456789012345678901234567890123456789012345")
-  Local ok% = tr.transpile%()
+  Local ok%
+
+  ok% = parse_and_transpile%("'!clear flag5678901234567890123456789012345678901234567890123456789012345")
   assert_int_equals(0, ok%)
   assert_error("!clear directive flag too long, max 64 chars")
 End Sub
@@ -660,11 +654,11 @@ Sub test_clear_is_case_insensitive()
   opt.set_flag("foo")
   opt.set_flag("BAR")
 
-  lx.parse_basic("'!clear FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!clear FOO")
   assert_int_equals(0, opt.is_flag_set%("foo"))
   assert_int_equals(1, opt.is_flag_set%("BAR"))
 
-  lx.parse_basic("'!clear bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!clear bar")
   assert_int_equals(0, opt.is_flag_set%("foo"))
   assert_int_equals(0, opt.is_flag_set%("BAR"))
 End Sub
@@ -673,18 +667,18 @@ Sub test_comment_if()
   Local ok%
 
   ' 'foo' is set, code inside !comment_if block should be commented.
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
-  lx.parse_basic("'!comment_if foo") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
+  ok% = parse_and_transpile%("'!comment_if foo")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' one")
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' two")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 
   ' Code outside the block should not be commented.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -693,50 +687,50 @@ Sub test_comment_if_not()
   Local ok%
 
   ' 'foo' is NOT set, code inside !comment_if NOT block should be commented.
-  lx.parse_basic("'!comment_if not foo") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!comment_if not foo")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' one")
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' two")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 
   ' 'foo' is set, code inside !comment_if NOT block should NOT be commented.
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
-  lx.parse_basic("'!comment_if not foo") : ok% = tr.transpile%()
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
+  ok% = parse_and_transpile%("'!comment_if not foo")
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 End Sub
 
 Sub test_uncomment_if()
   Local ok%
 
   ' 'foo' is set, code inside !uncomment_if block should be uncommented.
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
-  lx.parse_basic("'!uncomment_if foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
+  ok% = parse_and_transpile%("'!uncomment_if foo")
 
-  lx.parse_basic("' one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("' one")
   assert_string_equals(" one", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
 
-  lx.parse_basic("REM two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("REM two")
   assert_string_equals(" two", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
 
-  lx.parse_basic("'' three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'' three")
   assert_string_equals("' three", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' three")
 
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 
   ' Code outside the block should not be uncommented.
-  lx.parse_basic("' four") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("' four")
   assert_string_equals("' four", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
@@ -746,48 +740,48 @@ Sub test_uncomment_if_not()
   Local ok%
 
   ' 'foo' is NOT set, code inside !uncomment_if NOT block should be uncommented.
-  lx.parse_basic("'!uncomment_if not foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!uncomment_if not foo")
 
-  lx.parse_basic("' one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("' one")
   assert_string_equals(" one", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
 
-  lx.parse_basic("REM two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("REM two")
   assert_string_equals(" two", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
 
-  lx.parse_basic("'' three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'' three")
   assert_string_equals("' three", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' three")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 
   ' 'foo' is set, code inside !uncomment_if NOT block should NOT be uncommented.
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
-  lx.parse_basic("'!uncomment_if not foo") : ok% = tr.transpile%()
-  lx.parse_basic("' four") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
+  ok% = parse_and_transpile%("'!uncomment_if not foo")
+  ok% = parse_and_transpile%("' four")
   assert_string_equals("' four", lx.line$)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' four")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 End Sub
 
 Sub test_remove_if()
   Local ok%
 
   ' 'foo' is set, code inside !remove_if block should be omitted.
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
-  lx.parse_basic("'!remove_if foo") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
+  ok% = parse_and_transpile%("'!remove_if foo")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 
   ' Code outside the block should not be omitted.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -796,15 +790,15 @@ Sub test_remove_if_not()
   Local ok%
 
   ' 'foo' is not set, code inside !remove_if block should be omitted.
-  lx.parse_basic("'!remove_if not foo") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!remove_if not foo")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 
   ' Code outside the block should not be omitted.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -813,19 +807,19 @@ Sub test_ifdef_given_set()
   Local ok%
 
   ' FOO is set so all code within !ifdef FOO is included.
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -834,30 +828,30 @@ Sub test_ifdef_given_unset()
   Local ok%
 
   ' FOO is unset so all code within !ifdef FOO is excluded.
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifdef_given_0_args()
   Local ok%
-  lx.parse_basic("'!ifdef") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef")
   assert_int_equals(0, ok%)
   assert_string_equals("!ifdef directive expects 1 argument", sys.err$)
 End Sub
 
 Sub test_ifdef_given_2_args()
   Local ok%
-  lx.parse_basic("'!ifdef not bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef not bar")
   assert_int_equals(0, ok%)
   assert_string_equals("!ifdef directive expects 1 argument", sys.err$)
 End Sub
@@ -865,30 +859,30 @@ End Sub
 Sub test_ifdef_is_case_insensitive()
   Local ok%
   opt.set_flag("foo")
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 End Sub
 
 Sub test_ifdef_nested_1()
   Local ok%
 
   ' FOO and BAR are both unset so all code within !ifdef FOO is excluded.
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -897,21 +891,21 @@ Sub test_ifdef_nested_2()
   Local ok%
 
   ' FOO is set and BAR is unset so code within !ifdef BAR is excluded.
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -920,20 +914,20 @@ Sub test_ifdef_nested_3()
   Local ok%
 
   ' BAR is set and FOO is unset so all code within !ifdef FOO is excluded.
-  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set BAR")
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -942,23 +936,23 @@ Sub test_ifdef_nested_4()
   Local ok%
 
   ' FOO and BAR are both set so all code within !ifdef FOO and !ifdef BAR is included.
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!set BAR")
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("'!ifdef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -967,17 +961,17 @@ Sub test_ifndef_given_set()
   Local ok%
 
   ' FOO is set so all code within !ifndef FOO is excluded.
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -986,32 +980,32 @@ Sub test_ifndef_given_unset()
   Local ok%
 
   ' FOO is unset so all code within !ifndef FOO is included.
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("two")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifndef_given_0_args()
   Local ok%
-  lx.parse_basic("'!ifndef") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef")
   assert_int_equals(0, ok%)
   assert_string_equals("!ifndef directive expects 1 argument", sys.err$)
 End Sub
 
 Sub test_ifndef_given_2_args()
   Local ok%
-  lx.parse_basic("'!ifndef not bar") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef not bar")
   assert_int_equals(0, ok%)
   assert_string_equals("!ifndef directive expects 1 argument", sys.err$)
 End Sub
@@ -1019,31 +1013,31 @@ End Sub
 Sub test_ifndef_is_case_insensitive()
   Local ok%
   opt.set_flag("foo")
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
 End Sub
 
 Sub test_ifndef_nested_1()
   Local ok%
 
   ' FOO and BAR are both unset so all code within !ifndef FOO is included.
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "two")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -1052,20 +1046,20 @@ Sub test_ifndef_nested_2()
   Local ok%
 
   ' FOO is set and BAR is unset so all code within !ifndef FOO is excluded.
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -1074,21 +1068,21 @@ Sub test_ifndef_nested_3()
   Local ok%
 
   ' BAR is set and FOO is unset so all code within !ifndef BAR is excluded.
-  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set BAR")
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -1097,21 +1091,21 @@ Sub test_ifndef_nested_4()
   Local ok%
 
   ' FOO and BAR are both set so all code within !ifndef FOO and !ifndef BAR is excluded.
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!set BAR")
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("one")
   expect_tokens(0)
-  lx.parse_basic("'!ifndef BAR") : ok% = tr.transpile%()
-  lx.parse_basic("two") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef BAR")
+  ok% = parse_and_transpile%("two")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   expect_tokens(0)
 
   ' Code outside the block is included.
-  lx.parse_basic("three") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("three")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "three")
 End Sub
@@ -1119,22 +1113,22 @@ End Sub
 Sub test_set_given_flag_set()
   Local ok%
 
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
   assert_no_error()
   assert_int_equals(1, opt.is_flag_set%("foo"))
 
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
   assert_error("!set directive flag 'foo' is already set")
 End Sub
 
 Sub test_set_given_flag_unset()
   Local ok%
 
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
   assert_no_error()
   assert_int_equals(1, opt.is_flag_set%("foo"))
 
-  lx.parse_basic("'!set BAR") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set BAR")
   assert_no_error()
   assert_int_equals(1, opt.is_flag_set%("BAR"))
 End Sub
@@ -1143,22 +1137,22 @@ Sub test_set_given_flag_too_long()
   Local ok%
   Local flag$ = "flag567890123456789012345678901234567890123456789012345678901234"
 
-  lx.parse_basic("'!set " + flag$) : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set " + flag$)
   assert_no_error()
   assert_int_equals(1, opt.is_flag_set%(flag$))
 
-  lx.parse_basic("'!set " + flag$ + "5") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set " + flag$ + "5")
   assert_error("!set directive flag too long, max 64 chars")
 End Sub
 
 Sub test_set_is_case_insensitive()
   Local ok%
 
-  lx.parse_basic("'!set foo") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set foo")
   assert_no_error()
   assert_int_equals(1, opt.is_flag_set%("FOO"))
 
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
   assert_error("!set directive flag 'FOO' is already set")
 End Sub
 
@@ -1166,118 +1160,118 @@ Sub test_omit_directives_from_output()
   Local ok%
 
   setup_test()
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!clear FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!clear FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!comments on") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!comments on")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!comment_if FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!comment_if FOO")
   assert_int_equals(ok%, tr.STATUS_OMIT_LINE%)
   expect_tokens(0)
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!comment_if FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!comment_if FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!empty-lines 1") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!empty-lines 1")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-
-  setup_test()
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!ifdef FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!indent 1") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!ifndef FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!replace FOO BAR") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!indent 1")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!remove_if FOO") : ok% = tr.transpile%()
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!remove_if FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace FOO BAR")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!remove_if FOO")
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!remove_if FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!spacing 1") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!set FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!uncomment_if FOO") : ok% = tr.transpile%()
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!uncomment_if FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!spacing 1")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!replace FOO BAR") : ok% = tr.transpile%()
-  lx.parse_basic("'!unreplace FOO") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!uncomment_if FOO")
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!uncomment_if FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 
   setup_test()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!replace FOO BAR")
+  ok% = parse_and_transpile%("'!unreplace FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
-  lx.parse_basic("'!set FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!ifdef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+
+  setup_test()
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("'!endif")
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  ok% = parse_and_transpile%("'!set FOO")
+  ok% = parse_and_transpile%("'!ifdef FOO")
+  ok% = parse_and_transpile%("'!endif")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 End Sub
 
 Sub test_unknown_directive()
-  lx.parse_basic("'!wombat foo")
-  assert_int_equals(0, tr.transpile%())
+  Local ok% = parse_and_transpile%("'!wombat foo")
+  assert_int_equals(0, ok%)
   assert_error("unknown !wombat directive")
 End Sub
 
 Sub test_unbalanced_endif()
   Local ok%
 
-  lx.parse_basic("'!ifndef FOO") : ok% = tr.transpile%()
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifndef FOO")
+  ok% = parse_and_transpile%("'!endif")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   assert_int_equals(0, ok%)
   assert_error("unmatched !endif")
 End Sub
@@ -1286,30 +1280,36 @@ Sub test_sptrans_flag_is_set()
   Local ok%
 
   ' The SPTRANS flag is always considered set by the transpiler.
-  lx.parse_basic("'!ifdef SPTRANS") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!ifdef SPTRANS")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  lx.parse_basic("one") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("one")
   expect_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "one")
-  lx.parse_basic("'!endif") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!endif")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
 End Sub
 
 Sub test_error_directive()
   Local ok%
 
-  lx.parse_basic("'!error " + Chr$(34) + "This is an error" + Chr$(34)) : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!error " + Chr$(34) + "This is an error" + Chr$(34))
   assert_int_equals(0, ok%)
   assert_error("This is an error")
 
-  lx.parse_basic("'!error") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!error")
   assert_int_equals(0, ok%)
   assert_error("!error directive has missing " + str.quote$("message") + " argument")
 
-  lx.parse_basic("'!error 42") : ok% = tr.transpile%()
+  ok% = parse_and_transpile%("'!error 42")
   assert_int_equals(0, ok%)
   assert_error("!error directive has missing " + str.quote$("message") + " argument")
 End Sub
+
+Function parse_and_transpile%(s$)
+  lx.parse_basic(s$)
+  assert_no_error()
+  parse_and_transpile% = tr.transpile%()
+End Function
 
 Sub expect_replacement(i%, from$, to_$)
   assert_true(from$ = tr.replacements$(i%, 0), "Assert failed, expected from$ = '" + from$ + "', but was '" + tr.replacements$(i%, 0) + "'")
