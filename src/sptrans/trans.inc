@@ -14,7 +14,7 @@ Dim tr.num_comments(MAX_NUM_FILES - 1)
 ' If 'i' is the base-0 index of the source file then
 '   if_stack(i, if_stack_sz - 1)
 '     = +1  : if the latest !if directive incremented 'num_comments'
-'     = +2  : if the latest !if directive set the 'omit_code' flag
+'     = +2  : if the latest !if directive set the 'omit_flag'
 '     = -1  : if the latest !if directive decremented 'num_comments'
 '     = 0   : if the current !if directive is inactive
 Const tr.MAX_NUM_IFS = 10
@@ -29,9 +29,15 @@ Dim tr.replacements$(tr.MAX_REPLACEMENTS% - 1, 1) Length 80
 ' Set to name of file after processing #INCLUDE.
 Dim tr.include$
 
-' Set to 1 by the !remove_if directive this causes all code to be omitted until
-' we process the matching !endif which will reset it to 0.
-Dim tr.omit_code%
+' If set we ignore/omit lines until we process an !ENDIF directive
+' corresponding to the directive that set this flag.
+Dim tr.omit_flag%
+
+' Was the last non-omitted line empty after transpilation ?
+Dim tr.empty_line_flag%
+
+' Was the last line omitted ?
+Dim tr.omitted_line_flag%
 
 Const tr.STATUS_INCLUDE% = 2
 Const tr.STATUS_OMIT_LINE% = 3
@@ -64,17 +70,19 @@ Function tr.transpile%()
 
   If lx.token_lc$(0) = "'!endif" Then
     tr.transpile% = tr.process_endif%()
+    tr.omitted_line_flag% = (tr.transpile% = tr.STATUS_OMIT_LINE%)
     Exit Function
   EndIf
 
-  If tr.omit_code% Then
+  If tr.omit_flag% Then
     If lx.type(0) = TK_DIRECTIVE Then
       Select Case lx.directive$(0)
         Case "!comment_if", "!ifdef", "!ifndef", "!remove_if", "!uncomment_if"
           tr.push_if(0) ' Still need to record omitted !if's.
       End Select
     EndIf
-    lx.parse_basic("") ' Not really necessary since it should be ignored by the caller.
+    lx.parse_basic("")
+    tr.omitted_line_flag% = 1
     tr.transpile% = tr.STATUS_OMIT_LINE%
     Exit Function
   EndIf
@@ -83,13 +91,32 @@ Function tr.transpile%()
   tr.apply_replacements()
   If sys.err$ <> "" Then Exit Function
 
+  ' IF this line is empty
+  ' AND the last line was omitted
+  ' AND the last non-omitted line was empty.
+  ' THEN omit this line.
+  If lx.num = 0 Then                          ' IF this line is empty
+    If tr.omitted_line_flag% Then             ' AND the last line was omitted
+      If tr.empty_line_flag% Then             ' AND the last non-omitted line was empty
+        tr.transpile% = tr.STATUS_OMIT_LINE%  ' THEN omit this line.
+        Exit Function
+      EndIf
+    EndIf
+  EndIF
+
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
     tr.transpile% = Choice(sys.err$ = "", tr.STATUS_INCLUDE%, 0)
+    tr.omitted_line_flag% = 0
     Exit Function
   EndIf
 
-  If lx.type(0) <> TK_DIRECTIVE Then tr.transpile% = 1 : Exit Function
+  If lx.type(0) <> TK_DIRECTIVE Then
+    tr.transpile% = 1
+    tr.omitted_line_flag% = 0
+    tr.empty_line_flag% = (lx.num = 0)
+    Exit Function
+  EndIf
 
   Select Case lx.directive$(0)
     Case "!clear"        : tr.process_clear()
@@ -113,6 +140,7 @@ Function tr.transpile%()
 '    lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
     lx.parse_basic("")
     tr.transpile% = tr.STATUS_OMIT_LINE%
+    tr.omitted_line_flag% = 1
   EndIf
 End Function
 
@@ -121,7 +149,7 @@ Function tr.process_endif%()
   Select Case x%
     Case 0     : ' Do nothing.
     Case 1, -1 : tr.update_num_comments(-x%)
-    Case 2     : tr.omit_code = 0
+    Case 2     : tr.omit_flag% = 0
     Case Else  : Error
   End Select
   If sys.err$ <> "" Then Exit Function
@@ -321,11 +349,11 @@ Sub tr.process_if()
 
     Case "!ifdef"
       tr.push_if(Choice(x, 0, 2))
-      If Not x Then tr.omit_code = 1
+      tr.omit_flag% = Not x
 
     Case "!ifndef", "!remove_if"
       tr.push_if(Choice(x, 2, 0))
-      If x Then tr.omit_code = 1
+      tr.omit_flag% = x
 
     Case "!uncomment_if"
       tr.push_if(-x)

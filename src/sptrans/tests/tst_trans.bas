@@ -76,6 +76,7 @@ add_test("test_omit_directives_from_output")
 add_test("test_unbalanced_endif")
 add_test("test_sptrans_flag_is_set")
 add_test("test_error_directive")
+add_test("test_omit_and_line_spacing")
 
 run_tests()
 
@@ -87,7 +88,10 @@ Sub setup_test()
   ' TODO: extract into trans.init() or trans.reset().
   tr.clear_replacements()
   tr.include$ = ""
-  tr.omit_code = 0
+  tr.omit_flag% = 0
+  tr.empty_line_flag% = 0
+  tr.omitted_line_flag% = 0
+
   Local i%, j%
   For i% = Bound(tr.num_comments(), 0) To Bound(tr.num_comments(), 1)
     tr.num_comments(i%) = 0
@@ -1303,6 +1307,55 @@ Sub test_error_directive()
   ok% = parse_and_transpile%("'!error 42")
   assert_int_equals(0, ok%)
   assert_error("!error directive has missing " + str.quote$("message") + " argument")
+End Sub
+
+' If the result of transpiling a line is such that the line is omitted
+' and that omission then causes two empty lines to run sequentially then
+' we automatically omit the second empty line.
+Sub test_omit_and_line_spacing()
+  Local ok%
+
+  ok% = parse_and_transpile%("")
+  assert_no_error()
+  assert_int_equals(1, ok%)
+
+  ok% = parse_and_transpile%("")
+  assert_no_error()
+  assert_int_equals(1, ok%)
+
+  ok% = parse_and_transpile%("'!set foo")
+  assert_no_error()
+  assert_int_equals(3, ok%)
+  assert_int_equals(0, tr.omit_flag%)
+
+  ' Should be omitted, because the last line was omitted AND
+  ' the last non-omitted line was empty.
+  ok% = parse_and_transpile%("")
+  assert_no_error()
+  assert_int_equals(3, ok%)
+  assert_int_equals(0, tr.omit_flag%)
+
+  ok% = parse_and_transpile%("'!ifndef foo")
+  assert_no_error()
+  assert_int_equals(3, ok%)
+  assert_int_equals(1, tr.omit_flag%)
+
+  ok% = parse_and_transpile%("bar")
+  assert_no_error()
+  assert_int_equals(3, ok%)
+  assert_int_equals(1, tr.omit_flag%)
+
+  ok% = parse_and_transpile%("'!endif")
+  assert_no_error()
+  assert_int_equals(3, ok%)
+  assert_int_equals(0, tr.omit_flag%)
+
+  ' Should be omitted, because the last line was omitted AND
+  ' the last non-omitted line was empty.
+  ok% = parse_and_transpile%("")
+  assert_no_error()
+  assert_int_equals(3, ok%)
+  assert_int_equals(0, tr.omit_flag%)
 End Sub
 
 Function parse_and_transpile%(s$)
