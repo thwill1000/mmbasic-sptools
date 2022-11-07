@@ -35,6 +35,48 @@ Sub spsh.error_not_a_file(f$)
   sys.err$ = "Error: not a file: " + f$
 End Sub
 
+Sub spsh.error_file_exists(f$)
+  sys.err$ = "Error: file already exists: " + f$
+End Sub
+
+' @param  move_flag%  if <> 0 then do a 'move' instead of a 'copy'.
+Sub spsh.cmd_copy(cmd$, argc%, argv$(), move_flag%)
+  If argc% < 2 Then Error "expects 2 or more arguments"
+
+  Local dst$ = argv$(argc% - 1)
+
+  ' Error if try to copy over existing file.
+  If file.exists%(dst$) And Not file.is_directory%(dst$) Then
+    spsh.error_file_exists(dst$)
+    Exit Sub
+  EndIf
+
+  ' Error if multiple sources and destination is not a directory.
+  If argc% > 2 And Not file.is_directory%(dst$) Then
+    spsh.error_not_a_directory(dst$)
+    Exit Sub
+  EndIf
+
+  Local f$, i%, src$
+  For i% = 0 To argc% - 2
+    src$ = argv$(i%)
+    If Not file.exists%(src$) Then
+      spsh.error_no_such_file(src$)
+    ElseIf Not move_flag% And file.is_directory%(src$) Then
+      spsh.error_not_a_file(src$)
+    Else
+      f$ = Choice(file.is_directory%(dst$), dst$ + "/" + file.get_name$(src$), dst$)
+      If file.exists%(f$) Then
+        spsh.error_file_exists(f$)
+      ElseIf move_flag% Then
+        Rename src$ As f$
+      Else
+        Copy src$ To f$
+      EndIf
+    EndIf
+  Next
+End Sub
+
 Sub spsh.cmd_files(cmd$, argc%, argv$())
   If argc% > 1 Then Error "expects 0 or 1 arguments"
 
@@ -90,6 +132,10 @@ End Function
 Sub spsh.cmd_pwd(cmd$, argc%, argv$())
   If argc% <> 0 Then Error "expects 0 arguments")
   con.println(Cwd$)
+End Sub
+
+Sub spsh.cmd_rename(cmd$, argc%, argv$())
+  spsh.cmd_copy(cmd$, argc%, argv$(), 1)
 End Sub
 
 Sub spsh.cmd_type(cmd$, argc%, argv$())

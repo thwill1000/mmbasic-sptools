@@ -344,6 +344,11 @@ Sub gonzo.remote_file_cmd(command$)
   EndIf
 End Sub
 
+Sub gonzo.cmd_rename(cmd$, argc%, argv$())
+  If argc% <> 2 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  spsh.cmd_rename(cmd$, argc%, argv$())
+End Sub
+
 Sub gonzo.cmd_rexec(cmd$, argc%, argv$())
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection" : Exit Sub
 
@@ -676,8 +681,12 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
     gonzo.writeln(command$)
     gonzo.read_until_match("> " + command$)
   ElseIf xcmd% And LCase$(file.get_extension$(remote_file$)) = ".bas" Then
-    ' If we just sent a .bas file then LOAD it so that RUN with no argument will execute it.
-    gonzo.writeln("Load " + str.quote$(remote_file$))
+    If gonzo.device% <> gonzo.DEVICE_CMM2% Then
+      ' For desinations other than the CMM2 (which has no LOAD command) we
+      ' we automatically LOAD a sent .bas file so that RUN with no argument
+      ' will execute it.
+      gonzo.writeln("Load " + str.quote$(remote_file$))
+    EndIf
     gonzo.read_until_prompt()
   EndIf
 End Sub
@@ -1178,7 +1187,8 @@ Data "|history|",           "",                      "display history of recent 
 Data "|log|",               "[clear]",               "show (or clear) receive log"
 Data "|pwd|",               "",                      "display current local directory"
 Data "|rchdir|rcd|",        "<directory>",           "change remote directory"
-Data "|rcls|",               "",                     "clear remote terminal"
+Data "|rcls|",              "",                      "clear remote terminal"
+Data "|rename|mv|",         "<src-file> <dst-file>", "rename local file or directory"
 Data "|rexec|rex|",         "<command string>",      "execute command on remote"
 Data "|rcopy|rcp|",         "<src-file> <dst-file>", "copy remote file"
 Data "|rdelete|rkill|rrm|", "<file|directory>",      "delete remote file or (empty) directory"
@@ -1186,7 +1196,7 @@ Data "|receive|get|",       "<file>",                "receive file from remote u
 Data "|rfiles|rdir|rls|",   "[<file|directory>]",    "list remote directory contents"
 Data "|rmkdir|",            "<directory>",           "make directory on remote"
 Data "|rpwd|",              "",                      "display current remote directory"
-Data "|rrename|rmv|",       "<old-file> <new-file>", "rename remote file or directory"
+Data "|rrename|rmv|",       "<src-file> <dst-file>", "rename remote file or directory"
 Data "|rsize|",             "<file>",                "display size of remote file"
 Data "|rtype|rcat|rlist|",  "<file>",                "list remote file contents"
 Data "|send|put|",          "[OPTION]... <src-file> [<dst-file>]", "send file to remote using AUTOSAVE"
