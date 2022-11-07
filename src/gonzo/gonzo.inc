@@ -398,22 +398,23 @@ End Sub
 
 Sub gonzo.cmd_receive(cmd$, argc%, argv$())
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$)
+  If argc% < 1 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
   If sys.err$ <> "" Then Exit Sub
-  Local file$ = str.unquote$(argv$(0))
+  Local remote_file$ = str.unquote$(argv$(0))
 
-  Local file_size% = gonzo.get_file_size%(file$)
+  Local file_size% = gonzo.get_file_size%(remote_file$)
   If sys.err$ <> "" Then Exit Sub
+  Local local_file$ = Choice(argc% = 1, file.get_name$(remote_file$), argv$(1))
 
   ' Send LIST command.
-  Local command$ = "List " + str.quote$(file$)
+  Local command$ = "List " + str.quote$(remote_file$)
   gonzo.writeln(command$)
   gonzo.read_until_match("> " + command$)
 
   ' Open the file to receive.
-  Open file.get_name$(file$) For Output As #gonzo.OUT_FNBR%
+  Open file.get_name$(local_file$) For Output As #gonzo.OUT_FNBR%
 
-  con.println("Autosave receiving " + Str$(file_size%) + " bytes ...")
+  con.println("Autosave receiving " + Str$(file_size%) +  + " bytes to '" + local_file$ + "'...")
   Local t% = Timer
 
   ' Read lines and echo them to the file.
@@ -537,14 +538,14 @@ Sub gonzo.cmd_rtype(cmd$, argc%, argv$())
 End Sub
 
 ' Sends a file from the local to the remote using AUTOSAVE.
-Sub gonzo.send_file(in_file$, out_file$, verbose%)
-  If Not file.exists%(in_file$) Then
-    sys.err$ = "Error: file '" + in_file$ + "' not found"
+Sub gonzo.send_file(local_file$, remote_file$, verbose%)
+  If Not file.exists%(local_file$) Then
+    sys.err$ = "Error: file '" + local_file$ + "' not found"
     Exit Sub
   EndIf
 
   ' Open the file to send.
-  Open in_file$ For Input As #gonzo.IN_FNBR%
+  Open local_file$ For Input As #gonzo.IN_FNBR%
 
   ' Cleanup for a new command.
   gonzo.send_break()
@@ -552,7 +553,7 @@ Sub gonzo.send_file(in_file$, out_file$, verbose%)
 
   ' Send AUTOSAVE command.
   Local command$ = "Autosave"
-  If gonzo.device% = gonzo.DEVICE_CMM2% Then Cat command$, " " + str.quote$(out_file$)
+  If gonzo.device% = gonzo.DEVICE_CMM2% Then Cat command$, " " + str.quote$(remote_file$)
   gonzo.writeln(command$)
   gonzo.read_until_match("> " + command$)
   Local s$
@@ -561,8 +562,8 @@ Sub gonzo.send_file(in_file$, out_file$, verbose%)
     If sys.err$ <> "" Then Close #gonzo.IN_FNBR% : Exit Sub
   EndIf
 
-  Local file_size% = Mm.Info(FileSize in_file$)
-  If verbose% Then con.println("Autosave sending " + Str$(file_size%) + " bytes ...")
+  Local file_size% = Mm.Info(FileSize local_file$)
+  If verbose% Then con.println("Autosave sending " + Str$(file_size%) + " bytes to '" + remote_file$ + "' ...")
   Local t% = Timer
 
   ' Echo the file to the serial port.
@@ -586,7 +587,7 @@ Sub gonzo.send_file(in_file$, out_file$, verbose%)
 
   ' Except on the CMM2 send SAVE command to write from flash to disk.
   If (gonzo.device% <> gonzo.DEVICE_CMM2%) Then
-    command$ = "Save " + str.quote$(out_file$)
+    command$ = "Save " + str.quote$(remote_file$)
     gonzo.writeln(command$)
     gonzo.read_until_match("> " + command$)
     gonzo.clear_buf()
@@ -789,13 +790,13 @@ End Sub
 
 Sub gonzo.cmd_xreceive(cmd$, argc%, argv$())
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection"
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$)
+  If argc% < 1 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
   If sys.err$ <> "" Then Exit Sub
   Local remote_file$ = str.unquote$(argv$(0))
 
   Local file_size% = gonzo.get_file_size%(remote_file$)
   If sys.err$ <> "" Then Exit Sub
-  Local local_file$ = file.get_name$(remote_file$)
+  Local local_file$ = Choice(argc% = 1, file.get_name$(remote_file$), argv$(1))
 
   ' Send XMODEM SEND command.
   Local command$ = "XModem Send " + str.quote$(remote_file$)
@@ -807,7 +808,7 @@ Sub gonzo.cmd_xreceive(cmd$, argc%, argv$())
     If sys.err$ <> "" Then Exit Sub
   EndIf
 
-  con.println("XModem receiving " + Str$(file_size%) + " bytes ...")
+  con.println("XModem receiving " + Str$(file_size%) + " bytes to '" + local_file$ + "'...")
   Local t% = Timer
   XModem Receive local_file$, #gonzo.SERIAL_FNBR%, 1
 
@@ -1192,7 +1193,7 @@ Data "|rename|mv|",         "<src-file> <dst-file>", "rename local file or direc
 Data "|rexec|rex|",         "<command string>",      "execute command on remote"
 Data "|rcopy|rcp|",         "<src-file> <dst-file>", "copy remote file"
 Data "|rdelete|rkill|rrm|", "<file|directory>",      "delete remote file or (empty) directory"
-Data "|receive|get|",       "<file>",                "receive file from remote using AUTOSAVE"
+Data "|receive|get|",       "<src-file> [<dst-file>]", "receive file from remote using AUTOSAVE"
 Data "|rfiles|rdir|rls|",   "[<file|directory>]",    "list remote directory contents"
 Data "|rmkdir|",            "<directory>",           "make directory on remote"
 Data "|rpwd|",              "",                      "display current remote directory"
@@ -1204,7 +1205,7 @@ Data "|term|",              "",                      "open serial terminal"
 Data "|trans|sptrans|",     "[OPTION]... <src-file> [<dst-file>]", "transpile local file"
 Data "|type|cat|list|",     "<file>",                "list local file contents"
 Data "|version|",           "",                      "display current gonzo version"
-Data "|xreceive|xget|",     "<file>",                "receive file from remote using XMODEM"
+Data "|xreceive|xget|",     "<src-file> [<dst-file>]", "receive file from remote using XMODEM"
 Data "|xsend|xput|",        "[OPTION]... <src-file> [<dst-file>]", "send file from to remote using XMODEM"
 Data "<END>", "", ""
 
