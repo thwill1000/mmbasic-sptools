@@ -125,6 +125,12 @@ Function str.next_token$(s$, dlm$, skip%)
   EndIf
 End Function
 
+' Gets a string "quoted" with given characters.
+'
+' @param  s$      the string.
+' @param  begin$  the character to put at the start, defaults to double-quote.
+' @param  end$    the character to put at the end, defaults to double-quote.
+' @return         the "quoted" string.
 Function str.quote$(s$, begin$, end$)
   Local begin_$ = Choice(begin$ = "", Chr$(34), Left$(begin$, 1))
   Local end_$ = Choice(end$ = "", begin_$, Left$(end$, 1))
@@ -145,6 +151,12 @@ Function str.replace$(haystack$, needle$, rep$)
   str.replace$ = s$
 End Function
 
+' Gets a string padded to a given width with spaces to the right.
+'
+' @param  s$  the string.
+' @param  w%  the width.
+' @return     the padded string.
+'             If Len(s$) > w% then returns the unpadded string.
 Function str.rpad$(s$, x%)
   str.rpad$ = s$
   If Len(s$) < x% Then str.rpad$ = s$ + Space$(x% - Len(s$))
