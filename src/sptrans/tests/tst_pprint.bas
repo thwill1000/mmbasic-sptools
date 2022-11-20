@@ -73,6 +73,7 @@ add_test("Spacing - minimal option", "test_minimal_spacing")
 add_test("Spacing - compact option", "test_compact_spacing")
 add_test("Spacing - generous option", "test_generous_spacing")
 add_test("Spacing - before comments", "test_comment_spacing")
+add_test("Spacing - after IS keyword", "test_is_keyword_spacing")
 add_test("Keyword capitalisation", "test_keyword_capitalisation")
 add_test("Syntax highlighting - CSUBs", "test_syntax_highlight_1")
 add_test("Syntax highlighting - comments", "test_syntax_highlight_2")
@@ -503,6 +504,30 @@ Sub test_comment_spacing()
   parse_lines()
   expected$(0) = "foo 'comment1"
   expected$(1) = "bar    ' comment2"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_is_keyword_spacing()
+  in$(0) = "Case Is>=0"
+
+  opt.spacing = -1
+  parse_lines()
+  expected$(0) = "Case Is>=0"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 0
+  parse_lines()
+  expected$(0) = "Case Is >=0"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 1
+  parse_lines()
+  expected$(0) = "Case Is >=0"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 2
+  parse_lines()
+  expected$(0) = "Case Is >= 0"
   assert_string_array_equals(expected$(), out$())
 End Sub
 
