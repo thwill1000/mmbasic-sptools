@@ -275,6 +275,10 @@ Function pp.num_spaces(i)
       Select Case lx.type(i + 1)
         Case TK_KEYWORD, TK_IDENTIFIER, TK_NUMBER
           pp.num_spaces = 1
+        Case TK_SYMBOL
+          ' Due to dodgy parsing by MMBasic IS must be followed by a space even
+          ' when followed by a TK_SYMBOL.
+          If lx.token_lc$(i) = "is" Then pp.num_spaces = 1
       End Select
   End Select
 End Function
