@@ -270,12 +270,17 @@ End Sub
 
 Sub assert_raw_error(expected$)
   Inc ut.asserts_count%
-  If Mm.ErrMsg$ = expected$ Then Exit Sub
-  If InStr(Mm.ErrMsg$, expected$) < 1 Then
-    Local s$ = "Expected Error " + str.quote$(expected$)
+  Local s$
+  If Mm.ErrMsg$ = expected$ Then
+    If Mm.ErrNo = 0 And expected$ <> "" Then
+      Cat s$, "Expected Error " + str.quote$(expected$)
+      Cat s$, ", but Mm.ErrNo = 0"
+    EndIf
+  Else If Not InStr(Mm.ErrMsg$, expected$) Then
+    Cat s$, "Expected Error " + str.quote$(expected$)
     Cat s$, ", but actually " + str.quote$(Mm.ErrMsg$)
-    ut.add_failure(s$)
   EndIf
+  If s$ <> "" Then ut.add_failure(s$)
 End Sub
 
 ' @param  repeat$  if this is not empty then after running the test suite the program
