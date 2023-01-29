@@ -126,3 +126,41 @@ Function sys.string_prop$(key$)
       Error "Unknown property: " + key$
   End Select
 End Function
+
+' Are we running on one of the given devices ?
+'
+' @param  d1$, d2$, ... d5$  one of:
+'                mmb4l  - MMBasic for Linux
+'                mmb4w  - MMBasic for Windows
+'                cmm2   - Colour Maximite 2 (G1)
+'                cmm2g2 - Colour Maximite 2 (G2)
+'                cmm2*  - any Colour Maximite 2
+'                pm     - PicoMite
+'                pmvga  - PicoMiteVGA
+'                pm*    - any PicoMite
+Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
+  Local devices$(5 + Mm.Info(Option Base)) Length 16 = (d1$, d2$, d3$, d4$, d5$, "")
+  Local d$, ii% = Mm.Info(Option Base)
+  sys.is_device% = 1
+  Do While Len(devices$(ii%)) > 0
+    d$ = LCase$(devices$(ii%))
+    Select Case Mm.Device$
+      Case "MMB4L"
+        If d$ = "mmb4l" Then Exit Function
+      Case "MMBasic for Windows"
+        If d$ = "mmb4w" Then Exit Function
+      Case "Colour Maximite 2"
+        If d$ = "cmm2" Or d$ = "cmm2*" Then Exit Function
+      Case "Colour Maximite 2 G2"
+        If d$ = "cmm2g2" Or d$ = "cmm2*" Then Exit Function
+      Case "PicoMite"
+        If d$ = "pm" Or d$ = "pm*" Then Exit Function
+      Case "PicoMiteVGA"
+        If d$ = "pmvga" Or d$ = "pm*" Then Exit Function
+      Case Else
+        Error("Unknown device: " + Mm.Device$)
+    End Select
+    Inc ii%
+  Loop
+  sys.is_device% = 0
+End Function
