@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07.07
 
 Option Explicit On
 Option Default Integer
@@ -18,7 +18,7 @@ Option Default Integer
 #Include "../keywords.inc"
 #Include "../lexer.inc"
 
-keywords.load()
+keywords.init()
 
 add_test("test_binary_literals")
 add_test("test_comments")
@@ -47,12 +47,6 @@ add_test("test_csub")
 run_tests()
 
 End
-
-Sub setup_test()
-End Sub
-
-Sub teardown_test()
-End Sub
 
 Sub test_binary_literals()
   lx.parse_basic("&b1001001")
@@ -197,7 +191,7 @@ Sub test_hexadecimal_literals()
   expect_tk(0, TK_NUMBER, "&Habcdef")
   expect_tk(1, TK_IDENTIFIER, "ghijklmn")
 
-  ' To facilitate transpiling BBC Basic source code the The lexer accepts
+  ' To facilitate transpiling BBC Basic source code the lexer accepts
   ' hex numbers which begin just & instead of &h.
   lx.parse_basic("&ABCDEF")
   expect_success(1)

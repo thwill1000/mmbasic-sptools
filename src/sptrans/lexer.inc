@@ -248,7 +248,7 @@ Sub lx.parse_identifier()
   EndIf
 
   Local ln% = lx.pos - start
-  If keywords.contains(Mid$(lx.line$, start, ln%)) Then
+  If keywords.contains%(Mid$(lx.line$, start, ln%)) Then
     lx.store(TK_KEYWORD, start, ln%)
     If lx.token_lc$(lx.num - 1) = "csub" Then lx.csub = Not lx.csub
   Else

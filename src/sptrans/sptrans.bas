@@ -1,8 +1,8 @@
 #!/usr/local/bin/mmbasic
 
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07.07
 
 Option Explicit On
 Option Default Integer
@@ -68,7 +68,7 @@ Sub main()
     opt.colour = 0
   EndIf
 
-  keywords.load()
+  keywords.init()
 
   ' No line numbers when output to file.
   If opt.outfile$ <> "" Then out.line_num_fmt$ = ""

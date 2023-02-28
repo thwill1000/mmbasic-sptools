@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07.07
 
 Option Explicit On
 Option Default Integer
@@ -54,7 +54,7 @@ Dim expected$(19)
 Dim in$(19)
 Dim out$(19)
 
-keywords.load()
+keywords.init()
 
 add_test("Indenting - multi-line IF THEN increases", "test_indentation_1")
 add_test("Indenting - single-line IF THEN does not change", "test_indentation_2")
@@ -95,9 +95,6 @@ Sub setup_test()
     in$(i%) = ""
     out$(i%) = ""
   Next
-End Sub
-
-Sub teardown_test()
 End Sub
 
 Sub parse_lines()

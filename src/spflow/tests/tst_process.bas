@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
@@ -25,6 +25,8 @@ Dim in.num_open_files = 1
 in.files$(0) = "input.bas"
 Dim in.line_num(1)
 
+keywords.init()
+
 add_test("test_simple_sub")
 add_test("test_simple_fn")
 add_test("test_self_recursive_sub")
@@ -37,9 +39,6 @@ End
 Sub setup_test()
   opt.init()
   pro.init()
-End Sub
-
-Sub teardown_test()
 End Sub
 
 Sub test_simple_sub()

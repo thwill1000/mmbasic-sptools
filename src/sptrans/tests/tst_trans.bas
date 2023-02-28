@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07.07
 
 Option Explicit On
 Option Default Integer
@@ -23,7 +23,7 @@ Dim in.num_open_files = 1
 #Include "../options.inc"
 #Include "../trans.inc"
 
-keywords.load()
+keywords.init()
 
 add_test("test_transpile_includes")
 add_test("test_parse_replace")
@@ -102,9 +102,6 @@ Sub setup_test()
     Next
     tr.if_stack_sz(i%) = 0
   Next
-End Sub
-
-Sub teardown_test()
 End Sub
 
 Sub test_transpile_includes()

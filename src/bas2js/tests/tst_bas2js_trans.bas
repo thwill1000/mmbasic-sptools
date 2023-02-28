@@ -22,7 +22,7 @@ Dim in.num_open_files = 1
 #Include "../../sptrans/lexer.inc"
 #Include "../bas2js_trans.inc"
 
-keywords.load()
+keywords.init()
 
 add_test("test_insert_token")
 add_test("test_remove_next_token")
