@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -8,6 +8,17 @@ sys.requires("set", "keywords")
 sys.provides("lexer")
 If sys.err$ <> "" Then Error sys.err$
 
+'!ifdef INLINE_CONSTANTS
+'!replace TK_IDENTIFIER  1
+'!replace TK_NUMBER      2
+'!replace TK_COMMENT     3
+'!replace TK_STRING      4
+'!replace TK_KEYWORD     5
+'!replace TK_SYMBOL      6
+'!replace TK_DIRECTIVE   7
+'!replace TK_LABEL       8
+'!replace TK_OPTION      9
+'!endif
 '!comment_if INLINE_CONSTANTS
 Const TK_IDENTIFIER = 1
 Const TK_NUMBER = 2
