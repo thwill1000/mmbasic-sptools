@@ -280,16 +280,14 @@ End Sub
 '
 ' If i > the number of tokens then returns the empty string.
 Function lx.token$(i)
-  If i < lx.num And lx.len(i) > 0 Then
-    lx.token$ = Mid$(lx.line$, lx.start(i), lx.len(i))
-  EndIf
+  lx.token$ = Choice(i < lx.num, Mid$(lx.line$, lx.start(i), lx.len(i)), "")
 End Function
 
 ' Gets the lower-case text of token 'i'.
 '
 ' If i > the number of tokens then returns the empty string.
 Function lx.token_lc$(i)
-  lx.token_lc$ = LCase$(lx.token$(i))
+  lx.token_lc$ = Choice(i < lx.num, LCase$(Mid$(lx.line$, lx.start(i), lx.len(i))), "")
 End Function
 
 ' Gets the directive corresponding to token 'i' without the leading single quote.
