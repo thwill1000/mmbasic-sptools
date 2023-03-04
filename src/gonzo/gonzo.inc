@@ -1,4 +1,4 @@
-' Copyright (c) 2021-2022 Thomas Hugo Williams
+' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMB4L 2022.01.00
 
@@ -325,7 +325,7 @@ Sub gonzo.cmd_rcls(cmd$, argc%, argv$())
   gonzo.read_until_match("> cls")
 End Sub
 
-Sub gonzo.remote_file_cmd(command$)
+Sub gonzo.remote_file_cmd(command$, quiet%)
   If gonzo.device% = gonzo.DEVICE_DISCONNECTED% Then sys.err$ = "Error: no connection" : Exit Sub
 
   gonzo.send_break()
@@ -338,7 +338,7 @@ Sub gonzo.remote_file_cmd(command$)
     con.println("Error: file or directory not found")
   ElseIf LInStr(gonzo.buf%(), "Access denied") Then
     con.println("Error: file or directory exists")
-  Else
+  ElseIf Not quiet% Then
     ' con.print(LGetStr$(gonzo.buf%(), 1, 255))
     con.println("OK")
   EndIf
@@ -848,6 +848,9 @@ End Sub
 Function gonzo.send_rizzo%()
   ' Only send the file once per session.
   If gonzo.rizzo_sent% Then Exit Function
+
+  ' Ensure there is a '/tmp' directory on the remote.
+  gonzo.remote_file_cmd("MkDir " + str.quote$("/tmp"), 1)
 
   Open gonzo.RIZZO_FILE$ For Output As #gonzo.OUT_FNBR%
   Print #gonzo.OUT_FNBR%, "Dim f$, s$, x%"
