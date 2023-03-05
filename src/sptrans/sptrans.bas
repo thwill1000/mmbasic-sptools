@@ -2,7 +2,7 @@
 
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.07
+' For MMBasic 5.07.06
 
 Option Explicit On
 Option Default Integer
@@ -100,7 +100,7 @@ Sub main()
     trok% = 0
     If sys.err$ = "" Then
       If opt.format_only Then
-        trok% = 1
+        trok% = Choice(opt.comments = 0, tr.remove_comments%(), 1)
       ElseIf opt.include_only Then
         trok% = tr.transpile_includes%()
       Else

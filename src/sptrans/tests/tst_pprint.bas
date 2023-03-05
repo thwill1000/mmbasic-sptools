@@ -67,7 +67,6 @@ add_test("Indenting - EXIT SUB does not change", "test_indentation_8")
 add_test("Indenting - SELECT CASE increases", "test_indentation_9")
 add_test("Indenting - body of CSUB is indented", "test_indentation_10")
 add_test("Indenting - line numbers not indented", "test_indentation_11")
-add_test("Omission of comments", "test_comments_1")
 add_test("Spacing - preserve option", "test_preserve_spacing")
 add_test("Spacing - minimal option", "test_minimal_spacing")
 add_test("Spacing - compact option", "test_compact_spacing")
@@ -112,27 +111,6 @@ Sub parse_lines()
       Inc j%
     EndIf
   Next
-End Sub
-
-' Test omission of comments.
-Sub test_comments_1()
-  in$(0) = "' comment 1"
-  in$(1) = "  ' comment 2"
-  in$(2) = "If a = b Then REM comment 3"
-  in$(3) = "  Print c ' comment 4"
-  in$(4) = "EndIf ' comment 5"
-  in$(5) = "REM comment 6"
-
-  opt.comments = 0
-  parse_lines()
-
-  expected$(0) = ""
-  expected$(1) = ""
-  expected$(2) = "If a = b Then"
-  expected$(3) = "  Print c"
-  expected$(4) = "EndIf"
-  expected$(5) = ""
-  assert_string_array_equals(expected$(), out$())
 End Sub
 
 ' Test multi-line IF THEN increases indent level.

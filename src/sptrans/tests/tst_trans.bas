@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.07
+' For MMBasic 5.07.06
 
 Option Explicit On
 Option Default Integer
@@ -77,6 +77,7 @@ add_test("test_unbalanced_endif")
 add_test("test_sptrans_flag_is_set")
 add_test("test_error_directive")
 add_test("test_omit_and_line_spacing")
+add_test("test_comments_directive")
 
 run_tests()
 
@@ -1353,6 +1354,44 @@ Sub test_omit_and_line_spacing()
   assert_no_error()
   assert_int_equals(3, ok%)
   assert_int_equals(0, tr.omit_flag%)
+End Sub
+
+Sub test_comments_directive()
+  Local ok%
+
+  ok% = parse_and_transpile%("'!comments off")
+  assert_no_error()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  assert_int_equals(0, opt.comments)
+
+  ok% = parse_and_transpile%("' This is a comment")
+  assert_no_error()
+  expect_tokens(0)
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  assert_string_equals("", lx.line$)
+
+  ok% = parse_and_transpile%("Dim a = 1 ' This is also a comment")
+  assert_no_error()
+  assert_int_equals(1, ok%)
+  expect_tokens(4)
+  expect_tk(0, TK_KEYWORD, "Dim")
+  expect_tk(1, TK_IDENTIFIER, "a")
+  expect_tk(2, TK_SYMBOL, "=")
+  expect_tk(3, TK_NUMBER, "1")
+  assert_string_equals("Dim a = 1", lx.line$)
+
+  ok% = parse_and_transpile%("'!comments on")
+  assert_no_error()
+  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_tokens(0)
+  assert_int_equals(-1, opt.comments)
+
+  ok% = parse_and_transpile%("' This is a third comment")
+  assert_no_error()
+  assert_int_equals(1, ok%)
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' This is a third comment")
 End Sub
 
 Function parse_and_transpile%(s$)

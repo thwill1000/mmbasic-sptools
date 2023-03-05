@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -31,17 +31,6 @@ Sub pp.print_line(pretty_print%)
   If Not pretty_print% Then out.println(lx.line$) : Exit Sub
 
   Local i, t$, u$
-
-  ' If excluding comments then remove any trailing comment on the line.
-  ' TODO: should this be responsibility of transpile step not pretty-printing?
-  If opt.comments = 0 Then
-    If lx.num >= 1 Then
-      If lx.type(lx.num - 1) = TK_COMMENT Then
-        lx.type(lx.num - 1) = 0
-        Inc lx.num, -1
-      EndIf
-    EndIf
-  EndIf
 
   ' Ignore empty lines if the 'empty-lines' option is set > -1.
   If opt.empty_lines > -1 And lx.num = 0 Then Exit Sub

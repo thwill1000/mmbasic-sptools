@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -112,9 +112,9 @@ Function tr.transpile%()
   EndIf
 
   If lx.type(0) <> TK_DIRECTIVE Then
-    tr.transpile% = 1
-    tr.omitted_line_flag% = 0
     tr.empty_line_flag% = (lx.num = 0)
+    tr.transpile% = Choice(opt.comments = 0, tr.remove_comments%(), 1)
+    tr.omitted_line_flag% = tr.transpile% = tr.STATUS_OMIT_LINE%
     Exit Function
   EndIf
 
@@ -522,3 +522,21 @@ Sub tr.dump_replacements()
     Print Choice(tr.replacements$(i%, 1) = Chr$(0), "<null>", tr.replacements$(i%, 1))
   Next
 End Sub
+
+' Removes all comment tokens from the current line.
+'
+' @return  tr.STATUS_OMIT_LINE% if as a result of calling this function the line
+'          is now empty, otherwise 1.
+Function tr.remove_comments%()
+  If lx.num = 0 Then
+    tr.remove_comments% = 1
+    Exit Function
+  EndIf
+
+  Local i%
+  Do While i% < lx.num
+    If lx.type(i%) = TK_COMMENT Then lx.remove_token(i%)
+    Inc i%
+  Loop
+  tr.remove_comments% = Choice(lx.num = 0, tr.STATUS_OMIT_LINE%, 1)
+End Function
