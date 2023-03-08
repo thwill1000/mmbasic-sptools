@@ -667,7 +667,7 @@ Sub test_process_directives()
 End Sub
 
 Sub test_always_set_flag()
-  Local flags$(6) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS")
+  Local flags$(4) = ("1", "true", "TRUE", "on", "ON")
   Local i%
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
     assert_int_equals(1, opt.is_flag_set%(flags$(i%)))
@@ -685,7 +685,7 @@ Sub test_always_clear_flag()
 End Sub
 
 Sub test_set_fixed_flag()
-  Local flags$(11) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS", "0", "false", "FALSE", "off", "OFF")
+  Local flags$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
   Local i%
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
     opt.set_flag(flags$(i%))
@@ -694,7 +694,7 @@ Sub test_set_fixed_flag()
 End Sub
 
 Sub test_clear_fixed_flag()
-  Local flags$(11) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS", "0", "false", "FALSE", "off", "OFF")
+  Local flags$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
   Local i%
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
     opt.clear_flag(flags$(i%))

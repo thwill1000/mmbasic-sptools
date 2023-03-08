@@ -1337,7 +1337,7 @@ Sub test_comments_directive()
 End Sub
 
 Sub test_always_true_flags()
-  Local flags$(6) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS")
+  Local flags$(4) = ("1", "true", "TRUE", "on", "ON")
   Local i%, ok%
 
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)

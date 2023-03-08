@@ -59,7 +59,7 @@ Sub opt.clear_flag(flag$)
     sys.err$ = "invalid flag"
   Else If Len(s$) > opt.FLAG_MAX_LENGTH% Then
     sys.err$ = "flag too long, max 64 chars"
-  Else If InStr("|1|true|on|sptrans|SPTRANS|0|false|off|", "|" + lower$ + "|") Then
+  Else If InStr("|1|true|on|0|false|off|", "|" + lower$ + "|") Then
     sys.err$ = "flag '" + s$ + "' cannot be cleared"
   Else If opt.is_flag_set%(lower$) Then
     set.remove(opt.flags$(), lower$)
@@ -73,7 +73,7 @@ Function opt.is_flag_set%(flag$)
   Local s$ = str.trim$(flag$)
   If Len(s$) > opt.FLAG_MAX_LENGTH% Then
     sys.err$ = "flag too long, max 64 chars"
-  Else If InStr("|1|true|on|sptrans|", "|" + LCase$(s$) + "|") Then
+  Else If InStr("|1|true|on|", "|" + LCase$(s$) + "|") Then
     opt.is_flag_set% = 1
   Else If InStr("|0|false|off|", "|" + LCase$(s$) + "|") Then
     opt.is_flag_set% = 0
@@ -93,7 +93,7 @@ Sub opt.set_flag(flag$)
     Exit Sub
   EndIf
 
-  If InStr("|1|true|on|sptrans|SPTRANS|0|false|off|", "|" + lower$ + "|") Then
+  If InStr("|1|true|on|0|false|off|", "|" + lower$ + "|") Then
     sys.err$ = "flag '" + s$ + "' cannot be set"
     Exit Sub
   EndIf
