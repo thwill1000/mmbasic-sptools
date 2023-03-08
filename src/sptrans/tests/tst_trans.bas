@@ -48,8 +48,6 @@ add_test("test_comment_if_not")
 add_test("test_uncomment_if")
 add_test("test_uncomment_if_not")
 add_test("test_unknown_directive")
-add_test("test_remove_if")
-add_test("test_remove_if_not")
 add_test("test_ifdef_given_set")
 add_test("test_ifdef_given_unset")
 add_test("test_ifdef_given_0_args")
@@ -770,41 +768,6 @@ Sub test_uncomment_if_not()
   ok% = parse_and_transpile%("'!endif")
 End Sub
 
-Sub test_remove_if()
-  Local ok%
-
-  ' 'foo' is set, code inside !remove_if block should be omitted.
-  ok% = parse_and_transpile%("'!set foo")
-  ok% = parse_and_transpile%("'!remove_if foo")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-
-  ' Code outside the block should not be omitted.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
-End Sub
-
-Sub test_remove_if_not()
-  Local ok%
-
-  ' 'foo' is not set, code inside !remove_if block should be omitted.
-  ok% = parse_and_transpile%("'!remove_if not foo")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-
-  ' Code outside the block should not be omitted.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
-End Sub
-
 Sub test_ifdef_given_set()
   Local ok%
 
@@ -1211,15 +1174,6 @@ Sub test_omit_directives_from_output()
 
   setup_test()
   ok% = parse_and_transpile%("'!replace FOO BAR")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-
-  setup_test()
-  ok% = parse_and_transpile%("'!remove_if FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!remove_if FOO")
   assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
   expect_tokens(0)
 

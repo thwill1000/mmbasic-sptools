@@ -1,8 +1,8 @@
-' Copyright (c) 2021 Thomas Hugo Williams
+' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07
 
-'!remove_if NO_INCLUDE_GUARDS
+'!ifndef NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.provides("txtwm")

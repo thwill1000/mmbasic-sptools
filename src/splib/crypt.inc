@@ -1,11 +1,11 @@
-' Copyright (c) 2021-2022 Thomas Hugo Williams
+' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.03
+' For MMBasic 5.07
 
 ' MD5 algorithm from https://en.wikipedia.org/wiki/MD5
 ' XXTEA algorithm from https://en.wikipedia.org/wiki/XXTEA
 
-'!remove_if NO_INCLUDE_GUARDS
+'!ifndef NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
 sys.requires("array")

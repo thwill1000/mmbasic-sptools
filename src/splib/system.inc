@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.03
+' For MMBasic 5.07
 
 Const sys.VERSION$ = "2.0.0-a1"
 Const sys.NO_DATA$ = Chr$(&h7F)
@@ -9,7 +9,7 @@ Const sys.CRLF$ = Chr$(13) + Chr$(10)
 Dim sys.break_flag%
 Dim sys.err$
 
-'!remove_if NO_INCLUDE_GUARDS
+'!ifndef NO_INCLUDE_GUARDS
 Const sys.MAX_INCLUDES% = 20
 Dim sys.includes$(sys.MAX_INCLUDES%) Length 20
 

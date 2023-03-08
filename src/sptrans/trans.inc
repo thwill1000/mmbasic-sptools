@@ -77,7 +77,7 @@ Function tr.transpile%()
   If tr.omit_flag% Then
     If lx.type(0) = TK_DIRECTIVE Then
       Select Case lx.directive$(0)
-        Case "!comment_if", "!ifdef", "!ifndef", "!remove_if", "!uncomment_if"
+        Case "!comment_if", "!ifdef", "!ifndef", "!uncomment_if"
           tr.push_if(0) ' Still need to record omitted !if's.
       End Select
     EndIf
@@ -128,7 +128,6 @@ Function tr.transpile%()
     Case "!ifndef"       : tr.process_if()
     Case "!indent"       : tr.process_indent()
     Case "!replace"      : tr.process_replace()
-    Case "!remove_if"    : tr.process_if()
     Case "!set"          : tr.process_set()
     Case "!spacing"      : tr.process_spacing()
     Case "!uncomment_if" : tr.process_if()
@@ -351,7 +350,7 @@ Sub tr.process_if()
       tr.push_if(Choice(x, 0, 2))
       tr.omit_flag% = Not x
 
-    Case "!ifndef", "!remove_if"
+    Case "!ifndef"
       tr.push_if(Choice(x, 2, 0))
       tr.omit_flag% = x
 
