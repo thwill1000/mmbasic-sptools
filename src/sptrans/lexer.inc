@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.07
+' For MMBasic 5.07.06
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -411,5 +411,98 @@ Sub lx.dump()
       Case Else          : type$ = "<UNKNOWN> "
     End Select
     Print Str$(i%) ": " type$ ", " Str$(lx.start%(i%)) ", " Str$(lx.len%(i%)) ", [[[" lx.token$(i%) "]]]"
+  Next
+End Sub
+
+' Inserts token at given index moving the current token at that position
+' and all the tokens following it one place to the right.
+'
+' 1. Whitespace preceeding a token is considered part of that token,
+'    unless it is the first token.
+' 2. Whitespace following the last token is considered part of that
+'    token.
+Sub lx.insert_token(idx%, token$, type%)
+  If idx% > lx.num Then Error "Invalid token index: " + Str$(idx%)
+  Local length% = Len(lx.line$), prefix$, suffix$
+
+  ' Separator to insert before the token we are inserting.
+  Local sep$ = Choice(idx% = 0, "", Choice(token$ = "(", "", " "))
+
+  Select Case idx%
+    Case lx.num
+      prefix$ = lx.line$
+    Case 0
+      prefix$ = Left$(lx.line$, lx.start(idx%) - 1)
+      suffix$ = " " + Mid$(lx.line$, lx.start(idx%))
+    Case Else
+      Local prefix_len% = lx.start(idx% - 1) + lx.len(idx% - 1) - 1
+      prefix$ = Left$(lx.line$, prefix_len%)
+      suffix$ = Mid$(lx.line$, prefix_len% + 1)
+  End Select
+  lx.line$ = prefix$ + sep$ + token$ + suffix$
+
+  ' Shift following tokens up one index.
+  Local shift% = Len(token$) + Len(sep$) + (idx% = 0)
+  Local j%
+  For j% = lx.num - 1 To idx% Step -1
+    lx.type(j% + 1) = lx.type(j%)
+    lx.start(j% + 1) = lx.start(j%) + shift%
+    lx.len(j% + 1) = lx.len(j%)
+  Next
+
+  ' Insert new token.
+  lx.type(idx%) = type%
+  lx.start(idx%) = Len(prefix$ + sep$) + 1
+  lx.len(idx%) = Len(token$)
+
+  Inc lx.num, 1
+End Sub
+
+' Removes token at given index.
+'
+' 1. Whitespace preceeding a token is considered part of that token,
+'    unless it is the first token.
+' 2. Whitespace following the last token is considered part of that
+'    token.
+Sub lx.remove_token(idx%)
+  If idx% >= lx.num Then Error "Invalid token index: " + Str$(idx%)
+  Local length% = Len(lx.line$), prefix$, suffix$
+
+  Select Case idx%
+    Case 0
+      prefix$ = Left$(lx.line$, lx.start(0) - 1)
+      suffix$ = Choice(lx.num = 1, "", Mid$(lx.line$, lx.start(1)))
+    Case lx.num - 1
+      prefix$ = Left$(lx.line$, lx.start(idx% - 1) + lx.len(idx% - 1) - 1)
+    Case Else
+      prefix$ = Left$(lx.line$, lx.start(idx% - 1) + lx.len(idx% - 1) - 1)
+      suffix$ = Mid$(lx.line$, lx.start(idx%) + lx.len(idx%))
+  End Select
+  lx.line$ = prefix$ + suffix$
+
+  Local shift% = length% - Len(lx.line$)
+  Local j%
+  For j% = idx% To lx.num - 2
+    lx.type(j%) = lx.type(j% + 1)
+    lx.start(j%) = lx.start(j% + 1) - shift%
+    lx.len(j%) = lx.len(j% + 1)
+  Next
+
+  Inc lx.num, -1
+  lx.type(lx.num) = 0
+  lx.start(lx.num) = 0
+  lx.len(lx.num) = 0
+End Sub
+
+' Replaces token at given index.
+Sub lx.replace_token(idx%, replacement$, type%)
+  If idx% >= lx.num Then Error "Invalid token index: " + Str$(idx%)
+  lx.line$ = Left$(lx.line$, lx.start(idx%) - 1) + replacement$ + Mid$(lx.line$, lx.start(idx%) + lx.len(idx%))
+  lx.type(idx%) = type%
+  Local shift% = Len(replacement$) - lx.len(idx%)
+  lx.len(idx%) = Len(replacement$)
+  Local j%
+  For j% = idx% + 1 To lx.num - 1
+    Inc lx.start(j%), shift%
   Next
 End Sub

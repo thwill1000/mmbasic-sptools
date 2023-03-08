@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.07
+' For MMBasic 5.07.06
 
 Option Explicit On
 Option Default Integer
@@ -43,6 +43,9 @@ add_test("test_get_token_lc")
 add_test("test_old_tokens_cleared")
 add_test("test_parse_command_line")
 add_test("test_csub")
+add_test("test_insert_token")
+add_test("test_remove_token")
+add_test("test_replace_token")
 
 run_tests()
 
@@ -516,14 +519,141 @@ Sub test_csub()
   expect_tk(2, TK_IDENTIFIER, "AABBCC")
 End Sub
 
+Sub test_insert_token()
+  ' Test insertion into an empty line.
+  lx.parse_basic("")
+  lx.insert_token(0, "foo", TK_IDENTIFIER)
+  assert_string_equals("foo", lx.line$)
+  expect_success(1)
+  expect_tk(0, TK_IDENTIFIER, "foo", 1)
+
+  ' Test insertion into a line only containing whitespace.
+  lx.parse_basic("  ")
+  lx.insert_token(0, "foo", TK_IDENTIFIER)
+  assert_string_equals("  foo", lx.line$)
+  expect_success(1)
+  expect_tk(0, TK_IDENTIFIER, "foo", 3)
+
+  ' Test insertion before the first token.
+  lx.parse_basic("  foo")
+  lx.insert_token(0, "bar", TK_IDENTIFIER)
+  assert_string_equals("  bar foo", lx.line$)
+  expect_success(2)
+  expect_tk(0, TK_IDENTIFIER, "bar", 3)
+  expect_tk(1, TK_IDENTIFIER, "foo", 7)
+
+  ' Test insertion after the last token.
+  lx.parse_basic("  foo")
+  lx.insert_token(1, "bar", TK_IDENTIFIER)
+  assert_string_equals("  foo bar", lx.line$)
+  expect_success(2)
+  expect_tk(0, TK_IDENTIFIER, "foo", 3)
+  expect_tk(1, TK_IDENTIFIER, "bar", 7)
+
+  ' Test insertion between two tokens.
+  lx.parse_basic("  foo  bar")
+  lx.insert_token(1, "wombat", TK_IDENTIFIER)
+  assert_string_equals("  foo wombat  bar", lx.line$)
+  expect_success(3)
+  expect_tk(0, TK_IDENTIFIER, "foo", 3)
+  expect_tk(1, TK_IDENTIFIER, "wombat", 7)
+  expect_tk(2, TK_IDENTIFIER, "bar", 15)
+End Sub
+
+Sub test_remove_token()
+  ' Test removing the first (index = 0) token.
+  lx.parse_basic("  token1 token2  token3")
+  lx.remove_token(0)
+  assert_string_equals("  token2  token3", lx.line$)
+  expect_success(2)
+  expect_tk(0, TK_IDENTIFIER, "token2", 3)
+  expect_tk(1, TK_IDENTIFIER, "token3", 11)
+
+  ' Test removing the last token.
+  lx.parse_basic("  token1 token2  token3")
+  lx.remove_token(2)
+  assert_string_equals("  token1 token2", lx.line$)
+  expect_success(2)
+  expect_tk(0, TK_IDENTIFIER, "token1", 3)
+  expect_tk(1, TK_IDENTIFIER, "token2", 10)
+
+  ' Test removing an intermediate token.
+  lx.parse_basic("  token1 token2  token3")
+  lx.remove_token(1)
+  assert_string_equals("  token1  token3", lx.line$)
+  expect_success(2)
+  expect_tk(0, TK_IDENTIFIER, "token1", 3)
+  expect_tk(1, TK_IDENTIFIER, "token3", 11)
+
+  ' Test removing the only token.
+  lx.parse_basic("  token1  ")
+  lx.remove_token(0)
+  assert_string_equals("  ", lx.line$)
+  expect_success(0)
+
+  ' Test something more interesting.
+  lx.parse_basic("let y(3) = (" + str.quote$("foo") + ", " + str.quote$("bar") + ")")
+  lx.remove_token(2)
+  lx.remove_token(2)
+  lx.remove_token(2)
+  assert_string_equals("let y = (" + str.quote$("foo") + ", " + str.quote$("bar") + ")", lx.line$)
+  expect_success(8)
+  expect_tk(0, TK_KEYWORD, "let", 1)
+  expect_tk(1, TK_IDENTIFIER, "y", 5)
+  expect_tk(2, TK_SYMBOL, "=", 7)
+  expect_tk(3, TK_SYMBOL, "(", 9)
+  expect_tk(4, TK_STRING, str.quote$("foo"), 10)
+  expect_tk(5, TK_SYMBOL, ",", 15)
+  expect_tk(6, TK_STRING, str.quote$("bar"), 17)
+  expect_tk(7, TK_SYMBOL, ")", 22)
+End Sub
+
+Sub test_replace_token()
+  ' Test replacing the first (index = 0) token.
+  lx.parse_basic(" one  two   three")
+  lx.replace_token(0, "wombat", TK_KEYWORD)
+  assert_string_equals(" wombat  two   three", lx.line$)
+  expect_success(3)
+  expect_tk(0, TK_KEYWORD, "wombat", 2)
+  expect_tk(1, TK_IDENTIFIER, "two", 10)
+  expect_tk(2, TK_IDENTIFIER, "three", 16)
+
+  ' Test replacing an intermediate token.
+  lx.parse_basic(" one  two   three")
+  lx.replace_token(1, "wombat", TK_KEYWORD)
+  assert_string_equals(" one  wombat   three", lx.line$)
+  expect_success(3)
+  expect_tk(0, TK_IDENTIFIER, "one", 2)
+  expect_tk(1, TK_KEYWORD, "wombat", 7)
+  expect_tk(2, TK_IDENTIFIER, "three", 16)
+
+  ' Test replacing the last token.
+  lx.parse_basic(" one  two   three")
+  lx.replace_token(2, "wombat", TK_KEYWORD)
+  assert_string_equals(" one  two   wombat", lx.line$)
+  expect_success(3)
+  expect_tk(0, TK_IDENTIFIER, "one", 2)
+  expect_tk(1, TK_IDENTIFIER, "two", 7)
+  expect_tk(2, TK_KEYWORD, "wombat", 13)
+
+  ' Test replacing the only token.
+  lx.parse_basic("  token1  ")
+  lx.replace_token(0, "wombat", TK_KEYWORD)
+  assert_string_equals("  wombat  ", lx.line$)
+  expect_success(1)
+  expect_tk(0, TK_KEYWORD, "wombat", 3)
+End Sub
+
 Sub expect_success(num)
   assert_no_error()
   assert_true(lx.num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx.num))
 End Sub
 
-Sub expect_tk(i, type, s$)
+Sub expect_tk(i, type, s$, start%)
   assert_true(lx.type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx.type(i)))
   Local actual$ = lx.token$(i)
   assert_true(actual$ = s$, "expected " + s$ + ", found " + actual$)
+  assert_int_equals(Len(s$), lx.len(i%))
+  If start% > 0 Then assert_int_equals(start%, lx.start(i%))
 End Sub
 
