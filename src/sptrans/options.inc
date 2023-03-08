@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -53,11 +53,16 @@ Sub opt.init()
 End Sub
 
 Sub opt.clear_flag(flag$)
-  Local s$ = str.trim$(flag$)
-  If Len(s$) > opt.FLAG_MAX_LENGTH% Then
+  Local s$ = str.trim$(flag$), lower$ = LCase$(s$)
+
+  If s$ = "" Then
+    sys.err$ = "invalid flag"
+  Else If Len(s$) > opt.FLAG_MAX_LENGTH% Then
     sys.err$ = "flag too long, max 64 chars"
-  Else If opt.is_flag_set%(LCase$(s$)) Then
-    set.remove(opt.flags$(), LCase$(s$))
+  Else If InStr("|1|true|on|sptrans|SPTRANS|0|false|off|", "|" + lower$ + "|") Then
+    sys.err$ = "flag '" + s$ + "' cannot be cleared"
+  Else If opt.is_flag_set%(lower$) Then
+    set.remove(opt.flags$(), lower$)
   Else
     sys.err$ = "flag '" + s$ + "' is not set"
   EndIf
@@ -68,9 +73,10 @@ Function opt.is_flag_set%(flag$)
   Local s$ = str.trim$(flag$)
   If Len(s$) > opt.FLAG_MAX_LENGTH% Then
     sys.err$ = "flag too long, max 64 chars"
-  Else If LCase$(s$) = "sptrans" Then
-    ' SPTRANS flag is always considered set.
+  Else If InStr("|1|true|on|sptrans|", "|" + LCase$(s$) + "|") Then
     opt.is_flag_set% = 1
+  Else If InStr("|0|false|off|", "|" + LCase$(s$) + "|") Then
+    opt.is_flag_set% = 0
   Else
     opt.is_flag_set% = set.get%(opt.flags$(), LCase$(s$)) <> -1
   Endif
@@ -78,14 +84,20 @@ End Function
 
 Sub opt.set_flag(flag$)
   Local i%, s$ = str.trim$(flag$), lower$ = LCase$(s$)
+  sys.err$ = "invalid flag"
+
+  If s$ = "" Then Exit Sub
 
   If Len(s$) > opt.FLAG_MAX_LENGTH% Then
     sys.err$ = "flag too long, max 64 chars"
     Exit Sub
   EndIf
 
-  sys.err$ = "invalid flag"
-  If s$ = "" Then Exit Sub
+  If InStr("|1|true|on|sptrans|SPTRANS|0|false|off|", "|" + lower$ + "|") Then
+    sys.err$ = "flag '" + s$ + "' cannot be set"
+    Exit Sub
+  EndIf
+
   If Not InStr("_abcdefghijklmnopqrstuvwxyz", Mid$(lower$, 1, 1)) Then Exit Sub
   For i% = 2 To Len(lower$)
     If Not InStr("_abcdefghijklmnopqrstuvwxyz0123456789", Mid$(lower$, i%, 1)) Then Exit Sub

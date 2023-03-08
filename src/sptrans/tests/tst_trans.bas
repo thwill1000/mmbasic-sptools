@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.06
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
@@ -72,10 +72,11 @@ add_test("test_set_given_flag_too_long")
 add_test("test_set_is_case_insensitive")
 add_test("test_omit_directives_from_output")
 add_test("test_unbalanced_endif")
-add_test("test_sptrans_flag_is_set")
 add_test("test_error_directive")
 add_test("test_omit_and_line_spacing")
 add_test("test_comments_directive")
+add_test("test_always_true_flags")
+add_test("test_always_false_flags")
 
 run_tests()
 
@@ -1232,19 +1233,6 @@ Sub test_unbalanced_endif()
   assert_error("unmatched !endif")
 End Sub
 
-Sub test_sptrans_flag_is_set()
-  Local ok%
-
-  ' The SPTRANS flag is always considered set by the transpiler.
-  ok% = parse_and_transpile%("'!ifdef SPTRANS")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("'!endif")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-End Sub
-
 Sub test_error_directive()
   Local ok%
 
@@ -1346,6 +1334,58 @@ Sub test_comments_directive()
   assert_int_equals(1, ok%)
   expect_tokens(1)
   expect_tk(0, TK_COMMENT, "' This is a third comment")
+End Sub
+
+Sub test_always_true_flags()
+  Local flags$(6) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS")
+  Local i%, ok%
+
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    ok% = parse_and_transpile%("'!ifdef " + flags$(i%))
+    assert_int_equals(tr.STATUS_OMIT_LINE%, parse_and_transpile%("'!ifdef " + flags$(i%)))
+    ok% = parse_and_transpile%("should_not_be_omitted")
+    assert_int_equals(1, ok%)
+    expect_tokens(1)
+    expect_tk(0, TK_IDENTIFIER, "should_not_be_omitted")
+    ok% = parse_and_transpile%("'!endif")
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  Next
+
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    ok% = parse_and_transpile%("'!ifndef " + flags$(i%))
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    ok% = parse_and_transpile%("should_be_omitted")
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    expect_tokens(0)
+    ok% = parse_and_transpile%("'!endif")
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  Next
+End Sub
+
+Sub test_always_false_flags()
+  Local flags$(4) = ("0", "false", "FALSE", "off", "OFF")
+  Local i%, ok%
+
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    ok% = parse_and_transpile%("'!ifndef " + flags$(i%))
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    ok% = parse_and_transpile%("should_not_be_omitted")
+    assert_int_equals(1, ok%)
+    expect_tokens(1)
+    expect_tk(0, TK_IDENTIFIER, "should_not_be_omitted")
+    ok% = parse_and_transpile%("'!endif")
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  Next
+
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    ok% = parse_and_transpile%("'!ifdef " + flags$(i%))
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    ok% = parse_and_transpile%("should_be_omitted")
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    expect_tokens(0)
+    ok% = parse_and_transpile%("'!endif")
+    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  Next
 End Sub
 
 Function parse_and_transpile%(s$)

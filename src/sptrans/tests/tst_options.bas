@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
@@ -38,6 +38,10 @@ add_test("test_outfile")
 add_test("test_unknown")
 add_test("test_pretty_print")
 add_test("test_process_directives")
+add_test("test_always_set_flag")
+add_test("test_always_clear_flag")
+add_test("test_set_fixed_flag")
+add_test("test_clear_fixed_flag")
 
 run_tests()
 
@@ -660,4 +664,40 @@ Sub test_process_directives()
 
   given_options("version=1")
   assert_int_equals(1, opt.process_directives%())
+End Sub
+
+Sub test_always_set_flag()
+  Local flags$(6) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS")
+  Local i%
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    assert_int_equals(1, opt.is_flag_set%(flags$(i%)))
+    assert_no_error()
+  Next
+End Sub
+
+Sub test_always_clear_flag()
+  Local flags$(4) = ("0", "false", "FALSE", "off", "OFF")
+  Local i%
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    assert_int_equals(0, opt.is_flag_set%(flags$(i%)))
+    assert_no_error()
+  Next
+End Sub
+
+Sub test_set_fixed_flag()
+  Local flags$(11) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS", "0", "false", "FALSE", "off", "OFF")
+  Local i%
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    opt.set_flag(flags$(i%))
+    assert_error("flag '" + flags$(i%) + "' cannot be set")
+  Next
+End Sub
+
+Sub test_clear_fixed_flag()
+  Local flags$(11) = ("1", "true", "TRUE", "on", "ON", "sptrans", "SPTRANS", "0", "false", "FALSE", "off", "OFF")
+  Local i%
+  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
+    opt.clear_flag(flags$(i%))
+    assert_error("flag '" + flags$(i%) + "' cannot be cleared")
+  Next
 End Sub
