@@ -25,6 +25,7 @@ Const CR$ = Chr$(13)
 #Include "options.inc"
 #Include "output.inc"
 #Include "pprint.inc"
+#Include "expression.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
 

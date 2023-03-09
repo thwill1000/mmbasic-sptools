@@ -112,6 +112,8 @@ Sub lx.parse_number()
       lx.parse_hex_or_binary()
     ElseIf lx.next_char$ = "o" Then
       lx.parse_octal()
+    ElseIf lx.next_char$ = "&" Then
+      lx.parse_symbol()
     Else
       sys.err$ = "Unknown literal type &" + lx.next_char$
     EndIf
@@ -285,6 +287,24 @@ Sub lx.parse_symbol()
         Case Else
           lx.store(TK_SYMBOL, start, 1)
       End Select
+    Case "&"
+      lx.advance()
+      Select Case lx.char$
+        Case "&"
+          lx.store(TK_SYMBOL, start, 2)
+          lx.advance()
+        Case Else
+          lx.store(TK_SYMBOL, start, 1)
+      End Select
+    Case "|"
+      lx.advance()
+      Select Case lx.char$
+        Case "|"
+          lx.store(TK_SYMBOL, start, 2)
+          lx.advance()
+        Case Else
+          lx.store(TK_SYMBOL, start, 1)
+      End Select
     Case Else
       lx.store(TK_SYMBOL, start, 1)
       lx.advance()
@@ -337,15 +357,15 @@ Function lx.parse_command_line%(line$)
   Do While lx.char$ <> Chr$(10)
     If lx.char$ = " " Then
       lx.advance()
-    ElseIf InStr("&.0123456789", lx.char$) Then
-      lx.parse_number()
-    ElseIf lx.char$ = "'" Then
-      lx.parse_comment_or_directive()
+    ' ElseIf InStr("&.0123456789", lx.char$) Then
+    '   lx.parse_number()
+    ' ElseIf lx.char$ = "'" Then
+    '   lx.parse_comment_or_directive()
     ElseIf lx.char$ = Chr$(34) Then
       lx.parse_string()
-    ElseIf InStr("@#_abcdefghijklmnopqrstuvwxyz", lx.char$) Then
+    ElseIf InStr("./@#_abcdefghijklmnopqrstuvwxyz", lx.char$) Then
       lx.parse_argument()
-    ElseIf InStr("-/", lx.char$) Then
+    ElseIf lx.char$ = "-" Then
       lx.parse_option()
     Else
       lx.parse_symbol()
@@ -366,8 +386,8 @@ Sub lx.parse_option()
     Case "-"
       lx.advance()
       If lx.char$ = "-" Then lx.advance()
-    Case "/"
-      lx.advance()
+    ' Case "/"
+    '   lx.advance()
     Case Else
       Error "Unexpected badly formed option" ' Should never happen.
   End Select

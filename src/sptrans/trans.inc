@@ -4,7 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("options", "set")
+sys.requires("options", "set", "expression")
 sys.provides("trans")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -13,10 +13,12 @@ Dim tr.num_comments(MAX_NUM_FILES - 1)
 ' For each source file we maintain a stack of currently open !if directives.
 ' If 'i' is the base-0 index of the source file then
 '   if_stack(i, if_stack_sz - 1)
-'     = +1  : if the latest !if directive incremented 'num_comments'
-'     = +2  : if the latest !if directive set the 'omit_flag'
-'     = -1  : if the latest !if directive decremented 'num_comments'
-'     = 0   : if the current !if directive is inactive
+' is a boolean combination of constants describing the latest !if directive.
+Const tr.IF_ACTIVE     = &h00001 ' !if clause is active.
+Const tr.ELSE_ACTIVE   = &h00010 ' !else clause is active.
+Const tr.ELSE_INACTIVE = &h00100 ' !else clause is inactive.
+Const tr.IF_COMMENT    = &h01000 ' Inside an active/inactive !if_comment.
+Const tr.IF_UNCOMMENT  = &h10000 ' Inside an active/inactive !if_uncomment.
 Const tr.MAX_NUM_IFS = 10
 Dim tr.if_stack(MAX_NUM_FILES - 1, tr.MAX_NUM_IFS - 1)
 Dim tr.if_stack_sz(MAX_NUM_FILES - 1)
@@ -39,6 +41,10 @@ Dim tr.empty_line_flag%
 ' Was the last line omitted ?
 Dim tr.omitted_line_flag%
 
+' TODO - remove STATUS prefix
+'      - make SUCCESS code 0
+Const tr.STATUS_ERROR% = 0
+Const tr.STATUS_SUCCESS% = 1
 Const tr.STATUS_INCLUDE% = 2
 Const tr.STATUS_OMIT_LINE% = 3
 
@@ -68,16 +74,22 @@ End Function
 Function tr.transpile%()
   tr.include$ = ""
 
-  If lx.token_lc$(0) = "'!endif" Then
-    tr.transpile% = tr.process_endif%()
-    tr.omitted_line_flag% = (tr.transpile% = tr.STATUS_OMIT_LINE%)
-    Exit Function
-  EndIf
+  Select Case lx.token_lc$(0)
+    Case "'!endif", "'!else", "'!elif"
+      ' TODO: Requiring the trailing brackets in the CALL may be an MMBasic bug.
+      Call "tr.process_" + Mid$(lx.token_lc$(0), 3) + "()"
+      If sys.err$ = "" Then
+        lx.reset("") ' Is this really necessary ?
+        tr.omitted_line_flag% = 1
+        tr.transpile% = tr.STATUS_OMIT_LINE%
+      EndIf
+      Exit Function
+  End Select
 
   If tr.omit_flag% Then
     If lx.type(0) = TK_DIRECTIVE Then
       Select Case lx.directive$(0)
-        Case "!comment_if", "!ifdef", "!ifndef", "!uncomment_if"
+        Case "!comment_if", "!if", "!ifdef", "!ifndef", "!uncomment_if"
           tr.push_if(0) ' Still need to record omitted !if's.
       End Select
     EndIf
@@ -122,8 +134,11 @@ Function tr.transpile%()
     Case "!clear"        : tr.process_clear()
     Case "!comments"     : tr.process_comments()
     Case "!comment_if"   : tr.process_if()
+    Case "!elif"         : tr.process_elif()
+    Case "!else"         : tr.process_else()
     Case "!empty-lines"  : tr.process_empty_lines()
     Case "!error"        : tr.process_error()
+    Case "!if"           : tr.process_if()
     Case "!ifdef"        : tr.process_if()
     Case "!ifndef"       : tr.process_if()
     Case "!indent"       : tr.process_indent()
@@ -132,7 +147,7 @@ Function tr.transpile%()
     Case "!spacing"      : tr.process_spacing()
     Case "!uncomment_if" : tr.process_if()
     Case "!unreplace"    : tr.process_replace()  ' Same SUB for !replace & !unreplace.
-    Case Else            : sys.err$ = "unknown " + Mid$(lx.directive$(0), 1) + " directive"
+    Case Else            : sys.err$ = "Unknown " + Mid$(lx.directive$(0), 1) + " directive"
   End Select
 
   If sys.err$ = "" Then
@@ -143,30 +158,75 @@ Function tr.transpile%()
   EndIf
 End Function
 
-Function tr.process_endif%()
+Sub tr.process_elif()
+  Select Case tr.pop_if()
+    Case 0
+      tr.process_if()
+    Case tr.IF_ACTIVE
+      tr.omit_flag% = 1
+      tr.push_if(tr.IF_ACTIVE)
+    Case Else
+      sys.err$ = "!elif directive without !if"
+  End Select
+End Sub
+
+Sub tr.process_else()
+  If lx.num <> 1 Then
+    sys.err$ = "!else directive has too many arguments"
+    Exit Sub
+  EndIf
+
   Local x% = tr.pop_if()
   Select Case x%
-    Case 0     : ' Do nothing.
-    Case 1, -1 : tr.update_num_comments(-x%)
-    Case 2     : tr.omit_flag% = 0
-    Case Else  : Error
+    Case -1
+      If sys.err$ = "" Then Error "Internal error"
+    Case 0
+      tr.omit_flag% = 0
+      tr.push_if(tr.ELSE_ACTIVE)
+    Case Else
+      If x% And (tr.ELSE_ACTIVE Or tr.ELSE_INACTIVE) Then
+        sys.err$ = "Too many !else directives"
+      Else
+        tr.omit_flag% = 1
+        tr.push_if(tr.ELSE_INACTIVE)
+      EndIf
   End Select
-  If sys.err$ <> "" Then Exit Function
-'  lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
-  lx.reset("")
-  tr.process_endif% = tr.STATUS_OMIT_LINE%
-End Function
+End Sub
+
+Sub tr.process_endif()
+  If lx.num <> 1 Then
+    sys.err$ = "!endif directive has too many arguments"
+    Exit Sub
+  EndIf
+
+  Local x% = tr.pop_if()
+  If x% And (tr.IF_ACTIVE Or tr.ELSE_ACTIVE) Then
+    If x% And tr.IF_COMMENT Then
+      tr.update_num_comments(-1)
+    ElseIf x% And tr.IF_UNCOMMENT Then
+      tr.update_num_comments(+1)
+    EndIf
+  Else
+    If Not (x% And (tr.IF_COMMENT Or tr.IF_UNCOMMENT)) Then
+      tr.omit_flag% = 0
+    EndIf
+  EndIf
+End Sub
 
 Sub tr.update_num_comments(x)
   Local i = in.num_open_files% - 1
   tr.num_comments(i) = tr.num_comments(i) + x
 End Sub
 
-Function tr.pop_if()
+Function tr.pop_if(directive$)
   Local i = in.num_open_files% - 1
-  If tr.if_stack_sz(i) = 0 Then sys.err$ = "unmatched !endif" : Exit Function
-  tr.if_stack_sz(i) = tr.if_stack_sz(i) - 1
-  tr.pop_if = tr.if_stack(i, tr.if_stack_sz(i))
+  If tr.if_stack_sz(i) > 0 Then
+    tr.if_stack_sz(i) = tr.if_stack_sz(i) - 1
+    tr.pop_if = tr.if_stack(i, tr.if_stack_sz(i))
+  Else
+    sys.err$ = lx.directive$(0) + " directive without !if"
+    tr.pop_if = -1
+  EndIf
 End Function
 
 Sub tr.add_comments()
@@ -311,26 +371,23 @@ Sub tr.process_comments()
 End Sub
 
 Sub tr.process_if()
-  Local invert
-  Local t$ = lx.token_lc$(1)
 
+  ' Replace !IFDEF and !IFNDEF directives with equivalent !IF DEFINED.
   Select Case lx.directive$(0)
-    Case "!ifdef", "!ifndef"
-      If lx.num <> 2 Then sys.err$ = "expects 1 argument"
-
-    Case Else
-      If lx.num = 2 Then
-        ' Do nothing
-      ElseIf lx.num = 3 Then
-        If t$ = "not" Then
-          invert = 1
-          t$ = lx.token_lc$(2)
-        Else
-          sys.err$ = "followed by unexpected token {" + lx.token$(1) + "}"
-        EndIf
+    Case "!ifdef"
+      If lx.num <> 2 Then
+        sys.err$ = "expects 1 argument"
       Else
-        sys.err$ = "has too many arguments"
+        Local dummy% = lx.parse_basic%("'!if defined (" + lx.token$(1) + ")")
       EndIf
+    Case "!ifndef"
+      If lx.num <> 2 Then
+        sys.err$ = "expects 1 argument"
+      Else
+        Local dummy% = lx.parse_basic%("'!if not defined (" + lx.token$(1) + ")")
+      EndIf
+    Case Else
+      If lx.num < 2 Then sys.err$ = "expects at least 1 argument"
   End Select
 
   If sys.err$ <> "" Then
@@ -338,36 +395,33 @@ Sub tr.process_if()
     Exit Sub
   EndIf
 
-  Local x = opt.is_flag_set%(t$))
-  If invert Then x = Not x
+  Local x%
+  If ex.eval%(1, x%) <> 0 Then Exit Sub
+  If x% < 0 Or x% > 1 Then Error "Value is not true (1) or false (0): " + x%
 
   Select Case lx.directive$(0)
     Case "!comment_if"
-      tr.push_if(x)
-      If x Then tr.update_num_comments(+1)
+      tr.push_if(x% Or tr.IF_COMMENT)
+      If x% Then tr.update_num_comments(+1)
 
-    Case "!ifdef"
-      tr.push_if(Choice(x, 0, 2))
-      tr.omit_flag% = Not x
-
-    Case "!ifndef"
-      tr.push_if(Choice(x, 2, 0))
-      tr.omit_flag% = x
+    Case "!if", "!elif"
+      tr.push_if(Choice(x%, tr.IF_ACTIVE, 0))
+      tr.omit_flag% = Not x%
 
     Case "!uncomment_if"
-      tr.push_if(-x)
-      If x Then tr.update_num_comments(-1)
+      tr.push_if(x% Or tr.IF_UNCOMMENT)
+      If x% Then tr.update_num_comments(-1)
 
     Case Else
-      Error
+      Error "Unknown !if directive: " + lx.directive$(0)
   End Select
 End Sub
 
 Sub tr.push_if(x)
   Local i = in.num_open_files% - 1
-  If tr.if_stack_sz(i) = tr.MAX_NUM_IFS Then Error "Too many if directives"
+  If tr.if_stack_sz(i) = tr.MAX_NUM_IFS Then Error "Too many !if directives"
   tr.if_stack(i, tr.if_stack_sz(i)) = x
-  tr.if_stack_sz(i) = tr.if_stack_sz(i) + 1
+  Inc tr.if_stack_sz(i)
 End Sub
 
 Sub tr.process_empty_lines()

@@ -21,6 +21,7 @@ Dim in.num_open_files = 1
 #Include "../keywords.inc"
 #Include "../lexer.inc"
 #Include "../options.inc"
+#Include "../expression.inc"
 #Include "../trans.inc"
 
 const SUCCESS = 0
@@ -73,12 +74,31 @@ add_test("test_set_given_flag_unset")
 add_test("test_set_given_flag_too_long")
 add_test("test_set_is_case_insensitive")
 add_test("test_omit_directives_from_output")
-add_test("test_unbalanced_endif")
+add_test("test_endif_given_no_if")
+add_test("test_endif_given_args")
 add_test("test_error_directive")
 add_test("test_omit_and_line_spacing")
 add_test("test_comments_directive")
 add_test("test_always_true_flags")
 add_test("test_always_false_flags")
+add_test("test_if_given_true")
+add_test("test_if_given_false")
+add_test("test_if_given_nested")
+add_test("test_else_given_if_active")
+add_test("test_else_given_else_active")
+add_test("test_else_given_no_if")
+add_test("test_too_many_elses")
+add_test("test_elif_given_if_active")
+add_test("test_elif_given_elif_1_active")
+add_test("test_elif_given_elif_2_active")
+add_test("test_elif_given_else_active")
+add_test("test_elif_given_no_expression")
+add_test("test_elif_given_invalid_expr")
+add_test("test_elif_given_no_if")
+add_test("test_elif_given_comment_if")
+add_test("test_elif_given_uncomment_if")
+add_test("test_elif_given_ifdef")
+add_test("test_elif_given_shortcut_expr")
 
 run_tests()
 
@@ -104,6 +124,8 @@ Sub setup_test()
     Next
     tr.if_stack_sz(i%) = 0
   Next
+
+  sys.err$ = ""
 End Sub
 
 Sub test_transpile_includes()
@@ -1220,10 +1242,10 @@ End Sub
 Sub test_unknown_directive()
   Local ok% = parse_and_transpile%("'!wombat foo")
   assert_int_equals(0, ok%)
-  assert_error("unknown !wombat directive")
+  assert_error("Unknown !wombat directive")
 End Sub
 
-Sub test_unbalanced_endif()
+Sub test_endif_given_no_if()
   Local ok%
 
   ok% = parse_and_transpile%("'!ifndef FOO")
@@ -1232,7 +1254,12 @@ Sub test_unbalanced_endif()
   expect_tokens(0)
   ok% = parse_and_transpile%("'!endif")
   assert_int_equals(0, ok%)
-  assert_error("unmatched !endif")
+  assert_error("!endif directive without !if")
+End Sub
+
+Sub test_endif_given_args()
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_error("'!endif wombat", "!endif directive has too many arguments")
 End Sub
 
 Sub test_error_directive()
@@ -1390,10 +1417,203 @@ Sub test_always_false_flags()
   Next
 End Sub
 
-Function parse_and_transpile%(s$)
+Sub test_if_given_true()
+  expect_transpile_omits("'!if defined(true)")
+  expect_transpile_succeeds(" if_clause")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_if_given_false()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits(" if_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_if_given_nested()
+  expect_transpile_omits("'!if false")
+  expect_transpile_omits("  '!if true")
+  expect_transpile_omits("  '!endif")
+  expect_transpile_omits("'!endif")
+End Sub
+
+Sub test_else_given_if_active()
+  expect_transpile_omits("'!if defined(true)")
+  expect_transpile_succeeds(" if_clause")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_transpile_omits("'!else")
+  expect_transpile_omits("    else_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_else_given_else_active()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits("    if_clause")
+  expect_transpile_omits("'!else")
+  expect_transpile_succeeds(" else_clause")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "else_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_else_given_no_if()
+  expect_transpile_error("'!else", "!else directive without !if")
+End Sub
+
+Sub test_too_many_elses()
+  expect_transpile_omits("'!if defined(true)")
+  expect_transpile_omits("'!else")
+  expect_transpile_error("'!else", "Too many !else directives")
+
+  setup_test()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits("'!else")
+  expect_transpile_error("'!else", "Too many !else directives")
+End Sub
+
+Sub test_elif_given_if_active()
+  expect_transpile_omits("'!if defined(true)")
+  expect_transpile_succeeds(" if_clause")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_transpile_omits("'!elif defined(true)")
+  expect_transpile_omits("    elif_clause_1")
+  expect_transpile_omits("'!elif defined(true)")
+  expect_transpile_omits("    elif_clause_2")
+  expect_transpile_omits("'!else")
+  expect_transpile_omits("    else_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_elif_given_elif_1_active()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits("    if_clause")
+  expect_transpile_omits("'!elif defined(true)")
+  expect_transpile_succeeds(" elif_clause_1")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "elif_clause_1")
+  expect_transpile_omits("'!elif defined(true)")
+  expect_transpile_omits("    elif_clause_2")
+  expect_transpile_omits("'!else")
+  expect_transpile_omits("    else_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_elif_given_elif_2_active()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits("    if_clause")
+  expect_transpile_omits("'!elif defined(false)")
+  expect_transpile_omits("    elif_clause_1")
+  expect_transpile_omits("'!elif defined(true)")
+  expect_transpile_succeeds(" elif_clause_2")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "elif_clause_2")
+  expect_transpile_omits("'!else")
+  expect_transpile_omits("    else_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_elif_given_else_active()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits("    if_clause")
+  expect_transpile_omits("'!elif defined(false)")
+  expect_transpile_omits("    elif_clause_1")
+  expect_transpile_omits("'!elif defined(false)")
+  expect_transpile_omits("    elif_clause_2")
+  expect_transpile_omits("'!else")
+  expect_transpile_succeeds(" else_clause")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "else_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_elif_given_no_expression()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits("    if_clause")
+  expect_transpile_error("'!elif", "!elif directive expects at least 1 argument")
+End Sub
+
+Sub test_elif_given_invalid_expr()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_omits("    if_clause")
+  expect_transpile_error("'!elif a +", "Invalid expression syntax")
+End Sub
+
+Sub test_elif_given_no_if()
+  expect_transpile_error("'!elif defined(true)", "!elif directive without !if")
+End Sub
+
+Sub test_elif_given_comment_if()
+  expect_transpile_omits("'!comment_if true")
+  expect_transpile_error("'!elif defined(true)", "!elif directive without !if")
+
+  setup_test()
+  expect_transpile_omits("'!comment_if false")
+  expect_transpile_error("'!elif defined(true)", "!elif directive without !if")
+End Sub
+
+Sub test_elif_given_uncomment_if()
+  expect_transpile_omits("'!uncomment_if true")
+  expect_transpile_error("'!elif defined(true)", "!elif directive without !if")
+
+  setup_test()
+  expect_transpile_omits("'!uncomment_if false")
+  expect_transpile_error("'!elif defined(true)", "!elif directive without !if")
+End Sub
+
+Sub test_elif_given_ifdef()
+  expect_transpile_omits("'!ifdef true")
+  expect_transpile_succeeds(" if_clause")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_transpile_omits("'!elif defined(true)")
+  expect_transpile_omits("    elif_clause_1")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  setup_test()
+  expect_transpile_omits("'!ifdef false")
+  expect_transpile_omits("    if_clause")
+  expect_transpile_omits("'!elif defined(true)")
+  expect_transpile_succeeds(" elif_clause_1")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "elif_clause_1")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+' Test given shortcut expression:
+'   !ELIF foo
+' rather than full:4
+'   !ELIF DEFINED(foo)
+Sub test_elif_given_shortcut_expr()
+  expect_transpile_omits("'!if false")
+  expect_transpile_omits(" if_clause")
+  expect_transpile_omits("'!elif true")
+  expect_transpile_succeeds(" elif_clause")
+  expect_tokens(1)
+  expect_tk(0, TK_IDENTIFIER, "elif_clause")
+  expect_transpile_omits("'!endif")
+  assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+' @param  s$                    Line to parse and transpile.
+' @param  assert_no_trans_err%  If not 0 then assert no transpilation error occurred.
+Function parse_and_transpile%(s$, assert_no_trans_err%)
   assert_int_equals(SUCCESS, lx.parse_basic%(s$))
   assert_no_error()
   parse_and_transpile% = tr.transpile%()
+  If assert_no_trans_err% Then assert_no_error()
 End Function
 
 Sub expect_replacement(i%, from$, to_$)
@@ -1411,3 +1631,50 @@ Sub expect_tk(i, type, s$)
   assert_string_equals(s$, lx.token$(i))
 End Sub
 
+Sub expect_transpile_omits(line$)
+  Local result%
+  If lx.parse_basic%(line$) Then
+    assert_fail("Parse failed: " + line$)
+  Else
+    result% = tr.transpile%()
+    If result% = tr.STATUS_OMIT_LINE% Then
+      If lx.num <> 0 Then
+        assert_fail("Omitted line contains " + Str$(lx.num) + " tokens: " + line$)
+      EndIf
+    Else
+      assert_fail("Transpiler failed to omit line, result = " + Str$(result%) + " : " + line$)
+    EndIf
+  EndIf
+  assert_no_error()
+End Sub
+
+Sub expect_transpile_succeeds(line$)
+  Local result%
+  If lx.parse_basic%(line$) Then
+    assert_fail("Parse failed: " + line$)
+  Else
+    result% = tr.transpile%()
+    If result% = tr.STATUS_SUCCESS% Then
+      If lx.num < 1 Then
+        assert_fail("Transpiled line contains zero tokens: " + line$)
+      EndIf
+    Else
+      assert_fail("Transpiler did not return SUCCESS, result = " + Str$(result%) + " : " + line$)
+    EndIf
+  EndIf
+  assert_no_error()
+End Sub
+
+Sub expect_transpile_error(line$, msg$)
+  Local result%
+  If lx.parse_basic%(line$) Then
+    assert_fail("Parse failed: " + line$)
+  Else
+    result% = tr.transpile%()
+    If result% = tr.STATUS_ERROR% Then
+      assert_error(msg$)
+    Else
+      assert_fail("Transpiler did not return ERROR, result = " + Str$(result%) + " : " + line$)
+    EndIf
+  EndIf
+End Sub
