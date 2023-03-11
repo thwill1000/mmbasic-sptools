@@ -43,7 +43,8 @@ Dim lx.num         ' number of tokens.
 Dim lx.pos
 Dim lx.csub        ' 1 if we are tokenising within a CSUB definition, otherwise 0.
 
-Sub lx.parse_basic(line$)
+' @return  0 on success, otherwise -1 and sets 'sys.err$'.
+Function lx.parse_basic%(line$)
   lx.reset(line$)
   lx.advance()
 
@@ -66,9 +67,12 @@ Sub lx.parse_basic(line$)
       lx.parse_symbol()
     EndIf
 
-    If sys.err$ <> "" Then Exit Do
+    If sys.err$ <> "" Then
+      lx.parse_basic% = -1
+      Exit Do
+    EndIf
   Loop
-End Sub
+End Function
 
 Sub lx.reset(line$)
   ' Clear old token data
@@ -325,7 +329,8 @@ Function lx.number!(i)
   lx.number! = Val(lx.token$(i))
 End Function
 
-Sub lx.parse_command_line(line$)
+' @return  0 on success, otherwise -1 and sets 'sys.err$'.
+Function lx.parse_command_line%(line$)
   lx.reset(line$)
   lx.advance()
 
@@ -346,9 +351,12 @@ Sub lx.parse_command_line(line$)
       lx.parse_symbol()
     EndIf
 
-    If sys.err$ <> "" Then Exit Do
+    If sys.err$ <> "" Then 
+      lx.parse_command_line% = -1
+      Exit Do
+    EndIf
   Loop
-End Sub
+End Function
 
 Sub lx.parse_option()
 

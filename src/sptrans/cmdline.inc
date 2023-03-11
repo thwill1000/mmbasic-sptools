@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -14,8 +14,7 @@ If sys.err$ <> "" Then Error sys.err$
 Sub cli.parse(s$)
   Local i = 0, o$
 
-  lx.parse_command_line(s$)
-  If sys.err$ <> "" Then Exit Sub
+  If lx.parse_command_line%(s$) <> 0 Then Exit Sub
 
   ' Process options.
 

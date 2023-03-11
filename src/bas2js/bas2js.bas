@@ -1,8 +1,8 @@
 #!/usr/local/bin/mmbasic -i
 
-' Copyright (c) 2022 Thomas Hugo Williams
+' Copyright (c) 2022-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
@@ -91,8 +91,7 @@ Sub main()
     cout(BS$ + Mid$("\|/-", ((in.line_num(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
     s$ = in.readln$()
-    lx.parse_basic(s$)
-    If sys.err$ = "" Then
+    If lx.parse_basic%(s$) = 0 Then
       If Not opt.format_only Then tr.transpile()
       If tr.include$ <> "" Then open_include()
     EndIf
@@ -118,8 +117,7 @@ End Sub
 Sub open_include()
   Local s$ = lx.line$
   s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
-  lx.parse_basic(s$)
-  If sys.err$ = "" Then in.open(tr.include$)
+  If lx.parse_basic%(s$) = 0 Then in.open(tr.include$)
   If sys.err$ = "" Then
     Local i = in.num_open_files%
     cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
@@ -130,8 +128,7 @@ End Sub
 Sub close_include()
   Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
-  lx.parse_basic(s$)
-  If sys.err$ = "" Then pp.print_line()
+  If lx.parse_basic%(s$) = 0 Then pp.print_line()
   If sys.err$ = "" Then in.close()
 End Sub
 

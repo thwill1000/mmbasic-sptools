@@ -81,7 +81,7 @@ Function tr.transpile%()
           tr.push_if(0) ' Still need to record omitted !if's.
       End Select
     EndIf
-    lx.parse_basic("")
+    lx.reset("")
     tr.omitted_line_flag% = 1
     tr.transpile% = tr.STATUS_OMIT_LINE%
     Exit Function
@@ -137,7 +137,7 @@ Function tr.transpile%()
 
   If sys.err$ = "" Then
 '    lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
-    lx.parse_basic("")
+    lx.reset("")
     tr.transpile% = tr.STATUS_OMIT_LINE%
     tr.omitted_line_flag% = 1
   EndIf
@@ -153,7 +153,7 @@ Function tr.process_endif%()
   End Select
   If sys.err$ <> "" Then Exit Function
 '  lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
-  lx.parse_basic("")
+  lx.reset("")
   tr.process_endif% = tr.STATUS_OMIT_LINE%
 End Function
 
@@ -171,14 +171,15 @@ End Function
 
 Sub tr.add_comments()
   Local nc = tr.num_comments(in.num_open_files% - 1)
+  Local result%
   If nc > 0 Then
-    lx.parse_basic(String$(nc, "'") + " " + lx.line$)
+    result% = lx.parse_basic%(String$(nc, "'") + " " + lx.line$)
   ElseIf nc < 0 Then
     Do While nc < 0 And lx.num > 0 And lx.type(0) = TK_COMMENT
       If Mid$(lx.line$, lx.start(0), 1) = "'" Then
-        lx.parse_basic(Left$(lx.line$, lx.start(0) - 1) + Mid$(lx.line$, lx.start(0) + 1))
+        result% = lx.parse_basic%(Left$(lx.line$, lx.start(0) - 1) + Mid$(lx.line$, lx.start(0) + 1))
       ElseIf LCase$(Mid$(lx.line$, lx.start(0), 3)) = "rem" Then
-        lx.parse_basic(Left$(lx.line$, lx.start(0) - 1) + Mid$(lx.line$, lx.start(0) + 3))
+        result% = lx.parse_basic%(Left$(lx.line$, lx.start(0) - 1) + Mid$(lx.line$, lx.start(0) + 3))
       EndIf
       Inc nc, 1
     Loop
@@ -214,8 +215,7 @@ Sub tr.apply_replacements()
         Cat s$, to_$
         Cat s$, Mid$(lx.line$, lx.start(k%) + lx.len(k%))
         old_num% = lx.num%
-        lx.parse_basic(s$)
-        If sys.err$ <> "" Then Exit Sub
+        If lx.parse_basic%(s$) <> 0 Then Exit Sub
 
         ' Adjust j% so we don't resume searching for matches until immediately
         ' after the current replacement.

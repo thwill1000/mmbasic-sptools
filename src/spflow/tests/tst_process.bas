@@ -20,9 +20,10 @@ Option Default Integer
 #Include "../options.inc"
 #Include "../process.inc"
 
-Dim in.files$(1)
+Const SUCCESS = 0
+
+Dim in.files$(1) = ("input.bas", "")
 Dim in.num_open_files = 1
-in.files$(0) = "input.bas"
 Dim in.line_num(1)
 
 keywords.init()
@@ -54,7 +55,7 @@ Sub test_simple_sub()
   Local pass
   For pass = 1 To 2
     For in.line_num(0) = 1 To 7
-      lx.parse_basic(lines$(in.line_num(0)))
+      assert_int_equals(SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
       process(pass)
     Next in.line_num(0)
     pass_completed(pass)
@@ -86,7 +87,7 @@ Sub test_simple_fn()
   Local pass
   For pass = 1 To 2
     For in.line_num(0) = 1 To 4
-      lx.parse_basic(lines$(in.line_num(0)))
+      assert_int_equals(SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
       process(pass)
     Next in.line_num(0)
     pass_completed(pass)
@@ -115,7 +116,7 @@ Sub test_self_recursive_sub()
   Local pass
   For pass = 1 To 2
     For in.line_num(0) = 1 To 4
-      lx.parse_basic(lines$(in.line_num(0)))
+      assert_int_equals(SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
       process(pass)
     Next in.line_num(0)
     pass_completed(pass)
@@ -145,7 +146,7 @@ Sub test_self_recursive_fn()
   Local pass
   For pass = 1 To 2
     For in.line_num(0) = 1 To 4
-      lx.parse_basic(lines$(in.line_num(0)))
+      assert_int_equals(SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
       process(pass)
     Next in.line_num(0)
     pass_completed(pass)
