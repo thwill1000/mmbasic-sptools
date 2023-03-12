@@ -4,7 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("lexer", "options", "sptools", "string")
+sys.requires("lexer", "options", "sptools", "string", "defines")
 sys.provides("cmdline")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -87,7 +87,7 @@ Sub cli.parse_no_arg(option$, i)
     If flag$ = "" Then
       sys.err$ = "option -D<flag> expects flag"
     Else
-      opt.set_flag(flag$)
+      def.set_flag(flag$)
     EndIf
   Else
     opt.set(option$, "on")

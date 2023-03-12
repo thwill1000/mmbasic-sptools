@@ -23,6 +23,7 @@ Const CR$ = Chr$(13)
 #Include "keywords.inc"
 #Include "lexer.inc"
 #Include "options.inc"
+#Include "defines.inc"
 #Include "output.inc"
 #Include "pprint.inc"
 #Include "expression.inc"
@@ -52,6 +53,8 @@ Sub main()
   Local s$, t
 
   opt.init()
+  def.init()
+  keywords.init()
 
   cli.parse(Mm.CmdLine$)
   If sys.err$ <> "" Then Print "sptrans: "; sys.err$ : End
@@ -68,8 +71,6 @@ Sub main()
     EndIf
     opt.colour = 0
   EndIf
-
-  keywords.init()
 
   ' No line numbers when output to file.
   If opt.outfile$ <> "" Then out.line_num_fmt$ = ""

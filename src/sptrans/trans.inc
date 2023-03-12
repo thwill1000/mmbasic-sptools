@@ -4,7 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("options", "set", "expression")
+sys.requires("options", "set", "defines", "expression")
 sys.provides("trans")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -360,7 +360,7 @@ End Function
 Sub tr.process_clear()
   If lx.num < 2 Then sys.err$ = "expects a <flag> argument"
   If lx.num > 2 Then sys.err$ = "has too many arguments"
-  If sys.err$ = "" Then opt.clear_flag(lx.token$(1))
+  If sys.err$ = "" Then def.clear_flag(lx.token$(1))
   If sys.err$ <> "" Then sys.err$ = "!clear directive " + sys.err$
 End Sub
 
@@ -508,7 +508,7 @@ End Sub
 Sub tr.process_set()
   If lx.num < 2 Then sys.err$ = "expects <flag> argument"
   If lx.num > 2 Then sys.err$ = "has too many arguments"
-  If sys.err$ = "" Then opt.set_flag(lx.token$(1))
+  If sys.err$ = "" Then def.set_flag(lx.token$(1))
   If sys.err$ <> "" Then sys.err$ = "!set directive " + sys.err$
 End Sub
 

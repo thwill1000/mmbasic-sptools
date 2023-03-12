@@ -15,9 +15,9 @@ Option Default Integer
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../../common/sptools.inc"
-#Include "../options.inc"
 #Include "../keywords.inc"
 #Include "../lexer.inc"
+#Include "../defines.inc"
 #Include "../expression.inc"
 
 const SUCCESS = 0
@@ -38,7 +38,7 @@ run_tests()
 End
 
 Sub setup_test()
-  opt.init()
+  def.init()
 End Sub
 
 Sub test_eval_fundamentals()

@@ -4,6 +4,7 @@
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.requires("defines")
 sys.provides("expression")
 If sys.err$ <> "" Then Error sys.err$
 
@@ -34,7 +35,7 @@ Function ex.eval%(idx%, result%)
       Case Else
         Select Case lx.type(i%)
           Case TK_IDENTIFIER, TK_NUMBER, TK_KEYWORD
-            Cat expr$, Str$(opt.is_flag_set%(t$))
+            Cat expr$, Str$(def.is_flag_set%(t$))
           Case Else
             expr$ = ""
             Exit For

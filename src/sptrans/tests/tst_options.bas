@@ -18,15 +18,6 @@ Option Default Integer
 add_test("test_colour")
 add_test("test_comments")
 add_test("test_crunch")
-add_test("test_set_flag")
-add_test("test_set_flag_given_already_set")
-add_test("test_set_flag_given_invalid")
-add_test("test_set_flag_given_too_long")
-add_test("test_set_flag_given_too_many")
-add_test("test_set_flag_case_insensitive")
-add_test("test_clear_flag_given_set")
-add_test("test_clear_flag_given_unset")
-add_test("test_clear_flag_case_insensitive")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_include_only")
@@ -38,10 +29,6 @@ add_test("test_outfile")
 add_test("test_unknown")
 add_test("test_pretty_print")
 add_test("test_process_directives")
-add_test("test_always_set_flag")
-add_test("test_always_clear_flag")
-add_test("test_set_fixed_flag")
-add_test("test_clear_fixed_flag")
 
 run_tests()
 
@@ -49,9 +36,6 @@ End
 
 Sub setup_test()
   opt.init()
-End Sub
-
-Sub teardown_test()
 End Sub
 
 Sub test_colour()
@@ -166,99 +150,6 @@ Sub test_crunch()
 
   opt.set("crunch", "foo")
   assert_error("expects 'on|off' argument")
-End Sub
-
-Sub test_set_flag()
-  assert_int_equals(0, set.size%(opt.flags$()))
-
-  opt.set_flag("foo")
-
-  assert_no_error()
-  assert_int_equals(1, opt.is_flag_set%("foo"))
-  assert_int_equals(0, opt.is_flag_set%("bar"))
-End Sub
-
-Sub test_set_flag_given_already_set()
-  opt.set_flag("foo")
-  opt.set_flag("foo")
-
-  assert_error("flag 'foo' is already set")
-End Sub
-
-Sub test_set_flag_given_invalid()
-  sys.err$ = ""
-  opt.set_flag("")
-  assert_error("invalid flag")
-
-  sys.err$ = ""
-  opt.set_flag(" ")
-  assert_error("invalid flag")
-
-  sys.err$ = ""
-  opt.set_flag("?")
-  assert_error("invalid flag")
-
-  sys.err$ = ""
-  opt.set_flag("1hello")
-  assert_error("invalid flag")
-End Sub
-
-Sub test_set_flag_given_too_long()
-  opt.set_flag("flag567890123456789012345678901234567890123456789012345678901234")
-  assert_no_error()
-
-  opt.set_flag("flag5678901234567890123456789012345678901234567890123456789012345")
-  assert_error("flag too long, max 64 chars")
-End Sub
-
-Sub test_set_flag_given_too_many()
-  Local i%
-  For i% = 1 To 10
-    opt.set_flag("item" + Str$(i%))
-  Next
-
-  opt.set_flag("sausage")
-  assert_error("too many flags")
-End Sub
-
-Sub test_set_flag_case_insensitive()
-  opt.set_flag("foo")
-  opt.set_flag("bar")
-
-  assert_int_equals(1, opt.is_flag_set%("FOO"))
-  assert_int_equals(1, opt.is_flag_set%("BAR"))
-End Sub
-
-Sub test_clear_flag_given_set()
-  opt.set_flag("foo")
-  opt.set_flag("bar")
-
-  opt.clear_flag("foo")
-  assert_int_equals(0, opt.is_flag_set%("foo"))
-  assert_int_equals(1, opt.is_flag_set%("bar"))
-
-  opt.clear_flag("bar")
-  assert_int_equals(0, opt.is_flag_set%("bar"))
-End Sub
-
-Sub test_clear_flag_given_unset()
-  opt.clear_flag("foo")
-  assert_error("flag 'foo' is not set")
-
-  opt.clear_flag("BAR")
-  assert_error("flag 'BAR' is not set")
-End Sub
-
-Sub test_clear_flag_case_insensitive()
-  opt.set_flag("foo")
-  opt.set_flag("bar")
-
-  opt.clear_flag("FOO")
-  assert_int_equals(0, opt.is_flag_set%("FOO"))
-  assert_int_equals(1, opt.is_flag_set%("BAR"))
-
-  opt.clear_flag("BAR")
-  assert_int_equals(0, opt.is_flag_set%("BAR"))
 End Sub
 
 Sub test_empty_lines()
@@ -664,40 +555,4 @@ Sub test_process_directives()
 
   given_options("version=1")
   assert_int_equals(1, opt.process_directives%())
-End Sub
-
-Sub test_always_set_flag()
-  Local flags$(4) = ("1", "true", "TRUE", "on", "ON")
-  Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    assert_int_equals(1, opt.is_flag_set%(flags$(i%)))
-    assert_no_error()
-  Next
-End Sub
-
-Sub test_always_clear_flag()
-  Local flags$(4) = ("0", "false", "FALSE", "off", "OFF")
-  Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    assert_int_equals(0, opt.is_flag_set%(flags$(i%)))
-    assert_no_error()
-  Next
-End Sub
-
-Sub test_set_fixed_flag()
-  Local flags$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
-  Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    opt.set_flag(flags$(i%))
-    assert_error("flag '" + flags$(i%) + "' cannot be set")
-  Next
-End Sub
-
-Sub test_clear_fixed_flag()
-  Local flags$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
-  Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    opt.clear_flag(flags$(i%))
-    assert_error("flag '" + flags$(i%) + "' cannot be cleared")
-  Next
 End Sub

@@ -32,12 +32,6 @@ Dim opt.spacing      ' -1    : preserve spacing
 Dim opt.infile$      ' input file/path
 Dim opt.outfile$     ' output file/path, empty for output to console
 
-' Set of active flags
-'   - set at command line using -D<flag>,
-'   - or in program using !set directive.
-Const opt.FLAG_MAX_LENGTH% = 64
-Dim opt.flags$(set.new%(10)) Length opt.FLAG_MAX_LENGTH%
-
 Sub opt.init()
   opt.colour = 0
   opt.comments = -1
@@ -49,72 +43,6 @@ Sub opt.init()
   opt.spacing = -1
   opt.infile$ = ""
   opt.outfile$ = ""
-  set.init(opt.flags$())
-End Sub
-
-Sub opt.clear_flag(flag$)
-  Local s$ = str.trim$(flag$), lower$ = LCase$(s$)
-
-  If s$ = "" Then
-    sys.err$ = "invalid flag"
-  Else If Len(s$) > opt.FLAG_MAX_LENGTH% Then
-    sys.err$ = "flag too long, max 64 chars"
-  Else If InStr("|1|true|on|0|false|off|", "|" + lower$ + "|") Then
-    sys.err$ = "flag '" + s$ + "' cannot be cleared"
-  Else If opt.is_flag_set%(lower$) Then
-    set.remove(opt.flags$(), lower$)
-  Else
-    sys.err$ = "flag '" + s$ + "' is not set"
-  EndIf
-End Sub
-
-' @return  1 if the flag$ is set, 0 if it is not.
-Function opt.is_flag_set%(flag$)
-  Local s$ = str.trim$(flag$)
-  If Len(s$) > opt.FLAG_MAX_LENGTH% Then
-    sys.err$ = "flag too long, max 64 chars"
-  Else If InStr("|1|true|on|", "|" + LCase$(s$) + "|") Then
-    opt.is_flag_set% = 1
-  Else If InStr("|0|false|off|", "|" + LCase$(s$) + "|") Then
-    opt.is_flag_set% = 0
-  Else
-    opt.is_flag_set% = set.get%(opt.flags$(), LCase$(s$)) <> -1
-  Endif
-End Function
-
-Sub opt.set_flag(flag$)
-  Local i%, s$ = str.trim$(flag$), lower$ = LCase$(s$)
-  sys.err$ = "invalid flag"
-
-  If s$ = "" Then Exit Sub
-
-  If Len(s$) > opt.FLAG_MAX_LENGTH% Then
-    sys.err$ = "flag too long, max 64 chars"
-    Exit Sub
-  EndIf
-
-  If InStr("|1|true|on|0|false|off|", "|" + lower$ + "|") Then
-    sys.err$ = "flag '" + s$ + "' cannot be set"
-    Exit Sub
-  EndIf
-
-  If Not InStr("_abcdefghijklmnopqrstuvwxyz", Mid$(lower$, 1, 1)) Then Exit Sub
-  For i% = 2 To Len(lower$)
-    If Not InStr("_abcdefghijklmnopqrstuvwxyz0123456789", Mid$(lower$, i%, 1)) Then Exit Sub
-  Next
-
-  If set.get%(opt.flags$(), lower$) <> -1 Then
-    sys.err$ = "flag '" + s$ + "' is already set"
-    Exit Sub
-  EndIf
-
-  If set.is_full%(opt.flags$()) Then
-     sys.err$ = "too many flags"
-     Exit Sub
-  EndIf
-
-  sys.err$ = ""
-  set.put(opt.flags$(), lower$)
 End Sub
 
 ' Do the options require pretty-printing ?

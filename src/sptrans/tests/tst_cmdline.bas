@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2022 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
@@ -18,6 +18,7 @@ Option Default Integer
 #Include "../keywords.inc"
 #Include "../lexer.inc"
 #Include "../options.inc"
+#Include "../defines.inc"
 #Include "../cmdline.inc"
 
 Const INPUT_FILE$ = "input.bas"
@@ -47,9 +48,7 @@ End
 
 Sub setup_test()
   opt.init()
-End Sub
-
-Sub teardown_test()
+  def.init()
 End Sub
 
 Sub test_no_input_file()
@@ -111,19 +110,19 @@ Sub test_flag()
   cli.parse("-Dfoo " + INPUT_FILE$)
 
   assert_no_error()
-  assert_int_neq(-1, set.get%(opt.flags$(), "foo"))
+  assert_int_neq(-1, set.get%(def.flags$(), "foo"))
 
   setup_test()
   cli.parse("-D " + INPUT_FILE$)
 
   assert_error("option -D<flag> expects flag")
-  assert_int_equals(0, set.size%(opt.flags$()))
+  assert_int_equals(0, set.size%(def.flags$()))
 
   setup_test()
   cli.parse("-Dfoo=bar " + INPUT_FILE$)
 
   assert_error("option -D<flag> does not expect argument")
-  assert_int_equals(0, set.size%(opt.flags$()))
+  assert_int_equals(0, set.size%(def.flags$()))
 End Sub
 
 Sub test_no_comments()

@@ -21,6 +21,7 @@ Dim in.num_open_files = 1
 #Include "../keywords.inc"
 #Include "../lexer.inc"
 #Include "../options.inc"
+#Include "../defines.inc"
 #Include "../expression.inc"
 #Include "../trans.inc"
 
@@ -106,6 +107,7 @@ End
 
 Sub setup_test()
   opt.init()
+  def.init()
 
   ' TODO: extract into trans.init() or trans.reset().
   tr.clear_replacements()
@@ -641,16 +643,16 @@ End Sub
 Sub test_clear_given_flag_set()
   Local ok%
 
-  opt.set_flag("foo")
-  opt.set_flag("bar")
+  def.set_flag("foo")
+  def.set_flag("bar")
 
   ok% = parse_and_transpile%("'!clear foo")
-  assert_int_equals(0, opt.is_flag_set%("foo"))
-  assert_int_equals(1, opt.is_flag_set%("bar"))
+  assert_int_equals(0, def.is_flag_set%("foo"))
+  assert_int_equals(1, def.is_flag_set%("bar"))
 
   ok% = parse_and_transpile%("'!clear bar")
-  assert_int_equals(0, opt.is_flag_set%("foo"))
-  assert_int_equals(0, opt.is_flag_set%("bar"))
+  assert_int_equals(0, def.is_flag_set%("foo"))
+  assert_int_equals(0, def.is_flag_set%("bar"))
 End Sub
 
 Sub test_clear_given_flag_unset()
@@ -676,16 +678,16 @@ End Sub
 Sub test_clear_is_case_insensitive()
   Local ok%
 
-  opt.set_flag("foo")
-  opt.set_flag("BAR")
+  def.set_flag("foo")
+  def.set_flag("BAR")
 
   ok% = parse_and_transpile%("'!clear FOO")
-  assert_int_equals(0, opt.is_flag_set%("foo"))
-  assert_int_equals(1, opt.is_flag_set%("BAR"))
+  assert_int_equals(0, def.is_flag_set%("foo"))
+  assert_int_equals(1, def.is_flag_set%("BAR"))
 
   ok% = parse_and_transpile%("'!clear bar")
-  assert_int_equals(0, opt.is_flag_set%("foo"))
-  assert_int_equals(0, opt.is_flag_set%("BAR"))
+  assert_int_equals(0, def.is_flag_set%("foo"))
+  assert_int_equals(0, def.is_flag_set%("BAR"))
 End Sub
 
 Sub test_comment_if()
@@ -848,7 +850,7 @@ End Sub
 
 Sub test_ifdef_is_case_insensitive()
   Local ok%
-  opt.set_flag("foo")
+  def.set_flag("foo")
   ok% = parse_and_transpile%("'!ifdef FOO")
   ok% = parse_and_transpile%("one")
   expect_tokens(1)
@@ -1002,7 +1004,7 @@ End Sub
 
 Sub test_ifndef_is_case_insensitive()
   Local ok%
-  opt.set_flag("foo")
+  def.set_flag("foo")
   ok% = parse_and_transpile%("'!ifndef FOO")
   ok% = parse_and_transpile%("one")
   expect_tokens(0)
@@ -1105,7 +1107,7 @@ Sub test_set_given_flag_set()
 
   ok% = parse_and_transpile%("'!set foo")
   assert_no_error()
-  assert_int_equals(1, opt.is_flag_set%("foo"))
+  assert_int_equals(1, def.is_flag_set%("foo"))
 
   ok% = parse_and_transpile%("'!set foo")
   assert_error("!set directive flag 'foo' is already set")
@@ -1116,11 +1118,11 @@ Sub test_set_given_flag_unset()
 
   ok% = parse_and_transpile%("'!set foo")
   assert_no_error()
-  assert_int_equals(1, opt.is_flag_set%("foo"))
+  assert_int_equals(1, def.is_flag_set%("foo"))
 
   ok% = parse_and_transpile%("'!set BAR")
   assert_no_error()
-  assert_int_equals(1, opt.is_flag_set%("BAR"))
+  assert_int_equals(1, def.is_flag_set%("BAR"))
 End Sub
 
 Sub test_set_given_flag_too_long()
@@ -1129,7 +1131,7 @@ Sub test_set_given_flag_too_long()
 
   ok% = parse_and_transpile%("'!set " + flag$)
   assert_no_error()
-  assert_int_equals(1, opt.is_flag_set%(flag$))
+  assert_int_equals(1, def.is_flag_set%(flag$))
 
   ok% = parse_and_transpile%("'!set " + flag$ + "5")
   assert_error("!set directive flag too long, max 64 chars")
@@ -1140,7 +1142,7 @@ Sub test_set_is_case_insensitive()
 
   ok% = parse_and_transpile%("'!set foo")
   assert_no_error()
-  assert_int_equals(1, opt.is_flag_set%("FOO"))
+  assert_int_equals(1, def.is_flag_set%("FOO"))
 
   ok% = parse_and_transpile%("'!set FOO")
   assert_error("!set directive flag 'FOO' is already set")
