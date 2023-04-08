@@ -33,7 +33,7 @@ Sub cli.parse(s$)
       Case "v", "version"      : spt.print_version("sptrans") : End
       Case Else:
         If Left$(lx.option$(i), 1) = "D" Then
-          cli.parse_no_arg("flag", i);
+          cli.parse_no_arg("id", i);
         Else
           sys.err$ = "option " + lx.token$(i) + " is unknown"
         EndIf
@@ -80,14 +80,14 @@ End Sub
 Sub cli.parse_no_arg(option$, i)
   If lx.token$(i + 1) = "=" Then
     sys.err$ = "option "
-    Cat sys.err$, Choice(option$ = "flag", "-D<flag>", lx.token$(i))
+    Cat sys.err$, Choice(option$ = "id", "-D<id>", lx.token$(i))
     Cat sys.err$, " does not expect argument"
-  Else If option$ = "flag" Then
-    Local flag$ = Mid$(lx.token$(i), 3)
-    If flag$ = "" Then
-      sys.err$ = "option -D<flag> expects flag"
+  ElseIf option$ = "id" Then
+    Local id$ = Mid$(lx.token$(i), 3)
+    If id$ = "" Then
+      sys.err$ = "option -D<id> expects id"
     Else
-      def.set_flag(flag$)
+      def.define(id$)
     EndIf
   Else
     opt.set(option$, "on")
@@ -110,7 +110,7 @@ Sub cli.usage()
   Print "                           --empty-lines=0 --indent=0 --no-comments --spacing=0"
   Print "  -C, --colour           syntax highlight the output,"
   Print "                         only valid for output to VT100 serial console"
-  Print "  -D<flag>               sets flag, equivalent to !set <flag> directive"
+  Print "  -D<id>                 defines id, equivalent to !define <id> directive"
   Print "  -e, --empty-lines=0|1  controls output of empty lines:"
   Print "                           0 - omit all empty lines"
   Print "                           1 - include one empty line between each Function/Sub"

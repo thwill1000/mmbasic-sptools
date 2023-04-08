@@ -137,9 +137,9 @@ Function tr.transpile%()
   tr.transpile% = tr.OMIT_LINE
 
   Select Case lx.directive$(0)
-    Case "!clear"        : tr.process_clear()
     Case "!comments"     : tr.process_comments()
     Case "!comment_if"   : tr.process_if()
+    Case "!define"       : tr.process_define()
     Case "!elif"         : tr.process_elif()
     Case "!else"         : tr.process_else()
     Case "!empty-lines"  : tr.process_empty_lines()
@@ -150,9 +150,9 @@ Function tr.transpile%()
     Case "!info"         : tr.transpile% = tr.process_info%()
     Case "!indent"       : tr.process_indent()
     Case "!replace"      : tr.process_replace()
-    Case "!set"          : tr.process_set()
     Case "!spacing"      : tr.process_spacing()
     Case "!uncomment_if" : tr.process_if()
+    Case "!undef"        : tr.process_undef()
     Case "!unreplace"    : tr.process_replace()  ' Same SUB for !replace & !unreplace.
     Case Else            : sys.err$ = "Unknown " + Mid$(lx.directive$(0), 1) + " directive"
   End Select
@@ -365,11 +365,11 @@ Function tr.contains_only%(allowed$, s$)
   tr.contains_only% = 1
 End Function
 
-Sub tr.process_clear()
+Sub tr.process_undef()
   If lx.num < 2 Then sys.err$ = "expects a <flag> argument"
   If lx.num > 2 Then sys.err$ = "has too many arguments"
-  If sys.err$ = "" Then def.clear_flag(lx.token$(1))
-  If sys.err$ <> "" Then sys.err$ = "!clear directive " + sys.err$
+  If sys.err$ = "" Then def.undefine(lx.token$(1))
+  If sys.err$ <> "" Then sys.err$ = "!undef directive " + sys.err$
 End Sub
 
 Sub tr.process_comments()
@@ -460,9 +460,9 @@ Function tr.process_info%()
   ElseIf lx.token_lc$(1) <> "defined" Then
     sys.err$ = "has invalid first argument: " + lx.token_lc$(1)
   Else
-    Local defined% = def.is_flag_set%(lx.token$(2))
+    Local defined% = def.is_defined%(lx.token$(2))
     If defined% Then
-      lx.replace_token(0, "' Preprocessor flag " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
+      lx.replace_token(0, "' Preprocessor value " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
       lx.remove_token(2)
       lx.remove_token(1)
       tr.process_info% = tr.SUCCESS
@@ -532,11 +532,11 @@ Sub tr.process_replace()
   If sys.err$ <> "" Then sys.err$ = lx.directive$(0) + " directive " + sys.err$
 End Sub
 
-Sub tr.process_set()
-  If lx.num < 2 Then sys.err$ = "expects <flag> argument"
+Sub tr.process_define()
+  If lx.num < 2 Then sys.err$ = "expects <id> argument"
   If lx.num > 2 Then sys.err$ = "has too many arguments"
-  If sys.err$ = "" Then def.set_flag(lx.token$(1))
-  If sys.err$ <> "" Then sys.err$ = "!set directive " + sys.err$
+  If sys.err$ = "" Then def.define(lx.token$(1))
+  If sys.err$ <> "" Then sys.err$ = "!define directive " + sys.err$
 End Sub
 
 Sub tr.process_spacing()

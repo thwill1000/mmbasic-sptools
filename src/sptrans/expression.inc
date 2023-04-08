@@ -35,7 +35,7 @@ Function ex.eval%(idx%, result%)
       Case Else
         Select Case lx.type(i%)
           Case TK_IDENTIFIER, TK_NUMBER, TK_KEYWORD
-            Cat expr$, Str$(def.is_flag_set%(t$))
+            Cat expr$, Str$(def.is_defined%(t$))
           Case Else
             expr$ = ""
             Exit For

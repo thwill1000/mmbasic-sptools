@@ -270,25 +270,25 @@ The default setting is ```on``` unless the ```--spacing``` command-line option i
 
 #### 3.4.2. Directives that control conditional (un)commenting of code
 
-##### !set \<flag\>
+##### !define \<id\>
 
-Sets \<flag\> for use with the ```'!comment_if``` and ```'!uncomment_if``` directives.
+Defines \<id\> for use with the ```'!comment_if``` and ```'!uncomment_if``` directives.
 
-e.g. ```'!set foo```
+e.g. ```'!define foo```
 
-##### !clear \<flag\>
+##### !undef \<id\>
 
-Clears \<flag\>.
+Undefines \<id\>.
 
-e.g. ```'!clear foo```
+e.g. ```'!undef foo```
 
 <div style="page-break-after: always;"></div>
 
-##### !comment_if \<flag\>
+##### !comment_if \<id\>
 
-If \<flag\> is set then the transpiler will comment out all the following lines until the next ```'!end_if```, e.g.
+If \<id\> is defined then the transpiler will comment out all the following lines until the next ```'!end_if```, e.g.
 ```vba
-'!set foo
+'!define foo
 '!comment_if foo
 Print "This line and those that follow it will be commented out,"
 Print "including this one,"
@@ -296,11 +296,11 @@ Print "including this one,"
 Print "but not this one."
 ```
 
-##### !uncomment_if \<flag\>
+##### !uncomment_if \<id\>
 
-If \<flag\> is set then the transpiler will remove **one** comment character from all the following lines until the next ```'!end_if```, e.g.
+If \<id\> is defined then the transpiler will remove **one** comment character from all the following lines until the next ```'!end_if```, e.g.
 ```vba
-'!set foo
+'!define foo
 '!uncomment_if foo
 'Print "This line and those that follow it will be uncommented,"
 'Print "including this one,"

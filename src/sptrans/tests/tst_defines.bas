@@ -15,19 +15,19 @@ Option Default Integer
 #Include "../../sptest/unittest.inc"
 #Include "../defines.inc"
 
-add_test("test_set_flag")
-add_test("test_set_flag_given_already_set")
-add_test("test_set_flag_given_invalid")
-add_test("test_set_flag_given_too_long")
-add_test("test_set_flag_given_too_many")
-add_test("test_set_flag_case_insensitive")
-add_test("test_clear_flag_given_set")
-add_test("test_clear_flag_given_unset")
-add_test("test_clear_flag_case_insensitive")
-add_test("test_always_set_flag")
-add_test("test_always_clear_flag")
-add_test("test_set_fixed_flag")
-add_test("test_clear_fixed_flag")
+add_test("test_define_given_undefined")
+add_test("test_define_given_defined")
+add_test("test_define_given_invalid")
+add_test("test_define_given_too_long")
+add_test("test_define_given_too_many")
+add_test("test_define_case_insensitive")
+add_test("test_undefine_given_defined")
+add_test("test_undefine_given_undefined")
+add_test("test_undefine_case_insensitive")
+add_test("test_always_defined_values")
+add_test("test_always_undefined_values")
+add_test("test_define_fixed_value")
+add_test("test_undefine_fixed_value")
 
 run_tests()
 
@@ -37,131 +37,131 @@ Sub setup_test()
   def.init()
 End Sub
 
-Sub test_set_flag()
-  assert_int_equals(0, set.size%(def.flags$()))
+Sub test_define_given_undefined()
+  assert_int_equals(0, set.size%(def.defines$()))
 
-  def.set_flag("foo")
+  def.define("foo")
 
   assert_no_error()
-  assert_int_equals(1, def.is_flag_set%("foo"))
-  assert_int_equals(0, def.is_flag_set%("bar"))
+  assert_int_equals(1, def.is_defined%("foo"))
+  assert_int_equals(0, def.is_defined%("bar"))
 End Sub
 
-Sub test_set_flag_given_already_set()
-  def.set_flag("foo")
-  def.set_flag("foo")
+Sub test_define_given_defined()
+  def.define("foo")
+  def.define("foo")
 
-  assert_error("flag 'foo' is already set")
+  assert_error("'foo' is already defined")
 End Sub
 
-Sub test_set_flag_given_invalid()
+Sub test_define_given_invalid()
   sys.err$ = ""
-  def.set_flag("")
-  assert_error("invalid flag")
+  def.define("")
+  assert_error("invalid identifier")
 
   sys.err$ = ""
-  def.set_flag(" ")
-  assert_error("invalid flag")
+  def.define(" ")
+  assert_error("invalid identifier")
 
   sys.err$ = ""
-  def.set_flag("?")
-  assert_error("invalid flag")
+  def.define("?")
+  assert_error("invalid identifier")
 
   sys.err$ = ""
-  def.set_flag("1hello")
-  assert_error("invalid flag")
+  def.define("1hello")
+  assert_error("invalid identifier")
 End Sub
 
-Sub test_set_flag_given_too_long()
-  def.set_flag("flag567890123456789012345678901234567890123456789012345678901234")
+Sub test_define_given_too_long()
+  def.define("flag567890123456789012345678901234567890123456789012345678901234")
   assert_no_error()
 
-  def.set_flag("flag5678901234567890123456789012345678901234567890123456789012345")
-  assert_error("flag too long, max 64 chars")
+  def.define("flag5678901234567890123456789012345678901234567890123456789012345")
+  assert_error("identifier too long, max 64 chars")
 End Sub
 
-Sub test_set_flag_given_too_many()
+Sub test_define_given_too_many()
   Local i%
   For i% = 1 To 10
-    def.set_flag("item" + Str$(i%))
+    def.define("item" + Str$(i%))
   Next
 
-  def.set_flag("sausage")
-  assert_error("too many flags")
+  def.define("sausage")
+  assert_error("too many defines")
 End Sub
 
-Sub test_set_flag_case_insensitive()
-  def.set_flag("foo")
-  def.set_flag("bar")
+Sub test_define_case_insensitive()
+  def.define("foo")
+  def.define("bar")
 
-  assert_int_equals(1, def.is_flag_set%("FOO"))
-  assert_int_equals(1, def.is_flag_set%("BAR"))
+  assert_int_equals(1, def.is_defined%("FOO"))
+  assert_int_equals(1, def.is_defined%("BAR"))
 End Sub
 
-Sub test_clear_flag_given_set()
-  def.set_flag("foo")
-  def.set_flag("bar")
+Sub test_undefine_given_defined()
+  def.define("foo")
+  def.define("bar")
 
-  def.clear_flag("foo")
-  assert_int_equals(0, def.is_flag_set%("foo"))
-  assert_int_equals(1, def.is_flag_set%("bar"))
+  def.undefine("foo")
+  assert_int_equals(0, def.is_defined%("foo"))
+  assert_int_equals(1, def.is_defined%("bar"))
 
-  def.clear_flag("bar")
-  assert_int_equals(0, def.is_flag_set%("bar"))
+  def.undefine("bar")
+  assert_int_equals(0, def.is_defined%("bar"))
 End Sub
 
-Sub test_clear_flag_given_unset()
-  def.clear_flag("foo")
-  assert_error("flag 'foo' is not set")
+Sub test_undefine_given_undefined()
+  def.undefine("foo")
+  assert_error("'foo' is not defined")
 
-  def.clear_flag("BAR")
-  assert_error("flag 'BAR' is not set")
+  def.undefine("BAR")
+  assert_error("'BAR' is not defined")
 End Sub
 
-Sub test_clear_flag_case_insensitive()
-  def.set_flag("foo")
-  def.set_flag("bar")
+Sub test_undefine_case_insensitive()
+  def.define("foo")
+  def.define("bar")
 
-  def.clear_flag("FOO")
-  assert_int_equals(0, def.is_flag_set%("FOO"))
-  assert_int_equals(1, def.is_flag_set%("BAR"))
+  def.undefine("FOO")
+  assert_int_equals(0, def.is_defined%("FOO"))
+  assert_int_equals(1, def.is_defined%("BAR"))
 
-  def.clear_flag("BAR")
-  assert_int_equals(0, def.is_flag_set%("BAR"))
+  def.undefine("BAR")
+  assert_int_equals(0, def.is_defined%("BAR"))
 End Sub
 
-Sub test_always_set_flag()
-  Local flags$(4) = ("1", "true", "TRUE", "on", "ON")
+Sub test_always_defined_values()
+  Local values$(4) = ("1", "true", "TRUE", "on", "ON")
   Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    assert_int_equals(1, def.is_flag_set%(flags$(i%)))
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    assert_int_equals(1, def.is_defined%(values$(i%)))
     assert_no_error()
   Next
 End Sub
 
-Sub test_always_clear_flag()
-  Local flags$(4) = ("0", "false", "FALSE", "off", "OFF")
+Sub test_always_undefined_values()
+  Local values$(4) = ("0", "false", "FALSE", "off", "OFF")
   Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    assert_int_equals(0, def.is_flag_set%(flags$(i%)))
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    assert_int_equals(0, def.is_defined%(values$(i%)))
     assert_no_error()
   Next
 End Sub
 
-Sub test_set_fixed_flag()
-  Local flags$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
+Sub test_define_fixed_value()
+  Local values$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
   Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    def.set_flag(flags$(i%))
-    assert_error("flag '" + flags$(i%) + "' cannot be set")
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    def.define(values$(i%))
+    assert_error("'" + values$(i%) + "' cannot be defined")
   Next
 End Sub
 
-Sub test_clear_fixed_flag()
-  Local flags$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
+Sub test_undefine_fixed_value()
+  Local values$(9) = ("1", "true", "TRUE", "on", "ON", "0", "false", "FALSE", "off", "OFF")
   Local i%
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    def.clear_flag(flags$(i%))
-    assert_error("flag '" + flags$(i%) + "' cannot be cleared")
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    def.undefine(values$(i%))
+    assert_error("'" + values$(i%) + "' cannot be undefined")
   Next
 End Sub

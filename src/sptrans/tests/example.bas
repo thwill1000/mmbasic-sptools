@@ -1,5 +1,5 @@
 '!comments on
-'!set foo
+'!define foo
 
 '!comment_if foo
 Print "Should be commented"

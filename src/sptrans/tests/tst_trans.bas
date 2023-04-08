@@ -43,10 +43,10 @@ add_test("test_replace_with_fewer_tokens")
 add_test("test_replace_with_more_tokens")
 add_test("test_replace_given_new_rpl")
 add_test("test_apply_unreplace")
-add_test("test_clear_given_flag_set")
-add_test("test_clear_given_flag_unset")
-add_test("test_clear_given_flag_too_long")
-add_test("test_clear_is_case_insensitive")
+add_test("test_undef_given_defined")
+add_test("test_undef_given_undefined")
+add_test("test_undef_given_id_too_long")
+add_test("test_undef_is_case_insensitive")
 add_test("test_comment_if")
 add_test("test_comment_if_not")
 add_test("test_uncomment_if")
@@ -70,10 +70,10 @@ add_test("test_ifndef_nested_1")
 add_test("test_ifndef_nested_2")
 add_test("test_ifndef_nested_3")
 add_test("test_ifndef_nested_4")
-add_test("test_set_given_flag_set")
-add_test("test_set_given_flag_unset")
-add_test("test_set_given_flag_too_long")
-add_test("test_set_is_case_insensitive")
+add_test("test_define_given_defined")
+add_test("test_define_given_undefined")
+add_test("test_define_given_id_too_long")
+add_test("test_define_is_case_insensitive")
 add_test("test_omit_directives_from_output")
 add_test("test_endif_given_no_if")
 add_test("test_endif_given_args")
@@ -81,8 +81,8 @@ add_test("test_endif_given_trail_comment")
 add_test("test_error_directive")
 add_test("test_omit_and_line_spacing")
 add_test("test_comments_directive")
-add_test("test_always_true_flags")
-add_test("test_always_false_flags")
+add_test("test_always_defined_values")
+add_test("test_always_undefined_values")
 add_test("test_if_given_true")
 add_test("test_if_given_false")
 add_test("test_if_given_nested")
@@ -576,46 +576,46 @@ Sub test_apply_unreplace()
   expect_token(2, TK_IDENTIFIER, "ben")
 End Sub
 
-Sub test_clear_given_flag_set()
-  def.set_flag("foo")
-  def.set_flag("bar")
+Sub test_undef_given_defined()
+  def.define("foo")
+  def.define("bar")
 
-  expect_transpile_omits("'!clear foo")
-  assert_int_equals(0, def.is_flag_set%("foo"))
-  assert_int_equals(1, def.is_flag_set%("bar"))
+  expect_transpile_omits("'!undef foo")
+  assert_int_equals(0, def.is_defined%("foo"))
+  assert_int_equals(1, def.is_defined%("bar"))
 
-  expect_transpile_omits("'!clear bar")
-  assert_int_equals(0, def.is_flag_set%("foo"))
-  assert_int_equals(0, def.is_flag_set%("bar"))
+  expect_transpile_omits("'!undef bar")
+  assert_int_equals(0, def.is_defined%("foo"))
+  assert_int_equals(0, def.is_defined%("bar"))
 End Sub
 
-Sub test_clear_given_flag_unset()
-  expect_transpile_error("'!clear foo", "!clear directive flag 'foo' is not set")
-  expect_transpile_error("'!clear BAR", "!clear directive flag 'BAR' is not set")
+Sub test_undef_given_undefined()
+  expect_transpile_error("'!undef foo", "!undef directive 'foo' is not defined")
+  expect_transpile_error("'!undef BAR", "!undef directive 'BAR' is not defined")
 End Sub
 
-Sub test_clear_given_flag_too_long()
-  Local line$ = "'!clear flag5678901234567890123456789012345678901234567890123456789012345"
-  Local emsg$ = "!clear directive flag too long, max 64 chars"
+Sub test_undef_given_id_too_long()
+  Local line$ = "'!undef flag5678901234567890123456789012345678901234567890123456789012345"
+  Local emsg$ = "!undef directive identifier too long, max 64 chars"
   expect_transpile_error(line$, emsg$)
 End Sub
 
-Sub test_clear_is_case_insensitive()
-  def.set_flag("foo")
-  def.set_flag("BAR")
+Sub test_undef_is_case_insensitive()
+  def.define("foo")
+  def.define("BAR")
 
-  expect_transpile_omits("'!clear FOO")
-  assert_int_equals(0, def.is_flag_set%("foo"))
-  assert_int_equals(1, def.is_flag_set%("BAR"))
+  expect_transpile_omits("'!undef FOO")
+  assert_int_equals(0, def.is_defined%("foo"))
+  assert_int_equals(1, def.is_defined%("BAR"))
 
-  expect_transpile_omits("'!clear bar")
-  assert_int_equals(0, def.is_flag_set%("foo"))
-  assert_int_equals(0, def.is_flag_set%("BAR"))
+  expect_transpile_omits("'!undef bar")
+  assert_int_equals(0, def.is_defined%("foo"))
+  assert_int_equals(0, def.is_defined%("BAR"))
 End Sub
 
 Sub test_comment_if()
   ' 'foo' is set, code inside !comment_if block should be commented.
-  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!define foo")
   expect_transpile_omits("'!comment_if foo")
   expect_transpile_succeeds("one")
   expect_token_count(1)
@@ -643,7 +643,7 @@ Sub test_comment_if_not()
   expect_transpile_omits("'!endif")
 
   ' 'foo' is set, code inside !comment_if NOT block should NOT be commented.
-  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!define foo")
   expect_transpile_omits("'!comment_if not foo")
   expect_transpile_succeeds("three")
   expect_token_count(1)
@@ -653,7 +653,7 @@ End Sub
 
 Sub test_uncomment_if()
   ' 'foo' is set, code inside !uncomment_if block should be uncommented.
-  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!define foo")
   expect_transpile_omits("'!uncomment_if foo")
 
   expect_transpile_succeeds("' one")
@@ -701,7 +701,7 @@ Sub test_uncomment_if_not()
   expect_transpile_omits("'!endif")
 
   ' 'foo' is set, code inside !uncomment_if NOT block should NOT be uncommented.
-  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!define foo")
   expect_transpile_omits("'!uncomment_if not foo")
   expect_transpile_succeeds("' four")
   assert_string_equals("' four", lx.line$)
@@ -712,7 +712,7 @@ End Sub
 
 Sub test_ifdef_given_set()
   ' FOO is set so all code within !ifdef FOO is included.
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!ifdef FOO")
   expect_transpile_succeeds("one")
   expect_token_count(1)
@@ -750,7 +750,7 @@ Sub test_ifdef_given_2_args()
 End Sub
 
 Sub test_ifdef_is_case_insensitive()
-  def.set_flag("foo")
+  def.define("foo")
   expect_transpile_omits("'!ifdef FOO")
   expect_transpile_succeeds("one")
   expect_token_count(1)
@@ -775,7 +775,7 @@ End Sub
 
 Sub test_ifdef_nested_2()
   ' FOO is set and BAR is unset so code within !ifdef BAR is excluded.
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!ifdef FOO")
   expect_transpile_succeeds("one")
   expect_token_count(1)
@@ -793,7 +793,7 @@ End Sub
 
 Sub test_ifdef_nested_3()
   ' BAR is set and FOO is unset so all code within !ifdef FOO is excluded.
-  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!define BAR")
   expect_transpile_omits("'!ifdef FOO")
   expect_transpile_omits("one")
   expect_transpile_omits("'!ifdef BAR")
@@ -809,8 +809,8 @@ End Sub
 
 Sub test_ifdef_nested_4()
   ' FOO and BAR are both set so all code within !ifdef FOO and !ifdef BAR is included.
-  expect_transpile_omits("'!set FOO")
-  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!define FOO")
+  expect_transpile_omits("'!define BAR")
   expect_transpile_omits("'!ifdef FOO")
   expect_transpile_succeeds("one")
   expect_token_count(1)
@@ -830,7 +830,7 @@ End Sub
 
 Sub test_ifndef_given_set()
   ' FOO is set so all code within !ifndef FOO is excluded.
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!ifndef FOO")
   expect_transpile_omits("one")
   expect_transpile_omits("two")
@@ -868,7 +868,7 @@ Sub test_ifndef_given_2_args()
 End Sub
 
 Sub test_ifndef_is_case_insensitive()
-  def.set_flag("foo")
+  def.define("foo")
   expect_transpile_omits("'!ifndef FOO")
   expect_transpile_omits("one")
   expect_token_count(0)
@@ -896,7 +896,7 @@ End Sub
 
 Sub test_ifndef_nested_2()
   ' FOO is set and BAR is unset so all code within !ifndef FOO is excluded.
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!ifndef FOO")
   expect_transpile_omits("one")
   expect_transpile_omits("'!ifndef BAR")
@@ -912,7 +912,7 @@ End Sub
 
 Sub test_ifndef_nested_3()
   ' BAR is set and FOO is unset so all code within !ifndef BAR is excluded.
-  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!define BAR")
   expect_transpile_omits("'!ifndef FOO")
   expect_transpile_succeeds("one")
   expect_token_count(1)
@@ -930,8 +930,8 @@ End Sub
 
 Sub test_ifndef_nested_4()
   ' FOO and BAR are both set so all code within !ifndef FOO and !ifndef BAR is excluded.
-  expect_transpile_omits("'!set FOO")
-  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!define FOO")
+  expect_transpile_omits("'!define BAR")
   expect_transpile_omits("'!ifndef FOO")
   expect_transpile_omits("one")
   expect_transpile_omits("'!ifndef BAR")
@@ -945,48 +945,48 @@ Sub test_ifndef_nested_4()
   expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
-Sub test_set_given_flag_set()
-  expect_transpile_omits("'!set foo")
-  assert_int_equals(1, def.is_flag_set%("foo"))
+Sub test_define_given_defined()
+  expect_transpile_omits("'!define foo")
+  assert_int_equals(1, def.is_defined%("foo"))
 
-  expect_transpile_error("'!set foo", "!set directive flag 'foo' is already set")
+  expect_transpile_error("'!define foo", "!define directive 'foo' is already defined")
 End Sub
 
-Sub test_set_given_flag_unset()
-  expect_transpile_omits("'!set foo")
-  assert_int_equals(1, def.is_flag_set%("foo"))
+Sub test_define_given_undefined()
+  expect_transpile_omits("'!define foo")
+  assert_int_equals(1, def.is_defined%("foo"))
 
-  expect_transpile_omits("'!set BAR")
-  assert_int_equals(1, def.is_flag_set%("BAR"))
+  expect_transpile_omits("'!define BAR")
+  assert_int_equals(1, def.is_defined%("BAR"))
 End Sub
 
-Sub test_set_given_flag_too_long()
-  Local flag$ = "flag567890123456789012345678901234567890123456789012345678901234"
+Sub test_define_given_id_too_long()
+  Local id$ = "flag567890123456789012345678901234567890123456789012345678901234"
 
-  expect_transpile_omits("'!set " + flag$)
-  assert_int_equals(1, def.is_flag_set%(flag$))
+  expect_transpile_omits("'!define " + id$)
+  assert_int_equals(1, def.is_defined%(id$))
 
-  expect_transpile_error("'!set " + flag$ + "5", "!set directive flag too long, max 64 chars")
+  expect_transpile_error("'!define " + id$ + "5", "!define directive identifier too long, max 64 chars")
 End Sub
 
-Sub test_set_is_case_insensitive()
-  expect_transpile_omits("'!set foo")
-  assert_int_equals(1, def.is_flag_set%("FOO"))
+Sub test_define_is_case_insensitive()
+  expect_transpile_omits("'!define foo")
+  assert_int_equals(1, def.is_defined%("FOO"))
 
-  expect_transpile_error("'!set FOO", "!set directive flag 'FOO' is already set")
+  expect_transpile_error("'!define FOO", "!define directive 'FOO' is already defined")
 End Sub
 
 Sub test_omit_directives_from_output()
   setup_test()
-  expect_transpile_omits("'!set FOO")
-  expect_transpile_omits("'!clear FOO")
+  expect_transpile_omits("'!define FOO")
+  expect_transpile_omits("'!undef FOO")
 
   setup_test()
   expect_transpile_omits("'!comments on")
 
   setup_test()
   expect_transpile_omits("'!comment_if FOO")
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!comment_if FOO")
 
   setup_test()
@@ -994,12 +994,12 @@ Sub test_omit_directives_from_output()
 
   setup_test()
   expect_transpile_omits("'!ifdef FOO")
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!ifdef FOO")
 
   setup_test()
   expect_transpile_omits("'!ifndef FOO")
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!ifndef FOO")
 
   setup_test()
@@ -1009,14 +1009,14 @@ Sub test_omit_directives_from_output()
   expect_transpile_omits("'!replace FOO BAR")
 
   setup_test()
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
 
   setup_test()
   expect_transpile_omits("'!spacing 1")
 
   setup_test()
   expect_transpile_omits("'!uncomment_if FOO")
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!uncomment_if FOO")
 
   setup_test()
@@ -1026,7 +1026,7 @@ Sub test_omit_directives_from_output()
   setup_test()
   expect_transpile_omits("'!ifdef FOO")
   expect_transpile_omits("'!endif")
-  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!define FOO")
   expect_transpile_omits("'!ifdef FOO")
   expect_transpile_omits("'!endif")
 End Sub
@@ -1068,7 +1068,7 @@ Sub test_omit_and_line_spacing()
   expect_transpile_succeeds("", 1)
   expect_transpile_succeeds("", 1)
 
-  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!define foo")
   assert_int_equals(0, tr.omit_flag%)
 
   ' Should be omitted, because the last line was omitted AND
@@ -1114,38 +1114,38 @@ Sub test_comments_directive()
   expect_token(0, TK_COMMENT, "' This is a third comment")
 End Sub
 
-Sub test_always_true_flags()
-  Local flags$(4) = ("1", "true", "TRUE", "on", "ON")
+Sub test_always_defined_values()
+  Local values$(4) = ("1", "true", "TRUE", "on", "ON")
   Local i%
 
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    expect_transpile_omits("'!ifdef " + flags$(i%))
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    expect_transpile_omits("'!ifdef " + values$(i%))
     expect_transpile_succeeds("should_not_be_omitted")
     expect_token_count(1)
     expect_token(0, TK_IDENTIFIER, "should_not_be_omitted")
   Next
 
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    expect_transpile_omits("'!ifndef " + flags$(i%))
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    expect_transpile_omits("'!ifndef " + values$(i%))
     expect_transpile_omits("should_be_omitted")
     expect_transpile_omits("'!endif")
   Next
 End Sub
 
-Sub test_always_false_flags()
-  Local flags$(4) = ("0", "false", "FALSE", "off", "OFF")
+Sub test_always_undefined_values()
+  Local values$(4) = ("0", "false", "FALSE", "off", "OFF")
   Local i%
 
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    expect_transpile_omits("'!ifndef " + flags$(i%))
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    expect_transpile_omits("'!ifndef " + values$(i%))
     expect_transpile_succeeds("should_not_be_omitted")
     expect_token_count(1)
     expect_token(0, TK_IDENTIFIER, "should_not_be_omitted")
     expect_transpile_omits("'!endif")
   Next
 
-  For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    expect_transpile_omits("'!ifdef " + flags$(i%))
+  For i% = Bound(values$(), 0) To Bound(values$(), 1)
+    expect_transpile_omits("'!ifdef " + values$(i%))
     expect_transpile_omits("should_be_omitted")
     expect_transpile_omits("'!endif")
   Next
@@ -1343,11 +1343,11 @@ End Sub
 
 Sub test_info_defined()
   expect_transpile_omits("'!info defined foo")
-  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!define foo")
   expect_transpile_succeeds("'!info defined foo")
   expect_token_count(1)
-  expect_token(0, TK_COMMENT, "' Preprocessor flag FOO defined")
-  expect_transpile_omits("'!clear foo")
+  expect_token(0, TK_COMMENT, "' Preprocessor value FOO defined")
+  expect_transpile_omits("'!undef foo")
   expect_transpile_omits("'!info defined foo")
   expect_transpile_error("'!info", "!info directive expects two arguments")
   expect_transpile_error("'!info defined", "!info directive expects two arguments")
