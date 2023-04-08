@@ -77,6 +77,7 @@ add_test("test_set_is_case_insensitive")
 add_test("test_omit_directives_from_output")
 add_test("test_endif_given_no_if")
 add_test("test_endif_given_args")
+add_test("test_endif_given_trail_comment")
 add_test("test_error_directive")
 add_test("test_omit_and_line_spacing")
 add_test("test_comments_directive")
@@ -1263,6 +1264,15 @@ End Sub
 Sub test_endif_given_args()
   expect_transpile_omits("'!ifndef FOO")
   expect_transpile_error("'!endif wombat", "!endif directive has too many arguments")
+End Sub
+
+Sub test_endif_given_trail_comment()
+  expect_transpile_omits("'!if defined(FOO)")
+  expect_transpile_omits("'!endif ' my comment")
+
+  ' Note that only the first token on a line will be recognised as a directive.
+  expect_transpile_omits("'!if defined(FOO)")
+  expect_transpile_omits("'!endif '!if defined(FOO)")
 End Sub
 
 Sub test_error_directive()

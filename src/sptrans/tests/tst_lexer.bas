@@ -26,6 +26,8 @@ keywords.init()
 add_test("test_binary_literals")
 add_test("test_comments")
 add_test("test_directives")
+add_test("test_directive_given_comments")
+add_test("test_directive_given_not_first")
 add_test("test_replace_directives")
 add_test("test_hexadecimal_literals")
 add_test("test_identifiers")
@@ -112,6 +114,21 @@ Sub test_directives()
   expect_tk(0, TK_DIRECTIVE, "'!info")
   expect_tk(1, TK_IDENTIFIER, "defined")
   expect_tk(2, TK_IDENTIFIER, "foo")
+End Sub
+
+Sub test_directive_given_comments()
+  assert_int_equals(SUCCESS, lx.parse_basic%("'!endif ' my comment"))
+  expect_num_tokens(2)
+  expect_tk(0, TK_DIRECTIVE, "'!endif")
+  expect_tk(1, TK_COMMENT, "' my comment")
+End Sub
+
+' A directive should only be recognised as such if it is the first token on a line
+Sub test_directive_given_not_first()
+  assert_int_equals(SUCCESS, lx.parse_basic%("PRINT '!ifdef FOO"))
+  expect_num_tokens(2)
+  expect_tk(0, TK_KEYWORD, "PRINT")
+  expect_tk(1, TK_COMMENT, "'!ifdef FOO")
 End Sub
 
 Sub test_replace_directives()
@@ -412,8 +429,7 @@ End Sub
 Sub test_get_token_lc()
   assert_int_equals(SUCCESS, lx.parse_basic%("FOO '!BAR 1E7"))
   assert_string_equals("foo", lx.token_lc$(0))
-  assert_string_equals("'!bar", lx.token_lc$(1))
-  assert_string_equals("1e7", lx.token_lc$(2))
+  assert_string_equals("'!bar 1e7", lx.token_lc$(1))
 End Sub
 
 Sub test_parse_command_line()

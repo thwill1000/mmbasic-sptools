@@ -74,6 +74,11 @@ End Function
 Function tr.transpile%()
   tr.include$ = ""
 
+  ' Remove any trailing comment from directive.
+  If lx.type(0) = TK_DIRECTIVE Then
+    If lx.type(lx.num - 1) = TK_COMMENT Then lx.remove_token(lx.num - 1)
+  EndIf
+
   Select Case lx.token_lc$(0)
     Case "'!endif", "'!else", "'!elif"
       ' TODO: Requiring the trailing brackets in the CALL may be an MMBasic bug.

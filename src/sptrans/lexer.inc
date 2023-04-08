@@ -190,7 +190,14 @@ Sub lx.parse_octal()
 End Sub
 
 Sub lx.parse_comment_or_directive()
-  If lx.next_char$ = "!" Then lx.parse_directive() Else lx.parse_comment()
+  If lx.num = 0 Then
+    ' Only the first token on a line will be recognised as a directive.
+    If lx.next_char$ = "!" Then
+      lx.parse_directive()
+      Exit Sub
+    EndIf
+  EndIf
+  lx.parse_comment()
 End Sub
 
 Sub lx.parse_directive()
