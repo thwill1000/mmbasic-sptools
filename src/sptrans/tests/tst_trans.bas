@@ -191,1074 +191,854 @@ Sub test_transpile_includes()
 End Sub
 
 Sub test_parse_replace()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!replace DEF Sub")
-  assert_no_error()
+  expect_transpile_omits("'!replace DEF Sub")
   expect_replacement(0, "def", "Sub")
 
-  ok% = parse_and_transpile%("'!replace ENDPROC { End Sub }")
-  assert_no_error()
+  expect_transpile_omits("'!replace ENDPROC { End Sub }")
   expect_replacement(1, "endproc", "End|Sub")
 
-  ok% = parse_and_transpile%("'!replace { THEN ENDPROC } { Then Exit Sub }")
-  assert_no_error()
+  expect_transpile_omits("'!replace { THEN ENDPROC } { Then Exit Sub }")
   expect_replacement(2, "then|endproc", "Then|Exit|Sub")
 
-  ok% = parse_and_transpile%("'!replace GOTO%% { Goto %1 }")
-  assert_no_error()
+  expect_transpile_omits("'!replace GOTO%% { Goto %1 }")
   expect_replacement(3, "goto%%", "Goto|%1")
 
-  ok% = parse_and_transpile%("'!replace { THEN %% } { Then Goto %1 }")
-  assert_no_error()
+  expect_transpile_omits("'!replace { THEN %% } { Then Goto %1 }")
   expect_replacement(4, "then|%%", "Then|Goto|%1")
 
-  ok% = parse_and_transpile%("'!replace '%% { CRLF$ %1 }")
-  assert_no_error()
+  expect_transpile_omits("'!replace '%% { CRLF$ %1 }")
   expect_replacement(5, "'%%", "CRLF$|%1")
 
-  ok% = parse_and_transpile%("'!replace &%h &h%1")
-  assert_no_error()
+  expect_transpile_omits("'!replace &%h &h%1")
   expect_replacement(6, "&%h", "&h%1")
 
-  ok% = parse_and_transpile%("'!replace foo")
-  ok% = tr.transpile%()
-  assert_no_error()
+  expect_transpile_omits("'!replace foo")
   expect_replacement(7, "foo", "")
 
-  ok% = parse_and_transpile%("'!replace {foo}")
-  ok% = tr.transpile%()
-  assert_no_error()
+  expect_transpile_omits("'!replace {foo}")
   expect_replacement(7, Chr$(0), Chr$(0))
   expect_replacement(8, "foo", "")
 
-  ok% = parse_and_transpile%("'!replace foo {}")
-  ok% = tr.transpile%()
-  assert_no_error()
+  expect_transpile_omits("'!replace foo {}")
   expect_replacement(8, Chr$(0), Chr$(0))
   expect_replacement(9, "foo", "")
 End Sub
 
 Sub test_parse_replace_given_errors()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!replace")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace", "!replace directive expects <from> argument")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive expects <from> argument")
 
-  ok% = parse_and_transpile%("'!replace {}")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace {}", "!replace directive has empty <from> group")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has empty <from> group")
 
-  ok% = parse_and_transpile%("'!replace {} y")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace {} y", "!replace directive has empty <from> group")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has empty <from> group")
 
-  ok% = parse_and_transpile%("'!replace { x y")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace { x y", "!replace directive has missing '}'")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has missing '}'")
 
-  ok% = parse_and_transpile%("'!replace { x } { y z")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace { x } { y z", "!replace directive has missing '}'")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has missing '}'")
 
-  ok% = parse_and_transpile%("'!replace { x } { y } z")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace { x } { y } z", "!replace directive has too many arguments")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has too many arguments")
 
-  ok% = parse_and_transpile%("'!replace { x } { y } { z }")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace { x } { y } { z }", "!replace directive has too many arguments")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has too many arguments")
 
-  ok% = parse_and_transpile%("'!replace { {")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace { {", "!replace directive has unexpected '{'")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has unexpected '{'")
 
-  ok% = parse_and_transpile%("'!replace foo }")
-  ok% = tr.transpile%()
+  expect_transpile_error("'!replace foo }", "!replace directive has unexpected '}'")
   assert_int_equals(0, tr.num_replacements%)
-  assert_error("!replace directive has unexpected '}'")
 End Sub
 
 Sub test_parse_given_too_many_rpl()
-  Local i%, ok%
+  Local i%
 
   For i% = 0 To tr.MAX_REPLACEMENTS% - 1
-    ok% = parse_and_transpile%("'!replace a" + Str$(i%) + " b")
+    expect_transpile_omits("'!replace a" + Str$(i%) + " b")
   Next
-  assert_no_error()
 
-  ok% = parse_and_transpile%("'!replace foo bar")
-  assert_error("!replace directive too many replacements (max 200)")
+  expect_transpile_error("'!replace foo bar", "!replace directive too many replacements (max 200)")
 End Sub
 
 Sub test_parse_unreplace()
-  Local ok%
+  expect_transpile_omits("'!replace foo bar")
+  expect_transpile_omits("'!replace wom bat")
+  expect_transpile_omits("'!unreplace foo")
 
-  ok% = parse_and_transpile%("'!replace foo bar")
-  ok% = parse_and_transpile%("'!replace wom bat")
-  ok% = parse_and_transpile%("'!unreplace foo")
-
-  assert_no_error()
   assert_int_equals(2, tr.num_replacements%)
   expect_replacement(0, Chr$(0), Chr$(0))
   expect_replacement(1, "wom", "bat")
 End Sub
 
 Sub test_parse_unreplace_given_errs()
-  Local ok%
-
   ' Test given missing argument to directive.
-  ok% = parse_and_transpile%("'!unreplace")
-  assert_error("!unreplace directive expects <from> argument")
+  expect_transpile_error("'!unreplace", "!unreplace directive expects <from> argument")
 
   ' Test given directive has too many arguments.
-  ok% = parse_and_transpile%("'!unreplace { a b } c")
-  assert_error("!unreplace directive has too many arguments")
+  expect_transpile_error("'!unreplace { a b } c", "!unreplace directive has too many arguments")
 
   ' Test given replacement not present.
-  ok% = parse_and_transpile%("'!replace wom bat")
-  ok% = parse_and_transpile%("'!unreplace foo")
-  assert_error("!unreplace directive could not find 'foo'")
+  expect_transpile_omits("'!replace wom bat")
+  expect_transpile_error("'!unreplace foo", "!unreplace directive could not find 'foo'")
   assert_int_equals(1, tr.num_replacements%)
   expect_replacement(0, "wom", "bat")
 End Sub
 
 Sub test_apply_replace()
-  Local ok%
+  expect_transpile_omits("'!replace x      y")
+  expect_transpile_omits("'!replace &hFFFF z")
+  expect_transpile_succeeds("Dim x = &hFFFF ' comment")
 
-  ok% = parse_and_transpile%("'!replace x      y")
-  ok% = parse_and_transpile%("'!replace &hFFFF z")
-  ok% = parse_and_transpile%("Dim x = &hFFFF ' comment")
-
-  expect_tokens(5)
-  expect_tk(0, TK_KEYWORD, "Dim")
-  expect_tk(1, TK_IDENTIFIER, "y")
-  expect_tk(2, TK_SYMBOL, "=")
-  expect_tk(3, TK_IDENTIFIER, "z")
-  expect_tk(4, TK_COMMENT, "' comment")
+  expect_token_count(5)
+  expect_token(0, TK_KEYWORD, "Dim")
+  expect_token(1, TK_IDENTIFIER, "y")
+  expect_token(2, TK_SYMBOL, "=")
+  expect_token(3, TK_IDENTIFIER, "z")
+  expect_token(4, TK_COMMENT, "' comment")
   assert_string_equals("Dim y = z ' comment", lx.line$)
 End Sub
 
 Sub test_apply_replace_groups()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!replace ab { cd ef }")
-  ok% = parse_and_transpile%("ab gh ij")
-  expect_tokens(4)
-  expect_tk(0, TK_IDENTIFIER, "cd")
-  expect_tk(1, TK_IDENTIFIER, "ef")
-  expect_tk(2, TK_IDENTIFIER, "gh")
-  expect_tk(3, TK_IDENTIFIER, "ij")
+  expect_transpile_omits("'!replace ab { cd ef }")
+  expect_transpile_succeeds("ab gh ij")
+  expect_token_count(4)
+  expect_token(0, TK_IDENTIFIER, "cd")
+  expect_token(1, TK_IDENTIFIER, "ef")
+  expect_token(2, TK_IDENTIFIER, "gh")
+  expect_token(3, TK_IDENTIFIER, "ij")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace {ab cd} ef")
-  ok% = parse_and_transpile%("ab cd gh ij")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "ef")
-  expect_tk(1, TK_IDENTIFIER, "gh")
-  expect_tk(2, TK_IDENTIFIER, "ij")
+  expect_transpile_omits("'!replace {ab cd} ef")
+  expect_transpile_succeeds("ab cd gh ij")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "ef")
+  expect_token(1, TK_IDENTIFIER, "gh")
+  expect_token(2, TK_IDENTIFIER, "ij")
 End Sub
 
 Sub test_apply_replace_patterns()
-  Local ok%
+  setup_test()
+  expect_transpile_omits("'!replace { DEF PROC%% } { SUB proc%1 }")
+  expect_transpile_succeeds("foo DEF PROCWOMBAT bar")
+  expect_token_count(4)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_KEYWORD,    "SUB")
+  expect_token(2, TK_IDENTIFIER, "procWOMBAT") ' Note don't want to change case of WOMBAT.
+  expect_token(3, TK_IDENTIFIER, "bar")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace { DEF PROC%% } { SUB proc%1 }")
-  ok% = parse_and_transpile%("foo DEF PROCWOMBAT bar")
-  expect_tokens(4)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_KEYWORD,    "SUB")
-  expect_tk(2, TK_IDENTIFIER, "procWOMBAT") ' Note don't want to change case of WOMBAT.
-  expect_tk(3, TK_IDENTIFIER, "bar")
+  expect_transpile_omits("'!replace GOTO%d { Goto %1 }")
+  expect_transpile_succeeds("foo GOTO1234 bar")
+  expect_token_count(4)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_KEYWORD   , "Goto")
+  expect_token(2, TK_NUMBER,     "1234")
+  expect_token(3, TK_IDENTIFIER, "bar") 
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace GOTO%d { Goto %1 }")
-  ok% = parse_and_transpile%("foo GOTO1234 bar")
-  expect_tokens(4)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_KEYWORD   , "Goto")
-  expect_tk(2, TK_NUMBER,     "1234")
-  expect_tk(3, TK_IDENTIFIER, "bar") 
-
-  setup_test()
-  ok% = parse_and_transpile%("'!replace { THEN %d } { Then Goto %1 }")
+  expect_transpile_omits("'!replace { THEN %d } { Then Goto %1 }")
 
   ' Test %d pattern matches decimal digits ...
-  ok% = parse_and_transpile%("foo THEN 1234 bar")
-  expect_tokens(5)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_KEYWORD   , "Then")
-  expect_tk(2, TK_KEYWORD   , "Goto")
-  expect_tk(3, TK_NUMBER,     "1234")
-  expect_tk(4, TK_IDENTIFIER, "bar") 
+  expect_transpile_succeeds("foo THEN 1234 bar")
+  expect_token_count(5)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_KEYWORD   , "Then")
+  expect_token(2, TK_KEYWORD   , "Goto")
+  expect_token(3, TK_NUMBER,     "1234")
+  expect_token(4, TK_IDENTIFIER, "bar") 
 
   ' ... but it should not match other characters.
-  ok% = parse_and_transpile%("foo THEN wombat bar")
-  expect_tokens(4)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_KEYWORD   , "THEN")
-  expect_tk(2, TK_IDENTIFIER, "wombat")
-  expect_tk(3, TK_IDENTIFIER, "bar") 
+  expect_transpile_succeeds("foo THEN wombat bar")
+  expect_token_count(4)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_KEYWORD   , "THEN")
+  expect_token(2, TK_IDENTIFIER, "wombat")
+  expect_token(3, TK_IDENTIFIER, "bar") 
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace { PRINT '%% } { ? : ? %1 }")
-  ok% = parse_and_transpile%("foo PRINT '" + str.quote$("wombat") + " bar")
-  expect_tokens(6)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_SYMBOL,     "?")
-  expect_tk(2, TK_SYMBOL,     ":")
-  expect_tk(3, TK_SYMBOL,     "?")
-  expect_tk(4, TK_STRING,     str.quote$("wombat"))
-  expect_tk(5, TK_IDENTIFIER, "bar")
+  expect_transpile_omits("'!replace { PRINT '%% } { ? : ? %1 }")
+  expect_transpile_succeeds("foo PRINT '" + str.quote$("wombat") + " bar")
+  expect_token_count(6)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_SYMBOL,     "?")
+  expect_token(2, TK_SYMBOL,     ":")
+  expect_token(3, TK_SYMBOL,     "?")
+  expect_token(4, TK_STRING,     str.quote$("wombat"))
+  expect_token(5, TK_IDENTIFIER, "bar")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace '%% { : ? %1 }")
-  ok% = parse_and_transpile%("foo PRINT '" + str.quote$("wombat") + " bar")
-  expect_tokens(6)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_KEYWORD,    "PRINT")
-  expect_tk(2, TK_SYMBOL,     ":")
-  expect_tk(3, TK_SYMBOL,     "?")
-  expect_tk(4, TK_STRING,     str.quote$("wombat"))
-  expect_tk(5, TK_IDENTIFIER, "bar")
+  expect_transpile_omits("'!replace '%% { : ? %1 }")
+  expect_transpile_succeeds("foo PRINT '" + str.quote$("wombat") + " bar")
+  expect_token_count(6)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_KEYWORD,    "PRINT")
+  expect_token(2, TK_SYMBOL,     ":")
+  expect_token(3, TK_SYMBOL,     "?")
+  expect_token(4, TK_STRING,     str.quote$("wombat"))
+  expect_token(5, TK_IDENTIFIER, "bar")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace REM%% { ' %1 }")
-  ok% = parse_and_transpile%("foo REM This is a comment")
-  expect_tokens(2)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_COMMENT, "' This is a comment")
+  expect_transpile_omits("'!replace REM%% { ' %1 }")
+  expect_transpile_succeeds("foo REM This is a comment")
+  expect_token_count(2)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_COMMENT, "' This is a comment")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace { Spc ( } { Space$ ( }")
-  ok% = parse_and_transpile%("foo Spc(5) bar")
-  expect_tokens(6)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_KEYWORD,    "Space$")
-  expect_tk(2, TK_SYMBOL,     "(")
-  expect_tk(3, TK_NUMBER,     "5")
-  expect_tk(4, TK_SYMBOL,     ")")
-  expect_tk(5, TK_IDENTIFIER, "bar")
+  expect_transpile_omits("'!replace { Spc ( } { Space$ ( }")
+  expect_transpile_succeeds("foo Spc(5) bar")
+  expect_token_count(6)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_KEYWORD,    "Space$")
+  expect_token(2, TK_SYMBOL,     "(")
+  expect_token(3, TK_NUMBER,     "5")
+  expect_token(4, TK_SYMBOL,     ")")
+  expect_token(5, TK_IDENTIFIER, "bar")
 
   ' Test %h pattern matches hex digits ...
   setup_test()
-  ok% = parse_and_transpile%("'!replace GOTO%h { Goto %1 }")
-  ok% = parse_and_transpile%("foo GOTOabcdef0123456789 bar")
-  expect_tokens(4)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_KEYWORD,    "Goto")
-  expect_tk(2, TK_IDENTIFIER, "abcdef0123456789")
-  expect_tk(3, TK_IDENTIFIER, "bar")
+  expect_transpile_omits("'!replace GOTO%h { Goto %1 }")
+  expect_transpile_succeeds("foo GOTOabcdef0123456789 bar")
+  expect_token_count(4)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_KEYWORD,    "Goto")
+  expect_token(2, TK_IDENTIFIER, "abcdef0123456789")
+  expect_token(3, TK_IDENTIFIER, "bar")
 
   ' ... but it should not match other characters.
-  ok% = parse_and_transpile%("foo GOTOxyz bar")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "GOTOxyz")
-  expect_tk(2, TK_IDENTIFIER, "bar")
+  expect_transpile_succeeds("foo GOTOxyz bar")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_IDENTIFIER, "GOTOxyz")
+  expect_token(2, TK_IDENTIFIER, "bar")
 End Sub
 
 Sub test_replace_fails_if_too_long()
-  Local ok%, s$
-
-  ok% = parse_and_transpile%("'!replace foo foobar")
+  expect_transpile_omits("'!replace foo foobar")
 
   ' Test where replaced string should be 255 characters.
-  s$ = String$(248, "a")
+  Local s$ = String$(248, "a")
   Cat s$, " foo"
   assert_int_equals(252, Len(s$))
-  ok% = parse_and_transpile%(s$)
-  ok% = tr.transpile%()
-  assert_no_error()
-  expect_tokens(2)
-  expect_tk(0, TK_IDENTIFIER, String$(248, "a"))
-  expect_tk(1, TK_IDENTIFIER, "foobar")
+  expect_transpile_succeeds(s$)
+  expect_token_count(2)
+  expect_token(0, TK_IDENTIFIER, String$(248, "a"))
+  expect_token(1, TK_IDENTIFIER, "foobar")
 
 
   ' Test where replaced string should be 256 characters.
   s$ = String$(251, "a")
   Cat s$, " foo"
   assert_int_equals(255, Len(s$))
-  ok% = parse_and_transpile%(s$)
-  ok% = tr.transpile%()
-  assert_error("applying replacement makes line > 255 characters")
+  expect_transpile_error(s$, "applying replacement makes line > 255 characters")
 End Sub
 
 Sub test_replace_with_fewer_tokens()
-  Local ok%
-
   ' Replace 1 token with 0.
-  ok% = parse_and_transpile%("'!replace bar")
-  ok% = parse_and_transpile%("foo bar wom")
-  expect_tokens(2)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "wom")
+  expect_transpile_omits("'!replace bar")
+  expect_transpile_succeeds("foo bar wom")
+  expect_token_count(2)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_IDENTIFIER, "wom")
 
   ' Removal of all tokens.
   setup_test()
-  ok% = parse_and_transpile%("'!replace bar")
-  ok% = parse_and_transpile%("bar bar bar")
-  expect_tokens(0)
+  expect_transpile_omits("'!replace bar")
+  expect_transpile_succeeds("bar bar bar", 1)
+  expect_token_count(0)
 
   ' Replace 2 tokens with 1.
   setup_test()
-  ok% = parse_and_transpile%("'!replace { foo bar } wom")
-  ok% = parse_and_transpile%("foo bar foo bar snafu")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "wom")
-  expect_tk(1, TK_IDENTIFIER, "wom")
-  expect_tk(2, TK_IDENTIFIER, "snafu")
+  expect_transpile_omits("'!replace { foo bar } wom")
+  expect_transpile_succeeds("foo bar foo bar snafu")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "wom")
+  expect_token(1, TK_IDENTIFIER, "wom")
+  expect_token(2, TK_IDENTIFIER, "snafu")
 
   ' Note that we don't end up with the single token "foo" because once we have
   ' applied a replacement we do not recursively apply that replacement to the
   ' already replaced text.
   setup_test()
-  ok% = parse_and_transpile%("'!replace { foo bar } foo")
-  ok% = parse_and_transpile%("foo bar bar")
-  expect_tokens(2)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "bar")
+  expect_transpile_omits("'!replace { foo bar } foo")
+  expect_transpile_succeeds("foo bar bar")
+  expect_token_count(2)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_IDENTIFIER, "bar")
 
   ' Replace 3 tokens with 1 - again note we don't just end up with "foo".
   setup_test()
-  ok% = parse_and_transpile%("'!replace { foo bar wom } foo")
-  ok% = parse_and_transpile%("foo bar wom bar wom")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "bar")
-  expect_tk(2, TK_IDENTIFIER, "wom")
+  expect_transpile_omits("'!replace { foo bar wom } foo")
+  expect_transpile_succeeds("foo bar wom bar wom")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_IDENTIFIER, "bar")
+  expect_token(2, TK_IDENTIFIER, "wom")
 
   ' Replace 3 tokens with 2 - and again we don't just end up with "foo bar".
   setup_test()
-  ok% = parse_and_transpile%("'!replace { foo bar wom } { foo bar }")
-  ok% = parse_and_transpile%("foo bar wom wom")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "bar")
-  expect_tk(2, TK_IDENTIFIER, "wom")
+  expect_transpile_omits("'!replace { foo bar wom } { foo bar }")
+  expect_transpile_succeeds("foo bar wom wom")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_IDENTIFIER, "bar")
+  expect_token(2, TK_IDENTIFIER, "wom")
 End Sub
 
 Sub test_replace_with_more_tokens()
-  Local ok%
-
   ' Replace 1 token with 2 - note that we don't get infinite recursion because
   ' once we have applied the replacement text we not not recusively apply the
   ' replacement to the already replaced text.
-  ok% = parse_and_transpile%("'!replace foo { foo bar }")
-  ok% = parse_and_transpile%("foo wom")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "bar")
-  expect_tk(2, TK_IDENTIFIER, "wom")
+  expect_transpile_omits("'!replace foo { foo bar }")
+  expect_transpile_succeeds("foo wom")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_IDENTIFIER, "bar")
+  expect_token(2, TK_IDENTIFIER, "wom")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace foo { bar foo }")
-  ok% = parse_and_transpile%("foo wom foo")
-  expect_tokens(5)
-  expect_tk(0, TK_IDENTIFIER, "bar")
-  expect_tk(1, TK_IDENTIFIER, "foo")
-  expect_tk(2, TK_IDENTIFIER, "wom")
-  expect_tk(3, TK_IDENTIFIER, "bar")
-  expect_tk(4, TK_IDENTIFIER, "foo")
+  expect_transpile_omits("'!replace foo { bar foo }")
+  expect_transpile_succeeds("foo wom foo")
+  expect_token_count(5)
+  expect_token(0, TK_IDENTIFIER, "bar")
+  expect_token(1, TK_IDENTIFIER, "foo")
+  expect_token(2, TK_IDENTIFIER, "wom")
+  expect_token(3, TK_IDENTIFIER, "bar")
+  expect_token(4, TK_IDENTIFIER, "foo")
 
   ' Ensure replacement applied for multiple matches.
   setup_test()
-  ok% = parse_and_transpile%("'!replace foo { bar foo }")
-  ok% = parse_and_transpile%("foo foo")
-  expect_tokens(4)
-  expect_tk(0, TK_IDENTIFIER, "bar")
-  expect_tk(1, TK_IDENTIFIER, "foo")
-  expect_tk(2, TK_IDENTIFIER, "bar")
-  expect_tk(3, TK_IDENTIFIER, "foo")
+  expect_transpile_omits("'!replace foo { bar foo }")
+  expect_transpile_succeeds("foo foo")
+  expect_token_count(4)
+  expect_token(0, TK_IDENTIFIER, "bar")
+  expect_token(1, TK_IDENTIFIER, "foo")
+  expect_token(2, TK_IDENTIFIER, "bar")
+  expect_token(3, TK_IDENTIFIER, "foo")
 
   ' Replace 3 tokens with 4.
   setup_test()
-  ok% = parse_and_transpile%("'!replace { foo bar wom } { foo bar wom foo }")
-  ok% = parse_and_transpile%("foo bar wom bar wom")
-  expect_tokens(6)
-  expect_tk(0, TK_IDENTIFIER, "foo")
-  expect_tk(1, TK_IDENTIFIER, "bar")
-  expect_tk(2, TK_IDENTIFIER, "wom")
-  expect_tk(3, TK_IDENTIFIER, "foo")
-  expect_tk(4, TK_IDENTIFIER, "bar")
-  expect_tk(5, TK_IDENTIFIER, "wom")
+  expect_transpile_omits("'!replace { foo bar wom } { foo bar wom foo }")
+  expect_transpile_succeeds("foo bar wom bar wom")
+  expect_token_count(6)
+  expect_token(0, TK_IDENTIFIER, "foo")
+  expect_token(1, TK_IDENTIFIER, "bar")
+  expect_token(2, TK_IDENTIFIER, "wom")
+  expect_token(3, TK_IDENTIFIER, "foo")
+  expect_token(4, TK_IDENTIFIER, "bar")
+  expect_token(5, TK_IDENTIFIER, "wom")
 End Sub
 
 Sub test_replace_given_new_rpl()
-  Local ok%
+  expect_transpile_omits("'!replace foo bar")
+  expect_transpile_succeeds("foo wom bill")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "bar")
+  expect_token(1, TK_IDENTIFIER, "wom")
+  expect_token(2, TK_IDENTIFIER, "bill")
 
-  ok% = parse_and_transpile%("'!replace foo bar")
-  ok% = parse_and_transpile%("foo wom bill")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "bar")
-  expect_tk(1, TK_IDENTIFIER, "wom")
-  expect_tk(2, TK_IDENTIFIER, "bill")
-
-  ok% = parse_and_transpile%("'!replace foo snafu")
-  ok% = parse_and_transpile%("foo wom bill")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "snafu")
-  expect_tk(1, TK_IDENTIFIER, "wom")
-  expect_tk(2, TK_IDENTIFIER, "bill")
+  expect_transpile_omits("'!replace foo snafu")
+  expect_transpile_succeeds("foo wom bill")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "snafu")
+  expect_token(1, TK_IDENTIFIER, "wom")
+  expect_token(2, TK_IDENTIFIER, "bill")
 End Sub
 
 Sub test_apply_unreplace()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!replace foo bar")
-  ok% = parse_and_transpile%("'!replace wom bat")
-  ok% = parse_and_transpile%("'!replace bill ben")
+  expect_transpile_omits("'!replace foo bar")
+  expect_transpile_omits("'!replace wom bat")
+  expect_transpile_omits("'!replace bill ben")
   expect_replacement(0, "foo", "bar")
   expect_replacement(1, "wom", "bat")
   expect_replacement(2, "bill", "ben")
   expect_replacement(3, "", "")
 
-  ok% = parse_and_transpile%("foo wom bill")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "bar")
-  expect_tk(1, TK_IDENTIFIER, "bat")
-  expect_tk(2, TK_IDENTIFIER, "ben")
+  expect_transpile_succeeds("foo wom bill")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "bar")
+  expect_token(1, TK_IDENTIFIER, "bat")
+  expect_token(2, TK_IDENTIFIER, "ben")
 
-  ok% = parse_and_transpile%("'!unreplace wom")
-  assert_no_error()
+  expect_transpile_omits("'!unreplace wom")
   expect_replacement(0, "foo", "bar")
   expect_replacement(1, Chr$(0), Chr$(0))
   expect_replacement(2, "bill", "ben")
   expect_replacement(3, "", "")
 
-  ok% = parse_and_transpile%("foo wom bill")
-  expect_tokens(3)
-  expect_tk(0, TK_IDENTIFIER, "bar")
-  expect_tk(1, TK_IDENTIFIER, "wom")
-  expect_tk(2, TK_IDENTIFIER, "ben")
+  expect_transpile_succeeds("foo wom bill")
+  expect_token_count(3)
+  expect_token(0, TK_IDENTIFIER, "bar")
+  expect_token(1, TK_IDENTIFIER, "wom")
+  expect_token(2, TK_IDENTIFIER, "ben")
 End Sub
 
 Sub test_clear_given_flag_set()
-  Local ok%
-
   def.set_flag("foo")
   def.set_flag("bar")
 
-  ok% = parse_and_transpile%("'!clear foo")
+  expect_transpile_omits("'!clear foo")
   assert_int_equals(0, def.is_flag_set%("foo"))
   assert_int_equals(1, def.is_flag_set%("bar"))
 
-  ok% = parse_and_transpile%("'!clear bar")
+  expect_transpile_omits("'!clear bar")
   assert_int_equals(0, def.is_flag_set%("foo"))
   assert_int_equals(0, def.is_flag_set%("bar"))
 End Sub
 
 Sub test_clear_given_flag_unset()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!clear foo")
-  assert_int_equals(0, ok%)
-  assert_error("!clear directive flag 'foo' is not set")
-
-  ok% = parse_and_transpile%("'!clear BAR")
-  assert_int_equals(0, ok%)
-  assert_error("!clear directive flag 'BAR' is not set")
+  expect_transpile_error("'!clear foo", "!clear directive flag 'foo' is not set")
+  expect_transpile_error("'!clear BAR", "!clear directive flag 'BAR' is not set")
 End Sub
 
 Sub test_clear_given_flag_too_long()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!clear flag5678901234567890123456789012345678901234567890123456789012345")
-  assert_int_equals(0, ok%)
-  assert_error("!clear directive flag too long, max 64 chars")
+  Local line$ = "'!clear flag5678901234567890123456789012345678901234567890123456789012345"
+  Local emsg$ = "!clear directive flag too long, max 64 chars"
+  expect_transpile_error(line$, emsg$)
 End Sub
 
 Sub test_clear_is_case_insensitive()
-  Local ok%
-
   def.set_flag("foo")
   def.set_flag("BAR")
 
-  ok% = parse_and_transpile%("'!clear FOO")
+  expect_transpile_omits("'!clear FOO")
   assert_int_equals(0, def.is_flag_set%("foo"))
   assert_int_equals(1, def.is_flag_set%("BAR"))
 
-  ok% = parse_and_transpile%("'!clear bar")
+  expect_transpile_omits("'!clear bar")
   assert_int_equals(0, def.is_flag_set%("foo"))
   assert_int_equals(0, def.is_flag_set%("BAR"))
 End Sub
 
 Sub test_comment_if()
-  Local ok%
-
   ' 'foo' is set, code inside !comment_if block should be commented.
-  ok% = parse_and_transpile%("'!set foo")
-  ok% = parse_and_transpile%("'!comment_if foo")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' one")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' two")
-  ok% = parse_and_transpile%("'!endif")
+  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!comment_if foo")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' one")
+  expect_transpile_succeeds("two")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' two")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block should not be commented.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_comment_if_not()
-  Local ok%
-
   ' 'foo' is NOT set, code inside !comment_if NOT block should be commented.
-  ok% = parse_and_transpile%("'!comment_if not foo")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' one")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' two")
-  ok% = parse_and_transpile%("'!endif")
+  expect_transpile_omits("'!comment_if not foo")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' one")
+  expect_transpile_succeeds("two")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' two")
+  expect_transpile_omits("'!endif")
 
   ' 'foo' is set, code inside !comment_if NOT block should NOT be commented.
-  ok% = parse_and_transpile%("'!set foo")
-  ok% = parse_and_transpile%("'!comment_if not foo")
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
-  ok% = parse_and_transpile%("'!endif")
+  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!comment_if not foo")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
+  expect_transpile_omits("'!endif")
 End Sub
 
 Sub test_uncomment_if()
-  Local ok%
-
   ' 'foo' is set, code inside !uncomment_if block should be uncommented.
-  ok% = parse_and_transpile%("'!set foo")
-  ok% = parse_and_transpile%("'!uncomment_if foo")
+  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!uncomment_if foo")
 
-  ok% = parse_and_transpile%("' one")
+  expect_transpile_succeeds("' one")
   assert_string_equals(" one", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
 
-  ok% = parse_and_transpile%("REM two")
+  expect_transpile_succeeds("REM two")
   assert_string_equals(" two", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "two")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "two")
 
-  ok% = parse_and_transpile%("'' three")
+  expect_transpile_succeeds("'' three")
   assert_string_equals("' three", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' three")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' three")
 
-  ok% = parse_and_transpile%("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block should not be uncommented.
-  ok% = parse_and_transpile%("' four")
+  expect_transpile_succeeds("' four")
   assert_string_equals("' four", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' four")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' four")
 End Sub
 
 Sub test_uncomment_if_not()
-  Local ok%
-
   ' 'foo' is NOT set, code inside !uncomment_if NOT block should be uncommented.
-  ok% = parse_and_transpile%("'!uncomment_if not foo")
+  expect_transpile_omits("'!uncomment_if not foo")
 
-  ok% = parse_and_transpile%("' one")
+  expect_transpile_succeeds("' one")
   assert_string_equals(" one", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
 
-  ok% = parse_and_transpile%("REM two")
+  expect_transpile_succeeds("REM two")
   assert_string_equals(" two", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "two")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "two")
 
-  ok% = parse_and_transpile%("'' three")
+  expect_transpile_succeeds("'' three")
   assert_string_equals("' three", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' three")
-  ok% = parse_and_transpile%("'!endif")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' three")
+  expect_transpile_omits("'!endif")
 
   ' 'foo' is set, code inside !uncomment_if NOT block should NOT be uncommented.
-  ok% = parse_and_transpile%("'!set foo")
-  ok% = parse_and_transpile%("'!uncomment_if not foo")
-  ok% = parse_and_transpile%("' four")
+  expect_transpile_omits("'!set foo")
+  expect_transpile_omits("'!uncomment_if not foo")
+  expect_transpile_succeeds("' four")
   assert_string_equals("' four", lx.line$)
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' four")
-  ok% = parse_and_transpile%("'!endif")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' four")
+  expect_transpile_omits("'!endif")
 End Sub
 
 Sub test_ifdef_given_set()
-  Local ok%
-
   ' FOO is set so all code within !ifdef FOO is included.
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "two")
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
+  expect_transpile_succeeds("two")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "two")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifdef_given_unset()
-  Local ok%
-
   ' FOO is unset so all code within !ifdef FOO is excluded.
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_omits("one")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifdef_given_0_args()
-  Local ok%
-  ok% = parse_and_transpile%("'!ifdef")
-  assert_int_equals(0, ok%)
-  assert_string_equals("!ifdef directive expects 1 argument", sys.err$)
+  expect_transpile_error("'!ifdef", "!ifdef directive expects 1 argument")
 End Sub
 
 Sub test_ifdef_given_2_args()
-  Local ok%
-  ok% = parse_and_transpile%("'!ifdef not bar")
-  assert_int_equals(0, ok%)
-  assert_string_equals("!ifdef directive expects 1 argument", sys.err$)
+  expect_transpile_error("'!ifdef not bar", "!ifdef directive expects 1 argument")
 End Sub
 
 Sub test_ifdef_is_case_insensitive()
-  Local ok%
   def.set_flag("foo")
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("'!endif")
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
+  expect_transpile_omits("'!endif")
 End Sub
 
 Sub test_ifdef_nested_1()
-  Local ok%
-
   ' FOO and BAR are both unset so all code within !ifdef FOO is excluded.
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!ifdef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_omits("one")
+  expect_transpile_omits("'!ifdef BAR")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifdef_nested_2()
-  Local ok%
-
   ' FOO is set and BAR is unset so code within !ifdef BAR is excluded.
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("'!ifdef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
+  expect_transpile_omits("'!ifdef BAR")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifdef_nested_3()
-  Local ok%
-
   ' BAR is set and FOO is unset so all code within !ifdef FOO is excluded.
-  ok% = parse_and_transpile%("'!set BAR")
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!ifdef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_omits("one")
+  expect_transpile_omits("'!ifdef BAR")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifdef_nested_4()
-  Local ok%
-
   ' FOO and BAR are both set so all code within !ifdef FOO and !ifdef BAR is included.
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!set BAR")
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("'!ifdef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "two")
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
+  expect_transpile_omits("'!ifdef BAR")
+  expect_transpile_succeeds("two")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifndef_given_set()
-  Local ok%
-
   ' FOO is set so all code within !ifndef FOO is excluded.
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_omits("one")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifndef_given_unset()
-  Local ok%
-
   ' FOO is unset so all code within !ifndef FOO is included.
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "two")
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
+  expect_transpile_succeeds("two")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "two")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifndef_given_0_args()
-  Local ok%
-  ok% = parse_and_transpile%("'!ifndef")
-  assert_int_equals(0, ok%)
-  assert_string_equals("!ifndef directive expects 1 argument", sys.err$)
+  expect_transpile_error("'!ifndef", "!ifndef directive expects 1 argument")
 End Sub
 
 Sub test_ifndef_given_2_args()
-  Local ok%
-  ok% = parse_and_transpile%("'!ifndef not bar")
-  assert_int_equals(0, ok%)
-  assert_string_equals("!ifndef directive expects 1 argument", sys.err$)
+  expect_transpile_error("'!ifndef not bar", "!ifndef directive expects 1 argument")
 End Sub
 
 Sub test_ifndef_is_case_insensitive()
-  Local ok%
   def.set_flag("foo")
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_omits("one")
+  expect_token_count(0)
+  expect_transpile_omits("'!endif")
 End Sub
 
 Sub test_ifndef_nested_1()
-  Local ok%
-
   ' FOO and BAR are both unset so all code within !ifndef FOO is included.
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("'!ifndef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "two")
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
+  expect_transpile_omits("'!ifndef BAR")
+  expect_transpile_succeeds("two")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifndef_nested_2()
-  Local ok%
-
   ' FOO is set and BAR is unset so all code within !ifndef FOO is excluded.
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!ifndef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_omits("one")
+  expect_transpile_omits("'!ifndef BAR")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifndef_nested_3()
-  Local ok%
-
   ' BAR is set and FOO is unset so all code within !ifndef BAR is excluded.
-  ok% = parse_and_transpile%("'!set BAR")
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "one")
-  ok% = parse_and_transpile%("'!ifndef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_succeeds("one")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "one")
+  expect_transpile_omits("'!ifndef BAR")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_ifndef_nested_4()
-  Local ok%
-
   ' FOO and BAR are both set so all code within !ifndef FOO and !ifndef BAR is excluded.
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!set BAR")
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("one")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!ifndef BAR")
-  ok% = parse_and_transpile%("two")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  expect_tokens(0)
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!set BAR")
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_omits("one")
+  expect_transpile_omits("'!ifndef BAR")
+  expect_transpile_omits("two")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  ok% = parse_and_transpile%("three")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "three")
+  expect_transpile_succeeds("three")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "three")
 End Sub
 
 Sub test_set_given_flag_set()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!set foo")
-  assert_no_error()
+  expect_transpile_omits("'!set foo")
   assert_int_equals(1, def.is_flag_set%("foo"))
 
-  ok% = parse_and_transpile%("'!set foo")
-  assert_error("!set directive flag 'foo' is already set")
+  expect_transpile_error("'!set foo", "!set directive flag 'foo' is already set")
 End Sub
 
 Sub test_set_given_flag_unset()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!set foo")
-  assert_no_error()
+  expect_transpile_omits("'!set foo")
   assert_int_equals(1, def.is_flag_set%("foo"))
 
-  ok% = parse_and_transpile%("'!set BAR")
-  assert_no_error()
+  expect_transpile_omits("'!set BAR")
   assert_int_equals(1, def.is_flag_set%("BAR"))
 End Sub
 
 Sub test_set_given_flag_too_long()
-  Local ok%
   Local flag$ = "flag567890123456789012345678901234567890123456789012345678901234"
 
-  ok% = parse_and_transpile%("'!set " + flag$)
-  assert_no_error()
+  expect_transpile_omits("'!set " + flag$)
   assert_int_equals(1, def.is_flag_set%(flag$))
 
-  ok% = parse_and_transpile%("'!set " + flag$ + "5")
-  assert_error("!set directive flag too long, max 64 chars")
+  expect_transpile_error("'!set " + flag$ + "5", "!set directive flag too long, max 64 chars")
 End Sub
 
 Sub test_set_is_case_insensitive()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!set foo")
-  assert_no_error()
+  expect_transpile_omits("'!set foo")
   assert_int_equals(1, def.is_flag_set%("FOO"))
 
-  ok% = parse_and_transpile%("'!set FOO")
-  assert_error("!set directive flag 'FOO' is already set")
+  expect_transpile_error("'!set FOO", "!set directive flag 'FOO' is already set")
 End Sub
 
 Sub test_omit_directives_from_output()
-  Local ok%
+  setup_test()
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!clear FOO")
 
   setup_test()
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!clear FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!comments on")
 
   setup_test()
-  ok% = parse_and_transpile%("'!comments on")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!comment_if FOO")
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!comment_if FOO")
 
   setup_test()
-  ok% = parse_and_transpile%("'!comment_if FOO")
-  assert_int_equals(ok%, tr.STATUS_OMIT_LINE%)
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!comment_if FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!empty-lines 1")
 
   setup_test()
-  ok% = parse_and_transpile%("'!empty-lines 1")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!ifdef FOO")
 
   setup_test()
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!ifndef FOO")
 
   setup_test()
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!indent 1")
 
   setup_test()
-  ok% = parse_and_transpile%("'!indent 1")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!replace FOO BAR")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace FOO BAR")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!set FOO")
 
   setup_test()
-  ok% = parse_and_transpile%("'!set FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!spacing 1")
 
   setup_test()
-  ok% = parse_and_transpile%("'!spacing 1")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!uncomment_if FOO")
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!uncomment_if FOO")
 
   setup_test()
-  ok% = parse_and_transpile%("'!uncomment_if FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!uncomment_if FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!replace FOO BAR")
+  expect_transpile_omits("'!unreplace FOO")
 
   setup_test()
-  ok% = parse_and_transpile%("'!replace FOO BAR")
-  ok% = parse_and_transpile%("'!unreplace FOO")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-
-  setup_test()
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("'!endif")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!set FOO")
-  ok% = parse_and_transpile%("'!ifdef FOO")
-  ok% = parse_and_transpile%("'!endif")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_omits("'!endif")
+  expect_transpile_omits("'!set FOO")
+  expect_transpile_omits("'!ifdef FOO")
+  expect_transpile_omits("'!endif")
 End Sub
 
 Sub test_unknown_directive()
-  Local ok% = parse_and_transpile%("'!wombat foo")
-  assert_int_equals(0, ok%)
-  assert_error("Unknown !wombat directive")
+  expect_transpile_error("'!wombat foo", "Unknown !wombat directive")
 End Sub
 
 Sub test_endif_given_no_if()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!ifndef FOO")
-  ok% = parse_and_transpile%("'!endif")
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
-  ok% = parse_and_transpile%("'!endif")
-  assert_int_equals(0, ok%)
-  assert_error("!endif directive without !if")
+  expect_transpile_omits("'!ifndef FOO")
+  expect_transpile_omits("'!endif")
+  expect_transpile_error("'!endif", "!endif directive without !if")
 End Sub
 
 Sub test_endif_given_args()
@@ -1276,165 +1056,106 @@ Sub test_endif_given_trail_comment()
 End Sub
 
 Sub test_error_directive()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!error " + str.quote$("This is an error"))
-  assert_int_equals(0, ok%)
-  assert_error("This is an error")
-
-  ok% = parse_and_transpile%("'!error")
-  assert_int_equals(0, ok%)
-  assert_error("!error directive has missing " + str.quote$("message") + " argument")
-
-  ok% = parse_and_transpile%("'!error 42")
-  assert_int_equals(0, ok%)
-  assert_error("!error directive has missing " + str.quote$("message") + " argument")
+  expect_transpile_error("'!error " + str.quote$("This is an error"), "This is an error")
+  expect_transpile_error("'!error", "!error directive has missing " + str.quote$("message") + " argument")
+  expect_transpile_error("'!error 42", "!error directive has missing " + str.quote$("message") + " argument")
 End Sub
 
 ' If the result of transpiling a line is such that the line is omitted
 ' and that omission then causes two empty lines to run sequentially then
 ' we automatically omit the second empty line.
 Sub test_omit_and_line_spacing()
-  Local ok%
+  expect_transpile_succeeds("", 1)
+  expect_transpile_succeeds("", 1)
 
-  ok% = parse_and_transpile%("")
-  assert_no_error()
-  assert_int_equals(1, ok%)
-
-  ok% = parse_and_transpile%("")
-  assert_no_error()
-  assert_int_equals(1, ok%)
-
-  ok% = parse_and_transpile%("'!set foo")
-  assert_no_error()
-  assert_int_equals(3, ok%)
+  expect_transpile_omits("'!set foo")
   assert_int_equals(0, tr.omit_flag%)
 
   ' Should be omitted, because the last line was omitted AND
   ' the last non-omitted line was empty.
-  ok% = parse_and_transpile%("")
-  assert_no_error()
-  assert_int_equals(3, ok%)
+  expect_transpile_omits("")
   assert_int_equals(0, tr.omit_flag%)
 
-  ok% = parse_and_transpile%("'!ifndef foo")
-  assert_no_error()
-  assert_int_equals(3, ok%)
+  expect_transpile_omits("'!ifndef foo")
   assert_int_equals(1, tr.omit_flag%)
 
-  ok% = parse_and_transpile%("bar")
-  assert_no_error()
-  assert_int_equals(3, ok%)
+  expect_transpile_omits("bar")
   assert_int_equals(1, tr.omit_flag%)
 
-  ok% = parse_and_transpile%("'!endif")
-  assert_no_error()
-  assert_int_equals(3, ok%)
+  expect_transpile_omits("'!endif")
   assert_int_equals(0, tr.omit_flag%)
 
   ' Should be omitted, because the last line was omitted AND
   ' the last non-omitted line was empty.
-  ok% = parse_and_transpile%("")
-  assert_no_error()
-  assert_int_equals(3, ok%)
+  expect_transpile_omits("")
   assert_int_equals(0, tr.omit_flag%)
 End Sub
 
 Sub test_comments_directive()
-  Local ok%
-
-  ok% = parse_and_transpile%("'!comments off")
-  assert_no_error()
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!comments off")
   assert_int_equals(0, opt.comments)
 
-  ok% = parse_and_transpile%("' This is a comment")
-  assert_no_error()
-  expect_tokens(0)
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+  expect_transpile_omits("' This is a comment")
   assert_string_equals("", lx.line$)
 
-  ok% = parse_and_transpile%("Dim a = 1 ' This is also a comment")
-  assert_no_error()
-  assert_int_equals(1, ok%)
-  expect_tokens(4)
-  expect_tk(0, TK_KEYWORD, "Dim")
-  expect_tk(1, TK_IDENTIFIER, "a")
-  expect_tk(2, TK_SYMBOL, "=")
-  expect_tk(3, TK_NUMBER, "1")
+  expect_transpile_succeeds("Dim a = 1 ' This is also a comment")
+  expect_token_count(4)
+  expect_token(0, TK_KEYWORD, "Dim")
+  expect_token(1, TK_IDENTIFIER, "a")
+  expect_token(2, TK_SYMBOL, "=")
+  expect_token(3, TK_NUMBER, "1")
   assert_string_equals("Dim a = 1", lx.line$)
 
-  ok% = parse_and_transpile%("'!comments on")
-  assert_no_error()
-  assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-  expect_tokens(0)
+  expect_transpile_omits("'!comments on")
   assert_int_equals(-1, opt.comments)
 
-  ok% = parse_and_transpile%("' This is a third comment")
-  assert_no_error()
-  assert_int_equals(1, ok%)
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' This is a third comment")
+  expect_transpile_succeeds("' This is a third comment")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' This is a third comment")
 End Sub
 
 Sub test_always_true_flags()
   Local flags$(4) = ("1", "true", "TRUE", "on", "ON")
-  Local i%, ok%
+  Local i%
 
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    ok% = parse_and_transpile%("'!ifdef " + flags$(i%))
-    assert_int_equals(tr.STATUS_OMIT_LINE%, parse_and_transpile%("'!ifdef " + flags$(i%)))
-    ok% = parse_and_transpile%("should_not_be_omitted")
-    assert_int_equals(1, ok%)
-    expect_tokens(1)
-    expect_tk(0, TK_IDENTIFIER, "should_not_be_omitted")
-    ok% = parse_and_transpile%("'!endif")
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    expect_transpile_omits("'!ifdef " + flags$(i%))
+    expect_transpile_succeeds("should_not_be_omitted")
+    expect_token_count(1)
+    expect_token(0, TK_IDENTIFIER, "should_not_be_omitted")
   Next
 
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    ok% = parse_and_transpile%("'!ifndef " + flags$(i%))
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-    ok% = parse_and_transpile%("should_be_omitted")
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-    expect_tokens(0)
-    ok% = parse_and_transpile%("'!endif")
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    expect_transpile_omits("'!ifndef " + flags$(i%))
+    expect_transpile_omits("should_be_omitted")
+    expect_transpile_omits("'!endif")
   Next
 End Sub
 
 Sub test_always_false_flags()
   Local flags$(4) = ("0", "false", "FALSE", "off", "OFF")
-  Local i%, ok%
+  Local i%
 
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    ok% = parse_and_transpile%("'!ifndef " + flags$(i%))
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-    ok% = parse_and_transpile%("should_not_be_omitted")
-    assert_int_equals(1, ok%)
-    expect_tokens(1)
-    expect_tk(0, TK_IDENTIFIER, "should_not_be_omitted")
-    ok% = parse_and_transpile%("'!endif")
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    expect_transpile_omits("'!ifndef " + flags$(i%))
+    expect_transpile_succeeds("should_not_be_omitted")
+    expect_token_count(1)
+    expect_token(0, TK_IDENTIFIER, "should_not_be_omitted")
+    expect_transpile_omits("'!endif")
   Next
 
   For i% = Bound(flags$(), 0) To Bound(flags$(), 1)
-    ok% = parse_and_transpile%("'!ifdef " + flags$(i%))
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-    ok% = parse_and_transpile%("should_be_omitted")
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
-    expect_tokens(0)
-    ok% = parse_and_transpile%("'!endif")
-    assert_int_equals(tr.STATUS_OMIT_LINE%, ok%)
+    expect_transpile_omits("'!ifdef " + flags$(i%))
+    expect_transpile_omits("should_be_omitted")
+    expect_transpile_omits("'!endif")
   Next
 End Sub
 
 Sub test_if_given_true()
   expect_transpile_omits("'!if defined(true)")
   expect_transpile_succeeds(" if_clause")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "if_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
 End Sub
@@ -1456,8 +1177,8 @@ End Sub
 Sub test_else_given_if_active()
   expect_transpile_omits("'!if defined(true)")
   expect_transpile_succeeds(" if_clause")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "if_clause")
   expect_transpile_omits("'!else")
   expect_transpile_omits("    else_clause")
   expect_transpile_omits("'!endif")
@@ -1469,8 +1190,8 @@ Sub test_else_given_else_active()
   expect_transpile_omits("    if_clause")
   expect_transpile_omits("'!else")
   expect_transpile_succeeds(" else_clause")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "else_clause")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
 End Sub
@@ -1493,8 +1214,8 @@ End Sub
 Sub test_elif_given_if_active()
   expect_transpile_omits("'!if defined(true)")
   expect_transpile_succeeds(" if_clause")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "if_clause")
   expect_transpile_omits("'!elif defined(true)")
   expect_transpile_omits("    elif_clause_1")
   expect_transpile_omits("'!elif defined(true)")
@@ -1510,8 +1231,8 @@ Sub test_elif_given_elif_1_active()
   expect_transpile_omits("    if_clause")
   expect_transpile_omits("'!elif defined(true)")
   expect_transpile_succeeds(" elif_clause_1")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "elif_clause_1")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "elif_clause_1")
   expect_transpile_omits("'!elif defined(true)")
   expect_transpile_omits("    elif_clause_2")
   expect_transpile_omits("'!else")
@@ -1527,8 +1248,8 @@ Sub test_elif_given_elif_2_active()
   expect_transpile_omits("    elif_clause_1")
   expect_transpile_omits("'!elif defined(true)")
   expect_transpile_succeeds(" elif_clause_2")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "elif_clause_2")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "elif_clause_2")
   expect_transpile_omits("'!else")
   expect_transpile_omits("    else_clause")
   expect_transpile_omits("'!endif")
@@ -1544,8 +1265,8 @@ Sub test_elif_given_else_active()
   expect_transpile_omits("    elif_clause_2")
   expect_transpile_omits("'!else")
   expect_transpile_succeeds(" else_clause")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "else_clause")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
 End Sub
@@ -1587,8 +1308,8 @@ End Sub
 Sub test_elif_given_ifdef()
   expect_transpile_omits("'!ifdef true")
   expect_transpile_succeeds(" if_clause")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "if_clause")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "if_clause")
   expect_transpile_omits("'!elif defined(true)")
   expect_transpile_omits("    elif_clause_1")
   expect_transpile_omits("'!endif")
@@ -1599,8 +1320,8 @@ Sub test_elif_given_ifdef()
   expect_transpile_omits("    if_clause")
   expect_transpile_omits("'!elif defined(true)")
   expect_transpile_succeeds(" elif_clause_1")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "elif_clause_1")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "elif_clause_1")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
 End Sub
@@ -1614,8 +1335,8 @@ Sub test_elif_given_shortcut_expr()
   expect_transpile_omits(" if_clause")
   expect_transpile_omits("'!elif true")
   expect_transpile_succeeds(" elif_clause")
-  expect_tokens(1)
-  expect_tk(0, TK_IDENTIFIER, "elif_clause")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "elif_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
 End Sub
@@ -1624,8 +1345,8 @@ Sub test_info_defined()
   expect_transpile_omits("'!info defined foo")
   expect_transpile_omits("'!set foo")
   expect_transpile_succeeds("'!info defined foo")
-  expect_tokens(1)
-  expect_tk(0, TK_COMMENT, "' Preprocessor flag FOO defined")
+  expect_token_count(1)
+  expect_token(0, TK_COMMENT, "' Preprocessor flag FOO defined")
   expect_transpile_omits("'!clear foo")
   expect_transpile_omits("'!info defined foo")
   expect_transpile_error("'!info", "!info directive expects two arguments")
@@ -1633,26 +1354,17 @@ Sub test_info_defined()
   expect_transpile_error("'!info foo bar", "!info directive has invalid first argument: foo")
 End Sub
 
-' @param  s$                    Line to parse and transpile.
-' @param  assert_no_trans_err%  If not 0 then assert no transpilation error occurred.
-Function parse_and_transpile%(s$, assert_no_trans_err%)
-  assert_int_equals(SUCCESS, lx.parse_basic%(s$))
-  assert_no_error()
-  parse_and_transpile% = tr.transpile%()
-  If assert_no_trans_err% Then assert_no_error()
-End Function
-
 Sub expect_replacement(i%, from$, to_$)
   assert_true(from$ = tr.replacements$(i%, 0), "Assert failed, expected from$ = '" + from$ + "', but was '" + tr.replacements$(i%, 0) + "'")
   assert_true(to_$  = tr.replacements$(i%, 1), "Assert failed, expected to_$ = '"   + to_$  + "', but was '" + tr.replacements$(i%, 1) + "'")
 End Sub
 
-Sub expect_tokens(num)
+Sub expect_token_count(num)
   assert_no_error()
   assert_true(lx.num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx.num))
 End Sub
 
-Sub expect_tk(i, type, s$)
+Sub expect_token(i, type, s$)
   assert_true(lx.type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx.type(i)))
   assert_string_equals(s$, lx.token$(i))
 End Sub
@@ -1674,14 +1386,14 @@ Sub expect_transpile_omits(line$)
   assert_no_error()
 End Sub
 
-Sub expect_transpile_succeeds(line$)
+Sub expect_transpile_succeeds(line$, allow_zero_tokens%)
   Local result%
   If lx.parse_basic%(line$) Then
     assert_fail("Parse failed: " + line$)
   Else
     result% = tr.transpile%()
     If result% = tr.STATUS_SUCCESS% Then
-      If lx.num < 1 Then
+      If Not allow_zero_tokens% And lx.num < 1 Then
         assert_fail("Transpiled line contains zero tokens: " + line$)
       EndIf
     Else
