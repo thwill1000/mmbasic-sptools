@@ -1,5 +1,10 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.03
+' For MMBasic 5.07
 
-Execute "run " + Chr$(34) + Mm.Info$(Path) + "src/sptrans/sptrans.bas" + Chr$(34) + ", " + Mm.CmdLine$
+Const file$ =  Mm.Info$(Path) + "src/sptrans/sptrans.bas"
+If Mm.Device$ = "MMB4L" Then
+  Run file$, Mm.CmdLine$
+Else
+  Execute "Run " + Chr$(34) + file$ + Chr$(34) + ", " + Mm.CmdLine$
+EndIf
