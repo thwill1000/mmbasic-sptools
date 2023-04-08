@@ -41,12 +41,11 @@ Dim tr.empty_line_flag%
 ' Was the last line omitted ?
 Dim tr.omitted_line_flag%
 
-' TODO - remove STATUS prefix
-'      - make SUCCESS code 0
-Const tr.STATUS_ERROR% = 0
-Const tr.STATUS_SUCCESS% = 1
-Const tr.STATUS_INCLUDE% = 2
-Const tr.STATUS_OMIT_LINE% = 3
+' TODO: make SUCCESS code 0
+Const tr.ERROR = 0
+Const tr.SUCCESS = 1
+Const tr.INCLUDE_FILE = 2
+Const tr.OMIT_LINE = 3
 
 ' Just transpile/inline #INCLUDE statements.
 '
@@ -58,7 +57,7 @@ Function tr.transpile_includes%()
   tr.include$ = ""
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
-    tr.transpile_includes% = Choice(sys.err$ = "", tr.STATUS_INCLUDE%, 0)
+    tr.transpile_includes% = Choice(sys.err$ = "", tr.INCLUDE_FILE, 0)
   Else
     tr.transpile_includes% = 1
   EndIf
@@ -86,7 +85,7 @@ Function tr.transpile%()
       If sys.err$ = "" Then
         lx.reset("") ' Is this really necessary ?
         tr.omitted_line_flag% = 1
-        tr.transpile% = tr.STATUS_OMIT_LINE%
+        tr.transpile% = tr.OMIT_LINE
       EndIf
       Exit Function
   End Select
@@ -100,7 +99,7 @@ Function tr.transpile%()
     EndIf
     lx.reset("")
     tr.omitted_line_flag% = 1
-    tr.transpile% = tr.STATUS_OMIT_LINE%
+    tr.transpile% = tr.OMIT_LINE
     Exit Function
   EndIf
 
@@ -115,7 +114,7 @@ Function tr.transpile%()
   If lx.num = 0 Then                          ' IF this line is empty
     If tr.omitted_line_flag% Then             ' AND the last line was omitted
       If tr.empty_line_flag% Then             ' AND the last non-omitted line was empty
-        tr.transpile% = tr.STATUS_OMIT_LINE%  ' THEN omit this line.
+        tr.transpile% = tr.OMIT_LINE  ' THEN omit this line.
         Exit Function
       EndIf
     EndIf
@@ -123,7 +122,7 @@ Function tr.transpile%()
 
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
-    tr.transpile% = Choice(sys.err$ = "", tr.STATUS_INCLUDE%, 0)
+    tr.transpile% = Choice(sys.err$ = "", tr.INCLUDE_FILE, 0)
     tr.omitted_line_flag% = 0
     Exit Function
   EndIf
@@ -131,11 +130,11 @@ Function tr.transpile%()
   If lx.type(0) <> TK_DIRECTIVE Then
     tr.empty_line_flag% = (lx.num = 0)
     tr.transpile% = Choice(opt.comments = 0, tr.remove_comments%(), 1)
-    tr.omitted_line_flag% = tr.transpile% = tr.STATUS_OMIT_LINE%
+    tr.omitted_line_flag% = tr.transpile% = tr.OMIT_LINE
     Exit Function
   EndIf
 
-  tr.transpile% = tr.STATUS_OMIT_LINE%
+  tr.transpile% = tr.OMIT_LINE
 
   Select Case lx.directive$(0)
     Case "!clear"        : tr.process_clear()
@@ -159,8 +158,8 @@ Function tr.transpile%()
   End Select
 
   If sys.err$ <> "" Then
-    tr.transpile% = tr.STATUS_ERROR%
-  ElseIf tr.transpile% = tr.STATUS_OMIT_LINE% Then
+    tr.transpile% = tr.ERROR
+  ElseIf tr.transpile% = tr.OMIT_LINE Then
     ' lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
     lx.reset("")
     tr.omitted_line_flag% = 1
@@ -466,9 +465,9 @@ Function tr.process_info%()
       lx.replace_token(0, "' Preprocessor flag " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
       lx.remove_token(2)
       lx.remove_token(1)
-      tr.process_info% = tr.STATUS_SUCCESS%
+      tr.process_info% = tr.SUCCESS
     Else
-      tr.process_info% = tr.STATUS_OMIT_LINE%
+      tr.process_info% = tr.OMIT_LINE
     EndIf
   EndIf
   If sys.err$ <> "" Then sys.err$ = "!info directive " + sys.err$
@@ -606,7 +605,7 @@ End Sub
 
 ' Removes all comment tokens from the current line.
 '
-' @return  tr.STATUS_OMIT_LINE% if as a result of calling this function the line
+' @return  tr.OMIT_LINE if as a result of calling this function the line
 '          is now empty, otherwise 1.
 Function tr.remove_comments%()
   If lx.num = 0 Then
@@ -619,5 +618,5 @@ Function tr.remove_comments%()
     If lx.type(i%) = TK_COMMENT Then lx.remove_token(i%)
     Inc i%
   Loop
-  tr.remove_comments% = Choice(lx.num = 0, tr.STATUS_OMIT_LINE%, 1)
+  tr.remove_comments% = Choice(lx.num = 0, tr.OMIT_LINE, 1)
 End Function

@@ -110,11 +110,11 @@ Sub main()
     EndIf
 
     Select Case trok%
-      Case 0                    : cerror(sys.err$)
-      Case 1                    : pp.print_line(pretty_print%)
-      Case tr.STATUS_INCLUDE%   : open_include() : pp.print_line(pretty_print%)
-      Case tr.STATUS_OMIT_LINE% : ' Do nothing
-      Case Else                 : Error "Unknown status: " + Str(trok%)
+      Case tr.ERROR:        cerror(sys.err$)
+      Case tr.SUCCESS:      pp.print_line(pretty_print%)
+      Case tr.INCLUDE_FILE: open_include() : pp.print_line(pretty_print%)
+      Case tr.OMIT_LINE:    ' Do nothing
+      Case Else:            Error "Unknown status: " + Str(trok%)
     End Select
 
     If Eof(#in.num_open_files%) Then
