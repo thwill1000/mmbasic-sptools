@@ -130,6 +130,8 @@ Function tr.transpile%()
     Exit Function
   EndIf
 
+  tr.transpile% = tr.STATUS_OMIT_LINE%
+
   Select Case lx.directive$(0)
     Case "!clear"        : tr.process_clear()
     Case "!comments"     : tr.process_comments()
@@ -141,6 +143,7 @@ Function tr.transpile%()
     Case "!if"           : tr.process_if()
     Case "!ifdef"        : tr.process_if()
     Case "!ifndef"       : tr.process_if()
+    Case "!info"         : tr.transpile% = tr.process_info%()
     Case "!indent"       : tr.process_indent()
     Case "!replace"      : tr.process_replace()
     Case "!set"          : tr.process_set()
@@ -150,10 +153,11 @@ Function tr.transpile%()
     Case Else            : sys.err$ = "Unknown " + Mid$(lx.directive$(0), 1) + " directive"
   End Select
 
-  If sys.err$ = "" Then
-'    lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
+  If sys.err$ <> "" Then
+    tr.transpile% = tr.STATUS_ERROR%
+  ElseIf tr.transpile% = tr.STATUS_OMIT_LINE% Then
+    ' lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
     lx.reset("")
-    tr.transpile% = tr.STATUS_OMIT_LINE%
     tr.omitted_line_flag% = 1
   EndIf
 End Function
@@ -446,6 +450,25 @@ Sub tr.process_include()
   EndIf
 End Sub
 
+Function tr.process_info%()
+  If lx.num <> 3 Then
+    sys.err$ = "expects two arguments"
+  ElseIf lx.token_lc$(1) <> "defined" Then
+    sys.err$ = "has invalid first argument: " + lx.token_lc$(1)
+  Else
+    Local defined% = def.is_flag_set%(lx.token$(2))
+    If defined% Then
+      lx.replace_token(0, "' Preprocessor flag " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
+      lx.remove_token(2)
+      lx.remove_token(1)
+      tr.process_info% = tr.STATUS_SUCCESS%
+    Else
+      tr.process_info% = tr.STATUS_OMIT_LINE%
+    EndIf
+  EndIf
+  If sys.err$ <> "" Then sys.err$ = "!info directive " + sys.err$
+End Function
+
 Sub tr.process_indent()
   If lx.num > 2 Then sys.err$ = "has too many arguments"
   If sys.err$ = "" Then opt.set_indent_sz(lx.token_lc$(1))
@@ -549,7 +572,7 @@ Sub tr.add_replacement(from$, to_$)
     tr.replacements$(existing%, 0) = Chr$(0)
     tr.replacements$(existing%, 1) = Chr$(0)
     If to_$ = Chr$(0) Then Exit Sub
-  Else If to_$ = Chr$(0) Then
+  ElseIf to_$ = Chr$(0) Then
     sys.err$ = "could not find '" + from$ + "'"
     Exit Sub
   EndIf

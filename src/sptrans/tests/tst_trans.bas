@@ -100,6 +100,7 @@ add_test("test_elif_given_comment_if")
 add_test("test_elif_given_uncomment_if")
 add_test("test_elif_given_ifdef")
 add_test("test_elif_given_shortcut_expr")
+add_test("test_info_defined")
 
 run_tests()
 
@@ -1607,6 +1608,19 @@ Sub test_elif_given_shortcut_expr()
   expect_tk(0, TK_IDENTIFIER, "elif_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+End Sub
+
+Sub test_info_defined()
+  expect_transpile_omits("'!info defined foo")
+  expect_transpile_omits("'!set foo")
+  expect_transpile_succeeds("'!info defined foo")
+  expect_tokens(1)
+  expect_tk(0, TK_COMMENT, "' Preprocessor flag FOO defined")
+  expect_transpile_omits("'!clear foo")
+  expect_transpile_omits("'!info defined foo")
+  expect_transpile_error("'!info", "!info directive expects two arguments")
+  expect_transpile_error("'!info defined", "!info directive expects two arguments")
+  expect_transpile_error("'!info foo bar", "!info directive has invalid first argument: foo")
 End Sub
 
 ' @param  s$                    Line to parse and transpile.

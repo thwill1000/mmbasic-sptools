@@ -106,6 +106,12 @@ Sub test_directives()
   assert_int_equals(SUCCESS, lx.parse_basic%("'!endif"))
   expect_num_tokens(1)
   expect_tk(0, TK_DIRECTIVE, "'!endif")
+
+  assert_int_equals(SUCCESS, lx.parse_basic%("'!info defined foo"))
+  expect_num_tokens(3)
+  expect_tk(0, TK_DIRECTIVE, "'!info")
+  expect_tk(1, TK_IDENTIFIER, "defined")
+  expect_tk(2, TK_IDENTIFIER, "foo")
 End Sub
 
 Sub test_replace_directives()
