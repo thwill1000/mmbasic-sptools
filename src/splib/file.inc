@@ -73,14 +73,10 @@ End Function
 '       Alternatively need to use a more efficient way to store strings
 '       (a pool?), or take advantage of the fact they have common prefixes.
 Function file.find$(path$, pattern$, type$)
-  If Mm.Device$ = "MMB4L" Or Mm.Device$ = "MMBasic for Windows" Then
-    Static stack$(1000) Length 255 ' ~256K workspace.
-  Else
-    Static stack$(1000) Length 128 ' ~128K workspace.
-  EndIf
-  Static stack_ptr%
-  Static pattern_$
-  Static type_$
+  ' ~256K workspace for MMB4L and MMB4W, ~128K workspace for other platforms.
+  Const MAX_PATH_LEN = Choice(sys.is_device%("mmb4l", "mmb4w"), 255, 128)
+  Static stack$(1000) Length MAX_PATH_LEN
+  Static stack_ptr%, pattern_$, type_$
   Local f$, is_dir%, lb%, name$, num%
 
   If path$ <> "" Then
@@ -89,7 +85,7 @@ Function file.find$(path$, pattern$, type$)
     type_$ = Choice(type$ = "", "FILE", UCase$(type$))
     f$ = file.get_canonical$(path$)
     stack$(stack_ptr%) = f$ : Inc stack_ptr%
-    If InStr("|ALL|DIR|FILE|", "|" + type_$ + "|") < 1 Then Error "unknown type: " + type_$
+    If Not InStr("|ALL|DIR|FILE|", "|" + type_$ + "|") Then Error "unknown type: " + type_$
   EndIf
 
   Do
@@ -106,27 +102,43 @@ Function file.find$(path$, pattern$, type$)
       If Not file.is_symlink%(file.find$) Then
         is_dir% = 1
         lb% = stack_ptr%
-        f$ = Choice(type_$ = "DIR", Dir$(file.find$ + "/*", Dir), Dir$(file.find$ + "/*", All))
+
+        ' Add all sub-directories.
+        f$ = Dir$(file.find$ + "/*", Dir)
         Do While f$ <> ""
+          If stack_ptr% > Bound(stack$(), 1) Then Error "Too many files"
           stack$(stack_ptr%) = file.find$  + "/" + f$
           Inc stack_ptr%
           f$ = Dir$()
         Loop
 
+        ' Add all files matching pattern.
+        If type_$ <> "DIR" Then
+          ' f$ = Dir$(file.find$ + "/*", File)
+          f$ = Dir$(file.find$ + "/" + pattern_$, File)
+          Do While f$ <> ""
+            If stack_ptr% > Bound(stack$(), 1) Then Error "Too many files"
+            ' If file.fnmatch%(pattern_$, f$) Then
+            stack$(stack_ptr%) = file.find$  + "/" + f$
+            Inc stack_ptr%
+            ' EndIf
+            f$ = Dir$()
+          Loop
+        EndIf
+
         ' Sort the newly pushed dirs/files so that those beginning 'a|A'
         ' are at the top and those beginning 'z|Z' are near the bottom.
         num% = stack_ptr% - lb%
-        If num% > 0 Then Sort stack$(), , &b11, lb%, num%)
+        If num% > 0 Then Sort stack$(), , &b11, lb%, num%
       EndIf
     EndIf
 
-    ' I've profiled it and its faster to do the name checks before the type checks.
-    If file.fnmatch%(pattern_$, name$) Then
-      Select Case type_$
-        Case "ALL"  : Exit Do
-        Case "DIR"  : If is_dir% Then Exit Do
-        Case "FILE" : If Not is_dir% Then Exit Do
-      End Select
+    If is_dir% Then
+      If InStr("ALL|DIR", type_$) Then
+        If file.fnmatch%(pattern_$, name$) Then Exit Do
+      EndIf
+    Else
+      If InStr("ALL|FILE", type_$) Then Exit Do
     EndIf
 
   Loop
