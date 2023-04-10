@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07.03
 
@@ -41,17 +41,29 @@ add_test("test_get_files")
 add_test("test_trim_extension")
 add_test("test_mkdir_abs_path")
 add_test("test_mkdir_rel_path")
+add_test("test_depth_first_given_file")
+add_test("test_depth_first_given_dir")
+add_test("test_depth_first_given_symlink")
+add_test("test_depth_first_given_not_found", "test_depth_first_not_found")
+add_test("test_delete_root")
+add_test("test_delete_given_not_found")
+add_test("test_delete_given_file")
+add_test("test_delete_given_dir")
+add_test("test_delete_given_symlink")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 
 Sub setup_test()
-  If Not file.is_directory%(TMPDIR$) Then MkDir TMPDIR$
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory: " + TMPDIR$
+  EndIf
+  MkDir TMPDIR$
 End Sub
 
 Sub teardown_test()
-  ' TODO: recursive deletion of TMPDIR$
+  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory: " + TMPDIR$
 End Sub
 
 Sub test_get_parent()
@@ -351,7 +363,6 @@ Sub test_find_with_symlinks()
 
   ' Setup.
   Local foo_dir$ = TMPDIR$ + "/foo"
-  If file.exists%(foo_dir$) Then RmDir foo_dir$
   MkDir foo_dir$
   given_non_empty_file(TMPDIR$ + "/foo/one.txt")
   given_non_empty_file(TMPDIR$ + "/foo/two.txt")
@@ -368,15 +379,6 @@ Sub test_find_with_symlinks()
   assert_string_equals("A:" + TMPDIR$ + "/foo/one.txt", file.find$())
   assert_string_equals("A:" + TMPDIR$ + "/foo/two.txt", file.find$())
   assert_string_equals("",                              file.find$())
-
-  ' Teardown.
-  Kill TMPDIR$ + "/foo/one.txt"
-  Kill TMPDIR$ + "/foo/two.txt"
-  RmDir TMPDIR$ + "/foo"
-  Kill TMPDIR$ + "/bar/one.txt"
-  Kill TMPDIR$ + "/bar/two.txt"
-  RmDir TMPDIR$ + "/bar"
-  Kill symlink$
 End Sub
 
 Sub test_count_files()
@@ -534,10 +536,6 @@ Sub test_trim_extension()
 End Sub
 
 Sub test_mkdir_abs_path()
-  On Error Skip
-  RmDir TMPDIR$ + "/test_mkdir_abs_path"
-  On Error Clear
-
   ' Given parent exists.
   sys.err$ = ""
   file.mkdir(TMPDIR$ + "/test_mkdir_abs_path")
@@ -558,8 +556,7 @@ Sub test_mkdir_abs_path()
 
   ' Given exists and is a file.
   sys.err$ = ""
-  Open TMPDIR$ + "/test_mkdir_abs_path/file" For Output As #1
-  Close #1
+  ut.create_file(TMPDIR$ + "/test_mkdir_abs_path/file")
   file.mkdir(TMPDIR$ + "/test_mkdir_abs_path/file")
   assert_error("File exists")
   assert_false(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path/file"))
@@ -584,19 +581,9 @@ Sub test_mkdir_abs_path()
     file.mkdir("\")
     assert_no_error()
   EndIf
-
-  ' Cleanup.
-  RmDir TMPDIR$ + "/test_mkdir_abs_path/a/b"
-  RmDir TMPDIR$ + "/test_mkdir_abs_path/a"
-  Kill  TMPDIR$ + "/test_mkdir_abs_path/file"
-  RmDir TMPDIR$ + "/test_mkdir_abs_path"
 End Sub
 
 Sub test_mkdir_rel_path()
-  On Error Skip
-  RmDir TMPDIR$ + "/test_mkdir_rel_path"
-  On Error Clear
-
   file.mkdir(TMPDIR$ + "/test_mkdir_rel_path")
   Local old_cwd$ = Cwd$
   ChDir TMPDIR$ + "/test_mkdir_rel_path"
@@ -621,8 +608,7 @@ Sub test_mkdir_rel_path()
 
   ' Given exists and is a file.
   sys.err$ = ""
-  Open "file" For Output As #1
-  Close #1
+  ut.create_file("file")
   file.mkdir(TMPDIR$ + "/test_mkdir_rel_path/file")
   assert_error("File exists")
   assert_false(file.is_directory%("file"))
@@ -635,9 +621,135 @@ Sub test_mkdir_rel_path()
 
   ' Cleanup.
   ChDir old_cwd$
-  RmDir TMPDIR$ + "/test_mkdir_rel_path/subdir"
-  RmDir TMPDIR$ + "/test_mkdir_rel_path/a/b"
-  RmDir TMPDIR$ + "/test_mkdir_rel_path/a"
-  Kill  TMPDIR$ + "/test_mkdir_rel_path/file"
-  RmDir TMPDIR$ + "/test_mkdir_rel_path"
+End Sub
+
+Sub test_depth_first_given_file()
+  Local f$ = TMPDIR$ + "/foo"
+  ut.create_file(f$)
+
+  Local expected$(list.new%(10))
+  list.init(expected$())
+  list.add(expected$(), file.get_canonical$(f$) + "_5")
+
+  Dim actual$(list.new%(10))
+  list.init(actual$())
+  assert_int_equals(sys.SUCCESS, file.depth_first%(f$, "depth_first_callback%", 5))
+  assert_string_array_equals(expected$(), actual$())
+
+  Erase actual$()
+End Sub
+
+Function depth_first_callback%(f$, xtra%)
+  list.add(actual$(), f$ + "_" + Str$(xtra%))
+End Function
+
+Sub test_depth_first_given_dir()
+  ut.create_file(TMPDIR$ + "/foo")
+  MkDir TMPDIR$ + "/bar-dir"
+  ut.create_file(TMPDIR$ + "/bar-dir/wombat")
+  ut.create_file(TMPDIR$ + "/zzz")
+
+  ' I suspect the order of these may be a bit variable, the important thing is
+  ' that the contents of a directory is visited before the directory itself is.
+  Local expected$(list.new%(10))
+  list.init(expected$())
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
+
+  Dim actual$(list.new%(10))
+  list.init(actual$())
+  assert_int_equals(sys.SUCCESS, file.depth_first%(TMPDIR$, "depth_first_callback%", 5))
+  assert_string_array_equals(expected$(), actual$())
+
+  Erase actual$()
+End Sub
+
+Sub test_depth_first_given_symlink()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
+  MkDir TMPDIR$ + "/foo-dir"
+  ut.create_file(TMPDIR$ + "/foo-dir/bar")
+  System "ln -s " + TMPDIR$ + "/foo-dir " + TMPDIR$ + "/foo-link"
+
+  ' Should not recurse into target of symbolic link.
+  Local expected$(list.new%(10))
+  list.init(expected$())
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo-link_5"))
+
+  Dim actual$(list.new%(10))
+  list.init(actual$())
+  assert_int_equals(sys.SUCCESS, file.depth_first%(TMPDIR$ + "/foo-link", "depth_first_callback%", 5))
+  assert_string_array_equals(expected$(), actual$())
+
+  Erase actual$()
+End Sub
+
+Sub test_depth_first_not_found()
+  Local f$ = TMPDIR$ + "/foo"
+  assert_int_equals(sys.FAILURE, file.depth_first%(f$, "depth_first_callback%", 5))
+  assert_error("File not found '" + file.get_canonical$(f$) + "'")
+End Sub
+
+Sub test_delete_root()
+  Local roots$(array.new%(8)) = ("/", "\", "A:", "B:", "A:\", "A:/", "B:\", "B:/")
+  Local i%
+
+  For i% = Bound(roots$(), 0) To Bound(roots$(), 1)
+    sys.err$ = ""
+    assert_int_equals(sys.FAILURE, file.delete%(roots$(i%)))
+    assert_error("Cannot delete '" + file.get_canonical$(roots$(i%)) + "'")
+  Next
+End Sub
+
+Sub test_delete_given_not_found()
+  Local f$ = TMPDIR$ + "/foo"
+
+  assert_int_equals(sys.FAILURE, file.delete%(f$, 1))
+  assert_error("File not found '" + file.get_canonical$(f$) + "'")
+End Sub
+
+Sub test_delete_given_file()
+  Local f$ = TMPDIR$ + "/foo"
+  ut.create_file(f$)
+
+  assert_true(file.exists%(f$))
+  assert_int_equals(sys.SUCCESS, file.delete%(f$, 1))
+  assert_false(file.exists%(f$))
+End Sub
+
+Sub test_delete_given_dir()
+  Local f$ = TMPDIR$ + "/foo-dir"
+  MkDir f$
+  ut.create_file(f$ + "/one")
+  ut.create_file(f$ + "/two")
+  ut.create_file(TMPDIR$ + "/bar")
+
+  assert_true(file.exists%(f$))
+  assert_true(file.exists%(f$ + "/one"))
+  assert_true(file.exists%(f$ + "/two"))
+  assert_true(file.exists%(TMPDIR$ + "/bar"))
+  assert_int_equals(sys.SUCCESS, file.delete%(f$, 1))
+  assert_false(file.exists%(f$))
+  assert_false(file.exists%(f$ + "/one"))
+  assert_false(file.exists%(f$ + "/two"))
+  assert_true(file.exists%(TMPDIR$ + "/bar"))
+End Sub
+
+Sub test_delete_given_symlink()
+  If Mm.Device$ <> "MMB4L" Then Exit Sub
+
+  MkDir TMPDIR$ + "/foo-dir"
+  ut.create_file(TMPDIR$ + "/foo-dir/bar")
+  System "ln -s " + TMPDIR$ + "/foo-dir " + TMPDIR$ + "/foo-link"
+
+  assert_true(file.exists%(TMPDIR$ + "/foo-link"))
+  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$ + "/foo-link", 1))
+  assert_false(file.exists%(TMPDIR$ + "/foo-link"))
+
+  ' Should not recurse and delete into target of symbolic link.
+  assert_true(file.exists%(TMPDIR$ + "/foo-dir"))
+  assert_true(file.exists%(TMPDIR$ + "/foo-dir/bar"))
 End Sub

@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07.05
 
@@ -517,4 +517,10 @@ Sub ut.print_colour(c$)
     Case "reset"   : Colour(RGB(White))
     Case Else      : Error "unsupported colour: " + c$
   End Select
+End Sub
+
+' Creates an empty file.
+Sub ut.create_file(f$)
+  Open f$ For Output As #1
+  Close #1
 End Sub

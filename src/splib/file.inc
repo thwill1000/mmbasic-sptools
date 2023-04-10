@@ -380,10 +380,9 @@ Function file.is_directory%(f$)
 End Function
 
 Function file.is_symlink%(f$)
-  ' If MM.INFO(EXISTS SYMLINK f$) is not implemented then the error
-  ' will be ignored and the default 0 returned.
-  On Error Skip 1
-  file.is_symlink% = Mm.Info(Exists SymLink f$)
+  If Mm.Device$ = "MMB4L" Then
+    file.is_symlink% = Mm.Info(Exists SymLink f$)
+  EndIf
 End Function
 
 ' Makes directory 'f$' and its parents if they do not already exist.
@@ -409,6 +408,87 @@ Sub file.mkdir(f$)
     MkDir f$
   EndIf
 End Sub
+
+' Performs depth-first recursion of the filesystem from a given root$
+' calling the supplied callback$ function for each file encountered.
+'
+' @param  root$      Root of the traversal.
+' @param  callback$  Callback function to call, first parameter should be a string (the absolute
+'                    filename of the file node being processed) and return 0 on success.
+' @param  xtra%      Value to be passed as second argument to callback.
+'                    This could be used to pass the address of a value other than an integer.
+' @return            0 on success, or if a callback function returns a non-zero value then the
+'                    traversal stops and that value is returned.
+Function file.depth_first%(root$, callback$, xtra%)
+  Local root_$ = file.get_canonical$(root$)
+  If Not file.exists%(root_$) Then
+    file.depth_first% = sys.error%(sys.FAILURE, "File not found '" + root_$ + "'")
+    Exit Function
+  EndIf
+
+  Local depth% = 0, current$ = root_$, name$, parent$
+  Local f$ = Choice(file.is_directory%(root_$) And Not file.is_symlink%(root_$), Dir$(root_$ + "/*", All), "")
+  Do While file.depth_first% = sys.SUCCESS
+    If f$ = "" Then ' No more entries.
+      If current$ <> root_$ Then
+        ' Protection from accidentally navigating above root$ which would
+        ' have disasterous consequences if performing a recursive delete.
+        Inc depth%, -1
+        If depth% < 0 Then Error "Safety check failed!"
+
+        ' Update f$ to point to the entry after current$ in its parent;
+        ' traversal will continue from there.
+        name$ = file.get_name$(current$)
+        parent$ = file.get_parent$(current$)
+        f$ = Dir$(parent$ + "/*", All)
+        Do While f$ <> name$ : f$ = Dir$() : Loop
+        f$ = Dir$()
+      EndIf
+
+      ' Note that unless we are acting on the root$ we will have navigated to
+      ' the parent before calling the callback$, this is essential if the
+      ' callback deletes or renames the directory.
+      file.depth_first% = Call(callback$, current$, xtra%)
+      If current$ = root_$ Then Exit Do
+      current$ = parent$
+    Else
+      f$ = current$ + "/" + f$
+      If file.is_symlink%(f$) Then
+        file.depth_first% = Call(callback$, f$, xtra%)
+        f$ = Dir$()
+      ElseIf file.is_directory%(f$) Then
+        current$ = f$
+        f$ = Dir$(current$ + "/*", All)
+        Inc depth%
+      Else
+        file.depth_first% = Call(callback$, f$, xtra%)
+        f$ = Dir$()
+      EndIf
+    EndIf
+  Loop
+End Function
+
+Function file.delete%(f$, yes_to_all%)
+  Local f_$ = file.get_canonical$(f$), is_root%
+  Select Case Len(f_$)
+    Case 1 : is_root% = InStr("/\", f_$)
+    Case 2 : is_root% = Mid$(f_$, 2, 1) = ":"
+    Case 3 : is_root% = Mid$(f_$, 2, 1) = ":" And InStr("/\", Mid$(f_$, 3, 1))
+  End Select
+  If is_root% Then
+    file.delete% = sys.error%(sys.FAILURE, "Cannot delete '" + f_$ + "'")
+  Else
+    file.delete% = file.depth_first%(f_$, "file.delete_callback%", yes_to_all%)
+  EndIf
+End Function
+
+Function file.delete_callback%(f$, yes_to_all%)
+  Local s$ = Choice(yes_to_all%, "y", "n")
+  If s$ = "n" Then Line Input "Delete '" + f$ + "' [y|N] ? ", s$
+  If LCase$(s$) = "y" Then
+    If file.is_directory%(f$) And Not file.is_symlink%(f$) Then RmDir f$ Else Kill f$
+  EndIf
+End Function
 
 ' Returns a copy of f$ with any dot file-extension removed.
 ' e.g. file.trim_extension("foo.bas") => "foo"

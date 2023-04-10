@@ -6,6 +6,9 @@ Const sys.VERSION$ = "2.0.0-a1"
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 
+Const sys.SUCCESS = 0
+Const sys.FAILURE = -1
+
 Dim sys.break_flag%
 Dim sys.err$
 
@@ -158,9 +161,15 @@ Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
       Case "PicoMiteVGA"
         If d$ = "pmvga" Or d$ = "pm*" Then Exit Function
       Case Else
-        Error("Unknown device: " + Mm.Device$)
+        Error "Unknown device: " + Mm.Device$
     End Select
     Inc ii%
   Loop
   sys.is_device% = 0
+End Function
+
+Function sys.error%(code%, msg$)
+  If Not code% Then Error "Invalid error code"
+  sys.error% = code%
+  sys.err$ = msg$
 End Function
