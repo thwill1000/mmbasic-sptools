@@ -17,7 +17,8 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../../sptest/unittest.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const TEST_FILE$ = sys.string_prop$("tmpdir") + "/tst_inifile.ini"
+Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_inifile"
+Const TEST_FILE$ = TMPDIR$ + "/file.ini"
 
 add_test("test_read")
 add_test("test_read_given_map_overflow")
@@ -31,9 +32,14 @@ run_tests(Choice(InStr(Mm.CmdLine$, "--base"), "", "--base=1"))
 End
 
 Sub setup_test()
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  EndIf
+  MkDir TMPDIR$
 End Sub
 
 Sub teardown_test()
+  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
 End Sub
 
 Sub test_read()
