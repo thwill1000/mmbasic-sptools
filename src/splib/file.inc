@@ -23,13 +23,20 @@ EndIf
 ' @param   type$     type of files to return, "dir", "file" or "all".
 ' @return  the number of matching files.
 Function file.count_files%(d$, pattern$, type$)
-  Local f$
+  If Not file.is_directory%(d$) Then
+    file.count_files% = sys.error%(sys.FAILURE, "Not a directory '" + d$ + "'")
+    Exit Function
+  EndIf
 
+  Local f$
   Select Case LCase$(type$)
     Case "all"      : f$ = Dir$(d$ + "/*", All)
     Case "dir"      : f$ = Dir$(d$ + "/*", Dir)
     Case "file", "" : f$ = Dir$(d$ + "/*", File)
-    Case Else       : Error "unknown type: " + type$
+    Case Else
+      file.count_files% = sys.error%(sys.FAILURE, "Invalid file type '" + type$ + "'")
+      Exit Function
+    EndIf
   End Select
 
   Do While f$ <> ""
@@ -82,10 +89,13 @@ Function file.find$(path$, pattern$, type$)
   If path$ <> "" Then
     stack_ptr% = Bound(stack$(), 0)
     pattern_$ = Choice(pattern$ = "", "*", pattern$)
-    type_$ = Choice(type$ = "", "FILE", UCase$(type$))
+    type_$ = Choice(type$ = "", "FILE", LCase$(type$))
     f$ = file.get_canonical$(path$)
     stack$(stack_ptr%) = f$ : Inc stack_ptr%
-    If Not InStr("|ALL|DIR|FILE|", "|" + type_$ + "|") Then Error "unknown type: " + type_$
+    If Not InStr("|all|dir|file|", "|" + type_$ + "|") Then
+      Error "Invalid file type '" + type_$ + "'"
+      Exit Function ' So we stop even if errors are being ignored.
+    EndIf
   EndIf
 
   Do
@@ -106,18 +116,24 @@ Function file.find$(path$, pattern$, type$)
         ' Add all sub-directories.
         f$ = Dir$(file.find$ + "/*", Dir)
         Do While f$ <> ""
-          If stack_ptr% > Bound(stack$(), 1) Then Error "Too many files"
+          If stack_ptr% > Bound(stack$(), 1) Then
+            Error "Too many files"
+            Exit Function ' So we stop even if errors are being ignored.
+          EndIf
           stack$(stack_ptr%) = file.find$  + "/" + f$
           Inc stack_ptr%
           f$ = Dir$()
         Loop
 
         ' Add all files matching pattern.
-        If type_$ <> "DIR" Then
+        If type_$ <> "dir" Then
           ' f$ = Dir$(file.find$ + "/*", File)
           f$ = Dir$(file.find$ + "/" + pattern_$, File)
           Do While f$ <> ""
-            If stack_ptr% > Bound(stack$(), 1) Then Error "Too many files"
+            If stack_ptr% > Bound(stack$(), 1) Then
+              Error "Too many files"
+              Exit Function ' So we stop even if errors are being ignored.
+            EndIf
             ' If file.fnmatch%(pattern_$, f$) Then
             stack$(stack_ptr%) = file.find$  + "/" + f$
             Inc stack_ptr%
@@ -134,11 +150,11 @@ Function file.find$(path$, pattern$, type$)
     EndIf
 
     If is_dir% Then
-      If InStr("ALL|DIR", type_$) Then
+      If InStr("all|dir", type_$) Then
         If file.fnmatch%(pattern_$, name$) Then Exit Do
       EndIf
     Else
-      If InStr("ALL|FILE", type_$) Then Exit Do
+      If InStr("all|file", type_$) Then Exit Do
     EndIf
 
   Loop
@@ -309,29 +325,35 @@ End Function
 ' @param       pattern$  file pattern to match on, e.g. "*.bas".
 ' @param       type$     type of files to return, "dir", "file" or "all".
 ' @param[out]  out$()    the names of matching files are copied into this array.
-Sub file.get_files(d$, pattern$, type$, out$())
-  Local f$
+' @return                the number of files matching the pattern.
+Function file.get_files%(d$, pattern$, type$, out$())
+  If Not file.is_directory%(d$) Then
+    file.get_files% = sys.error%(sys.FAILURE, "Not a directory '" + d$ + "'")
+    Exit Function
+  EndIf
 
+  Local f$
   Select Case LCase$(type$)
     Case "all"      : f$ = Dir$(d$ + "/*", All)
     Case "dir"      : f$ = Dir$(d$ + "/*", Dir)
     Case "file", "" : f$ = Dir$(d$ + "/*", File)
-    Case Else       : Error "unknown type: " + type$
+    Case Else
+      file.get_files% = sys.error%(sys.FAILURE, "Invalid file type '" + type$ + "'")
+      Exit Function
   End Select
 
-  Local i% = Mm.Info(Option Base)
   Do While f$ <> ""
     If file.fnmatch%(pattern$, f$) Then
-      out$(i%) = f$
-      Inc i%
+      out$(file.get_files% + Mm.Info(Option Base)) = f$
+      Inc file.get_files%
     EndIf
     f$ = Dir$()
   Loop
 
-  If i% > Mm.Info(Option Base) Then
-    Sort out$(), , &b10, Mm.Info(Option Base), i% - Mm.Info(Option Base)
+  If file.get_files% > 0 Then
+    Sort out$(), , &b10, Mm.Info(Option Base), file.get_files%
   EndIf
-End Sub
+End Function
 
 ' Gets the name of file/directory 'f$' minus any path information.
 Function file.get_name$(f$)
@@ -423,7 +445,7 @@ End Function
 Function file.depth_first%(root$, callback$, xtra%)
   Local root_$ = file.get_canonical$(root$)
   If Not file.exists%(root_$) Then
-    file.depth_first% = sys.error%(sys.FAILURE, "File not found '" + root_$ + "'")
+    file.depth_first% = sys.error%(sys.FAILURE, "No such file or directory '" + root_$ + "'")
     Exit Function
   EndIf
 
@@ -435,7 +457,10 @@ Function file.depth_first%(root$, callback$, xtra%)
         ' Protection from accidentally navigating above root$ which would
         ' have disasterous consequences if performing a recursive delete.
         Inc depth%, -1
-        If depth% < 0 Then Error "Safety check failed!"
+        If depth% < 0 Then
+          Error "Safety check failed!"
+          Exit Function ' So we stop even if errors are being ignored.
+        EndIf
 
         ' Update f$ to point to the entry after current$ in its parent;
         ' traversal will continue from there.

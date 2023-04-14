@@ -36,8 +36,14 @@ add_test("test_find_files_matching")
 add_test("test_find_dirs_matching")
 add_test("test_find_does_not_follow_symlinks", "test_find_with_symlinks")
 add_test("test_count_files")
+add_test("test_count_files_not_found")
+add_test("test_count_files_given_not_dir")
+add_test("test_count_files_given_invalid")
 add_test("test_get_extension")
 add_test("test_get_files")
+add_test("test_get_files_given_not_found")
+add_test("test_get_files_given_not_dir")
+add_test("test_get_files_given_invalid")
 add_test("test_trim_extension")
 add_test("test_mkdir_abs_path")
 add_test("test_mkdir_rel_path")
@@ -404,6 +410,26 @@ Sub test_count_files()
   assert_int_equals(1, file.count_files%(RSRC$ + "/snafu-dir", "*r", "dir"))
 End Sub
 
+Sub test_count_files_not_found()
+  Local f$ = TMPDIR$ + "/not_found"
+
+  assert_int_equals(sys.FAILURE, file.count_files%(f$))
+  assert_error("Not a directory '" + f$ + "'")
+End Sub
+
+Sub test_count_files_given_not_dir()
+  Local f$ = TMPDIR$ + "/not_dir"
+  ut.create_file(f$)
+
+  assert_int_equals(sys.FAILURE, file.count_files%(f$))
+  assert_error("Not a directory '" + f$ + "'")
+End Sub
+
+Sub test_count_files_given_invalid()
+  assert_int_equals(sys.FAILURE, file.count_files%(TMPDIR$, "*", "wombat"))
+  assert_error("Invalid file type 'wombat'")
+End Sub
+
 Sub test_get_extension()
   assert_string_equals(".dat", file.get_extension$("foo.dat"))
   assert_string_equals("", file.get_extension$(""))
@@ -435,58 +461,58 @@ Sub test_get_files()
   ' Type = ALL
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "*r*", "all", actual$())
+  assert_int_equals(2, file.get_files%(RSRC$ + "/snafu-dir", "*r*", "all", actual$())))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   expected$(BASE% + 1) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "*R*", "ALL", actual$())
+  assert_int_equals(2, file.get_files%(RSRC$ + "/snafu-dir", "*R*", "ALL", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   expected$(BASE% + 1) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "*xyz*", "ALL", actual$())
+  assert_int_equals(0, file.get_files%(RSRC$ + "/snafu-dir", "*xyz*", "ALL", actual$()))
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 
   ' Type = DIR
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$, "*", "dir", actual$())
+  assert_int_equals(2, file.get_files%(RSRC$, "*", "dir", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "snafu-dir"
   expected$(BASE% + 1) = "wombat-dir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$, "*fu*", "dir", actual$())
+  assert_int_equals(1, file.get_files%(RSRC$, "*fu*", "dir", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "snafu-dir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$, "*.foo", "dir", actual$())
+  assert_int_equals(0, file.get_files%(RSRC$, "*.foo", "dir", actual$()))
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "*r*", "dir", actual$())
-  array.fill(expected$(), "")
-  expected$(BASE% + 0) = "subdir"
-  assert_string_array_equals(expected$(), actual$())
-
-  array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "*R*", "DIR", actual$())
+  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*r*", "dir", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "subdir", "DIR", actual$())
+  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*R*", "DIR", actual$()))
+  array.fill(expected$(), "")
+  expected$(BASE% + 0) = "subdir"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "subdir", "DIR", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   assert_string_array_equals(expected$(), actual$())
@@ -494,21 +520,45 @@ Sub test_get_files()
   ' Type = FILE
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "*r*", "file", actual$())
+  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*r*", "file", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "*R*", "FILE", actual$())
+  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*R*", "FILE", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  file.get_files(RSRC$ + "/snafu-dir", "subdir", "FILE", actual$())
+  assert_int_equals(0, file.get_files%(RSRC$ + "/snafu-dir", "subdir", "FILE", actual$()))
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
+End Sub
+
+Sub test_get_files_given_not_found()
+  Local actual$(array.new%(10)) Length 128
+  Local f$ = TMPDIR$ + "/not_found"
+
+  assert_int_equals(sys.FAILURE, file.get_files%(f$, "*", "all", actual$()))
+  assert_error("Not a directory '" + f$ + "'")
+End Sub
+
+Sub test_get_files_given_not_dir()
+  Local actual$(array.new%(10)) Length 128
+  Local f$ = TMPDIR$ + "/not_dir"
+  ut.create_file(f$)
+
+  assert_int_equals(sys.FAILURE, file.get_files%(f$, "*", "all", actual$()))
+  assert_error("Not a directory '" + f$ + "'")
+End Sub
+
+Sub test_get_files_given_invalid()
+  Local actual$(array.new%(10)) Length 128
+
+  assert_int_equals(sys.FAILURE, file.get_files%(TMPDIR$, "*", "wombat", actual$()))
+  assert_error("Invalid file type 'wombat'")
 End Sub
 
 Sub test_trim_extension()
@@ -679,7 +729,7 @@ End Sub
 Sub test_depth_first_not_found()
   Local f$ = TMPDIR$ + "/foo"
   assert_int_equals(sys.FAILURE, file.depth_first%(f$, "depth_first_callback%", 5))
-  assert_error("File not found '" + file.get_canonical$(f$) + "'")
+  assert_error("No such file or directory '" + file.get_canonical$(f$) + "'")
 End Sub
 
 Sub test_delete_root()
@@ -697,7 +747,7 @@ Sub test_delete_given_not_found()
   Local f$ = TMPDIR$ + "/foo"
 
   assert_int_equals(sys.FAILURE, file.delete%(f$, 1))
-  assert_error("File not found '" + file.get_canonical$(f$) + "'")
+  assert_error("No such file or directory '" + file.get_canonical$(f$) + "'")
 End Sub
 
 Sub test_delete_given_file()
