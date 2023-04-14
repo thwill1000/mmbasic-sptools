@@ -41,25 +41,23 @@ Dim tr.empty_line_flag%
 ' Was the last line omitted ?
 Dim tr.omitted_line_flag%
 
-' TODO: make SUCCESS code 0
-Const tr.ERROR = 0
-Const tr.SUCCESS = 1
-Const tr.INCLUDE_FILE = 2
-Const tr.OMIT_LINE = 3
+Const tr.INCLUDE_FILE = 1
+Const tr.OMIT_LINE = 2
 
 ' Just transpile/inline #INCLUDE statements.
 '
-' @return  0  on error, see 'sys.err$' for details.
-' @return  1  if current line did not start with #INCLUDE statement.
-' @return  2  if current line started with #INCLUDE statement,
-'             the filename/path is returned in 'tr.include$'.
+' @return  sys.FAILURE      on error, see 'sys.err$' for details.
+'          sys.SUCCESS      if the current line should be included in the
+'                           output.
+'          tr.INCLUDE_FILE  if current line started with #INCLUDE statement, the
+'                           filename/path is returned in 'tr.include$'.
+'          tr.OMIT_LINE     if the current line should be omitted from the
+'                           output.
 Function tr.transpile_includes%()
   tr.include$ = ""
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
-    tr.transpile_includes% = Choice(sys.err$ = "", tr.INCLUDE_FILE, 0)
-  Else
-    tr.transpile_includes% = 1
+    tr.transpile_includes% = Choice(sys.err$ = "", tr.INCLUDE_FILE, sys.FAILURE)
   EndIf
 End Function
 
@@ -86,6 +84,8 @@ Function tr.transpile%()
         lx.reset("") ' Is this really necessary ?
         tr.omitted_line_flag% = 1
         tr.transpile% = tr.OMIT_LINE
+      Else
+        tr.transpile% = sys.FAILURE
       EndIf
       Exit Function
   End Select
@@ -105,15 +105,14 @@ Function tr.transpile%()
 
   tr.add_comments()
   tr.apply_replacements()
-  If sys.err$ <> "" Then Exit Function
+  If sys.err$ <> "" Then
+    tr.transpile% = sys.FAILURE
+    Exit Function
+  EndIf
 
-  ' IF this line is empty
-  ' AND the last line was omitted
-  ' AND the last non-omitted line was empty.
-  ' THEN omit this line.
-  If lx.num = 0 Then                          ' IF this line is empty
-    If tr.omitted_line_flag% Then             ' AND the last line was omitted
-      If tr.empty_line_flag% Then             ' AND the last non-omitted line was empty
+  If lx.num = 0 Then                  ' IF this line is empty
+    If tr.omitted_line_flag% Then     ' AND the last line was omitted
+      If tr.empty_line_flag% Then     ' AND the last non-omitted line was empty
         tr.transpile% = tr.OMIT_LINE  ' THEN omit this line.
         Exit Function
       EndIf
@@ -122,14 +121,14 @@ Function tr.transpile%()
 
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
-    tr.transpile% = Choice(sys.err$ = "", tr.INCLUDE_FILE, 0)
+    tr.transpile% = Choice(sys.err$ = "", tr.INCLUDE_FILE, sys.FAILURE)
     tr.omitted_line_flag% = 0
     Exit Function
   EndIf
 
   If lx.type(0) <> TK_DIRECTIVE Then
     tr.empty_line_flag% = (lx.num = 0)
-    tr.transpile% = Choice(opt.comments = 0, tr.remove_comments%(), 1)
+    tr.transpile% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
     tr.omitted_line_flag% = tr.transpile% = tr.OMIT_LINE
     Exit Function
   EndIf
@@ -158,7 +157,7 @@ Function tr.transpile%()
   End Select
 
   If sys.err$ <> "" Then
-    tr.transpile% = tr.ERROR
+    tr.transpile% = sys.FAILURE
   ElseIf tr.transpile% = tr.OMIT_LINE Then
     ' lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
     lx.reset("")
@@ -465,12 +464,15 @@ Function tr.process_info%()
       lx.replace_token(0, "' Preprocessor value " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
       lx.remove_token(2)
       lx.remove_token(1)
-      tr.process_info% = tr.SUCCESS
+      tr.process_info% = sys.SUCCESS
     Else
       tr.process_info% = tr.OMIT_LINE
     EndIf
   EndIf
-  If sys.err$ <> "" Then sys.err$ = "!info directive " + sys.err$
+  If sys.err$ <> "" Then
+    sys.err$ = "!info directive " + sys.err$
+    tr.process_info% = sys.FAILURE
+  EndIf
 End Function
 
 Sub tr.process_indent()
@@ -608,15 +610,12 @@ End Sub
 ' @return  tr.OMIT_LINE if as a result of calling this function the line
 '          is now empty, otherwise 1.
 Function tr.remove_comments%()
-  If lx.num = 0 Then
-    tr.remove_comments% = 1
-    Exit Function
-  EndIf
+  If lx.num = 0 Then Exit Function
 
   Local i%
   Do While i% < lx.num
     If lx.type(i%) = TK_COMMENT Then lx.remove_token(i%)
     Inc i%
   Loop
-  tr.remove_comments% = Choice(lx.num = 0, tr.OMIT_LINE, 1)
+  tr.remove_comments% = Choice(lx.num = 0, tr.OMIT_LINE, sys.SUCCESS)
 End Function

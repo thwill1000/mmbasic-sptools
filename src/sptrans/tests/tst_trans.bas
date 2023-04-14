@@ -25,8 +25,6 @@ Dim in.num_open_files = 1
 #Include "../expression.inc"
 #Include "../trans.inc"
 
-const SUCCESS = 0
-
 keywords.init()
 
 add_test("test_transpile_includes")
@@ -135,57 +133,57 @@ End Sub
 Sub test_transpile_includes()
   ' Given #INCLUDE statement.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("#include " + str.quote$("foo/bar.inc")))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("#include " + str.quote$("foo/bar.inc")))
   assert_int_equals(tr.INCLUDE_FILE, tr.transpile_includes%())
   assert_no_error()
   assert_string_equals("foo/bar.inc", tr.include$)
 
   ' Given #INCLUDE statement preceded by whitespace.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("  #include " + str.quote$("foo/bar.inc")))
-  assert_int_equals(2, tr.transpile_includes%())
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  #include " + str.quote$("foo/bar.inc")))
+  assert_int_equals(tr.INCLUDE_FILE, tr.transpile_includes%())
   assert_no_error()
   assert_string_equals("foo/bar.inc", tr.include$)
 
   ' Given #INCLUDE statement followed by whitespace.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("#include " + str.quote$("foo/bar.inc") + "  "))
-  assert_int_equals(2, tr.transpile_includes%())
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("#include " + str.quote$("foo/bar.inc") + "  "))
+  assert_int_equals(tr.INCLUDE_FILE, tr.transpile_includes%())
   assert_no_error()
   assert_string_equals("foo/bar.inc", tr.include$)
 
   ' Given other statement.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("Print " + str.quote$("Hello World")))
-  assert_int_equals(1, tr.transpile_includes%())
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Print " + str.quote$("Hello World")))
+  assert_int_equals(sys.SUCCESS, tr.transpile_includes%())
   assert_no_error()
   assert_string_equals("", tr.include$)
 
   ' Given missing argument.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("#include"))
-  assert_int_equals(0, tr.transpile_includes%())
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("#include"))
+  assert_int_equals(sys.FAILURE, tr.transpile_includes%())
   assert_error("#INCLUDE expects a <file> argument")
   assert_string_equals("", tr.include$)
 
   ' Given non-string argument.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("#include foo"))
-  assert_int_equals(0, tr.transpile_includes%())
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("#include foo"))
+  assert_int_equals(sys.FAILURE, tr.transpile_includes%())
   assert_error("#INCLUDE expects a <file> argument")
   assert_string_equals("", tr.include$)
 
   ' Given too many arguments.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("#include " + str.quote$("foo/bar.inc") + " " + str.quote$("wombat.inc")))
-  assert_int_equals(0, tr.transpile_includes%())
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("#include " + str.quote$("foo/bar.inc") + " " + str.quote$("wombat.inc")))
+  assert_int_equals(sys.FAILURE, tr.transpile_includes%())
   assert_error("#INCLUDE expects a <file> argument")
   assert_string_equals("", tr.include$)
 
   ' Given #INCLUDE is not the first token on the line.
   setup_test()
-  assert_int_equals(0, lx.parse_basic%("Dim i% : #include " + str.quote$("foo/bar.inc")))
-  assert_int_equals(1, tr.transpile_includes%())
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Dim i% : #include " + str.quote$("foo/bar.inc")))
+  assert_int_equals(sys.SUCCESS, tr.transpile_includes%())
   assert_no_error()
   assert_string_equals("", tr.include$)
 End Sub
@@ -1392,7 +1390,7 @@ Sub expect_transpile_succeeds(line$, allow_zero_tokens%)
     assert_fail("Parse failed: " + line$)
   Else
     result% = tr.transpile%()
-    If result% = tr.SUCCESS Then
+    If result% = sys.SUCCESS Then
       If Not allow_zero_tokens% And lx.num < 1 Then
         assert_fail("Transpiled line contains zero tokens: " + line$)
       EndIf
@@ -1409,7 +1407,7 @@ Sub expect_transpile_error(line$, msg$)
     assert_fail("Parse failed: " + line$)
   Else
     result% = tr.transpile%()
-    If result% = tr.ERROR Then
+    If result% = sys.FAILURE Then
       assert_error(msg$)
     Else
       assert_fail("Transpiler did not return ERROR, result = " + Str$(result%) + " : " + line$)
