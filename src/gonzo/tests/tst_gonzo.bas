@@ -37,11 +37,14 @@ If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 End
 
 Sub setup_test()
-  file.mkdir(TMPDIR$)
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  EndIf
+  MkDir TMPDIR$
 End Sub
 
 Sub teardown_test()
-  ' TODO: recursive deletion of TMPDIR$
+  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
 End Sub
 
 Sub test_parse_cl_given_empty()

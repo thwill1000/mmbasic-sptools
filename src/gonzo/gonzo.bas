@@ -34,7 +34,7 @@ Sub main()
   Local argv$(array.new%(10))
   Local cmd_line$ = str.trim$(Mm.CmdLine$)
 
-  file.mkdir("~/.gonzo")
+  If file.mkdir%("~/.gonzo") <> sys.SUCCESS Then Error sys.err$
 
   If Not gonzo.load_inifile%(INI_FILE$) Then
     con.errorln(sys.err$)

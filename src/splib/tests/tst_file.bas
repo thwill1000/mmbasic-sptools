@@ -57,13 +57,13 @@ End
 
 Sub setup_test()
   If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory: " + TMPDIR$
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
   EndIf
   MkDir TMPDIR$
 End Sub
 
 Sub teardown_test()
-  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory: " + TMPDIR$
+  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
 End Sub
 
 Sub test_get_parent()
@@ -537,87 +537,76 @@ End Sub
 
 Sub test_mkdir_abs_path()
   ' Given parent exists.
-  sys.err$ = ""
-  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path")
+  assert_int_equals(sys.SUCCESS, file.mkdir%(TMPDIR$ + "/foo"))
   assert_no_error()
-  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path"))
+  assert_true(file.is_directory%(TMPDIR$ + "/foo"))
 
   ' Given parent does not exist.
-  sys.err$ = ""
-  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path/a/b")
+  assert_int_equals(sys.SUCCESS, file.mkdir%(TMPDIR$ + "/foo/a/b"))
   assert_no_error()
-  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path/a/b"))
+  assert_true(file.is_directory%(TMPDIR$ + "/foo/a/b"))
 
   ' Given exists and is a directory.
-  sys.err$ = ""
-  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path")
+  assert_int_equals(sys.SUCCESS, file.mkdir%(TMPDIR$ + "/foo"))
   assert_no_error()
-  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path"))
+  assert_true(file.is_directory%(TMPDIR$ + "/foo"))
 
   ' Given exists and is a file.
-  sys.err$ = ""
-  ut.create_file(TMPDIR$ + "/test_mkdir_abs_path/file")
-  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path/file")
+  ut.create_file(TMPDIR$ + "/foo/file")
+  assert_int_equals(sys.FAILURE, file.mkdir%(TMPDIR$ + "/foo/file"))
   assert_error("File exists")
-  assert_false(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path/file"))
+  assert_false(file.is_directory%(TMPDIR$ + "/foo/file"))
 
   ' Given parent exists and is a file.
-  sys.err$ = ""
-  file.mkdir(TMPDIR$ + "/test_mkdir_abs_path/file/a")
+  assert_int_equals(sys.FAILURE, file.mkdir%(TMPDIR$ + "/foo/file/a"))
   assert_error("File exists")
-  assert_false(file.is_directory%(TMPDIR$ + "/test_mkdir_abs_path/file/a"))
+  assert_false(file.is_directory%(TMPDIR$ + "/foo/file/a"))
 
   ' Given root directory.
-  sys.err$ = ""
-  file.mkdir("C:/")
+  assert_int_equals(sys.SUCCESS, file.mkdir%("C:/"))
   assert_no_error()
-  file.mkdir("C:\")
+  assert_int_equals(sys.SUCCESS, file.mkdir%("C:\"))
   assert_no_error()
-  file.mkdir("C:")
+  assert_int_equals(sys.SUCCESS, file.mkdir%("C:"))
   assert_no_error()
   If Mm.Device$ <> "MMBasic for Windows" Then
-    file.mkdir("/")
+    assert_int_equals(sys.SUCCESS, file.mkdir%("/"))
     assert_no_error()
-    file.mkdir("\")
+    assert_int_equals(sys.SUCCESS, file.mkdir%("\"))
     assert_no_error()
   EndIf
 End Sub
 
 Sub test_mkdir_rel_path()
-  file.mkdir(TMPDIR$ + "/test_mkdir_rel_path")
+  assert_int_equals(sys.SUCCESS, file.mkdir%(TMPDIR$ + "/foo"))
   Local old_cwd$ = Cwd$
-  ChDir TMPDIR$ + "/test_mkdir_rel_path"
+  ChDir TMPDIR$ + "/foo"
 
   ' Given parent exists.
-  sys.err$ = ""
-  file.mkdir("./subdir")
+  assert_int_equals(sys.SUCCESS, file.mkdir%("./subdir"))
   assert_no_error()
-  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/subdir"))
+  assert_true(file.is_directory%(TMPDIR$ + "/foo/subdir"))
 
   ' Given parent does not exist.
-  sys.err$ = ""
-  file.mkdir("a/b")
+  assert_int_equals(sys.SUCCESS, file.mkdir%("a/b"))
   assert_no_error()
-  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/a/b"))
+  assert_true(file.is_directory%(TMPDIR$ + "/foo/a/b"))
 
   ' Given exists and is a directory.
-  sys.err$ = ""
-  file.mkdir("a")
+  assert_int_equals(sys.SUCCESS, file.mkdir%("a"))
   assert_no_error()
-  assert_true(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/a"))
+  assert_true(file.is_directory%(TMPDIR$ + "/foo/a"))
 
   ' Given exists and is a file.
-  sys.err$ = ""
   ut.create_file("file")
-  file.mkdir(TMPDIR$ + "/test_mkdir_rel_path/file")
+  assert_int_equals(sys.FAILURE, file.mkdir%(TMPDIR$ + "/foo/file"))
   assert_error("File exists")
   assert_false(file.is_directory%("file"))
 
   ' Given parent exists and is a file.
-  sys.err$ = ""
-  file.mkdir("file/a")
+  assert_int_equals(sys.FAILURE, file.mkdir%("file/a"))
   assert_error("File exists")
-  assert_false(file.is_directory%(TMPDIR$ + "/test_mkdir_rel_path/file/a"))
+  assert_false(file.is_directory%(TMPDIR$ + "/foo/file/a"))
 
   ' Cleanup.
   ChDir old_cwd$

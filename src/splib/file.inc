@@ -386,16 +386,17 @@ Function file.is_symlink%(f$)
 End Function
 
 ' Makes directory 'f$' and its parents if they do not already exist.
-Sub file.mkdir(f$)
+Function file.mkdir%(f$)
   Local ad%, faddr% = Peek(VarAddr f$), parent$
+  sys.err$ = ""
   For ad% = faddr% To faddr% + Len(f$)
     Select Case Peek(Byte ad%)
       Case 47, 92 ' / and \
         parent$ = Left$(f$, ad% - faddr% - 1)
         If file.exists%(parent$) Then
           If Not file.is_directory%(parent$) Then
-            sys.err$ = "File exists"
-            Exit Sub
+            file.mkdir% = sys.error%(sys.FAILURE, "File exists")
+            Exit Function
           EndIf
         Else
           If parent$ <> "" Then MkDir parent$
@@ -403,11 +404,11 @@ Sub file.mkdir(f$)
     End Select
   Next
   If file.exists%(f$) Then
-    If Not file.is_directory%(f$) Then sys.err$ = "File exists"
+    If Not file.is_directory%(f$) Then file.mkdir% = sys.error%(sys.FAILURE, "File exists")
   Else
     MkDir f$
   EndIf
-End Sub
+End Function
 
 ' Performs depth-first recursion of the filesystem from a given root$
 ' calling the supplied callback$ function for each file encountered.
