@@ -2,7 +2,7 @@
 
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.06
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
@@ -86,8 +86,7 @@ Sub main()
   EndIf
 
   cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
-  in.open(opt.infile$)
-  If sys.err$ <> "" Then cerror(sys.err$)
+  If in.open%(opt.infile$) <> sys.SUCCESS Then cerror(sys.err$)
   cout(in.files$(0)) : cendl()
   cout("   ")
 
@@ -134,11 +133,12 @@ End Sub
 Sub open_include()
   Local s$ = lx.line$
   s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
-  If lx.parse_basic%(s$) = 0 Then in.open(tr.include$)
-  If sys.err$ = "" Then
-    Local i = in.num_open_files%
-    cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
-    cout(" " + Space$(i * 2))
+  If lx.parse_basic%(s$) = sys.SUCCESS Then
+    If in.open%(tr.include$) = sys.SUCCESS Then
+      Local i = in.num_open_files%
+      cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
+      cout(" " + Space$(i * 2))
+    EndIf
   EndIf
 End Sub
 

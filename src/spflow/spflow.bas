@@ -79,8 +79,7 @@ Sub main()
   For pass = 1 To 2
     Print "PASS" pass
 
-    in.open(opt.infile$)
-    If sys.err$ <> "" Then cerror(sys.err$)
+    If in.open%(opt.infile$) <> sys.SUCCESS Then cerror(sys.err$)
     cout(in.files$(0)) : cendl()
     cout("   ")
 
@@ -130,8 +129,8 @@ Sub handle_include()
   If sys.err$ <> "" Then Exit Sub
   If lx.num < 2 Or lx.type(1) <> TK_STRING Then sys.err$ = "#Include expects a <file> argument"
   If lx.num > 2 Then sys.err$ = "#Include has too many arguments"
-  If sys.err$ = "" Then in.open(lx.string$(1))
-  If sys.err$ = "" Then
+  If sys.err$ <> "" Then Exit Sub
+  If in.open%(lx.string$(1)) = sys.SUCCESS Then
     Local i = in.num_open_files%
     cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
     cout(" " + Space$(i * 2))

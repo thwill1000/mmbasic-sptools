@@ -23,6 +23,7 @@ Const CR$ = Chr$(13)
 #Include "../sptrans/keywords.inc"
 #Include "../sptrans/lexer.inc"
 #Include "../sptrans/options.inc"
+#Include "../sptrans/defines.inc"
 #Include "../sptrans/output.inc"
 #Include "../sptrans/pprint.inc"
 #Include "bas2js_trans.inc"
@@ -65,7 +66,7 @@ Sub main()
     opt.colour = 0
   EndIf
 
-  keywords.load()
+  keywords.init()
 
   ' No line numbers when output to file.
   If opt.outfile$ <> "" Then out.line_num_fmt$ = ""
@@ -81,8 +82,7 @@ Sub main()
   EndIf
 
   cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
-  in.open(opt.infile$)
-  If sys.err$ <> "" Then cerror(sys.err$)
+  If in.open%(opt.infile$) <> sys.SUCCESS Then cerror(sys.err$)
   cout(in.files$(0)) : cendl()
   cout("   ")
 
@@ -117,11 +117,12 @@ End Sub
 Sub open_include()
   Local s$ = lx.line$
   s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
-  If lx.parse_basic%(s$) = 0 Then in.open(tr.include$)
-  If sys.err$ = "" Then
-    Local i = in.num_open_files%
-    cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
-    cout(" " + Space$(i * 2))
+  If lx.parse_basic%(s$) = sys.SUCCESS Then
+    If in.open%(tr.include$) = sys.SUCCESS Then
+      Local i = in.num_open_files%
+      cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
+      cout(" " + Space$(i * 2))
+    EndIf
   EndIf
 End Sub
 

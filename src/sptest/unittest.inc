@@ -520,7 +520,8 @@ Sub ut.print_colour(c$)
 End Sub
 
 ' Creates an empty file.
-Sub ut.create_file(f$)
-  Open f$ For Output As #1
-  Close #1
+Sub ut.create_file(f$, fnbr%)
+  Local fnbr_% = Choice(fnbr%, fnbr%, 1)
+  Open f$ For Output As fnbr_%
+  Close fnbr_%
 End Sub
