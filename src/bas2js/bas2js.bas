@@ -91,7 +91,7 @@ Sub main()
     cout(BS$ + Mid$("\|/-", ((in.line_num(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
     s$ = in.readln$()
-    If lx.parse_basic%(s$) = 0 Then
+    If lx.parse_basic%(s$) = sys.SUCCESS Then
       If Not opt.format_only Then tr.transpile()
       If tr.include$ <> "" Then open_include()
     EndIf
@@ -129,7 +129,7 @@ End Sub
 Sub close_include()
   Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
-  If lx.parse_basic%(s$) = 0 Then pp.print_line()
+  If lx.parse_basic%(s$) = sys.SUCCESS Then pp.print_line()
   If sys.err$ = "" Then in.close()
 End Sub
 

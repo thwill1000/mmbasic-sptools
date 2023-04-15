@@ -20,8 +20,6 @@ Option Default Integer
 #Include "../defines.inc"
 #Include "../expression.inc"
 
-const SUCCESS = 0
-
 keywords.init()
 
 add_test("test_eval_fundamentals")
@@ -86,12 +84,12 @@ End Sub
 
 Sub run_eval_test(expr$, expected%)
   Local result%
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!if " + expr$))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!if " + expr$))
   If expected% = -1 Then
     assert_int_equals(-1, ex.eval%(1, result%))
     assert_error("Invalid expression syntax")
   Else
-    assert_int_equals(SUCCESS, ex.eval%(1, result%))
+    assert_int_equals(sys.SUCCESS, ex.eval%(1, result%))
     Local msg$ = "Expected { " + expr$ + " } to evaluate to " + Str$(expected%)
     Cat msg$, ", but was " + Str$(result%))
     assert_true(result% = expected%, msg$)

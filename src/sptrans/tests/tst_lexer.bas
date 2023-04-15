@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.06
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
@@ -17,9 +17,6 @@ Option Default Integer
 #Include "../../common/sptools.inc"
 #Include "../keywords.inc"
 #Include "../lexer.inc"
-
-const SUCCESS = 0
-const FAILURE = -1
 
 keywords.init()
 
@@ -58,58 +55,58 @@ run_tests()
 End
 
 Sub test_binary_literals()
-  assert_int_equals(SUCCESS, lx.parse_basic%("&b1001001"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&b1001001"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "&b1001001")
 
   ' Because the lexer accepts BBC micro-style hex numbers this is
   ' not considered a syntax error, and nor does it result in two
   ' separate tokens "&B01" and "23456789".
-  assert_int_equals(SUCCESS, lx.parse_basic%("&B0123456789"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&B0123456789"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "&B0123456789")
 End Sub
 
 Sub test_comments()
-  assert_int_equals(SUCCESS, lx.parse_basic%("' This is a comment"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("' This is a comment"))
   expect_num_tokens(1)
   expect_tk(0, TK_COMMENT, "' This is a comment");
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("REM This is also a comment"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("REM This is also a comment"))
   expect_num_tokens(1)
   expect_tk(0, TK_COMMENT, "REM This is also a comment");
 End Sub
 
 Sub test_directives()
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!comment_if foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!comment_if foo"))
   expect_num_tokens(2)
   expect_tk(0, TK_DIRECTIVE, "'!comment_if")
   expect_tk(1, TK_IDENTIFIER, "foo")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!empty-lines off"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!empty-lines off"))
   expect_num_tokens(2)
   expect_tk(0, TK_DIRECTIVE, "'!empty-lines")
   expect_tk(1, TK_KEYWORD, "off")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!ifdef foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!ifdef foo"))
   expect_num_tokens(2)
   expect_tk(0, TK_DIRECTIVE, "'!ifdef")
   expect_tk(1, TK_IDENTIFIER, "foo")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!ifndef foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!ifndef foo"))
   expect_num_tokens(2)
   expect_tk(0, TK_DIRECTIVE, "'!ifndef")
   expect_tk(1, TK_IDENTIFIER, "foo")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!elif"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!elif"))
   expect_num_tokens(1)
   expect_tk(0, TK_DIRECTIVE, "'!elif")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!endif"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!endif"))
   expect_num_tokens(1)
   expect_tk(0, TK_DIRECTIVE, "'!endif")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!info defined foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!info defined foo"))
   expect_num_tokens(3)
   expect_tk(0, TK_DIRECTIVE, "'!info")
   expect_tk(1, TK_IDENTIFIER, "defined")
@@ -117,7 +114,7 @@ Sub test_directives()
 End Sub
 
 Sub test_directive_given_comments()
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!endif ' my comment"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!endif ' my comment"))
   expect_num_tokens(2)
   expect_tk(0, TK_DIRECTIVE, "'!endif")
   expect_tk(1, TK_COMMENT, "' my comment")
@@ -125,20 +122,20 @@ End Sub
 
 ' A directive should only be recognised as such if it is the first token on a line
 Sub test_directive_given_not_first()
-  assert_int_equals(SUCCESS, lx.parse_basic%("PRINT '!ifdef FOO"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("PRINT '!ifdef FOO"))
   expect_num_tokens(2)
   expect_tk(0, TK_KEYWORD, "PRINT")
   expect_tk(1, TK_COMMENT, "'!ifdef FOO")
 End Sub
 
 Sub test_replace_directives()
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!replace DEF Sub"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!replace DEF Sub"))
   expect_num_tokens(3)
   expect_tk(0, TK_DIRECTIVE, "'!replace")
   expect_tk(1, TK_KEYWORD,   "DEF")
   expect_tk(2, TK_KEYWORD,   "Sub")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!replace ENDPROC { End Sub }"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!replace ENDPROC { End Sub }"))
   expect_num_tokens(6)
   expect_tk(0, TK_DIRECTIVE, "'!replace")
   expect_tk(1, TK_KEYWORD,   "ENDPROC")
@@ -147,7 +144,7 @@ Sub test_replace_directives()
   expect_tk(4, TK_KEYWORD,   "Sub")
   expect_tk(5, TK_SYMBOL,    "}")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!replace { THEN ENDPROC } { Then Exit Sub }"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!replace { THEN ENDPROC } { Then Exit Sub }"))
   expect_num_tokens(10)
   expect_tk(0, TK_DIRECTIVE, "'!replace")
   expect_tk(1, TK_SYMBOL,    "{")
@@ -160,7 +157,7 @@ Sub test_replace_directives()
   expect_tk(8, TK_KEYWORD,   "Sub")
   expect_tk(9, TK_SYMBOL,    "}")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!replace GOTO%d { Goto %1 }"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!replace GOTO%d { Goto %1 }"))
   expect_num_tokens(6)
   expect_tk(0, TK_DIRECTIVE, "'!replace")
   expect_tk(1, TK_KEYWORD,   "GOTO%d")
@@ -169,7 +166,7 @@ Sub test_replace_directives()
   expect_tk(4, TK_KEYWORD,   "%1")
   expect_tk(5, TK_SYMBOL,    "}")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!replace { THEN %d } { Then Goto %1 }"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!replace { THEN %d } { Then Goto %1 }"))
   expect_num_tokens(10)
   expect_tk(0, TK_DIRECTIVE, "'!replace")
   expect_tk(1, TK_SYMBOL,    "{")
@@ -183,7 +180,7 @@ Sub test_replace_directives()
   expect_tk(9, TK_SYMBOL,    "}")
 
   ' Apostrophes inside directives are accepted as identifier characters.
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!replace '%% { CRLF %1 }"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!replace '%% { CRLF %1 }"))
   expect_num_tokens(6)
   expect_tk(0, TK_DIRECTIVE, "'!replace")
   expect_tk(1, TK_KEYWORD,   "'%%")
@@ -193,7 +190,7 @@ Sub test_replace_directives()
   expect_tk(5, TK_SYMBOL,    "}")
 
   ' REM commands inside directives are treated as keywords not as the prefix of a comment.
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!replace REM foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!replace REM foo"))
   expect_num_tokens(3)
   expect_tk(0, TK_DIRECTIVE, "'!replace")
   expect_tk(1, TK_KEYWORD,   "REM")
@@ -201,31 +198,31 @@ Sub test_replace_directives()
 End Sub
 
 Sub test_includes()
-  assert_int_equals(SUCCESS, lx.parse_basic%("#Include " + str.quote$("foo.inc")))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("#Include " + str.quote$("foo.inc")))
   expect_num_tokens(2)
   expect_tk(0, TK_KEYWORD, "#Include")
   expect_tk(1, TK_STRING, str.quote$("foo.inc"))
 End Sub
 
 Sub test_hexadecimal_literals()
-  assert_int_equals(SUCCESS, lx.parse_basic%("&hABCDEF"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&hABCDEF"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "&hABCDEF")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("&Habcdefghijklmn"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&Habcdefghijklmn"))
   expect_num_tokens(2)
   expect_tk(0, TK_NUMBER, "&Habcdef")
   expect_tk(1, TK_IDENTIFIER, "ghijklmn")
 
   ' To facilitate transpiling BBC Basic source code the lexer accepts
   ' hex numbers which begin just & instead of &h.
-  assert_int_equals(SUCCESS, lx.parse_basic%("&ABCDEF"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&ABCDEF"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "&ABCDEF")
 End Sub
 
 Sub test_identifiers()
-  assert_int_equals(SUCCESS, lx.parse_basic%("xx s$ foo.bar wom.bat$ a! b%"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("xx s$ foo.bar wom.bat$ a! b%"))
   expect_num_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "xx")
   expect_tk(1, TK_IDENTIFIER, "s$")
@@ -236,26 +233,26 @@ Sub test_identifiers()
 End Sub
 
 Sub test_integer_literals()
-  assert_int_equals(SUCCESS, lx.parse_basic%("421"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("421"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "421")
 End Sub
 
 Sub test_integer_literals_with_e()
   ' If there is just a trailing E then it is part of the number literal.
-  assert_int_equals(SUCCESS, lx.parse_basic%("12345E"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("12345E"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER,     "12345E")
 
   ' Otherwise it is the start of a separate identifier.
-  assert_int_equals(SUCCESS, lx.parse_basic%("12345ENDPROC"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("12345ENDPROC"))
   expect_num_tokens(2)
   expect_tk(0, TK_NUMBER,     "12345")
   expect_tk(1, TK_IDENTIFIER, "ENDPROC")
 End Sub
 
 Sub test_keywords()
-  assert_int_equals(SUCCESS, lx.parse_basic%("For Next Do Loop Chr$"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("For Next Do Loop Chr$"))
   expect_num_tokens(5)
   expect_tk(0, TK_KEYWORD, "For")
   expect_tk(1, TK_KEYWORD, "Next")
@@ -263,7 +260,7 @@ Sub test_keywords()
   expect_tk(3, TK_KEYWORD, "Loop")
   expect_tk(4, TK_KEYWORD, "Chr$")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  #gps @ YELLOW  "))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  #gps @ YELLOW  "))
   expect_num_tokens(3)
   expect_tk(0, TK_KEYWORD, "#gps")
   expect_tk(1, TK_KEYWORD, "@")
@@ -271,51 +268,51 @@ Sub test_keywords()
 End Sub
 
 Sub test_octal_literals()
-  assert_int_equals(SUCCESS, lx.parse_basic%("&O1234"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&O1234"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "&O1234")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("&O123456789"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&O123456789"))
   expect_num_tokens(2)
   expect_tk(0, TK_NUMBER, "&O1234567")
   expect_tk(1, TK_NUMBER, "89")
 End Sub
 
 Sub test_real_literals()
-  assert_int_equals(SUCCESS, lx.parse_basic%("3.421"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("3.421"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "3.421")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("3.421e5"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("3.421e5"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "3.421e5")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("3.421e-17"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("3.421e-17"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "3.421e-17")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("3.421e+17"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("3.421e+17"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, "3.421e+17")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%(".3421"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(".3421"))
   expect_num_tokens(1)
   expect_tk(0, TK_NUMBER, ".3421")
 End Sub
 
 Sub test_string_literals()
-  assert_int_equals(SUCCESS, lx.parse_basic%(str.quote$("This is a string")))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(str.quote$("This is a string")))
   expect_num_tokens(1)
   expect_tk(0, TK_STRING, str.quote$("This is a string"))
 End Sub
 
 Sub test_string_no_closing_quote()
-  assert_int_equals(FAILURE, lx.parse_basic%(Chr$(34) + "String literal with no closing quote"))
+  assert_int_equals(sys.FAILURE, lx.parse_basic%(Chr$(34) + "String literal with no closing quote"))
   assert_error("No closing quote")
 End Sub
 
 Sub test_symbols()
-  assert_int_equals(SUCCESS, lx.parse_basic%("a=b/c*d\e<=f=<g>=h=>i:j;k,l<m>n"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("a=b/c*d\e<=f=<g>=h=>i:j;k,l<m>n"))
   expect_num_tokens(27)
   expect_tk(0, TK_IDENTIFIER, "a")
   expect_tk(1, TK_SYMBOL, "=")
@@ -345,7 +342,7 @@ Sub test_symbols()
   expect_tk(25, TK_SYMBOL, ">")
   expect_tk(26, TK_IDENTIFIER, "n")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("a$(i + 1)"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("a$(i + 1)"))
   expect_num_tokens(6)
   expect_tk(0, TK_IDENTIFIER, "a$")
   expect_tk(1, TK_SYMBOL, "(")
@@ -354,7 +351,7 @@ Sub test_symbols()
   expect_tk(4, TK_NUMBER, "1")
   expect_tk(5, TK_SYMBOL, ")")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("xx=xx+1"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("xx=xx+1"))
   expect_num_tokens(5)
   expect_tk(0, TK_IDENTIFIER, "xx")
   expect_tk(1, TK_SYMBOL, "=")
@@ -364,41 +361,41 @@ Sub test_symbols()
 End Sub
 
 Sub test_extended_symbols()
-  assert_int_equals(SUCCESS, lx.parse_basic%("&& ||"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("&& ||"))
   expect_num_tokens(2)
   expect_tk(0, TK_SYMBOL, "&&")
   expect_tk(1, TK_SYMBOL, "||")
 End Sub
 
 Sub test_labels()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  label:"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  label:"))
   expect_num_tokens(1)
   expect_tk(0, TK_LABEL, "label:")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  label: not_a_label:"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  label: not_a_label:"))
   expect_num_tokens(3)
   expect_tk(0, TK_LABEL,      "label:")
   expect_tk(1, TK_IDENTIFIER, "not_a_label")
   expect_tk(2, TK_SYMBOL,     ":")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  not_a_label : not_a_label:"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  not_a_label : not_a_label:"))
   expect_num_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "not_a_label")
   expect_tk(1, TK_SYMBOL,     ":")
   expect_tk(2, TK_IDENTIFIER, "not_a_label")
   expect_tk(3, TK_SYMBOL,     ":")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  1234: ' label"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  1234: ' label"))
   expect_num_tokens(2)
   expect_tk(0, TK_LABEL,   "1234:")
   expect_tk(1, TK_COMMENT, "' label")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  1234 ' not a label"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  1234 ' not a label"))
   expect_num_tokens(2)
   expect_tk(0, TK_NUMBER,  "1234")
   expect_tk(1, TK_COMMENT, "' not a label")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  foo 1234: ' not a label"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  foo 1234: ' not a label"))
   expect_num_tokens(4)
   expect_tk(0, TK_IDENTIFIER, "foo")
   expect_tk(1, TK_NUMBER,     "1234")
@@ -408,7 +405,7 @@ Sub test_labels()
 End Sub
 
 Sub test_get_number()
-  assert_int_equals(SUCCESS, lx.parse_basic%("1 2 3.14 3.14e-15"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("1 2 3.14 3.14e-15"))
   assert_float_equals(1, lx.number!(0))
   assert_float_equals(2, lx.number!(1))
   assert_float_equals(3.14, lx.number!(2))
@@ -416,25 +413,25 @@ Sub test_get_number()
 End Sub
 
 Sub test_get_string()
-  assert_int_equals(SUCCESS, lx.parse_basic%(str.quote$("foo") + " " + str.quote$("wom bat")))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(str.quote$("foo") + " " + str.quote$("wom bat")))
   assert_string_equals("foo", lx.string$(0))
   assert_string_equals("wom bat", lx.string$(1))
 End Sub
 
 Sub test_get_directive()
-  assert_int_equals(SUCCESS, lx.parse_basic%("'!foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'!foo"))
   assert_string_equals("!foo", lx.directive$(0))
 End Sub
 
 Sub test_get_token_lc()
-  assert_int_equals(SUCCESS, lx.parse_basic%("FOO '!BAR 1E7"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("FOO '!BAR 1E7"))
   assert_string_equals("foo", lx.token_lc$(0))
   assert_string_equals("'!bar 1e7", lx.token_lc$(1))
 End Sub
 
 Sub test_parse_command_line()
-  ' assert_int_equals(SUCCESS, lx.parse_command_line%("--foo -bar /wombat"))
-  assert_int_equals(SUCCESS, lx.parse_command_line%("--foo -bar"))
+  ' assert_int_equals(sys.SUCCESS, lx.parse_command_line%("--foo -bar /wombat"))
+  assert_int_equals(sys.SUCCESS, lx.parse_command_line%("--foo -bar"))
   assert_string_equals("--foo", lx.token_lc$(0))
   assert_string_equals("foo", lx.option$(0))
   assert_string_equals("-bar", lx.token_lc$(1))
@@ -442,25 +439,25 @@ Sub test_parse_command_line()
   ' assert_string_equals("/wombat", lx.token_lc$(2))
   ' assert_string_equals("wombat", lx.option$(2))
 
-  assert_int_equals(FAILURE, lx.parse_command_line%("--"))
+  assert_int_equals(sys.FAILURE, lx.parse_command_line%("--"))
   assert_error("Illegal command-line option format: --")
 
-  assert_int_equals(FAILURE, lx.parse_command_line%("-"))
+  assert_int_equals(sys.FAILURE, lx.parse_command_line%("-"))
   assert_error("Illegal command-line option format: -")
 
-  ' assert_int_equals(FAILURE, lx.parse_command_line%("/"))
+  ' assert_int_equals(sys.FAILURE, lx.parse_command_line%("/"))
   ' assert_error("Illegal command-line option format: /")
 
-  assert_int_equals(FAILURE, lx.parse_command_line%("--foo@ bar"))
+  assert_int_equals(sys.FAILURE, lx.parse_command_line%("--foo@ bar"))
   assert_error("Illegal command-line option format: --foo@")
 
   ' Given hyphen in unquoted argument.
-  assert_int_equals(SUCCESS, lx.parse_command_line%("foo-bar.bas"))
+  assert_int_equals(sys.SUCCESS, lx.parse_command_line%("foo-bar.bas"))
   assert_string_equals("foo-bar.bas", lx.token$(0))
   assert_int_equals(TK_IDENTIFIER, lx.type(0))
 
   ' Given forward slash in unquoted argument.
-  assert_int_equals(SUCCESS, lx.parse_command_line%("foo/bar.bas"))
+  assert_int_equals(sys.SUCCESS, lx.parse_command_line%("foo/bar.bas"))
   assert_string_equals("foo/bar.bas", lx.token$(0))
   assert_int_equals(TK_IDENTIFIER, lx.type(0))
 End Sub
@@ -468,10 +465,10 @@ End Sub
 Sub test_old_tokens_cleared()
   Local i
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("Dim s$(20) Length 20"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Dim s$(20) Length 20"))
   assert_int_equals(7, lx.num)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("' comment"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("' comment"))
   assert_int_equals(1, lx.num)
   For i = 1 To 10
     assert_int_equals(0, lx.type(i))
@@ -482,7 +479,7 @@ End Sub
 
 Sub test_csub()
   ' Within the confines of the CSUB we expect numbers to be treated as identifiers.
-  assert_int_equals(SUCCESS, lx.parse_basic%("CSub foo() 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End CSub"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("CSub foo() 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End CSub"))
   expect_num_tokens(13)
   expect_tk(0,  TK_KEYWORD,    "CSub")
   expect_tk(1,  TK_IDENTIFIER, "foo")
@@ -499,14 +496,14 @@ Sub test_csub()
   expect_tk(12, TK_KEYWORD,    "CSub")
 
   ' But once we get outside the CSUB numbers and identifiers are distinct again.
-  assert_int_equals(SUCCESS, lx.parse_basic%("0.12345 00AABBCC"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("0.12345 00AABBCC"))
   expect_num_tokens(3)
   expect_tk(0, TK_NUMBER,     "0.12345")
   expect_tk(1, TK_NUMBER,     "00")
   expect_tk(2, TK_IDENTIFIER, "AABBCC")
 
   ' It should also work when the CSUB is split over multiple lines.
-  assert_int_equals(SUCCESS, lx.parse_basic%("CSub foo() ' comment"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("CSub foo() ' comment"))
   expect_num_tokens(5)
   expect_tk(0,  TK_KEYWORD,    "CSub")
   expect_tk(1,  TK_IDENTIFIER, "foo")
@@ -514,11 +511,11 @@ Sub test_csub()
   expect_tk(3,  TK_SYMBOL,     ")")
   expect_tk(4,  TK_COMMENT,    "' comment")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  00000000"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  00000000"))
   expect_num_tokens(1)
   expect_tk(0,  TK_IDENTIFIER, "00000000")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF"))
   expect_num_tokens(6)
   expect_tk(0,  TK_IDENTIFIER, "00AABBCC")
   expect_tk(1,  TK_IDENTIFIER, "0.7")
@@ -527,12 +524,12 @@ Sub test_csub()
   expect_tk(4,  TK_IDENTIFIER, "&o1234")
   expect_tk(5, TK_IDENTIFIER, "FFFFFFFF")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("End CSub"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("End CSub"))
   expect_num_tokens(2)
   expect_tk(0, TK_KEYWORD, "End")
   expect_tk(1, TK_KEYWORD, "CSub")
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("0.12345 00AABBCC"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("0.12345 00AABBCC"))
   expect_num_tokens(3)
   expect_tk(0, TK_NUMBER,     "0.12345")
   expect_tk(1, TK_NUMBER,     "00")
@@ -541,21 +538,21 @@ End Sub
 
 Sub test_insert_token()
   ' Test insertion into an empty line.
-  assert_int_equals(SUCCESS, lx.parse_basic%(""))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(""))
   lx.insert_token(0, "foo", TK_IDENTIFIER)
   assert_string_equals("foo", lx.line$)
   expect_num_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "foo", 1)
 
   ' Test insertion into a line only containing whitespace.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  "))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  "))
   lx.insert_token(0, "foo", TK_IDENTIFIER)
   assert_string_equals("  foo", lx.line$)
   expect_num_tokens(1)
   expect_tk(0, TK_IDENTIFIER, "foo", 3)
 
   ' Test insertion before the first token.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  foo"))
   lx.insert_token(0, "bar", TK_IDENTIFIER)
   assert_string_equals("  bar foo", lx.line$)
   expect_num_tokens(2)
@@ -563,7 +560,7 @@ Sub test_insert_token()
   expect_tk(1, TK_IDENTIFIER, "foo", 7)
 
   ' Test insertion after the last token.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  foo"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  foo"))
   lx.insert_token(1, "bar", TK_IDENTIFIER)
   assert_string_equals("  foo bar", lx.line$)
   expect_num_tokens(2)
@@ -571,7 +568,7 @@ Sub test_insert_token()
   expect_tk(1, TK_IDENTIFIER, "bar", 7)
 
   ' Test insertion between two tokens.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  foo  bar"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  foo  bar"))
   lx.insert_token(1, "wombat", TK_IDENTIFIER)
   assert_string_equals("  foo wombat  bar", lx.line$)
   expect_num_tokens(3)
@@ -582,7 +579,7 @@ End Sub
 
 Sub test_remove_token()
   ' Test removing the first (index = 0) token.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1 token2  token3"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1 token2  token3"))
   lx.remove_token(0)
   assert_string_equals("  token2  token3", lx.line$)
   expect_num_tokens(2)
@@ -590,7 +587,7 @@ Sub test_remove_token()
   expect_tk(1, TK_IDENTIFIER, "token3", 11)
 
   ' Test removing the last token.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1 token2  token3"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1 token2  token3"))
   lx.remove_token(2)
   assert_string_equals("  token1 token2", lx.line$)
   expect_num_tokens(2)
@@ -598,7 +595,7 @@ Sub test_remove_token()
   expect_tk(1, TK_IDENTIFIER, "token2", 10)
 
   ' Test removing an intermediate token.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1 token2  token3"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1 token2  token3"))
   lx.remove_token(1)
   assert_string_equals("  token1  token3", lx.line$)
   expect_num_tokens(2)
@@ -606,13 +603,13 @@ Sub test_remove_token()
   expect_tk(1, TK_IDENTIFIER, "token3", 11)
 
   ' Test removing the only token.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1  "))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1  "))
   lx.remove_token(0)
   assert_string_equals("  ", lx.line$)
   expect_num_tokens(0)
 
   ' Test something more interesting.
-  assert_int_equals(SUCCESS, lx.parse_basic%("let y(3) = (" + str.quote$("foo") + ", " + str.quote$("bar") + ")"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("let y(3) = (" + str.quote$("foo") + ", " + str.quote$("bar") + ")"))
   lx.remove_token(2)
   lx.remove_token(2)
   lx.remove_token(2)
@@ -630,7 +627,7 @@ End Sub
 
 Sub test_replace_token()
   ' Test replacing the first (index = 0) token.
-  assert_int_equals(SUCCESS, lx.parse_basic%(" one  two   three"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(" one  two   three"))
   lx.replace_token(0, "wombat", TK_KEYWORD)
   assert_string_equals(" wombat  two   three", lx.line$)
   expect_num_tokens(3)
@@ -639,7 +636,7 @@ Sub test_replace_token()
   expect_tk(2, TK_IDENTIFIER, "three", 16)
 
   ' Test replacing an intermediate token.
-  assert_int_equals(SUCCESS, lx.parse_basic%(" one  two   three"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(" one  two   three"))
   lx.replace_token(1, "wombat", TK_KEYWORD)
   assert_string_equals(" one  wombat   three", lx.line$)
   expect_num_tokens(3)
@@ -648,7 +645,7 @@ Sub test_replace_token()
   expect_tk(2, TK_IDENTIFIER, "three", 16)
 
   ' Test replacing the last token.
-  assert_int_equals(SUCCESS, lx.parse_basic%(" one  two   three"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(" one  two   three"))
   lx.replace_token(2, "wombat", TK_KEYWORD)
   assert_string_equals(" one  two   wombat", lx.line$)
   expect_num_tokens(3)
@@ -657,7 +654,7 @@ Sub test_replace_token()
   expect_tk(2, TK_KEYWORD, "wombat", 13)
 
   ' Test replacing the only token.
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1  "))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1  "))
   lx.replace_token(0, "wombat", TK_KEYWORD)
   assert_string_equals("  wombat  ", lx.line$)
   expect_num_tokens(1)

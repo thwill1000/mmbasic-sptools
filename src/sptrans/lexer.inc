@@ -43,7 +43,10 @@ Dim lx.num         ' number of tokens.
 Dim lx.pos
 Dim lx.csub        ' 1 if we are tokenising within a CSUB definition, otherwise 0.
 
-' @return  0 on success, otherwise -1 and sets 'sys.err$'.
+' Parses a line of BASIC code.
+'
+' @param   the line to parse.
+' @return  sys.SUCCESS on success, otherwise sys.FAILURE and sets 'sys.err$'.
 Function lx.parse_basic%(line$)
   lx.reset(line$)
   lx.advance()
@@ -68,7 +71,7 @@ Function lx.parse_basic%(line$)
     EndIf
 
     If sys.err$ <> "" Then
-      lx.parse_basic% = -1
+      lx.parse_basic% = sys.FAILURE
       Exit Do
     EndIf
   Loop

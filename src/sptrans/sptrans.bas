@@ -98,7 +98,7 @@ Sub main()
 
     s$ = in.readln$()
     trok% = 0
-    If lx.parse_basic%(s$) = 0 Then
+    If lx.parse_basic%(s$) = sys.SUCCESS Then
       If opt.format_only Then
         trok% = Choice(opt.comments = 0, tr.remove_comments%(), 1)
       ElseIf opt.include_only Then
@@ -145,7 +145,7 @@ End Sub
 Sub close_include()
   Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
   s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
-  If lx.parse_basic%(s$) = 0 Then pp.print_line(1)
+  If lx.parse_basic%(s$) = sys.SUCCESS Then pp.print_line(1)
   If sys.err$ = "" Then in.close()
 End Sub
 

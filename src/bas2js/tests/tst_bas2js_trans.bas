@@ -22,8 +22,6 @@ Dim in.num_open_files = 1
 #Include "../../sptrans/lexer.inc"
 #Include "../bas2js_trans.inc"
 
-Const SUCCESS = 0
-
 keywords.init()
 
 add_test("test_insert_token")
@@ -50,7 +48,7 @@ Sub teardown_test()
 End Sub
 
 Sub test_insert_token()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1 token2"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1 token2"))
   tr.current% = 0
   tr.insert_token("tokenA", TK_IDENTIFIER)
 
@@ -60,7 +58,7 @@ Sub test_insert_token()
   expect_token(1, TK_IDENTIFIER, "tokenA", 10)
   expect_token(2, TK_IDENTIFIER, "token2", 17)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1 token2"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1 token2"))
   tr.current% = 1
   tr.insert_token("tokenA", TK_IDENTIFIER)
 
@@ -72,7 +70,7 @@ Sub test_insert_token()
 End Sub
 
 Sub test_remove_next_token()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  token1 token2"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1 token2"))
   tr.current% = 0
   tr.remove_next_token()
 
@@ -81,17 +79,17 @@ Sub test_remove_next_token()
 End Sub
 
 Sub test_comments()
-  assert_int_equals(SUCCESS, lx.parse_basic%("' The simplest possible comment"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("' The simplest possible comment"))
   tr.transpile()
   expect_num_tokens(1)
   expect_token(0, TK_COMMENT, "// The simplest possible comment", 1)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  ' Comment with leading whitespace"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  ' Comment with leading whitespace"))
   tr.transpile()
   expect_num_tokens(1)
   expect_token(0, TK_COMMENT, "// Comment with leading whitespace", 3)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  Print ' Comment with leading statement"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  Print ' Comment with leading statement"))
   tr.transpile()
   expect_num_tokens(2)
   expect_token(0, TK_KEYWORD, "Print", 3)
@@ -99,14 +97,14 @@ Sub test_comments()
 End Sub
 
 Sub test_do()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  Do"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  Do"))
   tr.transpile()
   assert_string_equals("  do {", lx.line$)
   expect_num_tokens(2)
   expect_token(0, TK_KEYWORD, "do", 3)
   expect_token(1, TK_SYMBOL, "{", 6)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  Exit Do"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  Exit Do"))
   tr.transpile()
   assert_string_equals("  break", lx.line$)
   expect_num_tokens(1)
@@ -114,7 +112,7 @@ Sub test_do()
 End Sub
 
 Sub test_identifiers()
-  assert_int_equals(SUCCESS, lx.parse_basic%("Dim i% = 1"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Dim i% = 1"))
   tr.transpile()
   assert_string_equals("Dim i = 1", lx.line$)
   expect_num_tokens(4)
@@ -125,7 +123,7 @@ Sub test_identifiers()
 End Sub
 
 Sub test_if()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  IF foo THEN bar"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  IF foo THEN bar"))
   tr.transpile()
   assert_string_equals("  if (foo { bar", lx.line$)
   expect_num_tokens(5)
@@ -135,7 +133,7 @@ Sub test_if()
   expect_token(3, TK_SYMBOL, "{", 11)
   expect_token(4, TK_IDENTIFIER, "bar", 13)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  ELSEIF foo THEN"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  ELSEIF foo THEN"))
   tr.transpile()
   assert_string_equals("  } else if (foo {", lx.line$)
   expect_num_tokens(6)
@@ -146,7 +144,7 @@ Sub test_if()
   expect_token(4, TK_IDENTIFIER, "foo", 14)
   expect_token(5, TK_SYMBOL, "{", 18)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  ELSE bar"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  ELSE bar"))
   tr.transpile()
   assert_string_equals("  } else { bar", lx.line$)
   expect_num_tokens(4)
@@ -155,7 +153,7 @@ Sub test_if()
   expect_token(2, TK_SYMBOL, "{", 10)
   expect_token(3, TK_IDENTIFIER, "bar", 12)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  ENDIF"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  ENDIF"))
   tr.transpile()
   assert_string_equals("  }", lx.line$)
   expect_num_tokens(1)
@@ -163,7 +161,7 @@ Sub test_if()
 End Sub
 
 Sub test_functions()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  FUNCTION foo()"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  FUNCTION foo()"))
   tr.transpile()
   assert_string_equals("  function foo()", lx.line$)
   expect_num_tokens(4)
@@ -172,13 +170,13 @@ Sub test_functions()
   expect_token(2, TK_SYMBOL, "(", 15)
   expect_token(3, TK_SYMBOL, ")", 16)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  END FUNCTION"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  END FUNCTION"))
   tr.transpile()
   assert_string_equals("  }", lx.line$)
   expect_num_tokens(1)
   expect_token(0, TK_SYMBOL, "}", 3)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  EXIT FUNCTION"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  EXIT FUNCTION"))
   tr.transpile()
   assert_string_equals("  return", lx.line$)
   expect_num_tokens(1)
@@ -186,7 +184,7 @@ Sub test_functions()
 End Sub
 
 Sub test_loop()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  Loop"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  Loop"))
   tr.transpile()
   assert_string_equals("  }", lx.line$)
   expect_num_tokens(1)
@@ -194,7 +192,7 @@ Sub test_loop()
 End Sub
 
 Sub test_next()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  Next"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  Next"))
   tr.transpile()
   assert_string_equals("  }", lx.line$)
   expect_num_tokens(1)
@@ -202,7 +200,7 @@ Sub test_next()
 End Sub
 
 Sub test_subs()
-  assert_int_equals(SUCCESS, lx.parse_basic%("  SUB foo()"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  SUB foo()"))
   tr.transpile()
   assert_string_equals("  function foo()", lx.line$)
   expect_num_tokens(4)
@@ -211,13 +209,13 @@ Sub test_subs()
   expect_token(2, TK_SYMBOL, "(", 15)
   expect_token(3, TK_SYMBOL, ")", 16)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  END SUB"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  END SUB"))
   tr.transpile()
   assert_string_equals("  }", lx.line$)
   expect_num_tokens(1)
   expect_token(0, TK_SYMBOL, "}", 3)
 
-  assert_int_equals(SUCCESS, lx.parse_basic%("  EXIT SUB"))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  EXIT SUB"))
   tr.transpile()
   assert_string_equals("  return", lx.line$)
   expect_num_tokens(1)

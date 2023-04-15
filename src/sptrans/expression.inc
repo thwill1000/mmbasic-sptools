@@ -12,7 +12,7 @@ If sys.err$ <> "" Then Error sys.err$
 '
 ' @param[in]  idx      token index to start evaluating the expression from.
 ' @param[out] result%  1 for true, 0 for false.
-' @return              0 on success, any other value is an error,
+' @return              sys.SUCCESS on success, any other value is an error,
 '                      see 'sys.err$' for details.
 Function ex.eval%(idx%, result%)
   Local i%, expr$, x%, t$
@@ -45,16 +45,16 @@ Function ex.eval%(idx%, result%)
 
   ' Print "Expression: " expr$
   If expr$ = "" Then
-    ex.eval% = -1
+    ex.eval% = sys.FAILURE
   Else
-    ex.eval% = 0
+    ex.eval% = sys.SUCCESS
     On Error Ignore
     result% = Eval(expr$)
     If Mm.ErrNo <> 0 Then
-      ex.eval% = -1
+      ex.eval% = sys.FAILURE
       On Error Clear
     EndIf
   EndIf
 
-  If ex.eval% = -1 Then sys.err$ = "Invalid expression syntax"
+  If ex.eval% <> sys.SUCCESS Then sys.err$ = "Invalid expression syntax"
 End Function

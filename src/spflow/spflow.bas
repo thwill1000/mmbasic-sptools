@@ -98,7 +98,7 @@ Sub main()
         Goto skip
       EndIf
 process:
-      If lx.parse_basic%(s$) = 0 Then
+      If lx.parse_basic%(s$) = sys.SUCCESS Then
         If lx.token_lc$(0) = "#include" Then handle_include()
       EndIf
       If sys.err$ <> "" Then cerror(sys.err$)

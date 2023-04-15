@@ -1,11 +1,10 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.07
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default Integer
 
-Const SUCCESS = 0
 Const MAX_NUM_FILES = 5
 Dim in.num_open_files = 1
 
@@ -103,7 +102,7 @@ Sub parse_lines()
   pp.indent_lvl = 0
   For i% = Bound(in$(), 0) To Bound(in$(), 1)
     out.buf$ = Chr$(0)
-    assert_int_equals(SUCCESS, lx.parse_basic%(in$(i%)))
+    assert_int_equals(sys.SUCCESS, lx.parse_basic%(in$(i%)))
     pp.print_line(1)
     If out.buf$ <> Chr$(0) Then
       out$(j%) = out.buf$
@@ -610,7 +609,7 @@ End Sub
 
 Sub test_no_pretty_print()
   Local in$ = "Dim x% = 1 ' This is a comment"
-  assert_int_equals(SUCCESS, lx.parse_basic%(in$))
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%(in$))
   opt.colour = 1
 
   pp.print_line(1)

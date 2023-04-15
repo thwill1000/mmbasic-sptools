@@ -1368,11 +1368,10 @@ Sub expect_token(i, type, s$)
 End Sub
 
 Sub expect_transpile_omits(line$)
-  Local result%
-  If lx.parse_basic%(line$) Then
+  If lx.parse_basic%(line$) <> sys.SUCCESS Then
     assert_fail("Parse failed: " + line$)
   Else
-    result% = tr.transpile%()
+    Local result% = tr.transpile%()
     If result% = tr.OMIT_LINE Then
       If lx.num <> 0 Then
         assert_fail("Omitted line contains " + Str$(lx.num) + " tokens: " + line$)
@@ -1385,11 +1384,10 @@ Sub expect_transpile_omits(line$)
 End Sub
 
 Sub expect_transpile_succeeds(line$, allow_zero_tokens%)
-  Local result%
-  If lx.parse_basic%(line$) Then
+  If lx.parse_basic%(line$) <> sys.SUCCESS Then
     assert_fail("Parse failed: " + line$)
   Else
-    result% = tr.transpile%()
+    Local result% = tr.transpile%()
     If result% = sys.SUCCESS Then
       If Not allow_zero_tokens% And lx.num < 1 Then
         assert_fail("Transpiled line contains zero tokens: " + line$)
@@ -1402,11 +1400,10 @@ Sub expect_transpile_succeeds(line$, allow_zero_tokens%)
 End Sub
 
 Sub expect_transpile_error(line$, msg$)
-  Local result%
-  If lx.parse_basic%(line$) Then
+  If lx.parse_basic%(line$) <> sys.SUCCESS Then
     assert_fail("Parse failed: " + line$)
   Else
-    result% = tr.transpile%()
+    Local result% = tr.transpile%()
     If result% = sys.FAILURE Then
       assert_error(msg$)
     Else

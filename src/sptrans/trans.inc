@@ -282,7 +282,7 @@ Sub tr.apply_replacements()
         Cat s$, to_$
         Cat s$, Mid$(lx.line$, lx.start(k%) + lx.len(k%))
         old_num% = lx.num%
-        If lx.parse_basic%(s$) <> 0 Then Exit Sub
+        If lx.parse_basic%(s$) <> sys.SUCCESS Then Exit Sub
 
         ' Adjust j% so we don't resume searching for matches until immediately
         ' after the current replacement.
