@@ -125,7 +125,7 @@ Function spsh.get_files$(f$, out$())
     Local pattern$ = file.get_name$(d$)
     d$ = file.get_parent$(d$)
   EndIf
-  file.get_files(d$, pattern$, "all", out$())
+  Local count% = file.get_files%(d$, pattern$, "all", out$())
   spsh.get_files$ = d$
 End Function
 
