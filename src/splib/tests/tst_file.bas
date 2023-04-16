@@ -688,12 +688,18 @@ Sub test_depth_first_given_dir()
   ut.create_file(TMPDIR$ + "/bar-dir/wombat")
   ut.create_file(TMPDIR$ + "/zzz")
 
-  ' I suspect the order of these may be a bit variable, the important thing is
-  ' that the contents of a directory is visited before the directory itself is.
+  ' The order of files at the same level may be a bit variable.
+  ' The important thing is that the contents of a directory is visited before
+  ' the directory itself is.
   Local expected$(list.new%(10))
   list.init(expected$())
-  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+  If sys.is_device%("mmb4l-armv6l") Then
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+  Else
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+  EndIf
   list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
   list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
   list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))

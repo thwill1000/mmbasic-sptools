@@ -149,7 +149,11 @@ Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
     d$ = LCase$(devices$(ii%))
     Select Case Mm.Device$
       Case "MMB4L"
-        If d$ = "mmb4l" Then Exit Function
+        If d$ = "mmb4l" Then
+          Exit Function
+        ElseIf d$ = "mmb4l-armv6l" And Mm.Info$(Arch) = "Linux armv6l" Then
+          Exit Function
+        EndIf
       Case "MMBasic for Windows"
         If d$ = "mmb4w" Then Exit Function
       Case "Colour Maximite 2"
