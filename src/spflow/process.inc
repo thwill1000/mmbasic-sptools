@@ -1,9 +1,14 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07
+
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("process")
+If sys.err$ <> "" Then Error sys.err$
 
 Const GLOBAL_SCOPE$ = "*GLOBAL*"
-Const MAX_NUM_SUBS = 1000
+Const MAX_NUM_SUBS = Choice(sys.is_device%("pm*"), 224, 1000)
 
 ' Map of all the declared subroutines created by pass 1.
 '

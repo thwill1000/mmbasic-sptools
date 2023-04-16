@@ -146,7 +146,12 @@ Sub map.sort(mp$())
 
   ' Copy values to tmp$().
   Local i%
-  Local tmp$(map.new%(sz%))
+  Select Case Mm.Device$
+    Case "PicoMite", "PicoMiteVGA"
+      Local tmp$(map.new%(sz%)) Length Peek(Byte Peek(VarHeader mp$()) + 34)
+    Case Else
+      Local tmp$(map.new%(sz%))
+  End Select
   ub% = lb% + sz% - 1
   For i% = lb% To ub% : tmp$(i%) = mp$(i% + off%) : Next
 

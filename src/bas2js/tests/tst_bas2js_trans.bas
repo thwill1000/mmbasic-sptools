@@ -39,14 +39,6 @@ run_tests()
 
 End
 
-Sub setup_test()
-'  set.clear(tr.flags$())
-'  map.clear(tr.replace$())
-End Sub
-
-Sub teardown_test()
-End Sub
-
 Sub test_insert_token()
   assert_int_equals(sys.SUCCESS, lx.parse_basic%("  token1 token2"))
   tr.current% = 0

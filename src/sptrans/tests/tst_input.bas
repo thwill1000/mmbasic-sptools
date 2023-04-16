@@ -18,8 +18,6 @@ Option Default Integer
 #Include "../../common/sptools.inc"
 #Include "../input.inc"
 
-Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_input"
-
 add_test("test_open_given_file")
 add_test("test_open_given_dir")
 add_test("test_open_given_not_found")
@@ -31,9 +29,6 @@ run_tests()
 End
 
 Sub setup_test()
-  If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-  EndIf
   MkDir TMPDIR$
 End Sub
 
@@ -44,12 +39,10 @@ Sub teardown_test()
   Next
   list.clear(in.files$())
   in.num_open_files% = 0
-
-  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
 End Sub
 
 Sub test_open_given_file()
-  Local f$ = TMPDIR$ + "/foo.bas"
+  Const f$ = TMPDIR$ + "/foo.bas"
   ut.create_file(f$)
 
   assert_int_equals(sys.SUCCESS, in.open%(f$))
@@ -60,7 +53,7 @@ Sub test_open_given_file()
 End Sub
 
 Sub test_open_given_dir()
-  Local f$ = TMPDIR$ + "/foo.bas"
+  Const f$ = TMPDIR$ + "/foo.bas"
   MkDir f$
 
   assert_int_equals(sys.FAILURE, in.open%(f$))
@@ -69,7 +62,7 @@ Sub test_open_given_dir()
 End Sub
 
 Sub test_open_given_not_found()
-  Local f$ = TMPDIR$ + "/not_found.bas"
+  Const f$ = TMPDIR$ + "/not_found.bas"
 
   assert_int_equals(sys.FAILURE, in.open%(f$))
   assert_error("#Include file '" + f$ + "' not found")

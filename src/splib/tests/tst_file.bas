@@ -15,7 +15,6 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../../sptest/unittest.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_file"
 
 add_test("test_get_parent")
 add_test("test_get_name")
@@ -54,21 +53,28 @@ add_test("test_delete_given_file")
 add_test("test_delete_given_dir")
 add_test("test_delete_given_symlink")
 
-If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
+' On the PicoMite the tests should run 4 times:
+'   Base 0, Drive A
+'   Base 1, Drive A
+'   Base 0, Drive B
+'   Base 1, Drive B
+If sys.is_device%("pm*") Then
+  If InStr(Mm.CmdLine$, "--base=1 --drive=b") Then
+    run_tests()
+  ElseIf InStr(Mm.CmdLine$, "--base=1") Then
+    run_tests("--base=1", "--drive=b")
+  ElseIf InStr(Mm.CmdLine$, "--drive=b") Then
+    run_tests("--drive=b", "--base=1 --drive=b")
+  Else
+    run_tests("--base=1")
+  EndIf
+ElseIf InStr(Mm.CmdLine$, "--base=1") Then
+  run_tests("")
+Else
+  run_tests("--base=1")
+EndIf
 
 End
-
-Sub setup_test()
-  If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-  EndIf
-End Sub
-
-Sub teardown_test()
-  If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-  EndIf
-End Sub
 
 Sub test_get_parent()
   assert_string_equals("", file.get_parent$("foo.bas"))
@@ -91,7 +97,8 @@ Sub test_get_name()
 End Sub
 
 Sub test_get_canonical()
-  Local root$ = Left$(Mm.Info(Directory), Len(Mm.Info(Directory)) - 1)
+  Local current$ = Cwd$
+  If InStr("/\", Right$(current$, 1)) Then current$ = Left$(current$, Len(current$) - 1)
 
   assert_string_equals("A:", file.get_canonical$("A:"))
   assert_string_equals("A:", file.get_canonical$("A:/"))
@@ -102,32 +109,32 @@ Sub test_get_canonical()
   assert_string_equals("C:", file.get_canonical$("C:/"))
   assert_string_equals("C:", file.get_canonical$("C:\"))
 
-  assert_string_equals(expected_path$(root$ + "/foo.bas"), file.get_canonical$("foo.bas"))
-  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir/foo.bas"))
-  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir\foo.bas"))
+  assert_string_equals(expected_path$(current$ + "/foo.bas"), file.get_canonical$("foo.bas"))
+  assert_string_equals(expected_path$(current$ + "/dir/foo.bas"), file.get_canonical$("dir/foo.bas"))
+  assert_string_equals(expected_path$(current$ + "/dir/foo.bas"), file.get_canonical$("dir\foo.bas"))
   assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("A:/dir/foo.bas"))
   assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("A:\dir\foo.bas"))
   assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("a:/dir/foo.bas"))
   assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("a:\dir\foo.bas"))
   assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("/dir/foo.bas"))
   assert_string_equals(expected_path$("A:/dir/foo.bas"), file.get_canonical$("\dir\foo.bas"))
-  assert_string_equals(expected_path$(root$ + "/foo.bas"), file.get_canonical$("dir/../foo.bas"))
-  assert_string_equals(expected_path$(root$ + "/foo.bas"), file.get_canonical$("dir\..\foo.bas"))
-  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir/./foo.bas"))
-  assert_string_equals(expected_path$(root$ + "/dir/foo.bas"), file.get_canonical$("dir\.\foo.bas"))
+  assert_string_equals(expected_path$(current$ + "/foo.bas"), file.get_canonical$("dir/../foo.bas"))
+  assert_string_equals(expected_path$(current$ + "/foo.bas"), file.get_canonical$("dir\..\foo.bas"))
+  assert_string_equals(expected_path$(current$ + "/dir/foo.bas"), file.get_canonical$("dir/./foo.bas"))
+  assert_string_equals(expected_path$(current$ + "/dir/foo.bas"), file.get_canonical$("dir\.\foo.bas"))
 
   ' Trailing .
   assert_string_equals("A:", file.get_canonical$("A:/."))
   assert_string_equals(expected_path$("A:/dir"), file.get_canonical$("A:/dir/."))
-  assert_string_equals(expected_path$(root$), file.get_canonical$("."))
+  assert_string_equals(expected_path$(current$), file.get_canonical$("."))
 
   ' Trailing ..
   assert_string_equals("A:", file.get_canonical$("A:/.."))
   assert_string_equals("A:", file.get_canonical$("A:/dir/.."))
 
   ' TODO: should the parent of "A:" be "" or should it be "A:" ?
-  Local parent$ = file.get_parent$(root$)
-  If parent$ = "" Then parent$ = "A:"
+  Local parent$ = file.get_parent$(current$)
+  If parent$ = "" Then parent$ = Choice(Not sys.is_device%("pm*"), "A:", Mm.Info$(Drive))
   assert_string_equals(expected_path$(parent$), file.get_canonical$(".."))
 
   ' Tilde expansion
@@ -163,9 +170,11 @@ Sub test_exists()
   assert_int_equals(expected%, file.exists%("A:\"))
 
   ' Given C: drive.
-  assert_int_equals(1, file.exists%("C:"))
-  assert_int_equals(1, file.exists%("C:/"))
-  assert_int_equals(1, file.exists%("C:\"))
+  If Not sys.is_device%("pm*") Then
+    assert_int_equals(1, file.exists%("C:"))
+    assert_int_equals(1, file.exists%("C:/"))
+    assert_int_equals(1, file.exists%("C:\"))
+  EndIf
 
   ' Given UNIX absolute paths.
   assert_true(file.exists%("/"))
@@ -251,10 +260,12 @@ Sub test_is_directory()
   assert_int_equals(has_a%, file.is_directory%("A:/"))
   assert_int_equals(has_a%, file.is_directory%("A:\"))
 
-  Const has_c% = 1 ' MMB4L pretends to have a C: drive
-  assert_int_equals(has_c%, file.is_directory%("C:"))
-  assert_int_equals(has_c%, file.is_directory%("C:/"))
-  assert_int_equals(has_c%, file.is_directory%("C:\"))
+  If Not sys.is_device%("pm*") Then
+    Const has_c% = 1 ' MMB4L pretends to have a C: drive
+    assert_int_equals(has_c%, file.is_directory%("C:"))
+    assert_int_equals(has_c%, file.is_directory%("C:/"))
+    assert_int_equals(has_c%, file.is_directory%("C:\"))
+  EndIf
 
   assert_true(file.is_directory%("/"))
   assert_true(file.is_directory%("/."))
@@ -292,6 +303,7 @@ Sub test_fnmatch()
 End Sub
 
 Sub test_find_all()
+  If sys.is_device%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -334,6 +346,7 @@ Sub given_file_tree()
 End Sub
 
 Sub test_find_files()
+  If sys.is_device%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -352,6 +365,7 @@ Sub test_find_files()
 End Sub
 
 Sub test_find_dirs()
+  If sys.is_device%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -364,6 +378,7 @@ Sub test_find_dirs()
 End Sub
 
 Sub test_find_all_matching()
+  If sys.is_device%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -381,6 +396,7 @@ Sub test_find_all_matching()
 End Sub
 
 Sub test_find_files_matching()
+  If sys.is_device%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -394,6 +410,7 @@ Sub test_find_files_matching()
 End Sub
 
 Sub test_find_dirs_matching()
+  If sys.is_device%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -663,13 +680,14 @@ Sub test_mkdir_abs_path()
   assert_false(file.is_directory%(TMPDIR$ + "/foo/file/a"))
 
   ' Given root directory.
-  assert_int_equals(sys.SUCCESS, file.mkdir%("C:/"))
+  Local root_drive$ = Choice(sys.is_device%("pm*"), "A:", "C:")
+  assert_int_equals(sys.SUCCESS, file.mkdir%(root_drive$ + "/"))
   assert_no_error()
-  assert_int_equals(sys.SUCCESS, file.mkdir%("C:\"))
+  assert_int_equals(sys.SUCCESS, file.mkdir%(root_drive$ + "\"))
   assert_no_error()
-  assert_int_equals(sys.SUCCESS, file.mkdir%("C:"))
+  assert_int_equals(sys.SUCCESS, file.mkdir%(root_drive$))
   assert_no_error()
-  If Mm.Device$ <> "MMBasic for Windows" Then
+  If Not sys.is_device%("mmb4w") Then
     assert_int_equals(sys.SUCCESS, file.mkdir%("/"))
     assert_no_error()
     assert_int_equals(sys.SUCCESS, file.mkdir%("\"))
@@ -747,12 +765,19 @@ Sub test_depth_first_given_dir()
   ' the directory itself is.
   Local expected$(list.new%(10))
   list.init(expected$())
-  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
-  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
-  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
-  list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
-
+  If sys.is_device%("pm*") Then
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
+  Else
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
+  EndIf
   Dim actual$(list.new%(10))
   list.init(actual$())
   assert_int_equals(sys.SUCCESS, file.depth_first%(TMPDIR$, "depth_first_callback%", 5))

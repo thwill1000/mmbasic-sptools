@@ -1,6 +1,6 @@
 ' Copyright (c) 2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.07
+' For MMBasic 5.07
 
 Option Base 0
 Option Default None
@@ -13,8 +13,8 @@ Option Explicit
 #Include "../splib/string.inc"
 #Include "../common/sptools.inc"
 
-Const KEYWORDS_INC$ = spt.INSTALL_DIR$ + "/src/sptrans/keywords.inc"
-Const KEYWORDS_TXT$ = spt.RESOURCES_DIR$ + "/keywords.txt"
+Const KEYWORDS_INC$ = spt.get_install_dir$() + "/src/sptrans/keywords.inc"
+Const KEYWORDS_TXT$ = spt.get_install_dir$() + "/resources/keywords.txt"
 
 Const IN_FNBR% = 1
 Const OUT_FNBR% = 2

@@ -42,17 +42,23 @@ End Function
 '
 ' @return 1 if the file exists, otherwise 0
 Function file.exists%(f$)
-  Select Case f$
+  Local f_$ = f$, i%
+  For i% = 1 To Len(f_$)
+    If Peek(Var f_$, i%) = 92 Then Poke Var f_$, i%, 47
+  Next
+  Select Case f_$
     Case ""
       ' file.exists% = 0
     Case "."
       file.exists% = 1
+    Case "A:", "B:" ' TODO
+      file.exists% = Mm.Info(Exists Dir f$ + "/")
     Case Else
       If Mm.Device$ = "MMB4L" Or Mm.Device$ = "MMBasic for Windows" Then
-        file.exists% = Mm.Info(Exists f$)
+        file.exists% = Mm.Info(Exists f_$)
       Else
-        file.exists% = Mm.Info(Exists File f$) Or Mm.Info(Exists Dir f$)
-    EndIf
+        file.exists% = Mm.Info(Exists File f_$) Or Mm.Info(Exists Dir f_$)
+      EndIf
   End Select
 End Function
 
@@ -65,7 +71,7 @@ End Function
 '          matches call this function with no parameters, i.e. f$ = file.find().
 '          Returns the empty string if there are no more matches.
 '
-' TODO: In order to return the files in alphabetical order this uses a 128K
+' TODO: In order to return the files in alphabetical order this uses a 64-256K
 '       workspace. I think there is an alternative implementation where it
 '       just records the last file returned by the previous call and restarts
 '       the search from there, however that would be much slower and probably
@@ -243,6 +249,8 @@ End Function
 ' Gets the canonical path for file/directory 'f$'.
 Function file.get_canonical$(f$)
   Local tmp$ = f$
+  Local current$ = Cwd$
+  If InStr("/\", Right$(current$, 1)) Then current$ = Left$(current$, Len(current$) - 1)
 
   Select Case Left$(tmp$, 1)
     Case "/", "\"
@@ -253,16 +261,16 @@ Function file.get_canonical$(f$)
       ElseIf Left$(tmp$, 2) = "~/" Or Left$(tmp$, 2) = "~\" Then
         tmp$ = sys.string_prop$("home") + Mid$(tmp$, 2)
       Else
-        tmp$ = Mm.Info$(Directory) + tmp$
+        tmp$ = Cwd$ + "/" + tmp$
       EndIf
     Case "a" To "z", "A" To "Z"
       If Mid$(tmp$, 2, 1) = ":" Then
         ' Do nothing
       Else
-        tmp$ = Mm.Info$(Directory) + tmp$
+        tmp$ = Cwd$ + "/" + tmp$
       EndIf
     Case Else
-      tmp$ = Mm.Info$(Directory) + tmp$
+      tmp$ = Cwd$ + "/" + tmp$
   End Select
 
   ' Convert backslash to slash to simplify algorithm.
@@ -402,14 +410,19 @@ End Function
 
 Function file.is_directory%(f$)
   ' TODO: handle ~ prefix
-  ' TODO: does this work on PicoMite
-  Select Case f$
+  Local f_$ = f$, i%
+  For i% = 1 To Len(f_$)
+    If Peek(Var f_$, i%) = 92 Then Poke Var f_$, i%, 47
+  Next
+  Select Case f_$
     Case ""
       ' file.is_directory% = 0
-    Case "."
+    Case ".", "/"
       file.is_directory% = 1
+    Case "A:", "B:" ' TODO
+      file.is_directory% = Mm.Info(Exists Dir f_$ + "/")
     Case Else
-      file.is_directory% = Mm.Info(Exists Dir f$)
+      file.is_directory% = Mm.Info(Exists Dir f_$)
   End Select
 End Function
 

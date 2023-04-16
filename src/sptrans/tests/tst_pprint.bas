@@ -329,7 +329,7 @@ Sub test_indentation_11()
   setup_test()
 
   in$(0) = "10 For i% = 1 To 5"
-  in$(1) = "20 If a% = b% Then
+  in$(1) = "20 If a% = b% Then"
   in$(2) = "30 foo"
   in$(3) = "40 EndIf"
   in$(4) = "50 Next"
@@ -338,7 +338,7 @@ Sub test_indentation_11()
   parse_lines()
 
   expected$(0) = "    10 For i% = 1 To 5"
-  expected$(1) = "    20   If a% = b% Then
+  expected$(1) = "    20   If a% = b% Then"
   expected$(2) = "    30     foo"
   expected$(3) = "    40   EndIf"
   expected$(4) = "    50 Next"

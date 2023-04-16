@@ -1,6 +1,6 @@
-' Copyright (c) 2021-2022 Thomas Hugo Williams
+' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.03
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default None
@@ -17,7 +17,6 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../../sptest/unittest.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_inifile"
 Const TEST_FILE$ = TMPDIR$ + "/file.ini"
 
 add_test("test_read")
@@ -32,14 +31,7 @@ run_tests(Choice(InStr(Mm.CmdLine$, "--base"), "", "--base=1"))
 End
 
 Sub setup_test()
-  If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-  EndIf
   MkDir TMPDIR$
-End Sub
-
-Sub teardown_test()
-  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
 End Sub
 
 Sub test_read()

@@ -8,7 +8,9 @@ sys.requires("array", "file", "list", "string", "vt100")
 sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 
-If Mm.Device$ = "MMBasic for Windows" Then Option Console Both
+If sys.is_device%("mmb4w") Then Option Console Both
+
+Const TMPDIR$ = ut.get_tmp_dir$() ' Test specific temporary directory.
 
 Const ut.MAX_FAILURES% = 20 ' Maximum number of failures reported per test method.
 Const ut.MAX_TESTS% = 100
@@ -24,6 +26,12 @@ Dim ut.test_subs$(list.new%(ut.MAX_TESTS%)) Length 40
 
 list.init(ut.test_names$())
 list.init(ut.test_subs$())
+
+Function ut.get_tmp_dir$()
+  Const stem$ = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:/tmp", sys.string_prop$("tmpdir"))
+  Const name$ = file.trim_extension$(file.get_name$(Mm.Info(Current)))
+  ut.get_tmp_dir$ = stem$ + "/" + name$
+End Function
 
 Sub add_test(name$, sub$)
   list.add(ut.test_names$(), name$)
@@ -64,8 +72,11 @@ End Sub
 Sub assert_hex_equals(expected%, actual%, chars%)
   Inc ut.asserts_count%
   If expected% <> actual% Then
-    Local s$ = "Assert equals failed, expected &h" + Hex$(expected%, chars%)
-    s$ = s$ + " but actually &h" + Hex$(actual%, chars%)
+    Local s$
+    Cat s$, "Assert equals failed, expected &h"
+    Cat s$, Hex$(expected%, chars%)
+    Cat s$, " but actually &h"
+    Cat s$, Hex$(actual%, chars%)
     ut.add_failure(s$)
   EndIf
 End Sub
@@ -343,6 +354,19 @@ Function ut.run_single_test%(idx%)
   ut.failure_count% = 0
   LongString Clear ut.failure_txt%()
 
+  ' Cache working directory and change drive.
+  Const OLD_DIR = Cwd$
+  If sys.is_device%("pm*") Then
+    Const OLD_DRIVE = Mm.Info(Drive)
+    Const NEW_DRIVE = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:", "A:")
+    If Mm.Info$(Drive) <> NEW_DRIVE Then Drive NEW_DRIVE
+  EndIf
+
+  ' Remove TMPDIR if left behind by previous failure.
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  EndIf
+
   On Error Skip 1 ' Skip error caused by missing optional setup_test() function.
   setup_test()
 
@@ -386,6 +410,17 @@ Function ut.run_single_test%(idx%)
     ut.print_colour("reset")
     Print
   EndIf
+
+  ' Cleanup TMPDIR.
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  EndIf
+
+  ' Restore working directory and drive.
+  If sys.is_device%("pm*") Then
+    If Mm.Info(Drive) <> OLD_DRIVE Then Drive OLD_DRIVE
+  EndIf
+  If Cwd$ <> OLD_DIR Then ChDir OLD_DIR
 
   ut.run_single_test% = ut.failure_count% = 0
 End Function
@@ -519,6 +554,11 @@ Sub ut.run_same(find$, replace$)
 End Sub
 
 Sub ut.print_colour(c$)
+  If sys.is_device%("pm*") Then
+    Print vt100.colour$(c$);
+    Exit Sub
+  EndIf
+
   ' Serial / ANSI colour.
   Local old_console$ = Mm.Info(Option Console)
   If LCase$(old_console$) <> "serial" Then Option Console Serial
@@ -556,7 +596,7 @@ Sub ut.write_data_file(filename$, data_label$)
   Read type$
   Open filename$ For Output As #1
   Select Case type$
-    Case "text/crlf", "text/lf"
+    Case "text/crlf", "text/lf", "text/json"
       Do
         Read s$
         If Right$(s$, 5) = "<EOF>" Then
@@ -565,6 +605,9 @@ Sub ut.write_data_file(filename$, data_label$)
         ElseIf type$ = "text/crlf" Then
           Print #1, s$ + Chr$(13) + Chr$(10);
         ElseIf type$ = "text/lf" Then
+          Print #1, s$ + Chr$(10);
+        ElseIf type$ = "text/json" Then
+          s$ = str.replace$(s$, "'", Chr$(34)) ' Convert single to double quotes.
           Print #1, s$ + Chr$(10);
         Else
           Error "Unknown text data type '" + type$ + "'"

@@ -16,7 +16,6 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../history.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_history"
 
 add_test("test_clear")
 add_test("test_count")
@@ -43,17 +42,6 @@ add_test("test_trim")
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
-
-Sub setup_test()
-  If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-  EndIf
-  MkDir TMPDIR$
-End Sub
-
-Sub teardown_test()
-  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-End Sub
 
 Sub test_clear()
   Local h%(array.new%(128))
@@ -157,9 +145,11 @@ Sub test_get_given_overlow()
 End Sub
 
 Sub test_load()
+  MkDir TMPDIR$
+
   Local h%(array.new%(128))
   fill_with_ones(h%())
-  Local filename$ = TMPDIR$ + "/test_load"
+  Const filename$ = TMPDIR$ + "/test_load"
 
   Open filename$ For Output As #5
   Print #5, "foo"
@@ -178,9 +168,11 @@ Sub test_load()
 End Sub
 
 Sub test_load_given_empty()
+  MkDir TMPDIR$
+
   Local h%(array.new%(128))
   fill_with_ones(h%())
-  Local filename$ = TMPDIR$ + "/test_load_empty"
+  Const filename$ = TMPDIR$ + "/test_load_empty"
 
   Open filename$ For Output As #5
   Close #5
@@ -191,9 +183,11 @@ Sub test_load_given_empty()
 End Sub
 
 Sub test_load_trims_long_file()
+  MkDir TMPDIR$
+
   Local h%(array.new%(128))
   fill_with_ones(h%())
-  Local filename$ = TMPDIR$ + "/test_load_trims_long_file"
+  Const filename$ = TMPDIR$ + "/test_load_trims_long_file"
   Local i%, s$
 
   Open filename$ For Output As #5
@@ -323,10 +317,10 @@ Sub test_push()
 End Sub
 
 Sub test_push_appends_to_file()
+  MkDir TMPDIR$
+
   Local h%(array.new%(128))
-  Local filename$ = TMPDIR$ + "/test_push_appends_to_file"
-  On Error Skip 1
-  Kill filename$
+  Const filename$ = TMPDIR$ + "/test_push_appends_to_file"
 
   history.push(h%(), "foo", filename$, 5)
 
@@ -412,9 +406,11 @@ Sub test_push_trims_spaces()
 End Sub
 
 Sub test_save()
+  MkDir TMPDIR$
+
   Local h%(array.new%(128))
   given_some_elements(h%())
-  Local filename$ = TMPDIR$ + "/test_save"
+  Const filename$ = TMPDIR$ + "/test_save"
 
   history.save(h%(), filename$, 5)
 
@@ -433,8 +429,10 @@ Sub test_save()
 End Sub
 
 Sub test_save_given_empty()
+  MkDir TMPDIR$
+
   Local h%(array.new%(128))
-  Local filename$ = TMPDIR$ + "/test_save_given_empty"
+  Const filename$ = TMPDIR$ + "/test_save_given_empty"
 
   history.save(h%(), filename$, 5)
 

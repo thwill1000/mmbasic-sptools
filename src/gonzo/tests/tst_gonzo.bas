@@ -21,7 +21,6 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../gonzo.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_gonzo"
 
 add_test("test_parse_cl_given_empty")
 add_test("test_parse_cl_given_0_args")
@@ -35,17 +34,6 @@ add_test("test_parse_cl_ignores_xs_ws")
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
-
-Sub setup_test()
-  If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-  EndIf
-  MkDir TMPDIR$
-End Sub
-
-Sub teardown_test()
-  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
-End Sub
 
 Sub test_parse_cl_given_empty()
   Local cmd$, argc%, argv$(array.new%(10))
