@@ -138,6 +138,8 @@ Sub open_include()
       Local i = in.num_open_files%
       cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
       cout(" " + Space$(i * 2))
+    Else
+      cerror(sys.err$)
     EndIf
   EndIf
 End Sub
