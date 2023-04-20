@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.06
+' For MMBasic 5.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -42,6 +42,7 @@ Dim lx.next_char$
 Dim lx.num         ' number of tokens.
 Dim lx.pos
 Dim lx.csub        ' 1 if we are tokenising within a CSUB definition, otherwise 0.
+Dim lx.font        ' 1 if we are tokenising within a DEFINEFONT definition, otherwise 0.
 
 ' Parses a line of BASIC code.
 '
@@ -55,7 +56,7 @@ Function lx.parse_basic%(line$)
     If lx.char$ = " " Then
       lx.advance()
     ElseIf InStr("&.0123456789", lx.char$) Then
-      If lx.csub Then
+      If lx.csub Or lx.font Then
         lx.parse_identifier()
       Else
         lx.parse_number()
@@ -277,7 +278,10 @@ Sub lx.parse_identifier()
   Local ln% = lx.pos - start
   If keywords.contains%(Mid$(lx.line$, start, ln%)) Then
     lx.store(TK_KEYWORD, start, ln%)
-    If lx.token_lc$(lx.num - 1) = "csub" Then lx.csub = Not lx.csub
+    Select Case lx.token_lc$(lx.num - 1)
+      Case "csub" :       lx.csub = Not lx.csub
+      Case "definefont" : lx.font = Not lx.font
+    End Select
   Else
     lx.store(TK_IDENTIFIER, start, ln%)
     If Right$(lx.token$(lx.num - 1), 1) = ":" Then lx.type(lx.num - 1) = TK_LABEL
