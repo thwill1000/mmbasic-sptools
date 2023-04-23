@@ -8,8 +8,8 @@ sys.requires("console", "file", "string")
 sys.provides("spsh")
 If sys.err$ <> "" Then Error sys.err$
 
-Const spsh.IN_FNBR% = 2
-Const spsh.MAX_FILES% = 200
+Const spsh.IN_FNBR = 2
+Const spsh.MAX_FILES = 200
 
 Sub spsh.cmd_chdir(cmd$, argc%, argv$())
   If argc% <> 1 Then Error "expects 1 argument"
@@ -84,9 +84,9 @@ Sub spsh.cmd_files(cmd$, argc%, argv$())
   If file.is_directory%(d$) Then Cat d$, "/*"
   Select Case Mm.Device$
     Case "MMB4L", "MMBasic for Windows"
-      Local files$(spsh.MAX_FILES% - 1)
+      Local files$(spsh.MAX_FILES - 1)
     Case Else
-      Local files$(spsh.MAX_FILES% - 1) Length 64
+      Local files$(spsh.MAX_FILES - 1) Length 64
   End Select
   d$ = spsh.get_files$(d$, files$())
 
@@ -149,12 +149,12 @@ Sub spsh.cmd_type(cmd$, argc%, argv$())
     ElseIf file.is_directory%(f$) Then
       spsh.error_not_a_file(f$)
     Else
-      Open f$ For Input As #spsh.IN_FNBR%
-      Do While Not Eof(#spsh.IN_FNBR%)
-        Line Input #spsh.IN_FNBR%, s$
+      Open f$ For Input As #spsh.IN_FNBR
+      Do While Not Eof(#spsh.IN_FNBR)
+        Line Input #spsh.IN_FNBR, s$
         con.println(s$)
       Loop
-      Close #spsh.IN_FNBR%
+      Close #spsh.IN_FNBR
     EndIf
   Next
 End Sub
