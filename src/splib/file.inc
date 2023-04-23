@@ -116,7 +116,10 @@ Function file.find$(path$, pattern$, type$)
         ' Add all sub-directories.
         f$ = Dir$(file.find$ + "/*", Dir)
         Do While f$ <> ""
-          If stack_ptr% > Bound(stack$(), 1) Then
+          If InStr("|.|..|", "|" + f$ + "|") Then
+            Error "DIR$() returned '" + f$ + "'"
+            Exit Function
+          ElseIf stack_ptr% > Bound(stack$(), 1) Then
             Error "Too many files"
             Exit Function ' So we stop even if errors are being ignored.
           EndIf
@@ -130,7 +133,10 @@ Function file.find$(path$, pattern$, type$)
           ' f$ = Dir$(file.find$ + "/*", File)
           f$ = Dir$(file.find$ + "/" + pattern_$, File)
           Do While f$ <> ""
-            If stack_ptr% > Bound(stack$(), 1) Then
+            If InStr("|.|..|", "|" + f$ + "|") Then
+              Error "DIR$() returned '" + f$ + "'"
+              Exit Function
+            ElseIf stack_ptr% > Bound(stack$(), 1) Then
               Error "Too many files"
               Exit Function ' So we stop even if errors are being ignored.
             EndIf
@@ -452,7 +458,10 @@ Function file.depth_first%(root$, callback$, xtra%)
   Local depth% = 0, current$ = root_$, name$, parent$
   Local f$ = Choice(file.is_directory%(root_$) And Not file.is_symlink%(root_$), Dir$(root_$ + "/*", All), "")
   Do While file.depth_first% = sys.SUCCESS
-    If f$ = "" Then ' No more entries.
+    If InStr("|.|..|", "|" + f$ + "|") Then
+      Error "DIR$() returned '" + f$ + "'"
+      Exit Function
+    ElseIf f$ = "" Then ' No more entries.
       If current$ <> root_$ Then
         ' Protection from accidentally navigating above root$ which would
         ' have disasterous consequences if performing a recursive delete.
