@@ -402,7 +402,7 @@ Sub cmd.rtest(cmd$, argc%, argv$())
     f$ = str.trim$(f$)
     If Not Len(f$) Then Exit Do
     If Left$(f$, 3) = "A:/" Then f$ = Mid$(f$, 3)
-    Print #gonzo.OUT_FNBR, "xput -r -t " + f$
+    Print #gonzo.OUT_FNBR, "xput -r -t=" + str.quote$("--quiet") + " " + f$
     Print #gonzo.OUT_FNBR, "rkill " + file.get_name$(f$)
   Loop
   Close #gonzo.OUT_FNBR

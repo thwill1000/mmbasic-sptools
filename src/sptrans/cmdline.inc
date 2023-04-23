@@ -29,6 +29,7 @@ Sub cli.parse(s$)
       Case "k", "keywords"     : cli.parse_arg("keywords", i, "{l|p|u}")
       Case "h", "help"         : cli.usage() : End
       Case "n", "no-comments"  : cli.parse_no_arg("no-comments", i)
+      Case "q", "quiet"        : cli.parse_no_arg("quiet", i)
       Case "s", "spacing"      : cli.parse_arg("spacing", i, "{0|1|2}")
       Case "v", "version"      : spt.print_version("sptrans") : End
       Case Else:
@@ -39,10 +40,6 @@ Sub cli.parse(s$)
         EndIf
     End Select
   Loop
-
-  If opt.format_only And opt.include_only Then
-    sys.err$ = "--format-only and --include-only options are mutually exclusive"
-  EndIf
 
   If sys.err$ <> "" Then Exit Sub
 
@@ -55,14 +52,21 @@ Sub cli.parse(s$)
   End Select
   Inc i
 
-  If i >= lx.num Then Exit Sub
-  Select Case lx.type(i)
-    Case TK_STRING: opt.set("outfile", lx.string$(i))
-    Case Else:      opt.set("outfile", lx.token$(i))
-  End Select
-  Inc i
+  If i < lx.num Then
+    Select Case lx.type(i)
+      Case TK_STRING: opt.set("outfile", lx.string$(i))
+      Case Else:      opt.set("outfile", lx.token$(i))
+    End Select
+    Inc i
+  EndIf
 
-  If i <> lx.num Then sys.err$ = "unexpected argument '" + lx.token$(i) + "'"
+  If i <> lx.num Then
+    sys.err$ = "unexpected argument '" + lx.token$(i) + "'"
+  ElseIf opt.format_only And opt.include_only Then
+    sys.err$ = "--format-only and --include-only options are mutually exclusive"
+  ElseIf opt.quiet And Not Len(opt.outfile$) Then
+    sys.err$ = "--quiet option incompatible with writing to console"
+  EndIf
 End Sub
 
 ' Parses an option with an argument.
@@ -129,6 +133,7 @@ Sub cli.usage()
   Print "                         if omitted then original capitalisation will be"
   Print "                         preserved"
   Print "  -n, --no-comments      do not include comments in the output"
+  Print "  -q, --quiet            run with minimal console output"
   Print "  -s, --spacing=0|1|2    controls output of spaces between tokens:"
   Print "                           0 - omit all unnecessary spaces"
   Print "                           1 - compact spacing"

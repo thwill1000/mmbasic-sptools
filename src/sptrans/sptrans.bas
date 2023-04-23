@@ -30,12 +30,16 @@ Const CR$ = Chr$(13)
 #Include "trans.inc"
 #Include "cmdline.inc"
 
-Sub cendl()
-  If opt.outfile$ <> "" Then Print
+Sub cendl(always%)
+  If Not Len(opt.outfile$) Then Exit Sub
+  If Not always% And opt.quiet Then Exit Sub
+  Print
 End Sub
 
-Sub cout(s$)
-  If opt.outfile$ <> "" Then Print s$;
+Sub cout(s$, always%)
+  If Not Len(opt.outfile$) Then Exit Sub
+  If Not always% And opt.quiet Then Exit Sub
+  Print s$;
 End Sub
 
 Sub cerror(msg$)
@@ -85,7 +89,7 @@ Sub main()
     out.endl()
   EndIf
 
-  cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
+  cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...", 1) : cendl(1)
   If in.open%(opt.infile$) <> sys.SUCCESS Then cerror(sys.err$)
   cout(in.files$(0)) : cendl()
   cout("   ")

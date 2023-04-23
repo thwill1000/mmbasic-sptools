@@ -35,6 +35,7 @@ add_test("test_format_only")
 add_test("test_include_only")
 add_test("test_indent")
 add_test("test_keywords")
+add_test("test_quiet")
 add_test("test_spacing")
 add_test("test_output_file")
 add_test("test_unknown_option")
@@ -211,6 +212,28 @@ Sub test_keywords()
   assert_error("option --keywords expects {l|p|u} argument")
 End Sub
 
+Sub test_quiet()
+  opt.quiet = 0
+  cli.parse("--quiet " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.quiet)
+
+  opt.quiet = 0
+  cli.parse("-q " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.quiet)
+
+  opt.quiet = 0
+  cli.parse("--quiet=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option --quiet does not expect argument")
+  assert_int_equals(0, opt.quiet)
+
+  opt.quiet = 0
+  cli.parse("-q=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option -q does not expect argument")
+  assert_int_equals(0, opt.quiet)
+End Sub
+
 Sub test_spacing()
   cli.parse("--spacing=0 " + INPUT_FILE$)
   assert_no_error()
@@ -261,12 +284,15 @@ End Sub
 
 Sub test_incompatible_arguments()
   cli.parse("-f -I " + INPUT_FILE$ + " " + OUTPUT_FILE$)
-
   assert_error("--format-only and --include-only options are mutually exclusive")
+
+  setup_test()
+  cli.parse("-q " + INPUT_FILE$)
+  assert_error("--quiet option incompatible with writing to console")
 End Sub
 
 Sub test_everything()
-  cli.parse("-f -C -e=1 -i=2 -s=0 -n " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  cli.parse("-f -C -e=1 -i=2 -s=0 -n -q " + INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_int_equals(1, opt.format_only)
@@ -276,5 +302,6 @@ Sub test_everything()
   assert_int_equals(0, opt.comments)
   assert_int_equals(1, opt.empty_lines)
   assert_int_equals(2, opt.indent_sz)
+  assert_int_equals(1, opt.quiet)
   assert_int_equals(0, opt.spacing)
 End Sub

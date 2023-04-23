@@ -22,13 +22,14 @@ add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_include_only")
 add_test("test_indent")
-add_test("test_keywords")
-add_test("test_spacing")
 add_test("test_infile")
+add_test("test_keywords")
 add_test("test_outfile")
-add_test("test_unknown")
 add_test("test_pretty_print")
 add_test("test_process_directives")
+add_test("test_quiet")
+add_test("test_spacing")
+add_test("test_unknown")
 
 run_tests()
 
@@ -370,6 +371,39 @@ Sub test_keywords()
   sys.err$ = ""
   opt.set("keywords", "3")
   assert_error("expects 'preserve|lower|pascal|upper' argument")
+End Sub
+
+Sub test_quiet()
+  Local elements$(10) Length 10, i
+
+  assert_int_equals(0, opt.quiet)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.quiet = 999
+    opt.set("quiet", elements$(i))
+    assert_int_equals(0, opt.quiet)
+    Inc i
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.quiet = 999
+    opt.set("quiet", elements$(i))
+    assert_int_equals(1, opt.quiet)
+    Inc i
+  Loop
+
+  opt.set("quiet", "foo")
+  assert_error("expects 'on|off' argument")
 End Sub
 
 Sub test_spacing()
