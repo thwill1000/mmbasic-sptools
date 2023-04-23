@@ -12,6 +12,9 @@ If sys.err$ <> "" Then Error sys.err$
 Function cmd.do_command%(cmd$, argc%, argv$())
   Local call_cmd$, i%
 
+  ' Ignore comments.
+  If Left$(cmd$, 1) = "#" Then Exit Function
+
   ' If cmd$ is "R" or "REMOTE" then suffix the first argument with R and
   ' use that as the cmd$ instead, e.g. "REMOTE TYPE foo" => "RTYPE foo".
   If LCase$(cmd$) = "r" Or LCase$(cmd$) = "remote" And argc% > 0 Then
@@ -179,24 +182,23 @@ Sub cmd.log(cmd$, argc%, argv$())
 End Sub
 
 Sub cmd.pwd(cmd$, argc%, argv$())
-  If Not gonzo.check_arg_count%(cmd$, argc%, 0)
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0) Then Exit Sub
   spsh.cmd_pwd(cmd$, argc%, argv$())
 End Sub
 
 Sub cmd.rchdir(cmd$, argc%, argv$())
-  If Not gonzo.check_arg_count%(cmd$, argc%, 1)
+  If Not gonzo.check_arg_count%(cmd$, argc%, 1) Then Exit Sub
   Local file$ = str.unquote$(argv$(0))
   gonzo.remote_file_cmd("ChDir " + str.quote$(file$))
 End Sub
 
 Sub cmd.rcls(cmd$, argc%, argv$())
-  If Not gonzo.check_arg_count%(cmd$, argc%, 0)
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0) Then Exit Sub
   gonzo.send_break()
   gonzo.read_until_prompt()
   gonzo.writeln("cls")
   gonzo.read_until_match("> cls")
 End Sub
-
 
 Sub cmd.rename(cmd$, argc%, argv$())
   If Not gonzo.check_arg_count%(cmd$, argc%, 2) Then Exit Sub
@@ -460,6 +462,8 @@ Sub cmd.send(cmd$, argc%, argv$())
     command$ = "Run " + str.quote$(remote_file$)
     gonzo.writeln(command$)
     gonzo.read_until_match("> " + command$)
+    con.foreground("white")
+    gonzo.read_until_prompt(ECHO) ' TODO
   ElseIf xcmd% And LCase$(file.get_extension$(remote_file$)) = ".bas" Then
     If gonzo.device% <> gonzo.DEVICE_CMM2 Then
       ' For desinations other than the CMM2 (which has no LOAD command) we
@@ -469,6 +473,14 @@ Sub cmd.send(cmd$, argc%, argv$())
     EndIf
     gonzo.read_until_prompt()
   EndIf
+End Sub
+
+Sub cmd.take(cmd$, argc%, argv$())
+  If Not gonzo.check_connection%() Then Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 1) Then Exit Sub
+  Local local_file$ = str.unquote$(argv$(0))
+  If Not gonzo.check_file_exists%(local_file$) Then Exit Sub
+  con.open_in(gonzo.CONSOLE_FNBR, local_file$)
 End Sub
 
 Sub cmd.term(cmd$, argc%, argv$())

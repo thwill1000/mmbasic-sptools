@@ -8,6 +8,8 @@ sys.requires("history")
 sys.provides("console")
 If sys.err$ <> "" Then Error sys.err$
 
+Dim con.fnbr_in% = 0 ' File number to read input from.
+
 ' Sounds the console bell.
 Sub con.bell()
   Console Bell
@@ -49,6 +51,30 @@ Sub con.foreground(fg$)
   End Select
 End Sub
 
+Sub con.open_in(fnbr%, f$)
+  con.close_in()
+  Open f$ For Input As #fnbr%
+  con.fnbr_in% = fnbr%
+End Sub
+
+Sub con.close_in()
+  If con.fnbr_in% Then Close #con.fnbr_in%
+  con.fnbr_in% = 0
+End Sub
+
+' Reads a character from the keyboard or script file.
+' @return  ASCII code of read character, or -1 if no character available.
+Function con.getc%()
+  Local ch$ = Input$(1, #con.fnbr_in%)
+  If Not Len(ch$) Then
+    If con.fnbr_in% Then
+      con.close_in()
+      ch$ = Input$(1, 0)
+    EndIf
+  EndIf
+  con.getc% = Choice(Len(ch$), Asc(ch$), -1)
+End Function
+
 ' Writes an string to the console without a newline.
 '
 ' @param  s$  the string to write.
@@ -71,7 +97,7 @@ End Sub
 ' @param  history_fnbr%      optional file number to use.
 ' @return                    the line of text read.
 Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
-  Local ch$, hidx%, p%, old$, overwrite%, s$
+  Local ch%, hidx%, p%, old$, overwrite%, s$
 
   con.readln$ = initial$
   p% = Len(initial$) + 1
@@ -79,10 +105,12 @@ Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
   hidx% = Choice(initial$ = "", -1, history.find%(history%(), initial$))
 
   Do While Not sys.break_flag%
-    ch$ = Inkey$
-    If ch$ = "" Then Pause 1 : Continue Do
+    ch% = con.getc%()
 
-    Select Case Asc(ch$)
+    Select Case ch%
+      Case -1
+        Continue Do
+
       Case 8 ' Backspace
         If p% = 1 Then
           con.bell()
@@ -94,12 +122,15 @@ Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
           Inc p%, -1
         EndIf
 
-      Case 10, 13 ' Enter
+      Case 10 ' \n: Line Feed
         Print
         If con.readln$ <> "" Then
           history.push(history%(), con.readln$, history_filename$, history_fnbr%)
         EndIf
         Exit Do
+
+      Case 13 ' \r: Carriage Return
+        ' Do nothing.
 
       Case 127 ' Delete
         If p% = Len(con.readln$) + 1 Then
@@ -113,7 +144,7 @@ Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
 
       Case 128, 129 ' Up, Down
         If hidx% = -1 Then old$ = con.readln$
-        Inc hidx%, Choice(Asc(ch$) = 128, 1, -1)
+        Inc hidx%, Choice(ch% = 128, 1, -1)
         If hidx% <= -1 Then
           hidx% = -1
           s$ = old$
@@ -152,24 +183,24 @@ Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
         Loop
 
       Case < 32, > 126
-        ' Print "<" Str$(Asc(ch$)) ">";
+        ' Print "<" Str$(ch%) ">";
         con.bell()
 
       Case Else
         If Len(con.readln$) = 255 Then
           con.bell()
         ElseIf p% > Len(con.readln$) Then
-          Cat con.readln$, ch$
-          Print ch$;
+          Cat con.readln$, Chr$(ch%)
+          Print Chr$(ch%);
           Inc p%
         ElseIf overwrite% Then
-          con.readln$ = Left$(con.readln$, p% - 1) + ch$ + Mid$(con.readln$, p% + 1)
-          Print ch$;
+          con.readln$ = Left$(con.readln$, p% - 1) + Chr$(ch%) + Mid$(con.readln$, p% + 1)
+          Print Chr$(ch%);
           Inc p%
         Else
           s$ = Mid$(con.readln$, p%)
-          con.readln$ = Left$(con.readln$, p% - 1) + ch$ + s$
-          Print ch$ s$ String$(Len(s$), &h08);
+          con.readln$ = Left$(con.readln$, p% - 1) + Chr$(ch%) + s$
+          Print Chr$(ch%) s$ String$(Len(s$), &h08);
           Inc p%
         EndIf
     End Select

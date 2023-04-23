@@ -23,6 +23,7 @@ Const gonzo.IN_FNBR = 2
 Const gonzo.LOG_FNBR = 3
 Const gonzo.INI_FNBR = 4
 Const gonzo.OUT_FNBR = 5
+Const gonzo.CONSOLE_FNBR = 6
 
 Const gonzo.DOT_DIR = "~/.gonzo"
 Const gonzo.LOG_FILE = gonzo.DOT_DIR + "/gonzo.log"
@@ -158,10 +159,7 @@ End Function
 
 ' Sends a file from the local to the remote using AUTOSAVE.
 Sub gonzo.send_file(local_file$, remote_file$, verbose%)
-  If Not file.exists%(local_file$) Then
-    sys.err$ = "Error: file '" + local_file$ + "' not found"
-    Exit Sub
-  EndIf
+  If Not gonzo.check_file_exists%(local_file$) Then Exit Sub
 
   ' Open the file to send.
   Open local_file$ For Input As #gonzo.IN_FNBR
@@ -259,6 +257,7 @@ Function gonzo.send_rizzo%()
   Print #gonzo.OUT_FNBR, "Close #2"
   Print #gonzo.OUT_FNBR, "Close #1"
   Print #gonzo.OUT_FNBR, "Copy " str.quote$("/tmp/") " + f$ To f$"
+  Print #gonzo.OUT_FNBR, "Kill " str.quote$("/tmp/") " + f$"
   Print #gonzo.OUT_FNBR, "End"
   Close #gonzo.OUT_FNBR
 
@@ -272,10 +271,7 @@ Function gonzo.send_rizzo%()
 End Function
 
 Sub gonzo.xsend_file(local_file$, remote_file$)
-  If Not file.exists%(local_file$) Then
-    sys.err$ = "Error: file '" + local_file$ + "' not found"
-    Exit Sub
-  EndIf
+  If Not gonzo.check_file_exists%(local_file$) Then Exit Sub
 
   ' Cleanup for a new command.
   gonzo.send_break()
@@ -585,6 +581,14 @@ Function gonzo.check_arg_range%(cmd$, argc%, minimum%, maximum%)
   EndIf
 End Function
 
+Function gonzo.check_file_exists%(local_file$)
+  If file.exists%(local_file$) Then
+    gonzo.check_file_exists% = 1
+  Else
+    sys.err$ = "Error: file not found"
+  EndIf
+End Function
+
 gonzo_commands:
 Data "|!|",                 "<index>",               "repeats a previous command from the history"
 Data "|break|",             "",                      "send a Ctrl-C to remote"
@@ -612,6 +616,7 @@ Data "|rrename|rmv|",       "<src-file> <dst-file>", "rename remote file or dire
 Data "|rsize|",             "<file>",                "display size of remote file"
 Data "|rtype|rcat|rlist|",  "<file>",                "list remote file contents"
 Data "|send|put|",          "[OPTION]... <src-file> [<dst-file>]", "send file to remote using AUTOSAVE"
+Data "|take|",              "<file>",                "read and execute gonzo commands from file"
 Data "|term|",              "",                      "open serial terminal"
 Data "|trans|sptrans|",     "[OPTION]... <src-file> [<dst-file>]", "transpile local file"
 Data "|type|cat|list|",     "<file>",                "list local file contents"
