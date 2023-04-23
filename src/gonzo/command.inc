@@ -365,6 +365,80 @@ Sub cmd.rsize(cmd$, argc%, argv$())
   If sys.err$ = "" Then con.println(Str$(size%))
 End Sub
 
+Sub cmd.rtest(cmd$, argc%, argv$())
+  If Not gonzo.check_arg_range%(cmd$, argc%, 0, 1) Then Exit Sub
+
+  Local f$
+  If argc% = 1 Then
+    f$ = str.unquote$(argv$(0))
+    If Not gonzo.check_file_exists%(f$) Then Exit Sub
+  EndIf
+
+  ' Write list of tests - copied from "unittest.inc"
+  If Not Len(f$) Then con.println("Building list of tests ...")
+  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Output As #gonzo.OUT_FNBR
+  Print #gonzo.OUT_FNBR, Time$
+  If Len(f$) Then
+    Print #gonzo.OUT_FNBR, file.get_canonical$(f$)
+  Else
+    f$ = file.find$(Cwd$, "*st*.bas", "file")
+    Do While f$ <> ""
+      If cmd.is_test_file%(f$) Then Print #gonzo.OUT_FNBR, file.get_canonical$(f$)
+      f$ = file.find$()
+    Loop
+  EndIf
+  Close #gonzo.OUT_FNBR
+
+  ' Transform into a gonzo script file.
+  con.println("Writing test script ...")
+  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Input As #gonzo.IN_FNBR
+  Open sys.string_prop$("tmpdir") + "/sptest.gs" For Output As #gonzo.OUT_FNBR
+  Line Input #gonzo.IN_FNBR, f$ ' Time
+  Print #gonzo.OUT_FNBR, "# Remotely execute MMBasic unit-tests"
+  Print #gonzo.OUT_FNBR, "# " + f$
+  Print #gonzo.OUT_FNBR, "rcd A:/"
+  Do
+    Line Input #gonzo.IN_FNBR, f$
+    f$ = str.trim$(f$)
+    If Not Len(f$) Then Exit Do
+    If Left$(f$, 3) = "A:/" Then f$ = Mid$(f$, 3)
+    Print #gonzo.OUT_FNBR, "xput -r -t " + f$
+    Print #gonzo.OUT_FNBR, "rkill " + file.get_name$(f$)
+  Loop
+  Close #gonzo.OUT_FNBR
+  Close #gonzo.IN_FNBR
+
+  ' Execute gonzo script file.
+  Local take_args$(1) = ( sys.string_prop$("tmpdir") + "/sptest.gs", "" )
+  cmd.take("take", 1, take_args$())
+End Sub
+
+Function cmd.is_test_file%(f$)
+  Local name$ = file.get_name$(f$)
+
+  ' Check name matches pattern for sptest files.
+  If file.fnmatch%("test_*.bas", name$) Then cmd.is_test_file% = 1
+  If file.fnmatch%("tst_*.bas", name$) Then cmd.is_test_file% = 1
+  If file.fnmatch%("*_test.bas", name$) Then cmd.is_test_file% = 1
+  If file.fnmatch%("*_tst*.bas", name$) Then cmd.is_test_file% = 1
+
+  If Not cmd.is_test_file% Then Exit Function
+
+  ' Scan first 50 lines of file for #Include of "unittest.inc".
+  Local i%, s$
+  cmd.is_test_file% = 0
+  Open f$ For Input As #gonzo.IN_FNBR
+  For i% = 1 To 50
+    If Eof(#gonzo.IN_FNBR) Then Exit For
+    Line Input #gonzo.IN_FNBR, s$
+    If file.fnmatch%("*#include*unittest.inc*", s$) Then
+      cmd.is_test_file% = 1
+      Exit For
+    EndIf
+  Next
+  Close #gonzo.IN_FNBR
+End Function
+
 Sub cmd.rtype(cmd$, argc%, argv$())
   If Not gonzo.check_arg_count%(cmd$, argc%, 1) Then Exit Sub
   Local file$ = str.unquote$(argv$(0))
