@@ -131,8 +131,10 @@ Sub main()
 End Sub
 
 Sub open_include()
-  Local s$ = lx.line$
-  s$ = "' BEGIN:     " + s$ + " " + String$(66 - Len(s$), "-")
+  Local s$ = "' BEGIN: #Include "
+  Cat s$, lx.line$
+  If Len(s$) < 79 Then Cat s$, " "
+  Do While Len(s$) < 80 : Cat s$, "-" : Loop
   If lx.parse_basic%(s$) = sys.SUCCESS Then
     If in.open%(tr.include$) = sys.SUCCESS Then
       Local i = in.num_open_files%
@@ -145,8 +147,10 @@ Sub open_include()
 End Sub
 
 Sub close_include()
-  Local s$ = "#Include " + str.quote$(in.files$(in.num_open_files% - 1))
-  s$ = "' END:       " + s$ + " " + String$(66 - Len(s$), "-")
+  Local s$ = "' END:   #Include "
+  Cat s$, str.quote$(in.files$(in.num_open_files% - 1))
+  If Len(s$) < 79 Then Cat s$, " "
+  Do While Len(s$) < 80 : Cat s$, "-" : Loop
   If lx.parse_basic%(s$) = sys.SUCCESS Then pp.print_line(1)
   If sys.err$ = "" Then in.close()
 End Sub

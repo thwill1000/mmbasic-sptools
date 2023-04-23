@@ -50,10 +50,8 @@ Function ex.eval%(idx%, result%)
     ex.eval% = sys.SUCCESS
     On Error Ignore
     result% = Eval(expr$)
-    If Mm.ErrNo <> 0 Then
-      ex.eval% = sys.FAILURE
-      On Error Clear
-    EndIf
+    If Mm.ErrNo <> 0 Then ex.eval% = sys.FAILURE
+    On Error Abort
   EndIf
 
   If ex.eval% <> sys.SUCCESS Then sys.err$ = "Invalid expression syntax"
