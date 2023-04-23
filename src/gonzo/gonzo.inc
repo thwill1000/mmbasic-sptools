@@ -129,7 +129,7 @@ Function gonzo.do_command%(cmd$, argc%, argv$())
 End Function
 
 Sub gonzo.cmd_bang(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 1) Then Exit Sub
   Local idx% = Val(argv$(0))
   If idx% <= 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
   idx% = history.newest%(gonzo.history%()) - idx%
@@ -143,19 +143,18 @@ Sub gonzo.cmd_bang(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_break(cmd$, argc%, argv$())
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
-
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0) Then Exit Sub
   gonzo.send_break()
   gonzo.read_until_prompt()
 End Sub
 
 Sub gonzo.cmd_chdir(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 1) Then Exit Sub
   spsh.cmd_chdir(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_cls(cmd$, argc%, argv$())
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0) Then Exit Sub
   Cls
 End Sub
 
@@ -232,19 +231,17 @@ Sub gonzo.cmd_device(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_exit(cmd$, argc%, argv$())
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0) Then Exit Sub
   gonzo.exit_flag% = 1
 End Sub
 
 Sub gonzo.cmd_files(cmd$, argc%, argv$())
-  If argc% > 1 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
-
+  If Not gonzo.check_arg_max%(cmd$, argc%, 1) Then Exit Sub
   spsh.cmd_files(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_help(cmd$, argc%, argv$())
-  If argc% > 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_max%(cmd$, argc%, 1) Then Exit Sub
 
   If argc% = 1 Then
     con.println(gonzo.usage$(argv$(0)))
@@ -263,7 +260,7 @@ Sub gonzo.cmd_help(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_history(cmd$, argc%, argv$())
-  If argc% > 0 Then sys.err$ = gonzo.usage(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count(cmd$, argc%, 0) Then Exit Sub
   Local i%, s$, newest% = history.newest%(gonzo.history%())
   For i% = history.count%(gonzo.history%()) - 1 To 0 Step -1
     s$ = history.get$(gonzo.history%(), i%)
@@ -277,8 +274,7 @@ Sub gonzo.cmd_log(cmd$, argc%, argv$())
     Close #gonzo.LOG_FNBR
     Open gonzo.LOG_FILE For Output As gonzo.LOG_FNBR
     Exit Sub
-  ElseIf argc% <> 0 Then
-    sys.err$ = gonzo.usage$(cmd$)
+  ElseIf Not gonzo.check_arg_count%(cmd$, argc%, 0)
     Exit Sub
   EndIf
 
@@ -304,21 +300,18 @@ Sub gonzo.cmd_log(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_pwd(cmd$, argc%, argv$())
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
-
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0)
   spsh.cmd_pwd(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_rchdir(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 1)
   Local file$ = str.unquote$(argv$(0))
-
   gonzo.remote_file_cmd("ChDir " + str.quote$(file$))
 End Sub
 
 Sub gonzo.cmd_rcls(cmd$, argc%, argv$())
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0)
   gonzo.send_break()
   gonzo.read_until_prompt()
   gonzo.writeln("cls")
@@ -326,7 +319,7 @@ Sub gonzo.cmd_rcls(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.remote_file_cmd(command$, quiet%)
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED Then sys.err$ = "Error: no connection" : Exit Sub
+  If Not gonzo.check_connection%() Then Exit Sub
 
   gonzo.send_break()
   gonzo.read_until_prompt()
@@ -344,13 +337,21 @@ Sub gonzo.remote_file_cmd(command$, quiet%)
   EndIf
 End Sub
 
+Function gonzo.check_connection%()
+  If gonzo.device% <> gonzo.DEVICE_DISCONNECTED Then
+    gonzo.check_connection% = 1
+  Else
+    sys.err$ = "Error: no connection"
+  EndIf
+End Function
+
 Sub gonzo.cmd_rename(cmd$, argc%, argv$())
-  If argc% <> 2 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 2) Then Exit Sub
   spsh.cmd_rename(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_rexec(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED Then sys.err$ = "Error: no connection" : Exit Sub
+  If Not gonzo.check_connection%() Then Exit Sub
 
   gonzo.send_break()
   gonzo.read_until_prompt()
@@ -390,16 +391,14 @@ Sub gonzo.cmd_rcopy(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_rdelete(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 1) Then Exit Sub
   Local file$ = str.unquote$(argv$(0))
-
   gonzo.remote_file_cmd("Kill " + str.quote$(file$))
 End Sub
 
 Sub gonzo.cmd_receive(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED Then sys.err$ = "Error: no connection"
-  If argc% < 1 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
+  If Not gonzo.check_connection%() Then Exit Sub
+  If Not gonzo.check_arg_range%(cmd$, argc%, 1, 2) Then Exit Sub
   Local remote_file$ = str.unquote$(argv$(0))
 
   Local file_size% = gonzo.get_file_size%(remote_file$)
@@ -442,9 +441,8 @@ Sub gonzo.cmd_receive(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_rfiles(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED Then sys.err$ = "Error: no connection"
-  If argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
+  If Not gonzo.check_connection%() Then Exit Sub
+  If Not gonzo.check_arg_max%(cmd$, argc%, 2) Then Exit Sub
 
   Local d$ = Choice(argv$(0) = "", "*", str.unquote$(argv$(0)))
   If file.is_directory%(d$) Then Cat d$, "/*"
@@ -468,14 +466,13 @@ Sub gonzo.cmd_rfiles(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_rmkdir(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count(cmd$, arg%, 1) Then Exit Sub
   Local file$ = str.unquote$(argv$(0))
-
   gonzo.remote_file_cmd("MkDir " + str.quote$(file$))
 End Sub
 
 Sub gonzo.cmd_rpwd(cmd$, argc%, argv$())
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count(cmd$, arg%, 0) Then Exit Sub
 
   gonzo.send_break()
   gonzo.read_until_prompt()
@@ -507,15 +504,14 @@ Sub gonzo.cmd_rrename(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_rsize(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count(cmd$, arg%, 1) Then Exit Sub
   Local file$ = str.unquote$(argv$(0))
-
   Local size% = gonzo.get_file_size%(file$)
   If sys.err$ = "" Then con.println(Str$(size%))
 End Sub
 
 Sub gonzo.cmd_rtype(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count(cmd$, arg%, 1) Then Exit Sub
   Local file$ = str.unquote$(argv$(0))
 
   gonzo.send_break()
@@ -605,10 +601,7 @@ Sub gonzo.clear_buf()
 End Sub
 
 Sub gonzo.cmd_send(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED Then
-    sys.err$ = "Error: no connection"
-    Exit Sub
-  EndIf
+  If Not gonzo.check_connection%() Then Exit Sub
 
   Local xcmd%
   Select Case cmd$
@@ -693,9 +686,8 @@ Sub gonzo.cmd_send(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_term(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED Then sys.err$ = "Error: no connection"
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
+  If Not gonzo.check_connection%() Then Exit Sub
+  If Not gonzo.check_arg_count%(cmd$, argc%, 0) Then Exit Sub
 
   gonzo.update_title("TERMINAL")
   con.println("(Connected to remote host, type ^]C to get back.)")
@@ -764,20 +756,19 @@ Sub gonzo.cmd_term(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_trans(cmd$, argc%, argv$())
-  If argc% < 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
-
+  If Not gonzo.check_arg_min(cmd$, arg%, 1) Then Exit Sub
   Local command$ = "mmbasic " + Mm.Info$(Path) + "../sptrans/sptrans.bas"
   Local cmdline$ = array.join_strings$(argv$(), " ", 0, argc%)
   System command$ + " " + cmdline$
 End Sub
 
 Sub gonzo.cmd_type(cmd$, argc%, argv$())
-  If argc% <> 1 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_count(cmd$, arg%, 1) Then Exit Sub
   spsh.cmd_type(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_version(cmd$, argc%, argv$())
-  If argc% <> 0 Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+  If Not gonzo.check_arg_min(cmd$, arg%, 0) Then Exit Sub
 
   ' TODO: duplicated from common/sptools.inc
   con.println("gonzo (SP Tools) Release " + sys.VERSION$ + " for MMB4L 2022.01.00")
@@ -789,9 +780,8 @@ Sub gonzo.cmd_version(cmd$, argc%, argv$())
 End Sub
 
 Sub gonzo.cmd_xreceive(cmd$, argc%, argv$())
-  If gonzo.device% = gonzo.DEVICE_DISCONNECTED Then sys.err$ = "Error: no connection"
-  If argc% < 1 Or argc% > 2 Then sys.err$ = gonzo.usage$(cmd$)
-  If sys.err$ <> "" Then Exit Sub
+  If Not gonzo.check_connection%() Then Exit Sub
+  If Not gonzo.check_arg_range(cmd$, argc%, 1, 2) Then Exit Sub
   Local remote_file$ = str.unquote$(argv$(0))
 
   Local file_size% = gonzo.get_file_size%(remote_file$)
@@ -1175,6 +1165,26 @@ Function gonzo.usage$(cmd$)
       Exit Do
     EndIf
   Loop
+End Function
+
+Function gonzo.check_arg_count%(cmd$, argc%, expected%)
+  gonzo.check_arg_count% = gonzo.check_arg_range%(cmd$, argc%, expected%, expected%)
+End Function
+
+Function gonzo.check_arg_max%(cmd$, argc%, maximum%)
+  gonzo.check_arg_max% = gonzo.check_arg_range%(cmd$, argc%, 0, maximum%)
+End Function
+
+Function gonzo.check_arg_min%(cmd$, argc%, minimum%)
+  gonzo.check_arg_max% = gonzo.check_arg_range%(cmd$, argc%, minimum%, 100)
+End Function
+
+Function gonzo.check_arg_range%(cmd$, argc%, minimum%, maximum%)
+  If argc% >= minimum% And argc% <= maximum% Then
+    gonzo.check_arg_range% = 1
+  Else
+    sys.err$ = gonzo.usage$(cmd$)
+  EndIf
 End Function
 
 gonzo_commands:
