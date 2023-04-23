@@ -1,6 +1,6 @@
-' Copyright (c) 2021-2022 Thomas Hugo Williams
+' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.03
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default None
@@ -16,6 +16,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../crypt.inc"
 
 Const BASE% = Mm.Info(Option Base)
+Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_crypt"
 
 add_test("test_md5_fmt")
 add_test("test_md5_given_string")
@@ -32,9 +33,16 @@ run_tests(Choice(InStr(Mm.CmdLine$, "--base"), "", "--base=1"))
 End
 
 Sub setup_test()
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  EndIf
+'  MkDir TMPDIR$
 End Sub
 
 Sub teardown_test()
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  EndIf
 End Sub
 
 Sub test_md5_fmt()
@@ -55,7 +63,7 @@ Data &h01, &h62, &hAB, &h89, &h1D, &h5F, &hFF, &h00
 Data &h1A, &h2F, &hBC, &h93, &hD7, &hF0, &hF2, &hEF
 
 Sub test_md5_given_string()
-  Local filename$, size%, md5_decrypted$, md5_encrypted$
+  Local filename$, name$, size%, md5_decrypted$, md5_encrypted$
   Local md5%(array.new%(2)), s$
 
   ' Without full-stop
@@ -68,13 +76,16 @@ Sub test_md5_given_string()
   assert_true(crypt.md5%(Peek(VarAddr s$) + 1, Len(s$), md5%()))
   assert_string_equals("e4d909c290d0fb1ca068ffaddf22cbd0", crypt.md5_fmt$(md5%()))
 
+  MkDir TMPDIR$
   Restore data_test_md5
   Do
-    restore_data_test_md5(filename$)
-    Read filename$, size%, md5_decrypted$, md5_encrypted$
-    If filename$ = "END" Then Exit Do
+    restore_data_test_md5(name$)
+    Read name$, size%, md5_decrypted$, md5_encrypted$
+    If name$ = "END" Then Exit Do
     If size% > 255 Then Continue Do
-    Open file.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
+    filename$ = TMPDIR$ + "/" + name$ + ".txt"
+    ut.write_data_file(filename$, "data_" + name$)
+    Open filename$ For Input As #1
     s$ = Input$(255, #1)
     Close #1
     assert_int_equals(size%, Len(s$))
@@ -86,29 +97,89 @@ End Sub
 ' Restores the global DATA pointer to a given entry in the 'data_test_md5' DATA.
 ' Needed on platforms that do not yet implement READ SAVE and READ RESTORE
 ' because crypt.md5%() and friends also manipulate the global DATA pointer.
-Sub restore_data_test_md5(filename$)
+Sub restore_data_test_md5(label$)
   If Mm.Device$ <> "MMBasic For Windows" Then
     Restore data_test_md5
-    If filename$ = "" Then Exit Sub
+    If label$ = "" Then Exit Sub
     Local s$, size%, enc$, dec$
     Do
       Read s$, size%, enc$, dec$
-      If s$ = filename$ Then Exit Do
+      If s$ = label$ Then Exit Do
     Loop
   EndIf
 End Sub
 
+data_test_md5:
+' Filename, file size, expected unencrypted MD5, expected encrypted MD5
+' Note that the encrypted MD5 is initialisation vector specific.
+Data "empty",             0,"d41d8cd98f00b204e9800998ecf8427e","232eeef90183d7ddfeb22aa80c6efa5e"
+Data "lorem_ipsum_54",   54,"e51638c24dbb103f460b70df14939bc5","4d03aaeafd08fb71a8a8a0f8cbaeded2"
+Data "lorem_ipsum_55",   55,"fc10a08df7fafa3871166646609e1c95","38d360aa333133aa39f032416f270a4f"
+Data "lorem_ipsum_56",   56,"572be236390dc0bca92bb5c5999d2290","7a738c8a534947512156a566bac3ecf1"
+Data "lorem_ipsum_63",   63,"5213818ec87e04c44d75b00f79b23110","b9af130d16deb6fbc8d0abdd0807c8e1"
+Data "lorem_ipsum_64",   64,"5819ecacdd8551d108e4fe83be10200e","ad924354452e9d78e1fa487360bbe80f"
+Data "lorem_ipsum_65",   65,"d66eea968b0c65fbb800bc5abb35cb4e","14956694aa4432aed9c07f3c3b774bae"
+Data "lorem_ipsum_255", 255,"123b001fc08115b683545c1c4140cc82","fc3e7b587986efc2f83079802e56716d"
+Data "lorem_ipsum",     446,"f90b84824e80384c67922ce9c932ac55","0ffd2be13672cd59da9c06c50d2231a2"
+Data "END", 0, ""
+
+data_empty:
+  Data "text/lf"
+  Data "<EOF>"
+
+data_lorem_ipsum_54:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing eli<EOF>"
+
+data_lorem_ipsum_55:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing elit<EOF>"
+
+data_lorem_ipsum_56:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing elit,<EOF>"
+
+data_lorem_ipsum_63:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do<EOF>"
+
+data_lorem_ipsum_64:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do <EOF>"
+
+data_lorem_ipsum_65:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do e<EOF>"
+
+data_lorem_ipsum_255:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore"
+  Data "et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut"
+  Data "aliquip ex ea commodo consequat. Duis aute irure dolor i<EOF>"
+
+data_lorem_ipsum:
+  Data "text/lf"
+  Data "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore"
+  Data "et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut"
+  Data "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse"
+  Data "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in"
+  Data "culpa qui officia deserunt mollit anim id est laborum."
+  Data "<EOF>"
+
 Sub test_md5_given_long_string()
-  Local filename$, size%, md5_decrypted$, md5_encrypted$
+  Local filename$, name$, size%, md5_decrypted$, md5_encrypted$
   Local i%, ls%(100), md5%(array.new%(2)), s$
 
+  MkDir TMPDIR$
   Restore data_test_md5
   Do
-    restore_data_test_md5(filename$)
-    Read filename$, size%, md5_decrypted$, md5_encrypted$
-    If filename$ = "END" Then Exit Do
+    restore_data_test_md5(name$)
+    Read name$, size%, md5_decrypted$, md5_encrypted$
+    If name$ = "END" Then Exit Do
     LongString Clear ls%()
-    Open file.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
+    filename$ = TMPDIR$ + "/" + name$ + ".txt"
+    ut.write_data_file(filename$, "data_" + name$)
+    Open filename$ For Input As #1
     Do
       s$ = Input$(255, #1)
       LongString Append ls%(), s$
@@ -121,33 +192,22 @@ Sub test_md5_given_long_string()
 End Sub
 
 Sub test_md5_file()
-  Local i%, filename$, size%, md5_decrypted$, md5_encrypted$, md5%(array.new%(2))
+  Local i%, filename$, name$, size%, md5_decrypted$, md5_encrypted$, md5%(array.new%(2))
 
+  MkDir TMPDIR$
   Restore data_test_md5
   Do
-    restore_data_test_md5(filename$)
-    Read filename$, size%, md5_decrypted$, md5_encrypted$
-    If filename$ = "END" Then Exit Do
-    Open file.PROG_DIR$ + "/resources/tst_crypt/" + filename$ For Input As #1
+    restore_data_test_md5(name$)
+    Read name$, size%, md5_decrypted$, md5_encrypted$
+    If name$ = "END" Then Exit Do
+    filename$ = TMPDIR$ + "/" + name$ + ".txt"
+    ut.write_data_file(filename$, "data_" + name$)
+    Open filename$ For Input As #1
     assert_true(crypt.md5_file%(1, md5%()))
     Close #1
     assert_string_equals(md5_decrypted$, crypt.md5_fmt$(md5%()))
   Loop
 End Sub
-
-data_test_md5:
-' Filename, file size, expected unencrypted MD5, expected encrypted MD5
-' Note that the encrypted MD5 is initialisation vector specific.
-Data "empty.txt",            0,"d41d8cd98f00b204e9800998ecf8427e","232eeef90183d7ddfeb22aa80c6efa5e"
-Data "lorem_ipsum_54.txt",  54,"e51638c24dbb103f460b70df14939bc5","4d03aaeafd08fb71a8a8a0f8cbaeded2"
-Data "lorem_ipsum_55.txt",  55,"fc10a08df7fafa3871166646609e1c95","38d360aa333133aa39f032416f270a4f"
-Data "lorem_ipsum_56.txt",  56,"572be236390dc0bca92bb5c5999d2290","7a738c8a534947512156a566bac3ecf1"
-Data "lorem_ipsum_63.txt",  63,"5213818ec87e04c44d75b00f79b23110","b9af130d16deb6fbc8d0abdd0807c8e1"
-Data "lorem_ipsum_64.txt",  64,"5819ecacdd8551d108e4fe83be10200e","ad924354452e9d78e1fa487360bbe80f"
-Data "lorem_ipsum_65.txt",  65,"d66eea968b0c65fbb800bc5abb35cb4e","14956694aa4432aed9c07f3c3b774bae"
-Data "lorem_ipsum_255.txt",255,"123b001fc08115b683545c1c4140cc82","fc3e7b587986efc2f83079802e56716d"
-Data "lorem_ipsum.txt",    446,"f90b84824e80384c67922ce9c932ac55","0ffd2be13672cd59da9c06c50d2231a2"
-Data "END", 0, ""
 
 Sub test_xxtea_block_encrypt()
   Local v%(array.new%(10)) ' 80 bytes
@@ -214,20 +274,22 @@ Sub test_xxtea_block_decrypt()
 End Sub
 
 Sub test_xxtea_file()
-  Local filename$, size%, md5_decrypted$, md5_encrypted$
+  Local filename$, name$, size%, md5_decrypted$, md5_encrypted$
   Local original_file$, encrypted_file$, decrypted_file$
   Local k%(array.new%(2)) = (17470987, -89397865243)
   Local iv%(array.new%(2)) = (-478912, 123456789)
   Local md5%(array.new%(2))
 
+  MkDir TMPDIR$
   Restore data_test_md5
   Do
-    restore_data_test_md5(filename$)
-    Read filename$, size%, md5_decrypted$, md5_encrypted$
-    If filename$ = "END" Then Exit Do
-    original_file$ = file.PROG_DIR$ + "/resources/tst_crypt/" + filename$
-    encrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".encrypted"
-    decrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".decrypted"
+    restore_data_test_md5(name$)
+    Read name$, size%, md5_decrypted$, md5_encrypted$
+    If name$ = "END" Then Exit Do
+    original_file$ = TMPDIR$ + "/" + name$ + ".txt"
+    ut.write_data_file(original_file$, "data_" + name$)
+    encrypted_file$ = TMPDIR$ + "/" + name$ + ".encrypted"
+    decrypted_file$ = TMPDIR$ + "/" + name$ + ".decrypted"
 
     ' Encrypt file.
     Open original_file$ For Input As #1
@@ -264,10 +326,12 @@ Sub test_xxtea_file()
 End Sub
 
 Sub test_xxtea_file_iv_dependent()
-  Const filename$ = "lorem_ipsum.txt"
-  Const original_file$ = file.PROG_DIR$ + "/resources/tst_crypt/" + filename$
-  Const encrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".iv.encrypted"
-  Const decrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".iv.decrypted"
+  Const name$ = "lorem_ipsum"
+  Const original_file$ = TMPDIR$ + "/" + name$ + ".txt"
+  MkDir TMPDIR$
+  ut.write_data_file(original_file$, "data_" + name$)
+  Const encrypted_file$ = TMPDIR$ + "/" + name$ + ".iv.encrypted"
+  Const decrypted_file$ = TMPDIR$ + "/" + name$ + ".iv.decrypted"
   Local k%(array.new%(2)) = (17470987, -89397865243)
   Local md5%(array.new%(2))
 
@@ -313,10 +377,12 @@ Sub test_xxtea_file_iv_dependent()
 End Sub
 
 Sub test_xxtea_file_key_dependent()
-  Const filename$ = "lorem_ipsum.txt"
-  Const original_file$ = file.PROG_DIR$ + "/resources/tst_crypt/" + filename$
-  Const encrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".key.encrypted"
-  Const decrypted_file$ = file.PROG_DIR$ + "/tmp/" + filename$ + ".key.decrypted"
+  Const name$ = "lorem_ipsum"
+  Const original_file$ = TMPDIR$ + "/" + name$ + ".txt"
+  MkDir TMPDIR$
+  ut.write_data_file(original_file$, "data_" + name$)
+  Const encrypted_file$ = TMPDIR$ + "/" + name$ + ".key.encrypted"
+  Const decrypted_file$ = TMPDIR$ + "/" + name$ + ".key.decrypted"
   Local iv%(array.new%(2)) = (-478912, 123456789)
   Local md5%(array.new%(2))
 

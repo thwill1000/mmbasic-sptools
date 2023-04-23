@@ -1,6 +1,6 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.05
+' For MMBasic 5.07
 
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
@@ -524,4 +524,36 @@ Sub ut.create_file(f$, fnbr%)
   Local fnbr_% = Choice(fnbr%, fnbr%, 1)
   Open f$ For Output As fnbr_%
   Close fnbr_%
+End Sub
+
+' Writes the contents of DATA to a file.
+'
+' @param  filename$    The file to write.
+' @param  data_label$  Label from which to start reading DATA.
+Sub ut.write_data_file(filename$, data_label$)
+  Local s$, type$
+  Read Save
+  Restore data_label$
+  Read type$
+  Open filename$ For Output As #1
+  Select Case type$
+    Case "text/crlf", "text/lf"
+      Do
+        Read s$
+        If Right$(s$, 5) = "<EOF>" Then
+          Print #1, Left$(s$, Len(s$) - 5);
+          Exit Do
+        ElseIf type$ = "text/crlf" Then
+          Print #1, s$ + Chr$(13) + Chr$(10);
+        ElseIf type$ = "text/lf" Then
+          Print #1, s$ + Chr$(10);
+        Else
+          Error "Unknown text data type '" + type$ + "'"
+        EndIf
+      Loop
+    Case Else
+      Error "Unknown data type '" + type$ + "'"
+  End Select
+  Close #1
+  Read Restore
 End Sub
