@@ -2,7 +2,7 @@
 
 ' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMB4L 2022.01.00
+' For MMB4L 0.6.0
 
 Option Base 0
 Option Default None
@@ -18,6 +18,7 @@ Option Explicit On
 #Include "console.inc"
 #Include "spsh.inc"
 #Include "gonzo.inc"
+#Include "command.inc"
 
 Option CodePage "CMM2"
 
@@ -54,7 +55,7 @@ Sub main()
   gonzo.connect(cmd$ = "");
 
   If cmd$ <> "" Then
-    gonzo.do_command(cmd$, argc%, argv$())
+    cmd.do_command(cmd$, argc%, argv$())
 
     If Mm.Device$ <> "MMB4L" Then
       ' Move cursor up one line on both VGA and Serial Console.
@@ -82,7 +83,7 @@ Sub main()
     If sys.break_flag% Then con.println() : Exit Do
     gonzo.parse_cmd_line(cmd_line$, cmd$, argc%, argv$())
     ' con.foreground("default")
-  Loop Until Choice(cmd$ = "", 0, gonzo.do_command%(cmd$, argc%, argv$()))
+  Loop Until Choice(cmd$ = "", 0, cmd.do_command%(cmd$, argc%, argv$()))
 
   If Not gonzo.save_inifile%(INI_FILE) Then con.errorln(sys.err$)
   sys.restore_break()
