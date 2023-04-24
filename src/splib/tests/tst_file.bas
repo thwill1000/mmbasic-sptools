@@ -1,11 +1,9 @@
 ' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07.03
+' For MMBasic 5.07
 
 Option Explicit On
 Option Default None
-' TODO: this is just a placeholder.
-If InStr(Mm.Device$, "PicoMite") > 0 Then Dim Mm.CmdLine$ = ""
 Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 #Include "../system.inc"
@@ -17,7 +15,6 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../../sptest/unittest.inc"
 
 Const BASE% = Mm.Info(Option Base)
-Const RSRC$ = file.get_canonical$(file.PROG_DIR$ + "/resources/tst_file")
 Const TMPDIR$ = sys.string_prop$("tmpdir") + "/tst_file"
 
 add_test("test_get_parent")
@@ -65,11 +62,12 @@ Sub setup_test()
   If file.exists%(TMPDIR$) Then
     If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
   EndIf
-  MkDir TMPDIR$
 End Sub
 
 Sub teardown_test()
-  If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 1) <> sys.SUCCESS Then Error "Failed to delete directory '" + TMPDIR$ + "'"
+  EndIf
 End Sub
 
 Sub test_get_parent()
@@ -207,6 +205,8 @@ Sub test_is_absolute()
 End Sub
 
 Sub test_is_symlink()
+  MkDir TMPDIR$
+
   ' Test on directory.
   assert_false(file.is_symlink%(TMPDIR$))
 
@@ -291,83 +291,121 @@ Sub test_fnmatch()
 End Sub
 
 Sub test_find_all()
-  assert_string_equals(RSRC$,                                 file.find$(RSRC$, "*", "all"))
-  assert_string_equals(RSRC$ + "/snafu-dir",                  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir",           file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir/four.bar",  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/three.bar",        file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir",                 file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir",          file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir/four.bar", file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/three.bar",       file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         file.find$())
-  assert_string_equals(RSRC$ + "/zzz.txt",                    file.find$())
-  assert_string_equals("",                                    file.find$())
+  given_file_tree()
+
+  Const CANON$ = file.get_canonical$(TMPDIR$)
+  assert_string_equals(CANON$,                                 file.find$(TMPDIR$, "*", "all"))
+  assert_string_equals(CANON$ + "/snafu-dir",                  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/one.foo",          file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/subdir",           file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/subdir/five.foo",  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/subdir/four.bar",  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/three.bar",        file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/two.foo",          file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir",                 file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/one.foo",         file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir",          file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir/five.foo", file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir/four.bar", file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/three.bar",       file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/two.foo",         file.find$())
+  assert_string_equals(CANON$ + "/zzz.txt",                    file.find$())
+  assert_string_equals("",                                     file.find$())
+End Sub
+
+Sub given_file_tree()
+  MkDir TMPDIR$
+  MkDir TMPDIR$ + "/snafu-dir"
+  MkDir TMPDIR$ + "/snafu-dir/subdir"
+  MkDir TMPDIR$ + "/wombat-dir"
+  MkDir TMPDIR$ + "/wombat-dir/subdir"
+  ut.create_file(TMPDIR$ + "/snafu-dir/one.foo")
+  ut.create_file(TMPDIR$ + "/snafu-dir/two.foo")
+  ut.create_file(TMPDIR$ + "/snafu-dir/three.bar")
+  ut.create_file(TMPDIR$ + "/snafu-dir/subdir/four.bar")
+  ut.create_file(TMPDIR$ + "/snafu-dir/subdir/five.foo")
+  ut.create_file(TMPDIR$ + "/wombat-dir/one.foo")
+  ut.create_file(TMPDIR$ + "/wombat-dir/two.foo")
+  ut.create_file(TMPDIR$ + "/wombat-dir/three.bar")
+  ut.create_file(TMPDIR$ + "/wombat-dir/subdir/four.bar")
+  ut.create_file(TMPDIR$ + "/wombat-dir/subdir/five.foo")
+  ut.create_file(TMPDIR$ + "/zzz.txt")
 End Sub
 
 Sub test_find_files()
-  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          file.find$(RSRC$, "*", "file"))
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir/four.bar",  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/three.bar",        file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir/four.bar", file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/three.bar",       file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         file.find$())
-  assert_string_equals(RSRC$ + "/zzz.txt",                    file.find$())
-  assert_string_equals("",                                    file.find$())
+  given_file_tree()
+
+  Const CANON$ = file.get_canonical$(TMPDIR$)
+  assert_string_equals(CANON$ + "/snafu-dir/one.foo",          file.find$(TMPDIR$, "*", "file"))
+  assert_string_equals(CANON$ + "/snafu-dir/subdir/five.foo",  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/subdir/four.bar",  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/three.bar",        file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/two.foo",          file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/one.foo",         file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir/five.foo", file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir/four.bar", file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/three.bar",       file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/two.foo",         file.find$())
+  assert_string_equals(CANON$ + "/zzz.txt",                    file.find$())
+  assert_string_equals("",                                     file.find$())
 End Sub
 
 Sub test_find_dirs()
-  assert_string_equals(RSRC$,                        file.find$(RSRC$, "*", "dir"))
-  assert_string_equals(RSRC$ + "/snafu-dir",         file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir",  file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir",        file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir", file.find$())
-  assert_string_equals("",                           file.find$())
+  given_file_tree()
+
+  Const CANON$ = file.get_canonical$(TMPDIR$)
+  assert_string_equals(CANON$,                        file.find$(TMPDIR$, "*", "dir"))
+  assert_string_equals(CANON$ + "/snafu-dir",         file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/subdir",  file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir",        file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir", file.find$())
+  assert_string_equals("",                            file.find$())
 End Sub
 
 Sub test_find_all_matching()
-  assert_string_equals(RSRC$,                                 file.find$(RSRC$, "*f*", "all"))
-  assert_string_equals(RSRC$ + "/snafu-dir",                  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir/four.bar",  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir/four.bar", file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         file.find$())
-  assert_string_equals("",                                    file.find$())
+  given_file_tree()
+
+  Const CANON$ = file.get_canonical$(TMPDIR$)
+  assert_string_equals(CANON$,                                 file.find$(TMPDIR$, "*f*", "all"))
+  assert_string_equals(CANON$ + "/snafu-dir",                  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/one.foo",          file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/subdir/five.foo",  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/subdir/four.bar",  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/two.foo",          file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/one.foo",         file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir/five.foo", file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir/four.bar", file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/two.foo",         file.find$())
+  assert_string_equals("",                                     file.find$())
 End Sub
 
 Sub test_find_files_matching()
-  assert_string_equals(RSRC$ + "/snafu-dir/one.foo",          file.find$(RSRC$, "*.foo", "file"))
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir/five.foo",  file.find$())
-  assert_string_equals(RSRC$ + "/snafu-dir/two.foo",          file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/one.foo",         file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir/five.foo", file.find$())
-  assert_string_equals(RSRC$ + "/wombat-dir/two.foo",         file.find$())
-  assert_string_equals("",                                    file.find$())
+  given_file_tree()
+
+  Const CANON$ = file.get_canonical$(TMPDIR$)
+  assert_string_equals(CANON$ + "/snafu-dir/one.foo",          file.find$(TMPDIR$, "*.foo", "file"))
+  assert_string_equals(CANON$ + "/snafu-dir/subdir/five.foo",  file.find$())
+  assert_string_equals(CANON$ + "/snafu-dir/two.foo",          file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/one.foo",         file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/subdir/five.foo", file.find$())
+  assert_string_equals(CANON$ + "/wombat-dir/two.foo",         file.find$())
+  assert_string_equals("",                                     file.find$())
 End Sub
 
 Sub test_find_dirs_matching()
-  assert_string_equals(RSRC$ + "/snafu-dir/subdir",  file.find$(RSRC$, "*ub*", "dir"))
-  assert_string_equals(RSRC$ + "/wombat-dir/subdir", file.find$())
-  assert_string_equals("",                           file.find$())
+  given_file_tree()
+
+  Const CANON$ = file.get_canonical$(TMPDIR$)
+  assert_string_equals(CANON$ + "/snafu-dir/subdir",  file.find$(TMPDIR$, "*ub*", "dir"))
+  assert_string_equals(CANON$ + "/wombat-dir/subdir", file.find$())
+  assert_string_equals("",                            file.find$())
 End Sub
 
 Sub test_find_with_symlinks()
   If Mm.Device$ <> "MMB4L" Then Exit Sub
 
   ' Setup.
+  MkDir TMPDIR$
   Local foo_dir$ = TMPDIR$ + "/foo"
   MkDir foo_dir$
   given_non_empty_file(TMPDIR$ + "/foo/one.txt")
@@ -388,29 +426,32 @@ Sub test_find_with_symlinks()
 End Sub
 
 Sub test_count_files()
-  assert_int_equals(3, file.count_files%(RSRC$, "*", "all"))
-  assert_int_equals(1, file.count_files%(RSRC$, "*fu*", "all"))
-  assert_int_equals(4, file.count_files%(RSRC$ + "/snafu-dir", "*", "all"))
-  assert_int_equals(2, file.count_files%(RSRC$ + "/snafu-dir", "*.foo", "all"))
-  assert_int_equals(1, file.count_files%(RSRC$ + "/snafu-dir", "*.bar", "all"))
-  assert_int_equals(2, file.count_files%(RSRC$ + "/snafu-dir", "*r", "all"))
+  given_file_tree()
 
-  assert_int_equals(1, file.count_files%(RSRC$, "*", "file"))
-  assert_int_equals(0, file.count_files%(RSRC$, "*fu*", "file"))
-  assert_int_equals(3, file.count_files%(RSRC$ + "/snafu-dir", "*", "file"))
-  assert_int_equals(2, file.count_files%(RSRC$ + "/snafu-dir", "*.foo", "file"))
-  assert_int_equals(1, file.count_files%(RSRC$ + "/snafu-dir", "*.bar", "file"))
-  assert_int_equals(1, file.count_files%(RSRC$ + "/snafu-dir", "*r", "file"))
+  assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
+  assert_int_equals(1, file.count_files%(TMPDIR$, "*fu*", "all"))
+  assert_int_equals(4, file.count_files%(TMPDIR$ + "/snafu-dir", "*", "all"))
+  assert_int_equals(2, file.count_files%(TMPDIR$ + "/snafu-dir", "*.foo", "all"))
+  assert_int_equals(1, file.count_files%(TMPDIR$ + "/snafu-dir", "*.bar", "all"))
+  assert_int_equals(2, file.count_files%(TMPDIR$ + "/snafu-dir", "*r", "all"))
 
-  assert_int_equals(2, file.count_files%(RSRC$, "*", "dir"))
-  assert_int_equals(1, file.count_files%(RSRC$, "*fu*", "dir"))
-  assert_int_equals(1, file.count_files%(RSRC$ + "/snafu-dir", "*", "dir"))
-  assert_int_equals(0, file.count_files%(RSRC$ + "/snafu-dir", "*.foo", "dir"))
-  assert_int_equals(0, file.count_files%(RSRC$ + "/snafu-dir", "*.bar", "dir"))
-  assert_int_equals(1, file.count_files%(RSRC$ + "/snafu-dir", "*r", "dir"))
+  assert_int_equals(1, file.count_files%(TMPDIR$, "*", "file"))
+  assert_int_equals(0, file.count_files%(TMPDIR$, "*fu*", "file"))
+  assert_int_equals(3, file.count_files%(TMPDIR$ + "/snafu-dir", "*", "file"))
+  assert_int_equals(2, file.count_files%(TMPDIR$ + "/snafu-dir", "*.foo", "file"))
+  assert_int_equals(1, file.count_files%(TMPDIR$ + "/snafu-dir", "*.bar", "file"))
+  assert_int_equals(1, file.count_files%(TMPDIR$ + "/snafu-dir", "*r", "file"))
+
+  assert_int_equals(2, file.count_files%(TMPDIR$, "*", "dir"))
+  assert_int_equals(1, file.count_files%(TMPDIR$, "*fu*", "dir"))
+  assert_int_equals(1, file.count_files%(TMPDIR$ + "/snafu-dir", "*", "dir"))
+  assert_int_equals(0, file.count_files%(TMPDIR$ + "/snafu-dir", "*.foo", "dir"))
+  assert_int_equals(0, file.count_files%(TMPDIR$ + "/snafu-dir", "*.bar", "dir"))
+  assert_int_equals(1, file.count_files%(TMPDIR$ + "/snafu-dir", "*r", "dir"))
 End Sub
 
 Sub test_count_files_not_found()
+  given_file_tree()
   Local f$ = TMPDIR$ + "/not_found"
 
   assert_int_equals(sys.FAILURE, file.count_files%(f$))
@@ -418,6 +459,7 @@ Sub test_count_files_not_found()
 End Sub
 
 Sub test_count_files_given_not_dir()
+  given_file_tree()
   Local f$ = TMPDIR$ + "/not_dir"
   ut.create_file(f$)
 
@@ -426,6 +468,7 @@ Sub test_count_files_given_not_dir()
 End Sub
 
 Sub test_count_files_given_invalid()
+  given_file_tree()
   assert_int_equals(sys.FAILURE, file.count_files%(TMPDIR$, "*", "wombat"))
   assert_error("Invalid file type 'wombat'")
 End Sub
@@ -455,64 +498,65 @@ Sub test_get_extension()
 End Sub
 
 Sub test_get_files()
+  given_file_tree()
   Local actual$(array.new%(10)) Length 128
   Local expected$(array.new%(10)) Length 128
 
   ' Type = ALL
 
   array.fill(actual$(), "")
-  assert_int_equals(2, file.get_files%(RSRC$ + "/snafu-dir", "*r*", "all", actual$())))
+  assert_int_equals(2, file.get_files%(TMPDIR$ + "/snafu-dir", "*r*", "all", actual$())))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   expected$(BASE% + 1) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(2, file.get_files%(RSRC$ + "/snafu-dir", "*R*", "ALL", actual$()))
+  assert_int_equals(2, file.get_files%(TMPDIR$ + "/snafu-dir", "*R*", "ALL", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   expected$(BASE% + 1) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(0, file.get_files%(RSRC$ + "/snafu-dir", "*xyz*", "ALL", actual$()))
+  assert_int_equals(0, file.get_files%(TMPDIR$ + "/snafu-dir", "*xyz*", "ALL", actual$()))
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 
   ' Type = DIR
 
   array.fill(actual$(), "")
-  assert_int_equals(2, file.get_files%(RSRC$, "*", "dir", actual$()))
+  assert_int_equals(2, file.get_files%(TMPDIR$, "*", "dir", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "snafu-dir"
   expected$(BASE% + 1) = "wombat-dir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(1, file.get_files%(RSRC$, "*fu*", "dir", actual$()))
+  assert_int_equals(1, file.get_files%(TMPDIR$, "*fu*", "dir", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "snafu-dir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(0, file.get_files%(RSRC$, "*.foo", "dir", actual$()))
+  assert_int_equals(0, file.get_files%(TMPDIR$, "*.foo", "dir", actual$()))
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*r*", "dir", actual$()))
-  array.fill(expected$(), "")
-  expected$(BASE% + 0) = "subdir"
-  assert_string_array_equals(expected$(), actual$())
-
-  array.fill(actual$(), "")
-  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*R*", "DIR", actual$()))
+  assert_int_equals(1, file.get_files%(TMPDIR$ + "/snafu-dir", "*r*", "dir", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "subdir", "DIR", actual$()))
+  assert_int_equals(1, file.get_files%(TMPDIR$ + "/snafu-dir", "*R*", "DIR", actual$()))
+  array.fill(expected$(), "")
+  expected$(BASE% + 0) = "subdir"
+  assert_string_array_equals(expected$(), actual$())
+
+  array.fill(actual$(), "")
+  assert_int_equals(1, file.get_files%(TMPDIR$ + "/snafu-dir", "subdir", "DIR", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "subdir"
   assert_string_array_equals(expected$(), actual$())
@@ -520,24 +564,25 @@ Sub test_get_files()
   ' Type = FILE
 
   array.fill(actual$(), "")
-  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*r*", "file", actual$()))
+  assert_int_equals(1, file.get_files%(TMPDIR$ + "/snafu-dir", "*r*", "file", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(1, file.get_files%(RSRC$ + "/snafu-dir", "*R*", "FILE", actual$()))
+  assert_int_equals(1, file.get_files%(TMPDIR$ + "/snafu-dir", "*R*", "FILE", actual$()))
   array.fill(expected$(), "")
   expected$(BASE% + 0) = "three.bar"
   assert_string_array_equals(expected$(), actual$())
 
   array.fill(actual$(), "")
-  assert_int_equals(0, file.get_files%(RSRC$ + "/snafu-dir", "subdir", "FILE", actual$()))
+  assert_int_equals(0, file.get_files%(TMPDIR$ + "/snafu-dir", "subdir", "FILE", actual$()))
   array.fill(expected$(), "")
   assert_string_array_equals(expected$(), actual$())
 End Sub
 
 Sub test_get_files_given_not_found()
+  given_file_tree()
   Local actual$(array.new%(10)) Length 128
   Local f$ = TMPDIR$ + "/not_found"
 
@@ -546,6 +591,7 @@ Sub test_get_files_given_not_found()
 End Sub
 
 Sub test_get_files_given_not_dir()
+  given_file_tree()
   Local actual$(array.new%(10)) Length 128
   Local f$ = TMPDIR$ + "/not_dir"
   ut.create_file(f$)
@@ -555,6 +601,7 @@ Sub test_get_files_given_not_dir()
 End Sub
 
 Sub test_get_files_given_invalid()
+  given_file_tree()
   Local actual$(array.new%(10)) Length 128
 
   assert_int_equals(sys.FAILURE, file.get_files%(TMPDIR$, "*", "wombat", actual$()))
@@ -586,6 +633,8 @@ Sub test_trim_extension()
 End Sub
 
 Sub test_mkdir_abs_path()
+  MkDir TMPDIR$
+
   ' Given parent exists.
   assert_int_equals(sys.SUCCESS, file.mkdir%(TMPDIR$ + "/foo"))
   assert_no_error()
@@ -628,6 +677,8 @@ Sub test_mkdir_abs_path()
 End Sub
 
 Sub test_mkdir_rel_path()
+  MkDir TMPDIR$
+
   assert_int_equals(sys.SUCCESS, file.mkdir%(TMPDIR$ + "/foo"))
   Local old_cwd$ = Cwd$
   ChDir TMPDIR$ + "/foo"
@@ -663,6 +714,7 @@ Sub test_mkdir_rel_path()
 End Sub
 
 Sub test_depth_first_given_file()
+  MkDir TMPDIR$
   Local f$ = TMPDIR$ + "/foo"
   ut.create_file(f$)
 
@@ -683,23 +735,19 @@ Function depth_first_callback%(f$, xtra%)
 End Function
 
 Sub test_depth_first_given_dir()
-  ut.create_file(TMPDIR$ + "/foo")
+  MkDir TMPDIR$
   MkDir TMPDIR$ + "/bar-dir"
-  ut.create_file(TMPDIR$ + "/bar-dir/wombat")
+  ut.create_file(TMPDIR$ + "/foo")
   ut.create_file(TMPDIR$ + "/zzz")
+  ut.create_file(TMPDIR$ + "/bar-dir/wombat")
 
   ' The order of files at the same level may be a bit variable.
   ' The important thing is that the contents of a directory is visited before
   ' the directory itself is.
   Local expected$(list.new%(10))
   list.init(expected$())
-  If sys.is_device%("mmb4l-armv6l") Then
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-  Else
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
-  EndIf
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+  list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
   list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
   list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
   list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
@@ -715,6 +763,7 @@ End Sub
 Sub test_depth_first_given_symlink()
   If Mm.Device$ <> "MMB4L" Then Exit Sub
 
+  MkDir TMPDIR$
   MkDir TMPDIR$ + "/foo-dir"
   ut.create_file(TMPDIR$ + "/foo-dir/bar")
   System "ln -s " + TMPDIR$ + "/foo-dir " + TMPDIR$ + "/foo-link"
@@ -733,6 +782,7 @@ Sub test_depth_first_given_symlink()
 End Sub
 
 Sub test_depth_first_not_found()
+  MkDir TMPDIR$
   Local f$ = TMPDIR$ + "/foo"
   assert_int_equals(sys.FAILURE, file.depth_first%(f$, "depth_first_callback%", 5))
   assert_error("No such file or directory '" + file.get_canonical$(f$) + "'")
@@ -750,6 +800,7 @@ Sub test_delete_root()
 End Sub
 
 Sub test_delete_given_not_found()
+  MkDir TMPDIR$
   Local f$ = TMPDIR$ + "/foo"
 
   assert_int_equals(sys.FAILURE, file.delete%(f$, 1))
@@ -757,6 +808,7 @@ Sub test_delete_given_not_found()
 End Sub
 
 Sub test_delete_given_file()
+  MkDir TMPDIR$
   Local f$ = TMPDIR$ + "/foo"
   ut.create_file(f$)
 
@@ -766,6 +818,7 @@ Sub test_delete_given_file()
 End Sub
 
 Sub test_delete_given_dir()
+  MkDir TMPDIR$
   Local f$ = TMPDIR$ + "/foo-dir"
   MkDir f$
   ut.create_file(f$ + "/one")
@@ -786,6 +839,7 @@ End Sub
 Sub test_delete_given_symlink()
   If Mm.Device$ <> "MMB4L" Then Exit Sub
 
+  MkDir TMPDIR$
   MkDir TMPDIR$ + "/foo-dir"
   ut.create_file(TMPDIR$ + "/foo-dir/bar")
   System "ln -s " + TMPDIR$ + "/foo-dir " + TMPDIR$ + "/foo-link"
