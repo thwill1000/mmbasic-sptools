@@ -124,7 +124,8 @@ Function con.readln$(initial$, history%(), history_filename$, history_fnbr%)
 
       Case 10 ' \n: Line Feed
         Print
-        If con.readln$ <> "" Then
+        ' Don't add empty lines, or lines read from a script to the history.
+        If con.readln$ <> "" And con.fnbr_in% = 0 Then
           history.push(history%(), con.readln$, history_filename$, history_fnbr%)
         EndIf
         Exit Do
