@@ -403,7 +403,7 @@ Sub test_find_dirs_matching()
 End Sub
 
 Sub test_find_with_symlinks()
-  If Mm.Device$ <> "MMB4L" Then Exit Sub
+  If Not sys.is_device%("mmb4l") Then Exit Sub
 
   ' Setup.
   MkDir TMPDIR$

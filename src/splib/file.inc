@@ -73,29 +73,41 @@ End Function
 '       Alternatively need to use a more efficient way to store strings
 '       (a pool?), or take advantage of the fact they have common prefixes.
 Function file.find$(path$, pattern$, type$)
-  ' ~256K workspace for MMB4L and MMB4W, ~128K workspace for other platforms.
-  Const MAX_PATH_LEN = Choice(sys.is_device%("mmb4l", "mmb4w"), 255, 128)
-  Static stack$(1000) Length MAX_PATH_LEN
   Static stack_ptr%, pattern_$, type_$
   Local f$, is_dir%, lb%, name$, num%
 
   If path$ <> "" Then
-    stack_ptr% = Bound(stack$(), 0)
+
+    ' Allocate stack/workspace:
+    '   ~256K workspace for MMB4L and MMB4W
+    '   ~64K workspace for other platforms.
+    ' Uses a GLOBAL rather than a STATIC because creation of STATICs requires
+    ' temporary allocation of twice as much memory.
+    On Error Skip
+    Erase file.find_stack$()
+    If sys.is_device%("mmb4l", "mmb4w") Then
+      Dim file.find_stack$(1000) Length 255
+    Else
+      Dim file.find_stack$(500) Length 128
+    EndIf
+
+    stack_ptr% = Bound(file.find_stack$(), 0)
     pattern_$ = Choice(pattern$ = "", "*", pattern$)
     type_$ = Choice(type$ = "", "FILE", LCase$(type$))
     f$ = file.get_canonical$(path$)
-    stack$(stack_ptr%) = f$ : Inc stack_ptr%
+    file.find_stack$(stack_ptr%) = f$ : Inc stack_ptr%
     If Not InStr("|all|dir|file|", "|" + type_$ + "|") Then
       Error "Invalid file type '" + type_$ + "'"
       Exit Function ' So we stop even if errors are being ignored.
     EndIf
+
   EndIf
 
   Do
     Do
       If stack_ptr% = Mm.Info(Option Base) Then file.find$ = "" : Exit Function
       Inc stack_ptr%, -1
-      file.find$ = stack$(stack_ptr%)
+      file.find$ = file.find_stack$(stack_ptr%)
       name$ = file.get_name$(file.find$)
     Loop Until name$ <> ".git" ' Doesn't recurse into .git directories.
 
@@ -112,11 +124,11 @@ Function file.find$(path$, pattern$, type$)
           If InStr("|.|..|", "|" + f$ + "|") Then
             Error "DIR$() returned '" + f$ + "'"
             Exit Function
-          ElseIf stack_ptr% > Bound(stack$(), 1) Then
+          ElseIf stack_ptr% > Bound(file.find_stack$(), 1) Then
             Error "Too many files"
             Exit Function ' So we stop even if errors are being ignored.
           EndIf
-          stack$(stack_ptr%) = file.find$  + "/" + f$
+          file.find_stack$(stack_ptr%) = file.find$  + "/" + f$
           Inc stack_ptr%
           f$ = Dir$()
         Loop
@@ -129,12 +141,12 @@ Function file.find$(path$, pattern$, type$)
             If InStr("|.|..|", "|" + f$ + "|") Then
               Error "DIR$() returned '" + f$ + "'"
               Exit Function
-            ElseIf stack_ptr% > Bound(stack$(), 1) Then
+            ElseIf stack_ptr% > Bound(file.find_stack$(), 1) Then
               Error "Too many files"
               Exit Function ' So we stop even if errors are being ignored.
             EndIf
             ' If file.fnmatch%(pattern_$, f$) Then
-            stack$(stack_ptr%) = file.find$  + "/" + f$
+            file.find_stack$(stack_ptr%) = file.find$  + "/" + f$
             Inc stack_ptr%
             ' EndIf
             f$ = Dir$()
@@ -144,7 +156,7 @@ Function file.find$(path$, pattern$, type$)
         ' Sort the newly pushed dirs/files so that those beginning 'a|A'
         ' are at the top and those beginning 'z|Z' are near the bottom.
         num% = stack_ptr% - lb%
-        If num% > 0 Then Sort stack$(), , &b11, lb%, num%
+        If num% > 0 Then Sort file.find_stack$(), , &b11, lb%, num%
       EndIf
     EndIf
 
