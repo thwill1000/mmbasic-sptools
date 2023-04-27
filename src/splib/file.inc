@@ -9,13 +9,6 @@ sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-If InStr(Mm.Device$, "PicoMite") > 0 Then
-  ' TODO: this is just a placeholder.
-  Const file.PROG_DIR$ = "A:/"
-Else
-  Const file.PROG_DIR$ = file.get_parent$(Mm.Info$(Current))
-EndIf
-
 ' Gets the number of files in directory d$ whose names match pattern$.
 '
 ' @param   d$        directory to process.

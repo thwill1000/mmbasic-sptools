@@ -151,8 +151,9 @@ Sub test_exists()
   Local f$ = Mm.Info$(Current)
 
   assert_true(file.exists%(f$))
+  assert_true(file.exists%(Mm.Info$(Path)))
+  assert_true(file.exists%(file.get_parent$(f$)))
   assert_true(file.exists%(file.get_parent$(f$) + "/foo/../" + file.get_name$(f$)))
-  assert_true(file.exists%(file.PROG_DIR$))
   assert_false(file.exists%(file.get_parent$(f$) + "/foo/" + file.get_name$(f$)))
 
   ' Given A: drive.
@@ -240,7 +241,7 @@ Sub given_non_empty_file(f$)
 End Sub
 
 Sub test_is_directory()
-  assert_true(file.is_directory%(file.PROG_DIR$))
+  assert_true(file.is_directory%(Mm.Info$(Path)))
 
   Select Case Mm.Device$
     Case "MMBasic for Windows" : Const has_a% = 0
