@@ -283,9 +283,11 @@ Sub assert_raw_error(expected$)
   If s$ <> "" Then ut.add_failure(s$)
 End Sub
 
-' @param  repeat$  if this is not empty then after running the test suite the program
-'                  should run itself again appending 'repeat$' to its command line.
-Sub run_tests(repeat$)
+' Runs all the tests.
+'
+' If find$ is not empty then once complete the tests will be
+' re-run with modified command line args, @see ut.run_same().
+Sub run_tests(find$, replace$)
   Local num_failed_tests% = 0
   Local num_tests% = list.size%(ut.test_names$())
   Local test$ = Mm.Info$(Current) + " " + Mm.CmdLine$;
@@ -322,8 +324,8 @@ Sub run_tests(repeat$)
   ut.print_colour("reset")
   Print
 
-  If repeat$ <> "" Then
-    ut.run_same(repeat$)
+  If Len(find$) Then
+    ut.run_same(find$, replace$)
   ElseIf InStr(Mm.CmdLine$, "--all") Then
     ut.run_next()
   EndIf
@@ -491,12 +493,29 @@ Sub ut.run_next()
   EndIf
 End Sub
 
-' Runs the current test file again appending 'cmd$' to its command line.
-Sub ut.run_same(cmd$)
-  Local tgt$ = "Run " + str.quote$(Mm.Info(Current)) + ", "
-  If Mm.CmdLine$ <> "" Then tgt$ = tgt$ + Mm.CmdLine$ + " "
-  tgt$ = tgt$ + cmd$
-  Execute tgt$
+' Re-runs the test program with modified command line args.
+'
+' If replace$ is not empty then replaces instances of find$ in Mm.CmdLine$ with
+' replace$. If there are no instances then appends replace$ to Mm.CmdLine$.
+' If replace$ is empty then appends find$ to Mm.CmdLine$.
+Sub ut.run_same(find$, replace$)
+  Local cmdline$ = Mm.CmdLine$
+  If Len(replace$) Then
+    cmdline$ = str.replace$(cmdline$, find$, replace$)
+    If Not InStr(cmdline$, replace$) Then
+      If Len(cmdline$) Then Cat cmdline$, " "
+      Cat cmdline$, replace$
+    EndIf
+  Else
+    If Len(cmdline$) Then Cat cmdline$, " "
+    Cat cmdline$, find$
+  EndIf
+
+  If sys.is_device%("cmm2") Then
+    Execute "Run " + str.quote$(Mm.Info$(Current)) + ", " + cmdline$
+  Else
+    Run Mm.Info$(Current), cmdline$
+  EndIf
 End Sub
 
 Sub ut.print_colour(c$)
