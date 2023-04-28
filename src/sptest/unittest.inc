@@ -392,8 +392,8 @@ End Function
 
 ' Should verbose output be generated?
 Function ut.is_verbose%()
-  ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --all ") < 1
-  If Not ut.is_verbose% Then ut.is_verbose% = InStr(" " + Mm.CmdLine$ + " ", " --verbose ") > 0
+  Local cmdline$ = " " + Mm.CmdLine$ + " "
+  ut.is_verbose% = Not InStr(cmdline$, " --quiet ") And Not InStr(cmdline$, " -q ")
 End Function
 
 ' Should MMBasic errors be caught and reported as assertion failures?
@@ -433,7 +433,7 @@ Sub ut.run_first()
     Print "Executing tests ..."
     Local cmd$ = "Run " + str.quote$(first$) + ", --all"
     If InStr(" " + Mm.CmdLine$ + " ", " --catch-errors") Then Cat cmd$, " --catch-errors"
-    If InStr(" " + Mm.CmdLine$ + " ", " --verbose ")     Then Cat cmd$, " --verbose"
+    If Not InStr(" " + Mm.CmdLine$ + " ", " --verbose ") Then Cat cmd$, " -q"
     Execute cmd$
   EndIf
 End Sub
@@ -488,7 +488,7 @@ Sub ut.run_next()
     Close #1
     Local cmd$ = "Run " + str.quote$(f$) + ", --all"
     If ut.is_catch_errors%() Then Cat cmd$, " --catch-errors"
-    If ut.is_verbose%()      Then Cat cmd$, " --verbose"
+    If Not ut.is_verbose%()  Then Cat cmd$, " -q"
     Execute cmd$
   EndIf
 End Sub

@@ -368,14 +368,14 @@ End Sub
 Sub cmd.rtest(cmd$, argc%, argv$())
   If Not gonzo.check_arg_range%(cmd$, argc%, 0, 1) Then Exit Sub
 
-  Local f$
+  Local count%, f$
   If argc% = 1 Then
     f$ = str.unquote$(argv$(0))
     If Not gonzo.check_file_exists%(f$) Then Exit Sub
+    count% = 1
   EndIf
 
   ' Write list of tests - copied from "unittest.inc"
-  If Not Len(f$) Then con.println("Building list of tests ...")
   Open sys.string_prop$("tmpdir") + "/sptest.lst" For Output As #gonzo.OUT_FNBR
   Print #gonzo.OUT_FNBR, Time$
   If Len(f$) Then
@@ -383,27 +383,33 @@ Sub cmd.rtest(cmd$, argc%, argv$())
   Else
     f$ = file.find$(Cwd$, "*st*.bas", "file")
     Do While f$ <> ""
-      If cmd.is_test_file%(f$) Then Print #gonzo.OUT_FNBR, file.get_canonical$(f$)
+      If cmd.is_test_file%(f$) Then
+        Print #gonzo.OUT_FNBR, file.get_canonical$(f$)
+        Inc count%
+      EndIf
       f$ = file.find$()
     Loop
   EndIf
   Close #gonzo.OUT_FNBR
 
   ' Transform into a gonzo script file.
-  con.println("Writing test script ...")
   Open sys.string_prop$("tmpdir") + "/sptest.lst" For Input As #gonzo.IN_FNBR
   Open sys.string_prop$("tmpdir") + "/sptest.gs" For Output As #gonzo.OUT_FNBR
   Line Input #gonzo.IN_FNBR, f$ ' Time
-  Print #gonzo.OUT_FNBR, "# Remotely execute MMBasic unit-tests"
-  Print #gonzo.OUT_FNBR, "# " + f$
-  Print #gonzo.OUT_FNBR, "rcd A:/"
+  Local s$ = "rex Drive " + str.quote$("B:") + " : ChDir " + str.quote$("B:/")
+  Cat s$, ": Drive " + str.quote$("A:") + " : ChDir " + str.quote$("A:/")
+  Print #gonzo.OUT_FNBR, s$
   Do
     Line Input #gonzo.IN_FNBR, f$
     f$ = str.trim$(f$)
     If Not Len(f$) Then Exit Do
     If Left$(f$, 3) = "A:/" Then f$ = Mid$(f$, 3)
-    Print #gonzo.OUT_FNBR, "xput -r -t=" + str.quote$("--quiet") + " " + f$
-    Print #gonzo.OUT_FNBR, "rkill " + file.get_name$(f$)
+    If count% = 1 Then
+      Print #gonzo.OUT_FNBR, "xput -t -r " + f$
+    Else
+      Print #gonzo.OUT_FNBR, "xput -t=" + str.quote$("--quiet") + " -r=" + str.quote$("--quiet") + " " + f$
+    EndIf
+    Print #gonzo.OUT_FNBR, "rex Kill " + str.quote$(file.get_name$(f$))
   Loop
   Close #gonzo.OUT_FNBR
   Close #gonzo.IN_FNBR
@@ -476,11 +482,15 @@ Sub cmd.send(cmd$, argc%, argv$())
       Exit Sub
   End Select
 
-  Local i%, p%, run_flag%, trans_args$, trans_flag%
+  Local i%, p%, run_args$, run_flag%, trans_args$, trans_flag%
   For i% = 0 To argc% - 1
     If Left$(argv$(i%), 1) <> "-" Then Exit For
 
-    If InStr(argv$(i%), "-t=") = 1 Or InStr(argv$(i%), "--trans=") = 1) Then
+    If InStr(argv$(i%), "-r=") = 1 Or InStr(argv$(i%), "--run=") = 1 Then
+      p% = InStr(argv$(i%), "=")
+      run_args$ = str.unquote$(Mid$(argv$(i%), p% + 1))
+      argv$(i%) = "-r"
+    ElseIf InStr(argv$(i%), "-t=") = 1 Or InStr(argv$(i%), "--trans=") = 1 Then
       p% = InStr(argv$(i%), "=")
       trans_args$ = str.unquote$(Mid$(argv$(i%), p% + 1))
       argv$(i%) = "-t"
@@ -534,6 +544,7 @@ Sub cmd.send(cmd$, argc%, argv$())
 
   If run_flag% Then
     command$ = "Run " + str.quote$(remote_file$)
+    If Len(run_args$) Then Cat command$, ", " + str.quote$(run_args$)
     gonzo.writeln(command$)
     gonzo.read_until_match("> " + command$)
     con.foreground("white")
@@ -619,7 +630,7 @@ Sub cmd.term(cmd$, argc%, argv$())
       sys.err$ = Mm.ErrMsg$
   End Select
 
-  On Error Clear
+  On Error Abort
 
   If Pos > 1 Then con.println()
   Console ShowCursor

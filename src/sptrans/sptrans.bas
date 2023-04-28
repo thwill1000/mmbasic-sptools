@@ -89,7 +89,7 @@ Sub main()
     out.endl()
   EndIf
 
-  cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...", 1) : cendl(1)
+  cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
   If in.open%(opt.infile$) <> sys.SUCCESS Then cerror(sys.err$)
   cout(in.files$(0)) : cendl()
   cout("   ")
@@ -128,7 +128,7 @@ Sub main()
 
   Loop Until in.num_open_files% = 0
 
-  Print BS$ "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
+  If Not opt.quiet Then Print BS$ "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
 
   out.close()
 

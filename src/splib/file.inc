@@ -85,6 +85,7 @@ Function file.find$(path$, pattern$, type$)
     ' temporary allocation of twice as much memory.
     On Error Skip
     Erase file.find_stack$()
+    On Error Clear
     If sys.is_device%("mmb4l", "mmb4w") Then
       Dim file.find_stack$(1000) Length 255
     Else
