@@ -100,11 +100,14 @@ Sub test_get_canonical()
   Local current$ = Cwd$
   If InStr("/\", Right$(current$, 1)) Then current$ = Left$(current$, Len(current$) - 1)
 
+  assert_string_equals("A:", file.get_canonical$("/"))
+  assert_string_equals("A:", file.get_canonical$("\"))
   assert_string_equals("A:", file.get_canonical$("A:"))
   assert_string_equals("A:", file.get_canonical$("A:/"))
   assert_string_equals("A:", file.get_canonical$("A:\"))
-  assert_string_equals("A:", file.get_canonical$("/"))
-  assert_string_equals("A:", file.get_canonical$("\"))
+  assert_string_equals("B:", file.get_canonical$("B:"))
+  assert_string_equals("B:", file.get_canonical$("B:/"))
+  assert_string_equals("B:", file.get_canonical$("B:\"))
   assert_string_equals("C:", file.get_canonical$("C:"))
   assert_string_equals("C:", file.get_canonical$("C:/"))
   assert_string_equals("C:", file.get_canonical$("C:\"))
@@ -155,8 +158,9 @@ Function expected_path$(f$)
 End Function
 
 Sub test_exists()
-  Local f$ = Mm.Info$(Current)
+  assert_false(file.exists%(""))
 
+  Local f$ = Mm.Info$(Current)
   assert_true(file.exists%(f$))
   assert_true(file.exists%(Mm.Info$(Path)))
   assert_true(file.exists%(file.get_parent$(f$)))
@@ -202,13 +206,19 @@ Sub test_is_absolute()
   assert_false(file.is_absolute%("dir/./foo.bas"))
   assert_false(file.is_absolute%("dir\.\foo.bas"))
 
-  assert_true(file.is_absolute%("A:"))
-  assert_true(file.is_absolute%("A:/"))
-  assert_true(file.is_absolute%("A:\"))
   assert_true(file.is_absolute%("/"))
   assert_true(file.is_absolute%("/."))
   assert_true(file.is_absolute%("\"))
   assert_true(file.is_absolute%("\."))
+  assert_true(file.is_absolute%("A:"))
+  assert_true(file.is_absolute%("A:/"))
+  assert_true(file.is_absolute%("A:\"))
+  assert_true(file.is_absolute%("B:"))
+  assert_true(file.is_absolute%("B:/"))
+  assert_true(file.is_absolute%("B:\"))
+  assert_true(file.is_absolute%("C:"))
+  assert_true(file.is_absolute%("C:/"))
+  assert_true(file.is_absolute%("C:\"))
 
   assert_false(file.is_absolute%("."))
   assert_false(file.is_absolute%(".."))
@@ -252,16 +262,18 @@ End Sub
 Sub test_is_directory()
   assert_true(file.is_directory%(Mm.Info$(Path)))
 
-  Select Case Mm.Device$
-    Case "MMBasic for Windows" : Const has_a% = 0
-    Case Else                  : Const has_a% = 1 ' MMB4L pretends to have an A: drive
-  End Select
+  Const has_a% = Choice(sys.is_device%("mmb4w"), 0, 1)
   assert_int_equals(has_a%, file.is_directory%("A:"))
   assert_int_equals(has_a%, file.is_directory%("A:/"))
   assert_int_equals(has_a%, file.is_directory%("A:\"))
 
+  Const has_b% = Choice(sys.is_device%("mmb4w"), 0, 1)
+  assert_int_equals(has_b%, file.is_directory%("A:"))
+  assert_int_equals(has_b%, file.is_directory%("A:/"))
+  assert_int_equals(has_b%, file.is_directory%("A:\"))
+
   If Not sys.is_device%("pm*") Then
-    Const has_c% = 1 ' MMB4L pretends to have a C: drive
+    Const has_c% = 1
     assert_int_equals(has_c%, file.is_directory%("C:"))
     assert_int_equals(has_c%, file.is_directory%("C:/"))
     assert_int_equals(has_c%, file.is_directory%("C:\"))

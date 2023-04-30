@@ -40,26 +40,23 @@ End Function
 
 ' Does the file/directory 'f$' exist?
 '
-' @return 1 if the file exists, otherwise 0
-Function file.exists%(f$)
+' @param  f$     name/path of file/directory
+' @param  type%  0 file or directory, 1 for file only, 2 for directory only
+' @return        1 if the file/directory exists, otherwise 0
+Function file.exists%(f$, type%)
+  If Not Len(f$) Then Exit Function
+
   Local f_$ = f$, i%
+  If f_$ = "." Then f_$ = Cwd$
+  If Len(f_$) = 2 Then
+    If Mid$(f_$, 2, 1) = ":" Then Cat f_$, "/"
+  EndIf
   For i% = 1 To Len(f_$)
     If Peek(Var f_$, i%) = 92 Then Poke Var f_$, i%, 47
   Next
-  Select Case f_$
-    Case ""
-      ' file.exists% = 0
-    Case "."
-      file.exists% = 1
-    Case "A:", "B:" ' TODO
-      file.exists% = Mm.Info(Exists Dir f$ + "/")
-    Case Else
-      If Mm.Device$ = "MMB4L" Or Mm.Device$ = "MMBasic for Windows" Then
-        file.exists% = Mm.Info(Exists f_$)
-      Else
-        file.exists% = Mm.Info(Exists File f_$) Or Mm.Info(Exists Dir f_$)
-      EndIf
-  End Select
+  If type% = 0 Or type% = 1 Then Inc file.exists%, Mm.Info(Exists File f_$)
+  If type% = 0 Or type% = 2 Then Inc file.exists%, Mm.Info(Exists Dir f_$)
+  file.exists% = file.exists% > 0
 End Function
 
 ' Find files whose names match pattern$
@@ -398,32 +395,17 @@ Function file.get_parent$(f$)
 End Function
 
 Function file.is_absolute%(f$)
-  Select Case Left$(f$, 1)
-    Case "a", "A"
-      Select Case Mid$(f$, 2, 2)
-        Case ":", ":\", ":/" : file.is_absolute% = 1
-      End Select
-    Case "/", "\"
-      file.is_absolute% = 1
-  End Select
+  If InStr("/\", Mid$(f$, 1, 1)) > 0 Then
+    file.is_absolute% = 1
+  Else If Mid$(f$, 2, 1) = ":" Then
+    If InStr("abcdefghijklmnopqrstuvwxyz", LCase$(Mid$(f$, 1, 1))) Then
+      file.is_absolute% = (Len(f$) = 2) Or (InStr("/\", Mid$(f$, 3, 1)) > 0)
+    EndIf
+  EndIf
 End Function
 
 Function file.is_directory%(f$)
-  ' TODO: handle ~ prefix
-  Local f_$ = f$, i%
-  For i% = 1 To Len(f_$)
-    If Peek(Var f_$, i%) = 92 Then Poke Var f_$, i%, 47
-  Next
-  Select Case f_$
-    Case ""
-      ' file.is_directory% = 0
-    Case ".", "/"
-      file.is_directory% = 1
-    Case "A:", "B:" ' TODO
-      file.is_directory% = Mm.Info(Exists Dir f_$ + "/")
-    Case Else
-      file.is_directory% = Mm.Info(Exists Dir f_$)
-  End Select
+  file.is_directory% = file.exists%(f$, 2)
 End Function
 
 Function file.is_symlink%(f$)
