@@ -17,6 +17,10 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 
 Const BASE% = Mm.Info(Option Base)
 
+If file.exists%(TMPDIR$) Then
+  If file.delete%(TMPDIR$, 30, 1) <> sys.SUCCESS Then Error sys.err$
+EndIf
+
 add_test("test_md5_fmt")
 add_test("test_md5_given_string")
 add_test("test_md5_given_long_string")
@@ -30,6 +34,12 @@ add_test("test_xxtea_file_key_dependent")
 run_tests(Choice(InStr(Mm.CmdLine$, "--base"), "", "--base=1"))
 
 End
+
+Sub teardown_test()
+  If file.exists%(TMPDIR$) Then
+    If file.delete%(TMPDIR$, 30, 1) <> sys.SUCCESS Then Error sys.err$
+  EndIf
+End Sub
 
 Sub test_md5_fmt()
   Local md5%(array.new%(2))

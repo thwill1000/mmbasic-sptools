@@ -13,7 +13,7 @@ If sys.err$ <> "" Then Error sys.err$
 '
 ' @param   d$        directory to process.
 ' @param   pattern$  file pattern to match on, e.g. "*.bas".
-' @param   type$     type of files to return, "dir", "file" or "all".
+' @param   type$     type of files to return: "dir", "file" or "all".
 ' @return  the number of matching files.
 Function file.count_files%(d$, pattern$, type$)
   If Not file.is_directory%(d$) Then
@@ -41,19 +41,20 @@ End Function
 ' Does the file/directory 'f$' exist?
 '
 ' @param  f$     name/path of file/directory
-' @param  type%  0 file or directory, 1 for file only, 2 for directory only
+' @param  type$  type of files to check for: "dir", "file" or "all".
 ' @return        1 if the file/directory exists, otherwise 0
-Function file.exists%(f$, type%)
-  Local f_$ = f$, i%
-  If InStr("||.|", "|" + f_$ + "|") Then f_$ = Cwd$
+Function file.exists%(f$, type$)
+  Local f_$ = Choice(Len(f$), f$, "."), i%
+  Local type_$ = "|" + Choice(Len(type$), LCase$(type$), "all") + "|"
+  If f_$ = "."  Then f_$ = Cwd$
   If Len(f_$) = 2 Then
     If Mid$(f_$, 2, 1) = ":" Then Cat f_$, "/"
   EndIf
   For i% = 1 To Len(f_$)
     If Peek(Var f_$, i%) = 92 Then Poke Var f_$, i%, 47
   Next
-  If type% = 0 Or type% = 1 Then Inc file.exists%, Mm.Info(Exists File f_$)
-  If type% = 0 Or type% = 2 Then Inc file.exists%, Mm.Info(Exists Dir f_$)
+  If InStr("|file|all|", type_$) Then Inc file.exists%, Mm.Info(Exists File f_$)
+  If InStr("|dir|all|", type_$) Then Inc file.exists%, Mm.Info(Exists Dir f_$)
   file.exists% = file.exists% > 0
 End Function
 
@@ -61,7 +62,7 @@ End Function
 '
 ' @param   path$     root directory to start looking from.
 ' @param   pattern$  file pattern to match on, e.g. "*.bas".
-' @param   type$     type of files to return, "dir", "file" or "all".
+' @param   type$     type of files to return: "dir", "file" or "all".
 ' @return  the absolute path to the first match found. To retrieve subsequent
 '          matches call this function with no parameters, i.e. f$ = file.find().
 '          Returns the empty string if there are no more matches.
@@ -338,7 +339,7 @@ End Function
 '
 ' @param       d$        directory to process.
 ' @param       pattern$  file pattern to match on, e.g. "*.bas".
-' @param       type$     type of files to return, "dir", "file" or "all".
+' @param       type$     type of files to return: "dir", "file" or "all".
 ' @param[out]  out$()    the names of matching files are copied into this array.
 ' @return                the number of files matching the pattern.
 Function file.get_files%(d$, pattern$, type$, out$())
@@ -403,7 +404,7 @@ Function file.is_absolute%(f$)
 End Function
 
 Function file.is_directory%(f$)
-  file.is_directory% = file.exists%(f$, 2)
+  file.is_directory% = file.exists%(f$, "dir")
 End Function
 
 Function file.is_symlink%(f$)
@@ -502,7 +503,17 @@ Function file.depth_first%(root$, callback$, xtra%)
   Loop
 End Function
 
-Function file.delete%(f$, yes_to_all%)
+' Deletes files/directories recursively.
+'
+' @param  f$           the file/directory to start deletion from.
+' @param  max_files%   the maximum number of files to be deleted. This is
+'                      checked before any files are deleted and if there are too
+'                      many files an error is reported without deleting any. Use
+'                      -1 to skip this check.
+' @param  yes_to_all%  if 0 then prompt for each file deletion.
+' @return              0 on success, any other value indicates and error in
+'                      which case sys.err$ will be set.
+Function file.delete%(f$, max_files%, yes_to_all%)
   Local f_$ = file.get_canonical$(f$), is_root%
   Select Case Len(f_$)
     Case 1 : is_root% = InStr("/\", f_$)
@@ -510,10 +521,25 @@ Function file.delete%(f$, yes_to_all%)
     Case 3 : is_root% = Mid$(f_$, 2, 1) = ":" And InStr("/\", Mid$(f_$, 3, 1))
   End Select
   If is_root% Then
-    file.delete% = sys.error%(sys.FAILURE, "Cannot delete '" + f_$ + "'")
+    file.delete% = sys.error%(sys.FAILURE, "Cannot delete drive '" + f_$ + "'")
   Else
-    file.delete% = file.depth_first%(f_$, "file.delete_callback%", yes_to_all%)
+    If max_files% >= 0 Then
+      Local count%
+      file.delete% = file.depth_first%(f$, "file.count_callback%", count%)
+      If count% > max_files% Then
+        Local msg$ = "Cannot delete '" + f_$ + "'; found " + Str$(count%)
+        Cat msg$, " files but maximum is " + Str$(max_files%)
+        file.delete% = sys.error%(sys.FAILURE, msg$)
+      EndIf
+    EndIf
+    If file.delete% = sys.SUCCESS Then
+      file.delete% = file.depth_first%(f_$, "file.delete_callback%", yes_to_all%)
+    EndIf
   EndIf
+End Function
+
+Function file.count_callback%(f$, count%)
+  Inc count%
 End Function
 
 Function file.delete_callback%(f$, yes_to_all%)

@@ -52,6 +52,8 @@ add_test("test_delete_given_not_found")
 add_test("test_delete_given_file")
 add_test("test_delete_given_dir")
 add_test("test_delete_given_symlink")
+add_test("test_delete_given_too_many")
+add_test("test_delete_given_unlimited")
 
 ' On the PicoMite the tests should run 4 times:
 '   Base 0, Drive A
@@ -832,7 +834,7 @@ Sub test_delete_root()
   For i% = Bound(roots$(), 0) To Bound(roots$(), 1)
     sys.err$ = ""
     assert_int_equals(sys.FAILURE, file.delete%(roots$(i%)))
-    assert_error("Cannot delete '" + file.get_canonical$(roots$(i%)) + "'")
+    assert_error("Cannot delete drive '" + file.get_canonical$(roots$(i%)) + "'")
   Next
 End Sub
 
@@ -840,7 +842,7 @@ Sub test_delete_given_not_found()
   MkDir TMPDIR$
   Local f$ = TMPDIR$ + "/foo"
 
-  assert_int_equals(sys.FAILURE, file.delete%(f$, 1))
+  assert_int_equals(sys.FAILURE, file.delete%(f$, 1, 1))
   assert_error("No such file or directory '" + file.get_canonical$(f$) + "'")
 End Sub
 
@@ -850,27 +852,18 @@ Sub test_delete_given_file()
   ut.create_file(f$)
 
   assert_true(file.exists%(f$))
-  assert_int_equals(sys.SUCCESS, file.delete%(f$, 1))
+  assert_int_equals(sys.SUCCESS, file.delete%(f$, 1, 1))
   assert_false(file.exists%(f$))
 End Sub
 
 Sub test_delete_given_dir()
-  MkDir TMPDIR$
-  Local f$ = TMPDIR$ + "/foo-dir"
-  MkDir f$
-  ut.create_file(f$ + "/one")
-  ut.create_file(f$ + "/two")
-  ut.create_file(TMPDIR$ + "/bar")
+  given_file_tree()
+  assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
 
-  assert_true(file.exists%(f$))
-  assert_true(file.exists%(f$ + "/one"))
-  assert_true(file.exists%(f$ + "/two"))
-  assert_true(file.exists%(TMPDIR$ + "/bar"))
-  assert_int_equals(sys.SUCCESS, file.delete%(f$, 1))
-  assert_false(file.exists%(f$))
-  assert_false(file.exists%(f$ + "/one"))
-  assert_false(file.exists%(f$ + "/two"))
-  assert_true(file.exists%(TMPDIR$ + "/bar"))
+  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$, 20, 1))
+  assert_no_error()
+
+  assert_false(file.exists%(TMPDIR$))
 End Sub
 
 Sub test_delete_given_symlink()
@@ -882,10 +875,30 @@ Sub test_delete_given_symlink()
   System "ln -s " + TMPDIR$ + "/foo-dir " + TMPDIR$ + "/foo-link"
 
   assert_true(file.exists%(TMPDIR$ + "/foo-link"))
-  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$ + "/foo-link", 1))
+  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$ + "/foo-link", 1, 1))
   assert_false(file.exists%(TMPDIR$ + "/foo-link"))
 
   ' Should not recurse and delete into target of symbolic link.
   assert_true(file.exists%(TMPDIR$ + "/foo-dir"))
   assert_true(file.exists%(TMPDIR$ + "/foo-dir/bar"))
+End Sub
+
+Sub test_delete_given_too_many()
+  given_file_tree()
+  assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
+
+  assert_int_equals(sys.FAILURE, file.delete%(TMPDIR$, 5, 1))
+  Local expected$ = "Cannot delete '" + file.get_canonical$(TMPDIR$)
+  Cat expected$, "'; found 16 files but maximum is 5"
+  assert_error(expected$)
+  assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
+End Sub
+
+Sub test_delete_given_unlimited()
+  given_file_tree()
+  assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
+
+  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$, -1, 1))
+  assert_no_error()
+  assert_false(file.exists%(TMPDIR$))
 End Sub
