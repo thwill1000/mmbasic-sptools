@@ -44,10 +44,8 @@ End Function
 ' @param  type%  0 file or directory, 1 for file only, 2 for directory only
 ' @return        1 if the file/directory exists, otherwise 0
 Function file.exists%(f$, type%)
-  If Not Len(f$) Then Exit Function
-
   Local f_$ = f$, i%
-  If f_$ = "." Then f_$ = Cwd$
+  If InStr("||.|", "|" + f_$ + "|") Then f_$ = Cwd$
   If Len(f_$) = 2 Then
     If Mid$(f_$, 2, 1) = ":" Then Cat f_$, "/"
   EndIf

@@ -158,8 +158,6 @@ Function expected_path$(f$)
 End Function
 
 Sub test_exists()
-  assert_false(file.exists%(""))
-
   Local f$ = Mm.Info$(Current)
   assert_true(file.exists%(f$))
   assert_true(file.exists%(Mm.Info$(Path)))
@@ -187,6 +185,7 @@ Sub test_exists()
   assert_true(file.exists%("\."))
 
   ' Given relative paths.
+  assert_true(file.exists%(""))
   assert_true(file.exists%("."))
   assert_true(file.exists%(".."))
 End Sub
