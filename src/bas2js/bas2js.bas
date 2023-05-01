@@ -69,7 +69,7 @@ Sub main()
   keywords.init()
 
   ' No line numbers when output to file.
-  If opt.outfile$ <> "" Then out.line_num_fmt$ = ""
+  If opt.outfile$ <> "" Then out.line_num_width% = 0
 
   out.open(opt.outfile$)
 

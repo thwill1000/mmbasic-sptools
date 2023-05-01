@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07
 
 Dim tg.call_stack$(list.new%(50)) Length 40
 list.init(tg.call_stack$())
@@ -10,7 +10,6 @@ list.init(tg.call_stack$())
 Dim tg.first_call(MAX_NUM_SUBS)
 
 Sub treegen()
-  out.line_num_fmt$ = "%5g "
   tg.subtree(GLOBAL_SCOPE$)
   If opt.all Then tg.orphans()
 End Sub
