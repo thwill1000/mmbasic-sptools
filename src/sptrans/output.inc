@@ -10,7 +10,7 @@ If sys.err$ <> "" Then Error sys.err$
 Dim out.append = 0
 Dim out.file_num = 0
 Dim out.line_num = 0
-Dim out.line_num_fmt$ = "%-5g "
+Dim out.line_num_width% = 5
 
 Sub out.open(f$)
   If f$ <> "" Then
@@ -30,7 +30,7 @@ Sub out.print(s$)
   Else
     out.line_num = out.line_num + 1
     out.append = 1
-    If out.line_num_fmt$ <> "" Then out.print(Format$(out.line_num, out.line_num_fmt$))
+    If out.line_num_width% Then out.print(str.rpad$(Str$(out.line_num), out.line_num_width%) + " ")
     out.print(s$)
   EndIf
 End Sub
