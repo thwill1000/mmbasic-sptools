@@ -9,6 +9,8 @@ sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
+Const file.SEPARATOR = sys.string_prop$("separator")
+
 ' Gets the number of files in directory d$ whose names match pattern$.
 '
 ' @param   d$        directory to process.
@@ -487,7 +489,7 @@ Function file.depth_first%(root$, callback$, xtra%)
       If current$ = root_$ Then Exit Do
       current$ = parent$
     Else
-      f$ = current$ + "/" + f$
+      f$ = current$ + file.SEPARATOR + f$
       If file.is_symlink%(f$) Then
         file.depth_first% = Call(callback$, f$, xtra%)
         f$ = Dir$()

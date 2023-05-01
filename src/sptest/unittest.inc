@@ -30,7 +30,7 @@ list.init(ut.test_subs$())
 Function ut.get_tmp_dir$()
   Const stem$ = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:/tmp", sys.string_prop$("tmpdir"))
   Const name$ = file.trim_extension$(file.get_name$(Mm.Info(Current)))
-  ut.get_tmp_dir$ = stem$ + "/" + name$
+  ut.get_tmp_dir$ = stem$ + file.SEPARATOR + name$
 End Function
 
 Sub add_test(name$, sub$)

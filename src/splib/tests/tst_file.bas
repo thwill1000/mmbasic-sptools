@@ -149,14 +149,7 @@ Sub test_get_canonical()
 End Sub
 
 Function expected_path$(f$)
-  expected_path$ = f$
-  If Mm.Device$ = "MMBasic for Windows" Then
-    ' Convert slash to backslash.
-    Local i%
-    For i% = 1 To Len(expected_path$)
-      If Peek(Var expected_path$, i%) = 47 Then Poke Var expected_path$, i%, 92
-    Next
-  EndIf
+  expected_path$ = str.replace$(f$, "/", file.SEPARATOR)
 End Function
 
 Sub test_exists()
@@ -168,7 +161,7 @@ Sub test_exists()
   assert_false(file.exists%(file.get_parent$(f$) + "/foo/" + file.get_name$(f$)))
 
   ' Given A: drive.
-  Local expected% = Mm.Device$ <> "MMBasic for Windows"
+  Local expected% = Not sys.is_device%("mmb4w")
   assert_int_equals(expected%, file.exists%("A:"))
   assert_int_equals(expected%, file.exists%("A:/"))
   assert_int_equals(expected%, file.exists%("A:\"))
@@ -783,6 +776,12 @@ Sub test_depth_first_given_dir()
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
+  ElseIf sys.is_device%("mmb4w") Then
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\bar-dir\wombat_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\bar-dir_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\foo_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\zzz_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
   Else
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
