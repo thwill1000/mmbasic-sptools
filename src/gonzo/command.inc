@@ -61,7 +61,7 @@ Sub cmd.bang(cmd$, argc%, argv$())
   If cmd.line$ = "" Then sys.err$ = "Event not found" : Exit Sub
   If Left$(cmd.line$, 1) = "!" Then sys.err$ = "Unexpected ! event" : Exit Sub
   history.push(gonzo.history%(), cmd.line$)
-  gonzo.parse_cmd.line(cmd.line$, cmd$, argc%, argv$())
+  gonzo.parse_cmd_line(cmd.line$, cmd$, argc%, argv$())
   If cmd$ <> "" Then gonzo.exit_flag% = cmd.do_command%(cmd$, argc%, argv$())
   sys.err$ = "" ' So that we don't repeat error message twice.
 End Sub
