@@ -209,6 +209,17 @@ Function pp.num_spaces(i)
   ' Never need a space after an opening bracket.
   If t$ = "(" Then Exit Function
 
+  ' Need a space after a keyword unless followed by an opening bracket or colon.
+  If lx.type(i) = TK_KEYWORD Then
+    Select Case u$
+      Case "(", ":"
+      Case Else
+        pp.num_spaces = 1
+        Exit Function
+      End Select
+    EndIf
+  EndIf
+
   ' Rules applying to 'generous' spacing.
   If opt.spacing >= 2 Then
     ' Don't need a space before an opening bracket
@@ -264,10 +275,6 @@ Function pp.num_spaces(i)
       Select Case lx.type(i + 1)
         Case TK_KEYWORD, TK_IDENTIFIER, TK_NUMBER
           pp.num_spaces = 1
-        Case TK_SYMBOL
-          ' Due to dodgy parsing by MMBasic IS must be followed by a space even
-          ' when followed by a TK_SYMBOL.
-          If lx.token_lc$(i) = "is" Then pp.num_spaces = 1
       End Select
   End Select
 End Function

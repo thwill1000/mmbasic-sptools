@@ -73,6 +73,7 @@ add_test("Spacing - compact option", "test_compact_spacing")
 add_test("Spacing - generous option", "test_generous_spacing")
 add_test("Spacing - before comments", "test_comment_spacing")
 add_test("Spacing - after IS keyword", "test_is_keyword_spacing")
+add_test("Spacing - after EXISTS keyword", "test_exists_keyword_spacing")
 add_test("Keyword capitalisation", "test_keyword_capitalisation")
 add_test("Syntax highlighting - CSUBs", "test_syntax_highlight_1")
 add_test("Syntax highlighting - comments", "test_syntax_highlight_2")
@@ -401,7 +402,7 @@ Sub test_minimal_spacing()
   expected$(7) = "    ' comment"
   expected$(8) = "myfun(a,,b)"
   expected$(9) = "Dim a(4)=(-2,-1,0,1,2)"
-  expected$(10) = "For i%=5 To 1 Step-1"
+  expected$(10) = "For i%=5 To 1 Step -1"
   expected$(11) = "Loop Until(-a>-b)"
   expected$(12) = "label: foo:bar"
   assert_string_array_equals(expected$(), out$())
@@ -503,6 +504,30 @@ Sub test_is_keyword_spacing()
   opt.spacing = 2
   parse_lines()
   expected$(0) = "Case Is >= 0"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_exists_keyword_spacing()
+  in$(0) = "? Mm.Info(Exists " + str.quote$("foo") + ")"
+
+  opt.spacing = -1
+  parse_lines()
+  expected$(0) = "? Mm.Info(Exists " + str.quote$("foo") + ")"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 0
+  parse_lines()
+  expected$(0) = "?Mm.Info(Exists " + str.quote$("foo") + ")"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 1
+  parse_lines()
+  expected$(0) = "?Mm.Info(Exists " + str.quote$("foo") + ")"
+  assert_string_array_equals(expected$(), out$())
+
+  opt.spacing = 2
+  parse_lines()
+  expected$(0) = "? Mm.Info(Exists " + str.quote$("foo") + ")"
   assert_string_array_equals(expected$(), out$())
 End Sub
 

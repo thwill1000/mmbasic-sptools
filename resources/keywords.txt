@@ -64,6 +64,7 @@ Clear
 Close
 Cls
 'Cmd
+CodePage
 Color
 ColorCode
 Colour
@@ -110,6 +111,7 @@ Draw3d
 Ds18b20
 'Echo
 Edit
+Editor
 Else
 ElseIf
 Enable
@@ -120,7 +122,9 @@ Epoch
 Erase
 Error
 Es
+EnvVar
 Eval
+Exists
 Exit
 Exp
 Explicit
@@ -141,7 +145,9 @@ Fr
 Frame
 Frequency
 Function
-Fauge
+F11
+F12
+Gauge
 Geoid
 GetReg
 GetScanLine
@@ -279,6 +285,7 @@ Or
 Output
 OwSearch
 Page
+Path
 Pause
 Peek
 Phase
@@ -398,6 +405,7 @@ String
 String$
 Sub
 Switch
+SymLink
 Tab
 Tan
 Tempr

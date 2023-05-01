@@ -28,7 +28,7 @@ End
 Sub test_init()
   keywords.init()
 
-  assert_int_equals(443, map.size%(keywords$()))
+  assert_int_equals(451, map.size%(keywords$()))
   ' TODO: PEEK into keywords$() to assert LENGTH = 14
 End Sub
 
