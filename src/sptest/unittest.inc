@@ -364,7 +364,7 @@ Function ut.run_single_test%(idx%)
 
   ' Remove TMPDIR if left behind by previous failure.
   If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 20, 1) <> sys.SUCCESS Then Error sys.err$
+    If file.delete%(TMPDIR$, 20) <> sys.SUCCESS Then Error sys.err$
   EndIf
 
   On Error Skip 1 ' Skip error caused by missing optional setup_test() function.
@@ -413,7 +413,7 @@ Function ut.run_single_test%(idx%)
 
   ' Cleanup TMPDIR.
   If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 20, 1) <> sys.SUCCESS Then Error sys.err$
+    If file.delete%(TMPDIR$, 20) <> sys.SUCCESS Then Error sys.err$
   EndIf
 
   ' Restore working directory and drive.

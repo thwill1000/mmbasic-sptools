@@ -510,10 +510,9 @@ End Function
 '                      checked before any files are deleted and if there are too
 '                      many files an error is reported without deleting any. Use
 '                      -1 to skip this check.
-' @param  yes_to_all%  if 0 then prompt for each file deletion.
 ' @return              0 on success, any other value indicates and error in
 '                      which case sys.err$ will be set.
-Function file.delete%(f$, max_files%, yes_to_all%)
+Function file.delete%(f$, max_files%)
   Local f_$ = file.get_canonical$(f$), is_root%
   Select Case Len(f_$)
     Case 1 : is_root% = InStr("/\", f_$)
@@ -533,7 +532,7 @@ Function file.delete%(f$, max_files%, yes_to_all%)
       EndIf
     EndIf
     If file.delete% = sys.SUCCESS Then
-      file.delete% = file.depth_first%(f_$, "file.delete_callback%", yes_to_all%)
+      file.delete% = file.depth_first%(f_$, "file.delete_callback%", 0)
     EndIf
   EndIf
 End Function
@@ -542,12 +541,8 @@ Function file.count_callback%(f$, count%)
   Inc count%
 End Function
 
-Function file.delete_callback%(f$, yes_to_all%)
-  Local s$ = Choice(yes_to_all%, "y", "n")
-  If s$ = "n" Then Line Input "Delete '" + f$ + "' [y|N] ? ", s$
-  If LCase$(s$) = "y" Then
-    If file.is_directory%(f$) And Not file.is_symlink%(f$) Then RmDir f$ Else Kill f$
-  EndIf
+Function file.delete_callback%(f$, ignored%)
+  If file.is_directory%(f$) And Not file.is_symlink%(f$) Then RmDir f$ Else Kill f$
 End Function
 
 ' Returns a copy of f$ with any dot file-extension removed.

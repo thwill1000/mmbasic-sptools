@@ -18,7 +18,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 Const BASE% = Mm.Info(Option Base)
 
 If file.exists%(TMPDIR$) Then
-  If file.delete%(TMPDIR$, 30, 1) <> sys.SUCCESS Then Error sys.err$
+  If file.delete%(TMPDIR$, 30) <> sys.SUCCESS Then Error sys.err$
 EndIf
 
 add_test("test_md5_fmt")
@@ -37,7 +37,7 @@ End
 
 Sub teardown_test()
   If file.exists%(TMPDIR$) Then
-    If file.delete%(TMPDIR$, 30, 1) <> sys.SUCCESS Then Error sys.err$
+    If file.delete%(TMPDIR$, 30) <> sys.SUCCESS Then Error sys.err$
   EndIf
 End Sub
 

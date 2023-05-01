@@ -833,7 +833,7 @@ Sub test_delete_root()
 
   For i% = Bound(roots$(), 0) To Bound(roots$(), 1)
     sys.err$ = ""
-    assert_int_equals(sys.FAILURE, file.delete%(roots$(i%)))
+    assert_int_equals(sys.FAILURE, file.delete%(roots$(i%), 1))
     assert_error("Cannot delete drive '" + file.get_canonical$(roots$(i%)) + "'")
   Next
 End Sub
@@ -842,7 +842,7 @@ Sub test_delete_given_not_found()
   MkDir TMPDIR$
   Local f$ = TMPDIR$ + "/foo"
 
-  assert_int_equals(sys.FAILURE, file.delete%(f$, 1, 1))
+  assert_int_equals(sys.FAILURE, file.delete%(f$, 1))
   assert_error("No such file or directory '" + file.get_canonical$(f$) + "'")
 End Sub
 
@@ -852,7 +852,7 @@ Sub test_delete_given_file()
   ut.create_file(f$)
 
   assert_true(file.exists%(f$))
-  assert_int_equals(sys.SUCCESS, file.delete%(f$, 1, 1))
+  assert_int_equals(sys.SUCCESS, file.delete%(f$, 1))
   assert_false(file.exists%(f$))
 End Sub
 
@@ -860,7 +860,7 @@ Sub test_delete_given_dir()
   given_file_tree()
   assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
 
-  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$, 20, 1))
+  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$, 20))
   assert_no_error()
 
   assert_false(file.exists%(TMPDIR$))
@@ -875,7 +875,7 @@ Sub test_delete_given_symlink()
   System "ln -s " + TMPDIR$ + "/foo-dir " + TMPDIR$ + "/foo-link"
 
   assert_true(file.exists%(TMPDIR$ + "/foo-link"))
-  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$ + "/foo-link", 1, 1))
+  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$ + "/foo-link", 1))
   assert_false(file.exists%(TMPDIR$ + "/foo-link"))
 
   ' Should not recurse and delete into target of symbolic link.
@@ -887,7 +887,7 @@ Sub test_delete_given_too_many()
   given_file_tree()
   assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
 
-  assert_int_equals(sys.FAILURE, file.delete%(TMPDIR$, 5, 1))
+  assert_int_equals(sys.FAILURE, file.delete%(TMPDIR$, 5))
   Local expected$ = "Cannot delete '" + file.get_canonical$(TMPDIR$)
   Cat expected$, "'; found 16 files but maximum is 5"
   assert_error(expected$)
@@ -898,7 +898,7 @@ Sub test_delete_given_unlimited()
   given_file_tree()
   assert_int_equals(3, file.count_files%(TMPDIR$, "*", "all"))
 
-  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$, -1, 1))
+  assert_int_equals(sys.SUCCESS, file.delete%(TMPDIR$, -1))
   assert_no_error()
   assert_false(file.exists%(TMPDIR$))
 End Sub
