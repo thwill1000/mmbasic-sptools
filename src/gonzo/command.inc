@@ -366,14 +366,17 @@ Sub cmd.rsize(cmd$, argc%, argv$())
 End Sub
 
 Sub cmd.rtest(cmd$, argc%, argv$())
-  If Not gonzo.check_arg_range%(cmd$, argc%, 0, 1) Then Exit Sub
-
   Local count%, f$
-  If argc% = 1 Then
+  Local crunch% = Choice(argv$(0) = "--no-crunch", 0, 1)
+  If Not gonzo.check_arg_range%(cmd$, argc%, 0, 2) Then Exit Sub
+  If argc% = 1 And crunch% Then
     f$ = str.unquote$(argv$(0))
-    If Not gonzo.check_file_exists%(f$) Then Exit Sub
-    count% = 1
+  ElseIf argc% = 2 Then
+    If crunch% Then sys.err$ = gonzo.usage$(cmd$) : Exit Sub
+    f$ = str.unquote$(argv$(1))
   EndIf
+  count% = Len(f$) > 0
+  If count% And Not gonzo.check_file_exists%(f$) Then Exit Sub
 
   ' Write list of tests - copied from "unittest.inc"
   Open sys.string_prop$("tmpdir") + "/sptest.lst" For Output As #gonzo.OUT_FNBR
@@ -404,11 +407,17 @@ Sub cmd.rtest(cmd$, argc%, argv$())
     f$ = str.trim$(f$)
     If Not Len(f$) Then Exit Do
     If Left$(f$, 3) = "A:/" Then f$ = Mid$(f$, 3)
+    s$ = "xput"
     If count% = 1 Then
-      Print #gonzo.OUT_FNBR, "xput -t -r " + f$
+      Cat s$, Choice(crunch%, " -t=" + str.quote$("--crunch"), " -t")
+      Cat s$, " -r"
     Else
-      Print #gonzo.OUT_FNBR, "xput -t=" + str.quote$("--quiet") + " -r=" + str.quote$("--quiet") + " " + f$
+      Cat s$, " -t="
+      Cat s$, str.quote$(Choice(crunch%, "--crunch --quiet", "--quiet"))
+      Cat s$, " -r=" + str.quote$("--quiet")
     EndIf
+    Cat s$, " " + f$
+    Print #gonzo.OUT_FNBR, s$
     Print #gonzo.OUT_FNBR, "rex Kill " + str.quote$(file.get_name$(f$))
   Loop
   Close #gonzo.OUT_FNBR
