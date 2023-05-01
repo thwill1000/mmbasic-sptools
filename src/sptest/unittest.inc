@@ -546,7 +546,7 @@ Sub ut.run_same(find$, replace$)
     Cat cmdline$, find$
   EndIf
 
-  If sys.is_device%("cmm2") Then
+  If sys.is_device%("cmm2*") Then
     Execute "Run " + str.quote$(Mm.Info$(Current)) + ", " + cmdline$
   Else
     Run Mm.Info$(Current), cmdline$

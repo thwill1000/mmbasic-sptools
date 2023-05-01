@@ -771,23 +771,17 @@ Sub test_depth_first_given_dir()
   ' the directory itself is.
   Local expected$(list.new%(10))
   list.init(expected$())
-  If sys.is_device%("pm*") Then
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
+  If sys.is_device%("mmb4l") Then
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
-  ElseIf sys.is_device%("mmb4w") Then
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\bar-dir\wombat_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\bar-dir_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\foo_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "\zzz_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
   Else
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
   EndIf
   Dim actual$(list.new%(10))
