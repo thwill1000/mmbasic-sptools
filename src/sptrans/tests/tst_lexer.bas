@@ -46,6 +46,7 @@ add_test("test_get_token_lc")
 add_test("test_old_tokens_cleared")
 add_test("test_parse_command_line")
 add_test("test_csub")
+add_test("test_define_font")
 add_test("test_insert_token")
 add_test("test_remove_token")
 add_test("test_replace_token")
@@ -536,6 +537,61 @@ Sub test_csub()
   expect_token(2, TK_IDENTIFIER, "AABBCC")
 End Sub
 
+Sub test_define_font()
+  ' Within the confines of the DEFINEFONT we expect numbers to be treated as identifiers.
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("DefineFont 9 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End DefineFont"))
+  expect_token_count(11)
+  expect_token(0, TK_KEYWORD,    "DefineFont")
+  expect_token(1, TK_IDENTIFIER, "9")
+  expect_token(2, TK_IDENTIFIER, "00000000")
+  expect_token(3, TK_IDENTIFIER, "00AABBCC")
+  expect_token(4, TK_IDENTIFIER, "0.7")
+  expect_token(5, TK_IDENTIFIER, "&hFF")
+  expect_token(6, TK_IDENTIFIER, "&b0101")
+  expect_token(7, TK_IDENTIFIER, "&o1234")
+  expect_token(8, TK_IDENTIFIER, "FFFFFFFF")
+  expect_token(9, TK_KEYWORD,    "End")
+  expect_token(10, TK_KEYWORD,    "DefineFont")
+
+  ' But once we get outside the DEFINEFONT numbers and identifiers are distinct again.
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("0.12345 00AABBCC"))
+  expect_token_count(3)
+  expect_token(0, TK_NUMBER,     "0.12345")
+  expect_token(1, TK_NUMBER,     "00")
+  expect_token(2, TK_IDENTIFIER, "AABBCC")
+
+  ' It should also work when the DEFINEFONT is split over multiple lines.
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("DefineFont 9 ' comment"))
+  expect_token_count(3)
+  expect_token(0, TK_KEYWORD,    "DefineFont")
+  expect_token(1, TK_IDENTIFIER, "9")
+  expect_token(2, TK_COMMENT,    "' comment")
+
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  00000000"))
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "00000000")
+
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("  00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF"))
+  expect_token_count(6)
+  expect_token(0, TK_IDENTIFIER, "00AABBCC")
+  expect_token(1, TK_IDENTIFIER, "0.7")
+  expect_token(2, TK_IDENTIFIER, "&hFF")
+  expect_token(3, TK_IDENTIFIER, "&b0101")
+  expect_token(4, TK_IDENTIFIER, "&o1234")
+  expect_token(5, TK_IDENTIFIER, "FFFFFFFF")
+
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("End DefineFont"))
+  expect_token_count(2)
+  expect_token(0, TK_KEYWORD, "End")
+  expect_token(1, TK_KEYWORD, "DefineFont")
+
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("0.12345 00AABBCC"))
+  expect_token_count(3)
+  expect_token(0, TK_NUMBER,     "0.12345")
+  expect_token(1, TK_NUMBER,     "00")
+  expect_token(2, TK_IDENTIFIER, "AABBCC")
+End Sub
+
 Sub test_insert_token()
   ' Test insertion into an empty line.
   assert_int_equals(sys.SUCCESS, lx.parse_basic%(""))
@@ -666,11 +722,24 @@ Sub expect_token_count(num)
   assert_true(lx.num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx.num))
 End Sub
 
-Sub expect_token(i, type, s$, start%)
-  assert_true(lx.type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx.type(i)))
-  Local actual$ = lx.token$(i)
-  assert_true(actual$ = s$, "expected " + s$ + ", found " + actual$)
-  assert_int_equals(Len(s$), lx.len(i%))
-  If start% > 0 Then assert_int_equals(start%, lx.start(i%))
+Sub expect_token(i%, type%, txt$, start%)
+  Local ok% = (lx.type(i) = type%)
+  ok% = ok% And (lx.token$(i) = txt$)
+  ok% = ok% And (lx.len(i%) = Len(txt$))
+  If start% Then ok% = ok% And (lx.start%(i%) = start%)
+  If Not ok% Then
+    Local msg$ = "expected " + token_to_string$(type%, txt$, Len(txt$), start%)
+    Cat msg$, ", found " + token_to_string$(lx.type(i), lx.token$(i), lx.len(i), lx.start(i))
+    assert_fail(msg$)
+  EndIf
 End Sub
+
+Function token_to_string$(type%, txt$, len%, start%)
+  Local s$
+  Cat s$, Str$(type%)
+  Cat s$, ", " + txt$
+  Cat s$, ", " + Str$(len%)
+  If start% Then Cat s$, ", " + Str$(start%)
+  token_to_string$ = "{ " + s$ + " }"
+End Function
 

@@ -1362,10 +1362,26 @@ Sub expect_token_count(num)
   assert_true(lx.num = num, "expected " + Str$(num) + " tokens, found " + Str$(lx.num))
 End Sub
 
-Sub expect_token(i, type, s$)
-  assert_true(lx.type(i) = type, "expected type " + Str$(type) + ", found " + Str$(lx.type(i)))
-  assert_string_equals(s$, lx.token$(i))
+Sub expect_token(i%, type%, txt$, start%)
+  Local ok% = (lx.type(i) = type%)
+  ok% = ok% And (lx.token$(i) = txt$)
+  ok% = ok% And (lx.len(i%) = Len(txt$))
+  If start% Then ok% = ok% And (lx.start%(i%) = start%)
+  If Not ok% Then
+    Local msg$ = "expected " + token_to_string$(type%, txt$, Len(txt$), start%)
+    Cat msg$, ", found " + token_to_string$(lx.type(i), lx.token$(i), lx.len(i), lx.start(i))
+    assert_fail(msg$)
+  EndIf
 End Sub
+
+Function token_to_string$(type%, txt$, len%, start%)
+  Local s$
+  Cat s$, Str$(type%)
+  Cat s$, ", " + txt$
+  Cat s$, ", " + Str$(len%)
+  If start% Then Cat s$, ", " + Str$(start%)
+  token_to_string$ = "{ " + s$ + " }"
+End Function
 
 Sub expect_transpile_omits(line$)
   If lx.parse_basic%(line$) <> sys.SUCCESS Then
