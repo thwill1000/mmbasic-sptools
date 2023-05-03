@@ -446,10 +446,10 @@ Sub tr.process_error()
 End Sub
 
 Sub tr.process_include()
-  If lx.num <> 2 Or lx.type(1) <> TK_STRING Then
-    sys.err$ = "#INCLUDE expects a <file> argument"
-  Else
+  If lx.num >= 2 And lx.type(1) = TK_STRING And (lx.num = 2 Or lx.type(2) = TK_COMMENT) Then
     tr.include$ = lx.string$(1)
+  Else
+    sys.err$ = "#INCLUDE expects a <file> argument"
   EndIf
 End Sub
 

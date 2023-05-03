@@ -186,6 +186,13 @@ Sub test_transpile_includes()
   assert_int_equals(sys.SUCCESS, tr.transpile_includes%())
   assert_no_error()
   assert_string_equals("", tr.include$)
+
+  ' Given #INCLUDE statement followed by comment.
+  setup_test()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("#include " + str.quote$("foo/bar.inc") + " ' This is a harmless comment"))
+  assert_int_equals(tr.INCLUDE_FILE, tr.transpile_includes%())
+  assert_no_error()
+  assert_string_equals("foo/bar.inc", tr.include$)
 End Sub
 
 Sub test_parse_replace()
