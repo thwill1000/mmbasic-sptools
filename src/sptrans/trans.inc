@@ -10,15 +10,20 @@ If sys.err$ <> "" Then Error sys.err$
 
 Dim tr.num_comments(MAX_NUM_FILES - 1)
 
-' For each source file we maintain a stack of currently open !if directives.
+' For each source file we maintain a stack of currently open !IF directives.
 ' If 'i' is the base-0 index of the source file then
 '   if_stack(i, if_stack_sz - 1)
-' is a boolean combination of constants describing the latest !if directive.
-Const tr.IF_ACTIVE     = &h00001 ' !if clause is active.
-Const tr.ELSE_ACTIVE   = &h00010 ' !else clause is active.
-Const tr.ELSE_INACTIVE = &h00100 ' !else clause is inactive.
-Const tr.IF_COMMENT    = &h01000 ' Inside an active/inactive !if_comment.
-Const tr.IF_UNCOMMENT  = &h10000 ' Inside an active/inactive !if_uncomment.
+' describes the state of the latest !IF directive:
+Const tr.INACTIVE_IF           = &b000010
+Const tr.ACTIVE_IF             = &b000011 ' Also active !ELIF
+Const tr.INACTIVE_ELSE         = &b000100
+Const tr.ACTIVE_ELSE           = &b000101
+Const tr.INACTIVE_COMMENT_IF   = &b001000
+Const tr.ACTIVE_COMMENT_IF     = &b001001
+Const tr.INACTIVE_UNCOMMENT_IF = &b010000
+Const tr.ACTIVE_UNCOMMENT_IF   = &b010001
+Const tr.OMITTED_IF            = &b100000 ' Also omitted !COMMENT_IF, !ELIF
+                                          ' !ELSE, !UNCOMMENT_IF
 Const tr.MAX_NUM_IFS = 10
 Dim tr.if_stack(MAX_NUM_FILES - 1, tr.MAX_NUM_IFS - 1)
 Dim tr.if_stack_sz(MAX_NUM_FILES - 1)
@@ -63,11 +68,13 @@ End Function
 
 ' Full transpilation.
 '
-' @return  0  on error, see 'sys.err$' for details.
-'          1  on general success.
-'          2  if current line started with #INCLUDE statement,
-'             the filename/path is returned in 'tr.include$'.
-'          3  if line was deleted/omitted by the transpiler.
+' @return  sys.FAILURE      on error, see 'sys.err$' for details.
+'          sys.SUCCESS      if the current line should be included in the
+'                           output.
+'          tr.INCLUDE_FILE  if current line started with #INCLUDE statement, the
+'                           filename/path is returned in 'tr.include$'.
+'          tr.OMIT_LINE     if the current line should be omitted from the
+'                           output.
 Function tr.transpile%()
   tr.include$ = ""
 
@@ -90,12 +97,14 @@ Function tr.transpile%()
       Exit Function
   End Select
 
-  If tr.omit_flag% Then
+  If tr.omit_flag% < 0 Then
+    Error "Invalid state"
+  ElseIf tr.omit_flag% Then
     If lx.type(0) = TK_DIRECTIVE Then
-      Select Case lx.directive$(0)
-        Case "!comment_if", "!if", "!ifdef", "!ifndef", "!uncomment_if"
-          tr.push_if(0) ' Still need to record omitted !if's.
-      End Select
+      If InStr("|!comment_if|!if|!ifdef|!ifndef|!uncomment_if|", "|" + lx.directive$(0) + "|") Then
+        tr.push_if(tr.OMITTED_IF)
+        Inc tr.omit_flag%
+      EndIf
     EndIf
     lx.reset("")
     tr.omitted_line_flag% = 1
@@ -167,11 +176,14 @@ End Function
 
 Sub tr.process_elif()
   Select Case tr.pop_if()
-    Case 0
+    Case tr.INACTIVE_IF
+      Inc tr.omit_flag%, -1
       tr.process_if()
-    Case tr.IF_ACTIVE
-      tr.omit_flag% = 1
-      tr.push_if(tr.IF_ACTIVE)
+    Case tr.ACTIVE_IF
+      Inc tr.omit_flag%
+      tr.push_if(tr.OMITTED_IF)
+    Case tr.OMITTED_IF
+      tr.push_if(tr.OMITTED_IF)
     Case Else
       sys.err$ = "!elif directive without !if"
   End Select
@@ -183,20 +195,19 @@ Sub tr.process_else()
     Exit Sub
   EndIf
 
-  Local x% = tr.pop_if()
-  Select Case x%
+  Select Case tr.pop_if()
     Case -1
       If sys.err$ = "" Then Error "Internal error"
-    Case 0
-      tr.omit_flag% = 0
-      tr.push_if(tr.ELSE_ACTIVE)
-    Case Else
-      If x% And (tr.ELSE_ACTIVE Or tr.ELSE_INACTIVE) Then
-        sys.err$ = "Too many !else directives"
-      Else
-        tr.omit_flag% = 1
-        tr.push_if(tr.ELSE_INACTIVE)
-      EndIf
+    Case tr.ACTIVE_IF
+      Inc tr.omit_flag%
+      tr.push_if(tr.INACTIVE_ELSE)
+    Case tr.INACTIVE_IF
+      Inc tr.omit_flag%, -1
+      tr.push_if(tr.ACTIVE_ELSE)
+    Case tr.OMITTED_IF
+      tr.push_if(tr.OMITTED_IF)
+    Case tr.INACTIVE_ELSE, tr.ACTIVE_ELSE
+      sys.err$ = "Too many !else directives"
   End Select
 End Sub
 
@@ -206,18 +217,14 @@ Sub tr.process_endif()
     Exit Sub
   EndIf
 
-  Local x% = tr.pop_if()
-  If x% And (tr.IF_ACTIVE Or tr.ELSE_ACTIVE) Then
-    If x% And tr.IF_COMMENT Then
+  Select Case tr.pop_if()
+    Case tr.ACTIVE_COMMENT_IF
       tr.update_num_comments(-1)
-    ElseIf x% And tr.IF_UNCOMMENT Then
+    Case tr.ACTIVE_UNCOMMENT_IF
       tr.update_num_comments(+1)
-    EndIf
-  Else
-    If Not (x% And (tr.IF_COMMENT Or tr.IF_UNCOMMENT)) Then
-      tr.omit_flag% = 0
-    EndIf
-  EndIf
+    Case tr.INACTIVE_IF, tr.OMITTED_IF
+      Inc tr.omit_flag%, -1
+  End Select
 End Sub
 
 Sub tr.update_num_comments(x)
@@ -225,11 +232,30 @@ Sub tr.update_num_comments(x)
   tr.num_comments(i) = tr.num_comments(i) + x
 End Sub
 
+Function tr.if_stack_to_string$()
+  Const i% = in.num_open_files% - 1
+  Local j%, s$
+  For j% = tr.if_stack_sz(i%) - 1 To 0 Step -1
+    Cat s$, Bin$(tr.if_stack(i%, j%))
+    If j% > 0 Then Cat s$, " "
+  Next
+  tr.if_stack_to_string$ = s$
+End Function
+
+Function tr.peek_if%()
+  Const i% = in.num_open_files% - 1
+  If tr.if_stack_sz(i%) Then
+    tr.peek_if% = tr.if_stack(i%, tr.if_stack_sz(i%) - 1)
+  Else
+    tr.peek_if% = -1
+  EndIf
+End Function
+
 Function tr.pop_if(directive$)
-  Local i = in.num_open_files% - 1
-  If tr.if_stack_sz(i) > 0 Then
-    tr.if_stack_sz(i) = tr.if_stack_sz(i) - 1
-    tr.pop_if = tr.if_stack(i, tr.if_stack_sz(i))
+  Const i% = in.num_open_files% - 1
+  If tr.if_stack_sz(i%) Then
+    Inc tr.if_stack_sz(i%), -1
+    tr.pop_if = tr.if_stack(i%, tr.if_stack_sz(i%))
   Else
     sys.err$ = lx.directive$(0) + " directive without !if"
     tr.pop_if = -1
@@ -378,7 +404,6 @@ Sub tr.process_comments()
 End Sub
 
 Sub tr.process_if()
-
   ' Replace !IFDEF and !IFNDEF directives with equivalent !IF DEFINED.
   Select Case lx.directive$(0)
     Case "!ifdef"
@@ -408,15 +433,15 @@ Sub tr.process_if()
 
   Select Case lx.directive$(0)
     Case "!comment_if"
-      tr.push_if(x% Or tr.IF_COMMENT)
+      tr.push_if(x% Or tr.INACTIVE_COMMENT_IF)
       If x% Then tr.update_num_comments(+1)
 
     Case "!if", "!elif"
-      tr.push_if(Choice(x%, tr.IF_ACTIVE, 0))
-      tr.omit_flag% = Not x%
+      tr.push_if(x% Or tr.INACTIVE_IF)
+      Inc tr.omit_flag%, Not x%
 
     Case "!uncomment_if"
-      tr.push_if(x% Or tr.IF_UNCOMMENT)
+      tr.push_if(x% Or tr.INACTIVE_UNCOMMENT_IF)
       If x% Then tr.update_num_comments(-1)
 
     Case Else
