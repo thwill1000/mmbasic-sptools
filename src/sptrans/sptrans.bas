@@ -104,7 +104,7 @@ Sub main()
     trok% = 0
     If lx.parse_basic%(s$) = sys.SUCCESS Then
       If opt.format_only Then
-        trok% = Choice(opt.comments = 0, tr.remove_comments%(), 1)
+        trok% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
       ElseIf opt.include_only Then
         trok% = tr.transpile_includes%()
       Else
