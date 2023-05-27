@@ -25,6 +25,8 @@ add_test("test_replace")
 add_test("test_rpad")
 add_test("test_trim")
 add_test("test_unquote")
+add_test("test_decode")
+add_test("test_encode")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -247,3 +249,63 @@ Sub test_unquote()
   assert_string_equals(QU$ + "foo" + QU$ + " ", str.unquote$(QU$ + "foo" + QU$ + " "))
   assert_string_equals(QU$, str.unquote$(QU$))
 End Sub
+
+Sub test_decode()
+  Local decoded$, encoded$
+  Restore decode_encode_data
+  Do While read_encoded_decoded%(encoded$, decoded$) = sys.SUCCESS
+    assert_string_equals(decoded$, str.decode$(encoded$))
+  Loop
+
+  Restore decode_only_data
+  Do While read_encoded_decoded%(encoded$, decoded$) = sys.SUCCESS
+    assert_string_equals(decoded$, str.decode$(encoded$))
+  Loop
+
+  ' C-style escape for double-quote.
+  assert_string_equals(Chr$(34), str.decode$("\" + Chr$(34)))
+End Sub
+
+Function read_encoded_decoded%(encoded$, decoded$)
+  Local x%
+  Read encoded$
+  If encoded$ = "<END>" Then
+    read_encoded_decoded% = -1
+  Else
+    decoded$ = ""
+    Do
+      Read x%
+      If x% <> -1 Then Cat decoded$, Chr$(x%)
+    Loop Until x% = -1
+  EndIf
+End Function
+
+Sub test_encode()
+  Local decoded$, encoded$
+  Restore decode_encode_data
+  Do While read_encoded_decoded%(encoded$, decoded$) = sys.SUCCESS
+    assert_string_equals(encoded$, str.encode$(decoded$))
+  Loop
+End Sub
+
+decode_encode_data:
+Data "a", &h61, -1, "A", &h41, -1, "z", &h7A, -1, "Z", &h5A, -1
+Data "\0", &h00, -1, "\x01", &h01, -1, "\x7F", &h7F, -1
+Data "\a", &h07, -1, "\b", &h08, -1, "\e", &h1B, -1, "\f", &h0C, -1
+Data "\n", &h0A, -1, "\r", &h0D, -1, "\t", &h09, -1, "\v", &h0B, -1
+Data "\\", &h5C, -1, "\'", &h27, -1, "\q", &h22, -1, "\?", &h3F, -1
+Data "b\n", &h62, &h0A, -1
+Data "hello world", &h68, &h65, &h6C, &h6C, &h6F, &h20, &h77, &h6F, &h72, &h6C, &h64, -1
+Data "<END>"
+
+decode_only_data:
+Data "\", &h5C, -1
+Data "c\", &h63, &h5C, -1
+Data "\x00", &h00, -1
+Data "\x", &h5C, &h78, -1
+Data "\x1", &h5C, &h78, &h31, -1
+Data "\xz", &h5C, &h78, &h7A, -1
+Data "\x1z", &h5C, &h78, &h31, &h7A, -1
+Data "\m", &h5C, &h6D, -1
+Data "\X01", &h5C, &h58, &h30, &h31, -1
+Data "<END>"

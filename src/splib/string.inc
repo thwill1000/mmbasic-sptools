@@ -184,3 +184,103 @@ Function str.unquote$(s$)
     str.unquote$ = Mid$(s$, 2, Len(s$) - 2)
   EndIf
 End Function
+
+' Decodes a string containing "C" escape codes.
+'
+' Note: does not handle octal escape codes.
+'
+' state%:
+'   0 = base state
+'   1 = looking for escape code
+'   2 = expecting 1st hex digit
+'   3 = expecting 2nd hex digit
+Function str.decode$(s$)
+  Local ad%, ch%, prev%, state%, t$
+
+  For ad% = Peek(VarAddr s$) + 1 TO Peek(VarAddr s$) + Len(s$)
+    ch% = Peek(Byte ad%)
+    Select Case ch%
+      Case &h5C ' \
+        state% = 1
+      Case Else
+        Select Case state%
+          Case 0
+            Cat t$, Chr$(ch%)
+          Case 1
+            Select Case ch%
+              Case &h22 : ch% = &h22 ' \"
+              Case &h27 : ch% = &h27 ' \'
+              Case &h30 : ch% = &h00 ' \0
+              Case &h3F : ch% = &h3F ' \?
+              Case &h5C : ch% = &h5C ' \
+              Case &h61 : ch% = &h07 ' \a
+              Case &h62 : ch% = &h08 ' \b
+              Case &h65 : ch% = &h1B ' \e
+              Case &h66 : ch% = &h0C ' \f
+              Case &h6E : ch% = &h0A ' \n
+              Case &h71 : ch% = &h22 ' \q
+              Case &h72 : ch% = &h0D ' \r
+              Case &h74 : ch% = &h09 ' \t
+              Case &h76 : ch% = &h0B ' \v
+              Case &h78 : state% = 2 ' \x
+              Case Else : Cat t$, "\"
+            End Select
+            If state% = 1 Then
+              Cat t$, Chr$(ch%)
+              state% = 0
+            EndIf
+          Case 2
+            Select Case ch%
+              Case &h30 To &h39, &h41 To &h46, &h61 To &h66 ' 0-9, A-F, a-f
+                prev% = ch%
+                state% = 3
+              Case Else
+                Cat t$, "\x" + Chr$(ch%)
+                state% = 0
+            End Select
+          Case 3
+            Select Case ch%
+              Case &h30 To &h39, &h41 To &h46, &h61 To &h66 ' 0-9, A-F, a-f
+                Cat t$, Chr$(Val("&h" + Chr$(prev%) + Chr$(ch%)))
+              Case Else
+                Cat t$, "\x" + Chr$(prev%) + Chr$(ch%)
+            End Select
+            state% = 0
+        End Select
+    End Select
+  Next
+
+  Select Case state%
+    Case 1 : Cat t$, "\"
+    Case 2 : Cat t$, "\x"
+    Case 3 : Cat t$, "\x" + Chr$(prev%)
+  End Select
+
+  str.decode$ = t$
+End Function
+
+' Encodes a string using "C" escape codes.
+Function str.encode$(s$)
+  Local ad%, ch%, t$
+  For ad% = Peek(VarAddr s$) + 1 TO Peek(VarAddr s$) + Len(s$)
+    ch% = Peek(Byte ad%)
+    Select Case ch%
+      Case &h00 : Cat t$, "\0"
+      Case &h07 : Cat t$, "\a"
+      Case &h08 : Cat t$, "\b"
+      Case &h09 : Cat t$, "\t"
+      Case &h0A : Cat t$, "\n"
+      Case &h0B : Cat t$, "\v"
+      Case &h0C : Cat t$, "\f"
+      Case &h0D : Cat t$, "\r"
+      Case &h1B : Cat t$, "\e"
+      Case &h22 : Cat t$, "\q"
+      Case &h27 : Cat t$, "\'"
+      Case &h3F : Cat t$, "\?"
+      Case &h5C : Cat t$, "\\"
+      Case < &h20, >= &h7F : Cat t$, "\x" + Hex$(ch%, 2)
+      Case Else : Cat t$, Chr$(ch%)
+    End Select
+  Next
+  str.encode$ = t$
+End Function
