@@ -740,9 +740,9 @@ Sub test_ifdef_given_set()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifdef_given_unset()
@@ -753,9 +753,9 @@ Sub test_ifdef_given_unset()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifdef_given_0_args()
@@ -773,6 +773,9 @@ Sub test_ifdef_is_case_insensitive()
   expect_token_count(1)
   expect_token(0, TK_IDENTIFIER, "one")
   expect_transpile_omits("'!endif")
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifdef_nested_1()
@@ -785,9 +788,9 @@ Sub test_ifdef_nested_1()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifdef_nested_2()
@@ -803,9 +806,9 @@ Sub test_ifdef_nested_2()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifdef_nested_3()
@@ -819,9 +822,9 @@ Sub test_ifdef_nested_3()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifdef_nested_4()
@@ -840,9 +843,9 @@ Sub test_ifdef_nested_4()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifndef_given_set()
@@ -854,9 +857,9 @@ Sub test_ifndef_given_set()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifndef_given_unset()
@@ -871,9 +874,9 @@ Sub test_ifndef_given_unset()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifndef_given_0_args()
@@ -890,6 +893,11 @@ Sub test_ifndef_is_case_insensitive()
   expect_transpile_omits("one")
   expect_token_count(0)
   expect_transpile_omits("'!endif")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifndef_nested_1()
@@ -906,9 +914,9 @@ Sub test_ifndef_nested_1()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifndef_nested_2()
@@ -922,9 +930,9 @@ Sub test_ifndef_nested_2()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifndef_nested_3()
@@ -940,9 +948,9 @@ Sub test_ifndef_nested_3()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_ifndef_nested_4()
@@ -957,9 +965,9 @@ Sub test_ifndef_nested_4()
   expect_transpile_omits("'!endif")
 
   ' Code outside the block is included.
-  expect_transpile_succeeds("three")
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "three")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_define_given_defined()
@@ -1183,6 +1191,11 @@ Sub test_if_given_true()
   expect_token(0, TK_IDENTIFIER, "if_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_if_given_false()
@@ -1190,6 +1203,11 @@ Sub test_if_given_false()
   expect_transpile_omits(" if_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_if_given_nested_1()
@@ -1200,9 +1218,11 @@ Sub test_if_given_nested_1()
   expect_transpile_omits   ("  '!endif")
   expect_transpile_omits   ("  _3_expect_omitted")
   expect_transpile_omits   ("'!endif")
-  expect_transpile_succeeds("_4_expect_not_omitted")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "_4_expect_not_omitted")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_if_given_nested_2()
@@ -1221,9 +1241,11 @@ Sub test_if_given_nested_2()
   expect_token_count(1)
   expect_token(0, TK_IDENTIFIER, "_4_expect_not_omitted")
   expect_transpile_omits   ("'!endif")
-  expect_transpile_succeeds("_5_expect_not_omitted")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
   expect_token_count(1)
-  expect_token(0, TK_IDENTIFIER, "_5_expect_not_omitted")
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_else_given_if_active()
@@ -1235,6 +1257,11 @@ Sub test_else_given_if_active()
   expect_transpile_omits("    else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_else_given_else_active()
@@ -1246,6 +1273,11 @@ Sub test_else_given_else_active()
   expect_token(0, TK_IDENTIFIER, "else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_else_given_no_if()
@@ -1276,6 +1308,11 @@ Sub test_elif_given_if_active()
   expect_transpile_omits("    else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_elif_given_elif_1_active()
@@ -1291,6 +1328,11 @@ Sub test_elif_given_elif_1_active()
   expect_transpile_omits("    else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_elif_given_elif_2_active()
@@ -1306,6 +1348,11 @@ Sub test_elif_given_elif_2_active()
   expect_transpile_omits("    else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_elif_given_else_active()
@@ -1321,6 +1368,11 @@ Sub test_elif_given_else_active()
   expect_token(0, TK_IDENTIFIER, "else_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_elif_given_no_expression()
@@ -1367,6 +1419,11 @@ Sub test_elif_given_ifdef()
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
 
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
+
   setup_test()
   expect_transpile_omits("'!ifdef false")
   expect_transpile_omits("    if_clause")
@@ -1376,6 +1433,11 @@ Sub test_elif_given_ifdef()
   expect_token(0, TK_IDENTIFIER, "elif_clause_1")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 ' Test given shortcut expression:
@@ -1391,6 +1453,11 @@ Sub test_elif_given_shortcut_expr()
   expect_token(0, TK_IDENTIFIER, "elif_clause")
   expect_transpile_omits("'!endif")
   assert_true(tr.if_stack_sz(0) = 0, "IF stack is not empty")
+
+  ' Code outside the block is included.
+  expect_transpile_succeeds("after_if_block")
+  expect_token_count(1)
+  expect_token(0, TK_IDENTIFIER, "after_if_block")
 End Sub
 
 Sub test_info_defined()

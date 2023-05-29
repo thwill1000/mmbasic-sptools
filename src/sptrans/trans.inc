@@ -222,7 +222,7 @@ Sub tr.process_endif()
       tr.update_num_comments(-1)
     Case tr.ACTIVE_UNCOMMENT_IF
       tr.update_num_comments(+1)
-    Case tr.INACTIVE_IF, tr.OMITTED_IF
+    Case tr.INACTIVE_ELSE, tr.INACTIVE_IF, tr.OMITTED_IF
       Inc tr.omit_flag%, -1
   End Select
 End Sub
