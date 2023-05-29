@@ -8,6 +8,8 @@ sys.requires("set")
 sys.provides("defines")
 If sys.err$ <> "" Then Error sys.err$
 
+Const def.CONSTANTS$ = "|1|true|on|0|false|off|"
+
 ' Set of active defines
 '   - set at command line using -D<flag>,
 '   - or in program using !DEFINE directive.
@@ -18,6 +20,9 @@ Sub def.init()
   set.init(def.defines$())
 End Sub
 
+' Undefines the given define.
+'
+' Undefining an already undefined symbol is an allowed no-op.
 Sub def.undefine(id$)
   Local s$ = str.trim$(id$), lower$ = LCase$(s$)
 
@@ -25,12 +30,10 @@ Sub def.undefine(id$)
     sys.err$ = "invalid identifier"
   Else If Len(s$) > def.ID_MAX_LENGTH% Then
     sys.err$ = "identifier too long, max 64 chars"
-  Else If InStr("|1|true|on|0|false|off|", "|" + lower$ + "|") Then
+  Else If InStr(def.CONSTANTS$, "|" + lower$ + "|") Then
     sys.err$ = "'" + s$ + "' cannot be undefined"
   Else If def.is_defined%(lower$) Then
     set.remove(def.defines$(), lower$)
-  Else
-    sys.err$ = "'" + s$ + "' is not defined"
   EndIf
 End Sub
 
@@ -59,7 +62,7 @@ Sub def.define(id$)
     Exit Sub
   EndIf
 
-  If InStr("|1|true|on|0|false|off|", "|" + lower$ + "|") Then
+  If InStr(def.CONSTANTS$, "|" + lower$ + "|") Then
     sys.err$ = "'" + s$ + "' cannot be defined"
     Exit Sub
   EndIf

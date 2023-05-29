@@ -112,10 +112,10 @@ End Sub
 
 Sub test_undefine_given_undefined()
   def.undefine("foo")
-  assert_error("'foo' is not defined")
+  assert_no_error()
 
   def.undefine("BAR")
-  assert_error("'BAR' is not defined")
+  assert_no_error()
 End Sub
 
 Sub test_undefine_case_insensitive()

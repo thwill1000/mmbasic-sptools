@@ -45,6 +45,7 @@ add_test("test_undef_given_defined")
 add_test("test_undef_given_undefined")
 add_test("test_undef_given_id_too_long")
 add_test("test_undef_is_case_insensitive")
+add_test("test_undef_given_constant")
 add_test("test_comment_if")
 add_test("test_comment_if_not")
 add_test("test_uncomment_if")
@@ -72,6 +73,7 @@ add_test("test_define_given_defined")
 add_test("test_define_given_undefined")
 add_test("test_define_given_id_too_long")
 add_test("test_define_is_case_insensitive")
+add_test("test_define_given_constant")
 add_test("test_omit_directives_from_output")
 add_test("test_endif_given_no_if")
 add_test("test_endif_given_args")
@@ -596,8 +598,9 @@ Sub test_undef_given_defined()
 End Sub
 
 Sub test_undef_given_undefined()
-  expect_transpile_error("'!undef foo", "!undef directive 'foo' is not defined")
-  expect_transpile_error("'!undef BAR", "!undef directive 'BAR' is not defined")
+  ' Undefining non-existent defines is allowed.
+  expect_transpile_omits("'!undef foo")
+  expect_transpile_omits("'!undef BAR")
 End Sub
 
 Sub test_undef_given_id_too_long()
@@ -617,6 +620,14 @@ Sub test_undef_is_case_insensitive()
   expect_transpile_omits("'!undef bar")
   assert_int_equals(0, def.is_defined%("foo"))
   assert_int_equals(0, def.is_defined%("BAR"))
+End Sub
+
+Sub test_undef_given_constant()
+  Local id$ = str.next_token$(def.CONSTANTS$, "|", 1)
+  Do While id$ <> sys.NO_DATA$
+    expect_transpile_error("'!undef " + id$, "!undef directive '" + id$ + "' cannot be undefined")
+    id$ = str.next_token$()
+  Loop
 End Sub
 
 Sub test_comment_if()
@@ -980,6 +991,14 @@ Sub test_define_is_case_insensitive()
   assert_int_equals(1, def.is_defined%("FOO"))
 
   expect_transpile_error("'!define FOO", "!define directive 'FOO' is already defined")
+End Sub
+
+Sub test_define_given_constant()
+  Local id$ = str.next_token$(def.CONSTANTS$, "|", 1)
+  Do While id$ <> sys.NO_DATA$
+    expect_transpile_error("'!define " + id$, "!define directive '" + id$ + "' cannot be defined")
+    id$ = str.next_token$()
+  Loop
 End Sub
 
 Sub test_omit_directives_from_output()
