@@ -7,7 +7,7 @@ Option Explicit On
 
 '!if defined(PGLCD1)
 ' For PicoGAME LCD 1 running PicoMite MMBasic 5.07.07
-'!if defined(PGLCD2)
+'!elif defined(PGLCD2)
 ' For PicoGAME LCD 2 running PicoMite MMBasic 5.07.07
 '!elif defined(PICOMITE)
 ' For PicoGAME VGA 1.4 running PicoMiteVGA MMBasic 5.07.07
@@ -15,8 +15,10 @@ Option Explicit On
 ' For CMM2 running MMBasic 5.07.02b6
 '!endif
 
-#Include "ctrl.inc"
-#Include "utility.inc"
+#Include "../system.inc"
+#Include "../bits.inc"
+#Include "../string.inc"
+#Include "../ctrl.inc"
 
 If Mm.Device$ = "PicoMite" Then
   Const FONT_NUM = 7
@@ -102,7 +104,7 @@ End Sub
 
 Sub show_menu()
   Cls
-  print_at(0, 0, "MMBasic Controller Driver Test " + format_version$(ctrl.VERSION))
+  print_at(0, 0, "MMBasic Controller Driver Test " + sys.format_version$(ctrl.VERSION))
   print_at(0, 1, "Running on " + Mm.Device$ + " " + Str$(Mm.Info(Version)))
   print_at(0, 3,  "Select driver using [A-Z]")
   print_at(0, 4,  "Then 'play' with controller to test response")

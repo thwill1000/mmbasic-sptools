@@ -1,14 +1,29 @@
 ' Copyright (c) 2022-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-'
+
 ' MMBasic Controller Library
 
-'!if not(defined(PGLCD1) or defined(PGLCD2) or defined(PICOMITE) or defined(CMM2) or defined(MMB4L))
-  '!error "File 'ctrl.inc' was transpiled without CMM2, MMB4L, PGLCD_1, PGLCD2 or PICOMITE defined"
+'!ifndef NO_INCLUDE_GUARDS
+On Error Skip 1 : Dim sys.VERSION$ = ""
+If sys.VERSION$ = "" Then Error "'system.inc' not included"
+sys.provides("ctrl")
+If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-'!if not(defined(PGLCD1) xor defined(PGLCD2) xor defined(PICOMITE) xor defined(CMM2) xor defined(MMB4L))
+'!if not(defined(PGLCD1) or defined(PGLCD2) or defined(PICOMITE) or defined(CMM2) or defined(MMB4L))
+  '!error "File 'ctrl.inc' was transpiled without CMM2, MMB4L, PGLCD1, PGLCD2 or PICOMITE defined"
+'!endif
+
+'!if defined(PICOMITE)
+  '!undef PICOMITE
+'!endif
+
+'!if not(defined(PGLCD1) xor defined(PGLCD2) xor defined(CMM2) xor defined(MMB4L))
   '!error "File 'ctrl.inc' was transpiled with more than one of CMM2, MMB4L, PGLCD1, PGLCD2 and PICOMITE defined"
+'!endif
+
+'!if defined(PGLCD1) || defined(PGLCD2)
+  '!define PICOMITE
 '!endif
 
 '!info defined CMM2
@@ -42,7 +57,7 @@
 '!info defined CTRL_USE_ON_PS2
 '!info defined CTRL_USE_KEYDOWN
 
-Const ctrl.VERSION = 908  ' 0.9.8
+Const ctrl.VERSION = 909  ' 0.9.9
 
 ' Button values as returned by controller driver subroutines.
 Const ctrl.R      = &h01
@@ -169,24 +184,33 @@ Function ctrl.keydown%(i%)
 '!endif
 End Function
 
-Function ctrl.poll_multiple$(drivers$(), mask%, duration%)
+' Iterates through array of controller drivers$(), opensing, polling and closing
+' each in turn waiting for the user to provide an input that matches a mask%.
+'
+' @param[in]      drivers$()  controller drivers to poll.
+' @param[in]      mask%       bit mask to match against.
+' @param[in,out]  duration%   on entry the maxiumum duration to poll, or
+'                             0 to poll indefinitely.
+'                             on exit the remaining duration, or
+'                             0 if it was 0 on entry.
+' @param[out]     key%        matching bits, otherwise 0.
+' @return                     entry from drivers$() or empty string if no match.
+Function ctrl.poll_multiple$(drivers$(), mask%, duration%, key%)
   Local expires% = Choice(duration%, Timer + duration%, &h7FFFFFFFFFFFFFFF), i%
   Do
     For i% = Bound(drivers$(), 0) To Bound(drivers$(), 1)
-      If ctrl.poll_single%(drivers$(i%), mask%) Then
-        ctrl.poll_multiple$ = drivers$(i%)
-        Exit Do
-      EndIf
+      key% = ctrl.poll_single%(drivers$(i%), mask%)
+      If key% Then ctrl.poll_multiple$ = drivers$(i%) : Exit Do
     Next
   Loop While Timer < expires%
+  If duration% Then duration% = Max(0, expires% - Timer)
 End Function
 
 ' Opens, polls (for a maximum of 5ms) and closes a controller.
 '
 ' @param  driver$  controller driver function.
 ' @param  mask%    bit mask to match against.
-' @return          1 if any of the bits in the mask match what is read from the
-'                  controller, otherwise 0.
+' @return          matching bits, otherwise 0.
 Function ctrl.poll_single%(driver$, mask%)
   On Error Ignore
   Call driver$, ctrl.OPEN
@@ -194,8 +218,8 @@ Function ctrl.poll_single%(driver$, mask%)
     Local key%, t% = Timer + 5
     Do
       Call driver$, key%
-      If key% And mask% Then
-        ctrl.poll_single% = 1
+      ctrl.poll_single% = key% And mask%
+      If ctrl.poll_single% Then
         ' Wait for user to release key.
         Do While key% : Pause 5 : Call driver$, key% : Loop
         Exit Do
@@ -229,6 +253,20 @@ Function ctrl.bits_to_string$(x%)
     EndIf
   Next
 End Function
+
+' Waits until specified controllers are all idle.
+Sub ctrl.wait_until_idle(d1$, d2$, d3$, d4$, d5$)
+  Local k%
+  Do
+    Call d1$, k%
+    If Not k% Then If Len(d2$) Then Call d2$, k%
+    If Not k% Then If Len(d3$) Then Call d3$, k%
+    If Not k% Then If Len(d4$) Then Call d4$, k%
+    If Not k% Then If Len(d5$) Then Call d5$, k%
+    If Not k% Then Exit Do
+    Pause 5
+  Loop
+End Sub
 
 '!ifndef CTRL_NO_CURSORS
 

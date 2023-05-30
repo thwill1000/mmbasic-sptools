@@ -73,6 +73,7 @@ Sub twm.init(max_num%, mem_sz%)
   twm.fh%      = Mm.Info(FontHeight)
 
   ' Allocate data buffer.
+  ' TODO: don't allocate 8 bytes for every byte required.
   Dim twm.data%(mem_sz% - 1)
 
   ' Allocate array of pointers (one for each window) into the data buffer.
@@ -227,6 +228,7 @@ Function twm.new_win%(x%, y%, w%, h%)
   EndIf
   twm.ptr%(twm.num%) = ptr%
 
+  ' TODO: don't allocate 8 bytes for every byte required.
   Local reqd% = ptr% + 7 + w% * h% * 2 - twm.ptr%(0)
   Local alloc% = Bound(twm.data%(), 1) + 1
   If reqd% > alloc% Then
@@ -486,10 +488,7 @@ Sub twm.cls(x%, y%, w%, h%)
 End Sub
 
 Sub twm.box(x%, y%, w%, h%)
-  Local i%
-  Local pc% = twm.pc%
-  Local s$
-  Local ad%
+  Local ad%, i%, pc% = twm.pc%, s$
 
   twm.lock_vga_cursor(1)
 
@@ -524,6 +523,44 @@ Sub twm.box(x%, y%, w%, h%)
   twm.lock_vga_cursor(0)
 End Sub
 
+' TODO: Implement intersections of boxes as was done for the original
+'       twm.box() command above.
+Sub twm.box1(x%, y%, w%, h%)
+  Local ad%, i%, pc% = twm.pc%, s$
+
+  twm.lock_vga_cursor(1)
+
+  ' Top
+  Poke Var s$, 0, w%
+  ad% = pc% + twm.w% * y% + x%
+  Poke Var s$, 1, twm.box_or%(&hDA, Peek(Byte ad%))
+  For i% = 2 To w% - 1
+    Poke Var s$, i%, twm.box_or%(&hC4, Peek(Byte ad% + i% - 1))
+  Next
+  Poke Var s$, w%, twm.box_or%(&hBF, Peek(Byte ad% + w% - 1))
+  twm.print_at(x%, y%, s$)
+
+  ' Sides
+  For twm.y% = y% + 1 To y% + h% - 2
+    Inc ad%, twm.w%
+    twm.x% = x%
+    twm.putc(twm.box_or%(&hB3, Peek(Byte ad%)))
+    twm.x% = x% +  w% - 1
+    twm.putc(twm.box_or%(&hB3, Peek(Byte ad% + w% - 1)))
+  Next
+
+  ' Bottom
+  Inc ad%, twm.w%
+  Poke Var s$, 1, twm.box_or%(&hC0, Peek(Byte ad%))
+  For i% = 2 To w% - 1
+    Poke Var s$, i%, twm.box_or%(&hC4, Peek(Byte ad% + i% - 1))
+  Next
+  Poke Var s$, w%, twm.box_or%(&hD9, Peek(Byte ad% + w% - 1))
+  twm.print_at(x%, y% + h% - 1, s$)
+
+  twm.lock_vga_cursor(0)
+End Sub
+
 ' Combines a new character 'ch%' and an existing character 'ex%'.
 ' If they are both 'box-drawing' characters then returns an appropriate junction character,
 ' otherwise returns the new character 'ch%'.
@@ -538,6 +575,7 @@ End Function
 
 ' Sends VT100 control-code to hide/show cursor to the serial console.
 Sub twm.enable_cursor(z%)
+'!if not defined(PICOMITE)
   Local s$ = LCase$(Mm.Info$(Option Console))
   Select Case s$
     Case "screen" : Exit Sub
@@ -550,8 +588,11 @@ Sub twm.enable_cursor(z%)
       ' the same line as a CASE clause.
       Option Console Serial
   End Select
+'!endif
   Print Chr$(27) Choice(z%, "[?25h", "[?25l");
+'!if not defined(PICOMITE)
   If s$ = "both" Then Option Console Both
+'!endif
 
   If z% = twm.cursor_enabled% Then Exit Sub
   twm.cursor_enabled% = z%

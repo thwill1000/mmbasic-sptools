@@ -18,7 +18,7 @@ add_test("test_provides")
 add_test("test_provides_given_duplicates")
 add_test("test_provides_given_too_many")
 add_test("test_requires")
-add_test("test_firmware_version")
+add_test("test_format_version")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -86,9 +86,10 @@ Sub test_requires()
   assert_error("required file(s) not included: a.inc, c.inc, d.inc, e.inc, g.inc, h.inc, i.inc, j.inc")
 End Sub
 
-Sub test_firmware_version()
-  assert_int_equals(50605, sys.firmware_version%("5.06.05"))
-  assert_int_equals(50600, sys.firmware_version%("5.06"))
-'  assert_int_equals(50506, sys.firmware_version%())
-  assert_int_equals(12345678, sys.firmware_version%("12.34.5.678"))
+Sub test_format_version()
+  assert_string_equals("10.07.08b7", sys.format_version$(10070807, 1))
+  assert_string_equals("5.07.08b7", sys.format_version$(5070807, 1))
+  assert_string_equals("5.06.00", sys.format_version$(5060000, 1))
+  assert_string_equals("5.6.0", sys.format_version$(50600))
+  assert_string_equals("0.9.9", sys.format_version$(909))
 End Sub

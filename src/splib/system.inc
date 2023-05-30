@@ -2,9 +2,14 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
+'!if !defined(PICOMITE) && ( defined(PGLCD1) || defined(PGLCD2) )
+  '!define PICOMITE
+'!endif
+
 Const sys.VERSION$ = "2.0.0-a1"
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
+const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
 
 Const sys.SUCCESS = 0
 Const sys.FAILURE = -1
@@ -61,29 +66,34 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
 End Sub
 '!endif
 
-' Formats a firmware version as a 5-digit number, e.g.
-'   5.05.06 => 50506
-'   5.04    => 50400
-'
-' @param version$  the firmware version to format.
-'                  If empty then formats the current firmware version number.
-Function sys.firmware_version%(version$)
-  Local i%, s$, v$ = version$
-  If v$ = "" Then v$ = Str$(Mm.Info$(Version))
-  For i% = 1 To Len(v$)
-    If InStr("0123456789", Mid$(v$, i%, 1)) > 0 Then s$ = s$ + Mid$(v$, i%, 1)
-  Next
-  Do While Len(s$) < 5 : s$ = s$ + "0" : Loop
-  sys.firmware_version% = Val(s$)
+' Formats an integer version as a minor.major.micro string.
+Function sys.format_version$(v%, fw%)
+  Local a% = v%\10000, b% = (v%-a%*10000)\100, c% = v%-a%*10000-b%*100
+  Local d% = Choice(fw%, 2, 1)
+  Local s$ = Str$(a%)+"."+Str$(b%,d%,0,"0")+"."+Str$(c%,d%,0,"0")
+  If fw% Then
+    If v% >= 10000000 Then
+      s$ = Mid$(s$,1,2) + "." + Mid$(s$,3)
+    ElseIf v% >= 100000 Then
+      s$ = Mid$(s$,1,1) + "." + Mid$(s$,2)
+    EndIf
+    Const beta% = Right$(s$, 3) <> ".00"
+    s$ = Mid$(s$,1,Len(s$)-3) + Choice(beta%, "b" + Str$(Val(Right$(s$,2))), "")
+  EndIf
+  sys.format_version$ = s$
 End Function
 
 ' Overrides Ctrl-C behaviour such that:
 '   - Ctrl-C will call sys.break_handler()
 '   - Ctrl-D will perform an actual MMBasic break
-Sub sys.override_break()
+Sub sys.override_break(callback$)
   sys.break_flag% = 0
   Option Break 4
-  On Key 3, sys.break_handler()
+  If Len(callback$) Then
+    Execute "On Key 3, " + callback$ + "()"
+  Else
+    On Key 3, sys.break_handler()
+  EndIf
 End Sub
 
 ' Called as an ON KEY interrupt when Ctrl-C is overridden by sys.override_break().
@@ -138,6 +148,8 @@ End Function
 '                cmm2   - Colour Maximite 2 (G1)
 '                cmm2g2 - Colour Maximite 2 (G2)
 '                cmm2*  - any Colour Maximite 2
+'                pglcd  - PicoGAME LCD / Bintendo Tomboy - Mark 1 or 2
+'                pglcd2 - PicoGAME LCD / Bintendo Tomboy - Mark 2
 '                pm     - PicoMite
 '                pmvga  - PicoMiteVGA
 '                pm*    - any PicoMite
@@ -161,6 +173,12 @@ Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
       Case "Colour Maximite 2 G2"
         If d$ = "cmm2g2" Or d$ = "cmm2*" Then Exit Function
       Case "PicoMite"
+'!if defined(PGLCD1) || defined(PGLCD2)
+        If d$ = "pglcd" Then Exit Function
+'!endif
+'!if defined(PGLCD2)
+        If d$ = "pglcd2" Then Exit Function
+'!endif
         If d$ = "pm" Or d$ = "pm*" Then Exit Function
       Case "PicoMiteVGA"
         If d$ = "pmvga" Or d$ = "pm*" Then Exit Function
