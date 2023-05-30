@@ -34,12 +34,6 @@ If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
 End
 
-Sub setup_test()
-End Sub
-
-Sub teardown_test()
-End Sub
-
 Sub test_init()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))

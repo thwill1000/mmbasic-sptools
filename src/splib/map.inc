@@ -90,7 +90,6 @@ Function map.is_full%(map$())
   map.is_full% = (ub% - Bound(map$(), 0)) \ 2 = Val(map$(ub%))
 End Function
 
-
 ' Adds a key/value pair.
 Sub map.put(mp$(), k$, v$)
   Local lb% = Bound(mp$(), 0)
