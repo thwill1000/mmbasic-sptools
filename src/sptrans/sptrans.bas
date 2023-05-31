@@ -4,6 +4,7 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
+Option Base 0
 Option Explicit On
 Option Default Integer
 

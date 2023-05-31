@@ -2,8 +2,9 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-Option Explicit On
+Option Base 0
 Option Default Integer
+Option Explicit On
 
 Const MAX_NUM_FILES = 5
 Dim in.num_open_files = 1
