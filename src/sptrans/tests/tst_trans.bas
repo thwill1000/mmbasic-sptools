@@ -52,6 +52,7 @@ add_test("test_comment_if_not")
 add_test("test_uncomment_if")
 add_test("test_uncomment_if_not")
 add_test("test_unknown_directive")
+add_test("test_unknown_directive_given_inactive_if", "test_unknown_given_inactive_if")
 add_test("test_ifdef_given_set")
 add_test("test_ifdef_given_unset")
 add_test("test_ifdef_given_0_args")
@@ -964,6 +965,11 @@ Sub test_unknown_directive()
   expect_transpile_error("'!wombat foo", "Unknown !wombat directive")
 End Sub
 
+Sub test_unknown_given_inactive_if()
+  expect_transpile_omits("'!if defined(false)")
+  expect_transpile_error("  '!wombat foo", "Unknown !wombat directive")
+End Sub
+
 Sub test_endif_given_no_if()
   expect_transpile_omits("'!ifndef FOO")
   expect_transpile_omits("'!endif")
@@ -1380,7 +1386,7 @@ Sub expect_transpile_error(line$, msg$)
     If result% = sys.FAILURE Then
       assert_error(msg$)
     Else
-      assert_fail("Transpiler did not return ERROR, result = " + Str$(result%) + " : " + line$)
+      assert_fail("Transpiler did not return FAILURE, result = " + Str$(result%) + " : " + line$)
     EndIf
   EndIf
 End Sub

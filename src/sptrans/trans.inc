@@ -78,9 +78,16 @@ End Function
 Function tr.transpile%()
   tr.include$ = ""
 
-  ' Remove any trailing comment from directive.
   If lx.type(0) = TK_DIRECTIVE Then
+    ' Remove any trailing comment from directive.
     If lx.type(lx.num - 1) = TK_COMMENT Then lx.remove_token(lx.num - 1)
+
+    ' Check that is is a known directive.
+    If Not tr.is_known_directive%(lx.directive$(0)) Then
+      sys.err$ = "Unknown " + lx.directive$(0) + " directive"
+      tr.transpile% = sys.FAILURE
+      Exit Function
+    EndIf
   EndIf
 
   Select Case lx.token_lc$(0)
@@ -162,7 +169,7 @@ Function tr.transpile%()
     Case "!uncomment_if" : tr.process_if()
     Case "!undef"        : tr.process_undef()
     Case "!unreplace"    : tr.process_replace()  ' Same SUB for !replace & !unreplace.
-    Case Else            : sys.err$ = "Unknown " + Mid$(lx.directive$(0), 1) + " directive"
+    Case Else            : Error "Invalid state" ' Should have been caught earlier.
   End Select
 
   If sys.err$ <> "" Then
@@ -171,6 +178,15 @@ Function tr.transpile%()
     ' lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
     lx.reset("")
     tr.omitted_line_flag% = 1
+  EndIf
+End Function
+
+Function tr.is_known_directive%(t$)
+  Local u$ = "|" + Mid$(t$, 2) + "|"
+  If InStr("|comments|comment_if|define|elif|else|empty-lines|endif|error|if|ifdef|", u$) Then
+    tr.is_known_directive% = 1
+  ElseIf InStr("|ifndef|info|indent|replace|spacing|uncomment_if|undef|unreplace|", u$) Then
+    tr.is_known_directive% = 1
   EndIf
 End Function
 
