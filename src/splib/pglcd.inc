@@ -16,11 +16,8 @@ Sub pglcd.end(break%)
 
   sys.restore_break()
 
-  ' TODO: ctrl.term() should term keys and close all open controllers.
-  On Error Ignore
-  ctrl.term_keys()
-  Call ctrl$, ctrl.CLOSE
-  On Error Abort
+  On Error Skip : sound.term()
+  On Error Skip : ctrl.term()
 
   ' TODO: twm.term() should subsume twm.free() and also do this.
   On Error Skip

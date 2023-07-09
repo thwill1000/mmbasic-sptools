@@ -31,6 +31,7 @@ Option Explicit On
 Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
 Dim CTRL_DRIVERS$(1) = ("ctrl.pglcd2", "keys_cursor")
 
+If sys.is_device%("mmb4l") Then Option CodePage CMM2
 If sys.is_device%("mmb4w", "cmm2*") Then Option Console Serial
 Mode 7
 Page Write 1
@@ -45,22 +46,22 @@ Sub main()
   Local ctrl_idx% = Choice(sys.is_device%("pglcd2"), 0, 1)
   menu.init(CTRL_DRIVERS$(ctrl_idx%), "menu_cb")
   menu.load_data("main_menu_data")
-  menu.selection% = ctrl_idx%
+  menu.selection% = ctrl_idx% + 2
   Call menu.ctrl$, ctrl.OPEN
-  menu.render()
+  menu.render(1)
 
   Local i%, key%, old%, t% = 0
   Do
     If sys.break_flag% Then menu.on_break()
     If ctrl.keydown%(Asc("1")) Then
-      menu.select(0)
+      menu.select_item(2)
     ElseIf ctrl.keydown%(Asc("2")) Then
-      menu.select(1)
+      menu.select_item(3)
     Else
       Call menu.ctrl$, key%
       If key% = ctrl.A Then
         If t% = 0 Then t% = Timer + 2000
-        If Timer >= t% Then cmd_quit(ctrl.A)
+        If Timer >= t% Then on_quit()
       Else
         t% = 0
       EndIf
@@ -76,12 +77,10 @@ End Sub
 
 Sub menu_cb(cb_data$)
   Select Case Field$(cb_data$, 1, "|")
-    Case "ctrl", "open"
-      ' Do nothing.
     Case "render"
       render_cb(cb_data$)
-    Case "select"
-      select_cb(cb_data$)
+    Case "selection_changed"
+      selection_changed_cb(cb_data$)
     Case Else
       Error "Invalid state"
   End Select
@@ -93,18 +92,19 @@ Sub render_cb(cb_data$)
   For i% = Bound(BUTTONS%(), 0) To Bound(BUTTONS%(), 1)
     render_button(BUTTONS%(i%))
   Next
-  Const msg$ = "Hold " + Choice(menu.selection%, "SPACE", "A") + " to QUIT"
-  twm.print_at(1, menu.height% - 2, str.centre$(msg$, menu.width% - 2))
+  Const msg$ = "Hold " + Choice(menu.selection% = 3, "SPACE", "A") + " to QUIT"
+  menu.items$(Bound(menu.items$(), 1)) = str.centre$(msg$, menu.width% - 4) + "|"
+  menu.render_item(Bound(menu.items$(), 1))
   Local s$ = "v" + sys.format_version$(ctrl.VERSION)
   twm.print_at(menu.width% - Len(s$) - 2, menu.height% - 2, s$)
 End Sub
 
-Sub select_cb(cb_data$)
+Sub selection_changed_cb(cb_data$)
   On Error Ignore
   Call menu.ctrl$, ctrl.CLOSE
   Local err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
   On Error Abort
-  menu.ctrl$ = CTRL_DRIVERS$(menu.selection%)
+  menu.ctrl$ = CTRL_DRIVERS$(menu.selection% - 2)
   On Error Ignore
   Call menu.ctrl$, ctrl.OPEN
   err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
@@ -145,8 +145,7 @@ Sub render_button(key%, active%)
   If active% Then twm.foreground(twm.WHITE%)
 End Sub
 
-Sub cmd_quit(key%)
-  If key% <> ctrl.A Then menu.play_invalid_fx(1) : Exit Sub
+Sub on_quit()
   menu.play_valid_fx(1)
   Const msg$ = str.decode$("\nAre you sure you want to quit this program?")  
   Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
@@ -162,7 +161,9 @@ Sub cmd_quit(key%)
 End Sub
 
 main_menu_data:
-Data "\x9F Controller Test \x9F"
-Data "1) PicoGAME LCD gamepad         |menu.cmd_open|music_menu_data"
-Data "2) Keyboard: Cursor keys & Space|menu.cmd_open|music_menu_data"
+Data "\x9F Controller Test \x9F|"
+Data "|"
+Data " 1) PicoGAME LCD gamepad          |menu.cmd_open|music_menu_data"
+Data " 2) Keyboard: Cursor keys & Space |menu.cmd_open|music_menu_data"
+Data "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|"
 Data ""

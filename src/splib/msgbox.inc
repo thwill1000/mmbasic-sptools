@@ -5,7 +5,7 @@
 '!ifndef NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.requires("ctrl")
+sys.requires("ctrl", "string")
 sys.provides("msgbox")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -14,14 +14,18 @@ Const msgbox.NO_PAGES = &h01
 
 Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg%, frame%, flags%)
   Const base% = Mm.Info(Option Base), num% = Bound(buttons$(), 1) - base% + 1
-  Local i%, btn_x%(num%)
+  Local i%, btn_x%(num%), p% = 1
   btn_x%(base%) = x% + 2
   For i% = base% + 1 To base% + num% - 1
     btn_x%(i%) = btn_x%(i% - 1) + Len(buttons$(i% - 1)) + 5
   Next
 
   msgbox.box(x%, y%, w%, h%, 1, Choice(frame% = -1, fg%, frame%), bg%)
-  msgbox.print_at(x% + 2, y% + 2, msg$, fg%, bg%)
+  i% = y% + 2
+  Do While p% <= Len(msg$)
+    msgbox.print_at(x% + 2, i%, str.wwrap$(msg$, p%, w% - 4), fg%, bg%)
+    Inc i%
+  Loop
 
   Local key%, released%, valid% = 1
   msgbox.show% = default%
@@ -33,7 +37,6 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
       Next
       If Not flags% And msgbox.NO_PAGES Then Page Copy 1 To 0, B
       valid% = 0
-      Pause 50
     EndIf
     Call ctrl$, key%
     If Not key% Then keys_cursor(key%)
@@ -49,7 +52,7 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
         If msgbox.show% < num% - 1 Then Inc msgbox.show% : valid% =1
     End Select
     msgbox.beep(valid%)
-    If Not valid% Then Pause 50
+    Pause ctrl.UI_DELAY - 100
   Loop Until key% = ctrl.A
 
   ctrl.wait_until_idle(ctrl$, "keys_cursor")

@@ -63,6 +63,7 @@ Dim octave% = 0
 Dim octave_idx% = 0
 Dim type_idx% = 0
 
+If sys.is_device%("mmb4l") Then Option CodePage CMM2
 If sys.is_device%("mmb4w", "cmm2*") Then Option Console Serial
 Mode 7
 Page Write 1
@@ -77,8 +78,8 @@ Sub main()
   Call ctrl$, ctrl.OPEN
   sound.init("fx_test_int", "music_test_int")
   menu.init(ctrl$, "menu_cb")
-  menu.load_data("main_menu_data")
-  menu.render()
+  update_menu_data("main_menu_data")
+  menu.render(1)
   menu.main_loop()
 End Sub
 
@@ -156,97 +157,115 @@ End Sub
 
 Sub menu_cb(cb_data$)
   Select Case Field$(cb_data$, 1, "|")
-    Case "ctrl"
-      ctrl_cb(cb_data$)
-    Case "open"
-      open_cb(cb_data$)
     Case "render"
       render_cb()
-    Case "select"
+    Case "selection_changed"
       ' Do nothing.
     Case Else
       Error "Invalid state"
   End Select
 End Sub
 
-Sub ctrl_cb(cb_data$)
-  Select Case Field$(cb_data$, 2, "|")
-    Case "b", "start":
-      If Left$(menu.items$(menu.item_count% - 1), 4) = "BACK" Then
-        menu.selection% = menu.item_count% - 1
-        menu.cmd_open(ctrl.A)
-      Else
-        menu.play_invalid_fx(1)
-      EndIf
-    Case "select"
-      cmd_quit(ctrl.A)
+Sub render_cb(cb_data$)
+  Const s$ = "v" + sys.format_version$(sound.VERSION%)
+  twm.print_at(menu.width% - Len(s$) - 2, menu.height% - 2, s$)
+End Sub
+
+Sub cmd_menu(key%)
+  Select Case key%
+    Case ctrl.A
+      menu.play_valid_fx(1)
+      update_menu_data(Field$(menu.items$(menu.selection%), 3, "|"))
+      menu.render()
     Case Else
-      Error "Invalid state"
+      default_handler(key%)
   End Select
 End Sub
 
-Sub open_cb(cb_data$)
-  Local idx% = -1
-  Select Case Field$(cb_data$, 2, "|")
-    Case "main_menu_data"
-      ' Do nothing
-    Case "music_menu_data"
-      idx% = 4
-    Case "fx_menu_data"
-      idx% = 6
+Sub default_handler(key%)
+  Local i%
+  Select Case key%
+    Case ctrl.B
+      For i% = 0 To menu.item_count% - 1
+        If Field$(menu.items$(i%), 1, "|") = "BACK" Then
+          menu.selection% = i%
+          cmd_menu(ctrl.A)
+          Exit Sub
+        EndIf
+      Next
+      menu.play_invalid_fx(1)
+
+    Case ctrl.SELECT
+      cmd_quit(key%)
+
     Case Else
-      Error "Invalid state"
+      menu.play_invalid_fx(1)
+  End Select
+End Sub
+
+Sub update_menu_data(data_label$)
+  menu.load_data(data_label$)
+  Local idx% = -1
+  Select Case data_label$
+    Case "main_menu_data":  ' Do nothing
+    Case "music_menu_data": idx% = 6
+    Case "fx_menu_data":    idx% = 8
+    Case Else: Error "Invalid state"
   End Select
   If idx% > -1 Then
-    menu.items$(idx%)     = "CHANNEL: " + CHANNELS$(channel_idx%) + "|cmd_channel"
-    menu.items$(idx% + 1) = "TYPE:    " + TYPES$(type_idx%) + "|cmd_type"
-    menu.items$(idx% + 2) = "OCTAVE:  " + OCTAVES$(octave_idx%) + "|cmd_octave"
+    menu.items$(idx%)     = " CHANNEL: " + CHANNELS$(channel_idx%) + " |cmd_channel"
+    menu.items$(idx% + 1) = " TYPE:    " + TYPES$(type_idx%) + " |cmd_type"
+    menu.items$(idx% + 2) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
   EndIf
-End Sub
-
-Sub render_cb(cb_data$)
   If sys.is_device%("pglcd") Then
-    Const footer$ = str.decode$("Use \x92 \x93 and A to select ")
-  Else
-    Const footer$ = str.decode$("Use \x92 \x93 and SPACE to select")
+    menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and A to select |")
   EndIf
-  twm.print_at(1, menu.height% - 3, str.centre$(footer$, menu.width% - 2))
-
-  twm.print_at(2, 18, str.lpad$("v" + sys.format_version$(sound.VERSION%), 36))
 End Sub
 
 Sub cmd_play_fx(key%)
-  If key% <> ctrl.A Then menu.play_invalid_fx(1) : Exit Sub
-  Const item$ = menu.items$(menu.selection%)
-  Execute "sound.play_fx(sound.FX_" + Field$(item$, 3, "|") + "%())"
-  Do While sound.is_playing%() : Loop
+  Select Case key%
+    Case ctrl.A
+      Const item$ = menu.items$(menu.selection%)
+      Execute "sound.play_fx(sound.FX_" + Field$(item$, 3, "|") + "%())"
+      Do While sound.is_playing%() : Loop ' Do not block within EXECUTE.
+    Case Else
+      default_handler(key%)
+  End Select
 End Sub
 
 Sub cmd_play_music(key%)
-  If key% <> ctrl.A Then menu.play_invalid_fx(1) : Exit Sub
-  Local music%(255), track$ = Field$(menu.items$(menu.selection%), 3, "|")
-  sound.load_data(track$ + "_music_data", music%())
-  sound.play_music(music%())
-  Do : Call menu.ctrl$, key% : Loop Until Not key%
-  Do While (Not key%) And sound.is_playing%()
-    Call menu.ctrl$, key%
-    If Not key% Then keys_cursor(key%)
-  Loop
-  sound.stop()
-  sound.start()
+  Select Case key%
+    Case ctrl.A
+      Local music%(255), track$ = Field$(menu.items$(menu.selection%), 3, "|")
+      sound.load_data(track$ + "_music_data", music%())
+      sound.play_music(music%())
+      Do : Call menu.ctrl$, key% : Loop Until Not key%
+      Do While (Not key%) And sound.is_playing%()
+        Call menu.ctrl$, key%
+        If Not key% Then keys_cursor(key%)
+      Loop
+      sound.enable(&h00)
+      sound.enable(sound.FX_FLAG% Or sound.MUSIC_FLAG%)
+    Case Else
+      default_handler(key%)
+  End Select
 End Sub
 
 Sub cmd_play_wav(key%)
-  If key% <> ctrl.A Then menu.play_invalid_fx(1) : Exit Sub
-  Const filename$ = Field$(menu.items$(menu.selection%), 3, "|")
-  Do While sound.is_playing%() : Loop
-  sound.term()
-  Dim wav_done%
-  Play Wav filename$, wav_done_cb
-  Do While Not wav_done% : Loop
-  Erase wav_done%
-  Play Stop
-  sound.start()
+  Select Case key%
+    Case ctrl.A
+      Const filename$ = Field$(menu.items$(menu.selection%), 3, "|")
+      Do While sound.is_playing%() : Loop
+      sound.term()
+      Dim wav_done%
+      Play Wav filename$, wav_done_cb
+      Do While Not wav_done% : Loop
+      Erase wav_done%
+      Play Stop
+      sound.enable(sound.FX_FLAG% Or sound.MUSIC_FLAG%)
+    Case Else
+      default_handler(key%)
+  End Select
 End Sub
 
 Sub wav_done_cb()
@@ -254,89 +273,117 @@ Sub wav_done_cb()
 End Sub
 
 Sub cmd_channel(key%)
-  menu.play_valid_fx(1)
-  Inc channel_idx%, Choice(key% = ctrl.LEFT, -1, 1)
-  If channel_idx% > Bound(CHANNELS$(), 1) Then channel_idx% = 0
-  If channel_idx% < 0 Then channel_idx% = Bound(CHANNELS$(), 1)
-  channel$ = CHANNEL_VALUES$(channel_idx%)
-  menu.items$(menu.selection%) = "CHANNEL: " + CHANNELS$(channel_idx%) + "|cmd_channel"
-  menu.render_item(menu.selection%)
-  Page Copy 1 To 0 , B
+  Select Case key%
+    Case ctrl.LEFT, ctrl.RIGHT
+      menu.play_valid_fx(1)
+      Inc channel_idx%, Choice(key% = ctrl.LEFT, -1, 1)
+      If channel_idx% > Bound(CHANNELS$(), 1) Then channel_idx% = 0
+      If channel_idx% < 0 Then channel_idx% = Bound(CHANNELS$(), 1)
+      channel$ = CHANNEL_VALUES$(channel_idx%)
+      menu.items$(menu.selection%) = " CHANNEL: " + CHANNELS$(channel_idx%) + " |cmd_channel"
+      menu.render_item(menu.selection%)
+      Page Copy 1 To 0 , B
+    Case Else
+      default_handler(key%)
+  End Select
 End Sub
 
 Sub cmd_type(key%)
-  menu.play_valid_fx(1)
-  Inc type_idx%, Choice(key% = ctrl.LEFT, -1, 1)
-  If type_idx% > Bound(TYPES$(), 1) Then type_idx% = 0
-  If type_idx% < 0 Then type_idx% = Bound(TYPES$(), 1)
-  type$ = TYPE_VALUES$(type_idx%)
-  menu.items$(menu.selection%) = "TYPE:    " + TYPES$(type_idx%) + "|cmd_type"
-  menu.render_item(menu.selection%)
-  Page Copy 1 To 0 , B
+  Select Case key%
+    Case ctrl.LEFT, ctrl.RIGHT
+      menu.play_valid_fx(1)
+      Inc type_idx%, Choice(key% = ctrl.LEFT, -1, 1)
+      If type_idx% > Bound(TYPES$(), 1) Then type_idx% = 0
+      If type_idx% < 0 Then type_idx% = Bound(TYPES$(), 1)
+      type$ = TYPE_VALUES$(type_idx%)
+      menu.items$(menu.selection%) = " TYPE:    " + TYPES$(type_idx%) + " |cmd_type"
+      menu.render_item(menu.selection%)
+      Page Copy 1 To 0 , B
+    Case Else
+      default_handler(key%)
+  End Select
 End Sub
 
 Sub cmd_octave(key%)
-  menu.play_valid_fx(1)
-  Inc octave_idx%, Choice(key% = ctrl.LEFT, -1, 1)
-  If octave_idx% > Bound(OCTAVES$(), 1) Then octave_idx% = 0
-  If octave_idx% < 0 Then octave_idx% = Bound(OCTAVES$(), 1)
-  octave% = OCTAVE_VALUES%(octave_idx%)
-  menu.items$(menu.selection%) = "OCTAVE:  " + OCTAVES$(octave_idx%) + "|cmd_octave"
-  menu.render_item(menu.selection%)
-  Page Copy 1 To 0 , B
+  Select Case key%
+    Case ctrl.LEFT, ctrl.RIGHT
+      menu.play_valid_fx(1)
+      Inc octave_idx%, Choice(key% = ctrl.LEFT, -1, 1)
+      If octave_idx% > Bound(OCTAVES$(), 1) Then octave_idx% = 0
+      If octave_idx% < 0 Then octave_idx% = Bound(OCTAVES$(), 1)
+      octave% = OCTAVE_VALUES%(octave_idx%)
+      menu.items$(menu.selection%) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
+      menu.render_item(menu.selection%)
+      Page Copy 1 To 0 , B
+    Case Else
+      default_handler(key%)
+  End Select
 End Sub
 
 Sub cmd_quit(key%)
-  If key% <> ctrl.A Then menu.play_invalid_fx(1) : Exit Sub
-  menu.play_valid_fx(1)
-  Const msg$ = str.decode$("\nAre you sure you want to quit this program?")
-  Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
-    Case "Yes"
-      pglcd.end()
-    Case "No"
-      twm.switch(menu.win1%)
-      twm.redraw()
-      Page Copy 1 To 0 , B
+  Select Case key%
+    Case ctrl.A, ctrl.SELECT
+      menu.play_valid_fx(1)
+      Const msg$ = str.decode$("\nAre you sure you want to quit this program?")
+      Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
+        Case "Yes"
+          pglcd.end()
+        Case "No"
+          twm.switch(menu.win1%)
+          twm.redraw()
+          Page Copy 1 To 0 , B
+        Case Else
+          Error "Invalid state"
+      End Select
     Case Else
-      Error "Invalid state"
+      default_handler(key%)
   End Select
 End Sub
 
 main_menu_data:
-Data "\x9F Sound Test \x9F"
-Data "    Play Music     |menu.cmd_open|music_menu_data"
-Data "   Play Sound FX   |menu.cmd_open|fx_menu_data"
+Data "\x9F Sound Test \x9F|"
+Data "|"
+Data "  Play Music   |cmd_menu|music_menu_data"
+Data " Play Sound FX |cmd_menu|fx_menu_data"
 'Data "Play \qCantina Band\q|cmd_play_wav|CantinaBand3.wav"
 Data "|"
-Data "QUIT|cmd_quit"
+Data " QUIT |cmd_quit"
+Data "|", "|", "|", "|", "|", "|", "|", "|", "|"
+Data "Use \x92 \x93 and SPACE to select|"
 Data ""
 
 music_menu_data:
-Data "\x9F Play Music \x9F"
-Data " The Entertainer |cmd_play_music|entertainer"
-Data "Black & White Rag|cmd_play_music|black_white_rag"
-Data "Spring (Vivaldi) |cmd_play_music|spring"
+Data "\x9F Play Music \x9F|"
 Data "|"
-Data "CHANNEL: \x95    Both    \x94|cmd_channel"
-Data "TYPE:    \x95    Sine    \x94|cmd_type"
-Data "OCTAVE:  \x95   Default  \x94|cmd_octave"
+Data "  The Entertainer  |cmd_play_music|entertainer"
+Data " Black & White Rag |cmd_play_music|black_white_rag"
+Data "  Spring (Vivaldi) |cmd_play_music|spring"
 Data "|"
-Data "BACK|menu.cmd_open|main_menu_data"
+Data " CHANNEL: \x95    Both    \x94 |cmd_channel"
+Data " TYPE:    \x95    Sine    \x94 |cmd_type"
+Data " OCTAVE:  \x95   Default  \x94 |cmd_octave"
+Data "|"
+Data " BACK |cmd_menu|main_menu_data"
+Data "|", "|", "|", "|"
+Data "Use \x92 \x93 and SPACE to select|"
 Data ""
 
 fx_menu_data:
-Data "\x9F Play Sound FX \x9F"
-Data "Blart |cmd_play_fx|blart"
-Data "Select|cmd_play_fx|select"
-Data "Die   |cmd_play_fx|die"
-Data "Wipe  |cmd_play_fx|wipe"
-Data "Ready, Steady, Go!|cmd_play_fx|ready_steady_go"
+Data "\x9F Play Sound FX \x9F|"
 Data "|"
-Data "CHANNEL: \x95    Both    \x94|cmd_channel"
-Data "TYPE:    \x95    Sine    \x94|cmd_type"
-Data "OCTAVE:  \x95   Default  \x94|cmd_octave"
+Data " Blart  |cmd_play_fx|blart"
+Data " Select |cmd_play_fx|select"
+Data " Die    |cmd_play_fx|die"
+Data " Wipe   |cmd_play_fx|wipe"
+Data " Ready, Steady, Go! |cmd_play_fx|ready_steady_go"
 Data "|"
-Data "BACK|menu.cmd_open|main_menu_data"
+Data " CHANNEL: \x95    Both    \x94 |cmd_channel"
+Data " TYPE:    \x95    Sine    \x94 |cmd_type"
+Data " OCTAVE:  \x95   Default  \x94 |cmd_octave"
+Data "|"
+Data " BACK |cmd_menu|main_menu_data"
+Data "|", "|"
+Data "Use \x92 \x93 and SPACE to select|"
 Data ""
 
 entertainer_music_data:

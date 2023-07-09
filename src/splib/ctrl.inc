@@ -57,7 +57,7 @@ If sys.err$ <> "" Then Error sys.err$
 '!info defined CTRL_USE_ON_PS2
 '!info defined CTRL_USE_KEYDOWN
 
-Const ctrl.VERSION = 909  ' 0.9.9
+Const ctrl.VERSION = 910  ' 0.9.10
 
 ' Button values as returned by controller driver subroutines.
 Const ctrl.R      = &h01
@@ -83,6 +83,14 @@ Const ctrl.SOFT_CLOSE = -3
 ' The NES standard specifies a 12 micro-second pulse, but all the controllers
 ' I've tested work with 1 micro-second, and possibly less.
 Const ctrl.PULSE = 0.001 ' 1 micro-second
+
+' Suggested default delay between actions when using keys to navigate UI.
+Const ctrl.UI_DELAY = 200 ' 200 micro-seconds.
+
+' Comma separated list of OPEN controller drivers that should automatically
+' be CLOSEd when ctrl.term() is called. If a driver does not need closing
+' (i.e. keyboard) then it does not need to be added to this list.
+Dim ctrl.open_drivers$
 
 ' When a key is down the corresponding byte of this 256-byte map is set,
 ' when the key is up then it is unset.
@@ -110,22 +118,30 @@ Dim ctrl.tick_nbr%
 ' @param  nbr%     CMM2 only - timer nbr to read KEYDOWN state, default 4.
 Sub ctrl.init_keys(period%, nbr%)
   ctrl.term_keys()
-'!uncomment_if CTRL_USE_INKEY
-'  On Key ctrl.on_key()
-'!endif
-'!uncomment_if CTRL_USE_ON_PS2
-  ' Read Save
-  ' Restore ctrl.scan_map_data
-  ' Local i%
-  ' For i% = Bound(ctrl.scan_map%(), 0) To Bound(ctrl.scan_map%(), 1)
-  '   Read ctrl.scan_map%(i%)
-  ' Next
-  ' Read Restore
-  ' On Ps2 ctrl.on_ps2()
-'!endif
-'!ifdef CTRL_USE_KEYDOWN
+'!if false ' This is the untranspiled branch.
+  If Mm.Device$ = "MMB4L" Then
+    On Key ctrl.on_key()
+  Else
+    ctrl.tick_nbr% = Choice(nbr% = 0, 4, nbr%)
+    SetTick Choice(period% = 0, 40, period%), ctrl.on_tick(), ctrl.tick_nbr%
+  EndIf
+  Exit Sub
+'!elif defined(CTRL_USE_INKEY)
+  On Key ctrl.on_key()
+'!elif defined(CTRL_USE_ON_PS2)
+  Read Save
+  Restore ctrl.scan_map_data
+  Local i%
+  For i% = Bound(ctrl.scan_map%(), 0) To Bound(ctrl.scan_map%(), 1)
+    Read ctrl.scan_map%(i%)
+  Next
+  Read Restore
+  On Ps2 ctrl.on_ps2()
+'!elif defined(CTRL_USE_KEYDOWN)
   ctrl.tick_nbr% = Choice(nbr% = 0, 4, nbr%)
   SetTick Choice(period% = 0, 40, period%), ctrl.on_tick(), ctrl.tick_nbr%
+'!else
+'!error "Unknown keyboard controller"
 '!endif
 End Sub
 
@@ -162,16 +178,34 @@ Sub ctrl.on_ps2()
 End Sub
 '!endif
 
+Sub ctrl.term()
+  ctrl.term_keys()
+  On Error Ignore
+  Do While Len(ctrl.open_drivers$)
+    Call Field$(ctrl.open_drivers$, 1), ctrl.CLOSE
+  Loop
+  On Error Abort
+End Sub
+
 ' Terminates keyboard reading.
 Sub ctrl.term_keys()
-'!uncomment_if CTRL_USE_INKEY
-  ' On Key 0
-'!endif
-'!uncomment_if CTRL_USE_ON_PS2
-  ' On Ps2 0
-'!endif
-'!ifdef CTRL_USE_KEYDOWN
+'!if false ' This is the untranspiled branch.
+  If Mm.Device$ = "MMB4L" Then
+    On Key 0
+  Else
+    If ctrl.tick_nbr% <> 0 Then SetTick 0, 0, ctrl.tick_nbr%
+  EndIf
+  Memory Set Peek(VarAddr ctrl.key_map%()), 0, 256
+  Do While Inkey$ <> "" : Loop
+  Exit Sub
+'!elif defined(CTRL_USE_INKEY)
+  On Key 0
+'!elif defined(CTRL_USE_ON_PS2)
+  On Ps2 0
+'!elif defined(CTRL_USE_KEYDOWN)
   If ctrl.tick_nbr% <> 0 Then SetTick 0, 0, ctrl.tick_nbr%
+'!else
+'!error "Unknown keyboard controller"
 '!endif
   Memory Set Peek(VarAddr ctrl.key_map%()), 0, 256
   Do While Inkey$ <> "" : Loop
@@ -179,8 +213,11 @@ End Sub
 
 Function ctrl.keydown%(i%)
   ctrl.keydown% = Peek(Var ctrl.key_map%(), i%)
-'!uncomment_if CTRL_USE_INKEY
-  ' Poke Var ctrl.key_map%(), i%, 0
+'!if false ' This is the untranspiled branch.
+  If Mm.Device$ = "MMB4L" Then Poke Var ctrl.key_map%(), i%, 0
+  Exit Function
+'!elif defined(CTRL_USE_INKEY)
+  Poke Var ctrl.key_map%(), i%, 0
 '!endif
 End Function
 
@@ -189,10 +226,10 @@ End Function
 '
 ' @param[in]      drivers$()  controller drivers to poll.
 ' @param[in]      mask%       bit mask to match against.
-' @param[in,out]  duration%   on entry the maxiumum duration to poll, or
-'                             0 to poll indefinitely.
-'                             on exit the remaining duration, or
-'                             0 if it was 0 on entry.
+' @param[in,out]  duration%   on entry the maximum duration to poll,
+'                             or 0 to poll indefinitely.
+'                             on exit the remaining duration,
+'                             which will be 0 if it was 0 on entry.
 ' @param[out]     key%        matching bits, otherwise 0.
 ' @return                     entry from drivers$() or empty string if no match.
 Function ctrl.poll_multiple$(drivers$(), mask%, duration%, key%)
@@ -284,6 +321,22 @@ Sub keys_cursor(x%)
   Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
 End Sub
 
+Sub ctrl.open_driver(d$)
+  Cat ctrl.open_drivers$, d$ + ","
+End Sub
+
+Sub ctrl.close_driver(d$)
+  Local idx% = InStr(ctrl.open_drivers$, d$)
+  Select Case idx%
+    Case 0
+      ' d$ not present, ignore.
+    Case 1
+      ctrl.open_drivers$ = Mid$(ctrl.open_drivers$, Len(d$) + 2)
+    Case Else
+      ctrl.open_drivers$ = Mid$(ctrl.open_drivers$, 1, idx% - 1) + Mid$(ctrl.open_drivers$, idx% + Len(d$) + 1)
+  End Select
+End Sub
+
 '!endif ' CTRL_NO_CURSORS
 
 '!if defined(PICOMITE) && !defined(PGLCD2)
@@ -300,8 +353,10 @@ Sub atari_a(x%)
       Exit Sub
     Case ctrl.OPEN
       SetPin GP0, DIn : SetPin GP1, DIn : SetPin GP2, DIn : SetPin GP3, DIn : SetPin GP14, DIn
+      ctrl.open_driver("atari_a")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP0, Off : SetPin GP1, Off : SetPin GP2, Off : SetPin GP3, Off : SetPin GP14, Off
+      ctrl.close_driver("atari_a")
   End Select
 End Sub
 
@@ -319,8 +374,10 @@ Sub atari_b(x%)
       Exit Sub
     Case ctrl.OPEN
       SetPin GP4, DIn : SetPin GP5, DIn : SetPin GP15, DIn : SetPin GP22, DIn : SetPin GP28, DIn
+      ctrl.open_driver("atari_b")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP4, Off : SetPin GP5, Off : SetPin GP15, Off : SetPin GP22, Off : SetPin GP28, Off
+      ctrl.close_driver("atari_b")
     End Select
 End Sub
 
@@ -348,8 +405,14 @@ Sub snes_a(x%)
       Inc x%, Not Pin(GP1) * ctrl.L      : Pulse GP3, ctrl.PULSE
       Inc x%, Not Pin(GP1) * ctrl.R      : Pulse GP3, ctrl.PULSE
       Exit Sub
-    Case Else
-      nes_a(x%)
+    Case ctrl.OPEN
+      SetPin GP1, Din : SetPin GP2, Dout : SetPin GP3, Dout
+      Pin(GP2) = 0 : Pin(GP3) = 0
+      snes_a(0) ' Discard the first reading.
+      ctrl.open_driver("snes_a")
+    Case ctrl.CLOSE, ctrl.SOFT_CLOSE
+      SetPin GP1, Off : SetPin GP2, Off : SetPin GP3, Off
+      ctrl.close_driver("snes_a")
   End Select
 End Sub
 
@@ -375,8 +438,14 @@ Sub snes_b(x%)
       Inc x%, Not Pin(GP4) * ctrl.L      : Pulse GP22, ctrl.PULSE
       Inc x%, Not Pin(GP4) * ctrl.R      : Pulse GP22, ctrl.PULSE
       Exit Sub
-    Case Else
-      nes_b(x%)
+    Case ctrl.OPEN
+      SetPin GP4, Din : SetPin GP5, Dout : SetPin GP22, Dout
+      Pin(GP5) = 0 : Pin(GP22) = 0
+      snes_b(0) ' Discard the first reading.
+      ctrl.open_driver("snes_b")
+    Case ctrl.CLOSE, ctrl.SOFT_CLOSE
+      SetPin GP4, Off : SetPin GP5, Off : SetPin GP22, Off
+      ctrl.close_driver("snes_b")
   End Select
 End Sub
 
@@ -407,8 +476,10 @@ Sub nes_a(x%)
       SetPin GP1, Din : SetPin GP2, Dout : SetPin GP3, Dout
       Pin(GP2) = 0 : Pin(GP3) = 0
       nes_a(0) ' Discard the first reading.
+      ctrl.open_driver("nes_a")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP1, Off : SetPin GP2, Off : SetPin GP3, Off
+      ctrl.close_driver("nes_a")
   End Select
 End Sub
 
@@ -434,8 +505,10 @@ Sub nes_b(x%)
       SetPin GP4, Din : SetPin GP5, Dout : SetPin GP22, Dout
       Pin(GP5) = 0 : Pin(GP22) = 0
       nes_b(0) ' Discard the first reading.
+      ctrl.open_driver("nes_b")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP4, Off : SetPin GP5, Off : SetPin GP22, Off
+      ctrl.close_driver("nes_b")
   End Select
 End Sub
 
@@ -456,9 +529,11 @@ Sub ctrl.pglcd2(x%)
     Case ctrl.OPEN
       Local i%
       For i% = 8 To 15 : SetPin Mm.Info(PinNo "GP" + Str$(i%)), Din, PullUp : Next
+      ctrl.open_driver("ctrl.pglcd2")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       Local i%
       For i% = 8 To 15 : SetPin Mm.Info(PinNo "GP" + Str$(i%)), Off : Next
+      ctrl.close_driver("ctrl.pglcd2")
   End Select
 End Sub
 '!endif
@@ -479,9 +554,11 @@ Sub atari_dx(x%)
     Case ctrl.OPEN
       SetPin 32, Din, PullUp : SetPin 33, Din, PullUp : SetPin 35, Din, PullUp
       SetPin 36, Din, PullUp : SetPin 38, Din, PullUp : SetPin 40, Din, PullUp
+      ctrl.open_driver("atari_dx")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin 32, Off : SetPin 33, Off : SetPin 35, Off
       SetPin 36, Off : SetPin 38, Off : SetPin 40, Off
+      ctrl.close_driver("atari_dx")
   End Select
 End Sub
 
@@ -508,8 +585,10 @@ Sub nes_dx(x%)
       SetPin 36, Din, PullUp : SetPin 38, Dout : SetPin 40, Dout
       Pin(38) = 0 : Pin(40) = 0
       nes_dx(0) ' Discard the first reading.
+      ctrl.open_driver("nes_dx")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin 36, Off : SetPin 38, Off : SetPin 40, Off
+      ctrl.close_driver("nes_dx")
   End Select
 End Sub
 
@@ -538,8 +617,14 @@ Sub snes_dx(x%)
       Inc x%, Not Pin(36) * ctrl.L      : Pulse 40, ctrl.PULSE
       Inc x%, Not Pin(36) * ctrl.R      : Pulse 40, ctrl.PULSE
       Exit Sub
-    Case Else
-      nes_dx(x%)
+    Case ctrl.OPEN
+      SetPin 36, Din, PullUp : SetPin 38, Dout : SetPin 40, Dout
+      Pin(38) = 0 : Pin(40) = 0
+      snes_dx(0) ' Discard the first reading.
+      ctrl.open_driver("snes_dx")
+    Case ctrl.CLOSE, ctrl.SOFT_CLOSE
+      SetPin 36, Off : SetPin 38, Off : SetPin 40, Off
+      ctrl.close_driver("snes_dx")
   End Select
 End Sub
 
@@ -582,6 +667,7 @@ Sub wii_internal(i2c%, x%, type%)
           Controller Classic Close i2c%
       End Select
       is_open%(i2c%) = 0
+      ctrl.close_driver("wii_any_" + Str$(i2c%))
       Exit Sub
 
     Case ctrl.OPEN
@@ -617,6 +703,7 @@ Sub wii_internal(i2c%, x%, type%)
           is_open%(i2c%) = -1
           Error "Unrecognised controller on I2C" + Str$(i2c%)
       End Select
+      ctrl.open_driver("wii_any_" + Str$(i2c%))
   End Select
 End Sub
 
