@@ -27,6 +27,28 @@ add_test("test_trim")
 add_test("test_unquote")
 add_test("test_decode")
 add_test("test_encode")
+add_test("test_wwrap")
+add_test("test_wwrap_given_empty")
+add_test("test_wwrap_given_just_spaces")
+add_test("test_wwrap_given_space_at_len")
+add_test("test_wwrap_given_cr_at_len")
+add_test("test_wwrap_given_lf_at_len")
+add_test("test_wwrap_given_crlf_at_len")
+add_test("test_wwrap_given_space_at_len_plus_1", "test_wwrap_given_space_at_lenp1")
+add_test("test_wwrap_given_cr_at_len_plus_1", "test_wwrap_given_cr_at_lenp1")
+add_test("test_wwrap_given_lf_at_len_plus_1", "test_wwrap_given_lf_at_lenp1")
+add_test("test_wwrap_given_crlf_at_len_plus_1", "test_wwrap_given_crlf_at_lenp1")
+add_test("test_wwrap_given_crlf_at_len_minus_1", "test_wwrap_given_crlf_at_lenm1")
+add_test("test_wwrap_given_word_too_long")
+add_test("test_wwrap_given_space_at_start")
+add_test("test_wwrap_given_cr_at_start")
+add_test("test_wwrap_given_lf_at_start")
+add_test("test_wwrap_given_crlf_at_start")
+add_test("test_wwrap_given_space_at_end")
+add_test("test_wwrap_given_cr_at_end")
+add_test("test_wwrap_given_lf_at_end")
+add_test("test_wwrap_given_crlf_at_end")
+add_test("test_wwrap_given_broken_spaces")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -309,3 +331,152 @@ Data "\x1z", &h5C, &h78, &h31, &h7A, -1
 Data "\m", &h5C, &h6D, -1
 Data "\X01", &h5C, &h58, &h30, &h31, -1
 Data "<END>"
+
+Sub test_wwrap()
+  Local p% = 1, s$ = "Moses supposes his toeses are roses\r"
+  Cat s$, "But moses supposes erroneously\r\n"
+  Cat s$, "For nobodies toeses are roses\n"
+  Cat s$, "As moses supposes his toeses to be"
+  s$ = str.decode$(s$)
+
+  assert_string_equals("Moses supposes his ", str.wwrap$(s$, p%, 20))
+  assert_string_equals("toeses are roses", str.wwrap$(s$, p%, 20))
+  assert_string_equals("But moses supposes ", str.wwrap$(s$, p%, 20))
+  assert_string_equals("erroneously", str.wwrap$(s$, p%, 20))
+  assert_string_equals("For nobodies toeses ", str.wwrap$(s$, p%, 20))
+  assert_string_equals("are roses", str.wwrap$(s$, p%, 20))
+  assert_string_equals("As moses supposes ", str.wwrap$(s$, p%, 20))
+  assert_string_equals("his toeses to be", str.wwrap$(s$, p%, 20))
+End Sub
+
+Sub test_wwrap_given_empty()
+  Local p% = 1, s$ = ""
+  assert_string_equals("", str.wwrap$(s$, p%, 1))
+  assert_int_equals(1, p%)
+  assert_string_equals("", str.wwrap$(s$, p%, 10))
+  assert_int_equals(1, p%)
+End Sub
+
+Sub test_wwrap_given_just_spaces()
+  Local p% = 1, s$ = "                "
+  assert_string_equals("      ", str.wwrap$(s$, p%, 6))
+  assert_int_equals(8, p%) ' One space is swallowed.
+End Sub
+
+Sub test_wwrap_given_space_at_len()
+  Local p% = 1, s$ = "Moses Supposes"
+  assert_string_equals("Moses ", str.wwrap$(s$, p%, 6))
+  assert_int_equals(7, p%)
+End Sub
+
+Sub test_wwrap_given_cr_at_len()
+  Local p% = 1, s$ = str.decode$("Moses\rSupposes")
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 6))
+  assert_int_equals(7, p%)
+End Sub
+
+Sub test_wwrap_given_lf_at_len()
+  Local p% = 1, s$ = str.decode$("Moses\nSupposes")
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 6))
+  assert_int_equals(7, p%)
+End Sub
+
+Sub test_wwrap_given_crlf_at_len()
+  Local p% = 1, s$ = str.decode$("Moses\r\nSupposes")
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 6))
+  assert_int_equals(8, p%)
+End Sub
+
+Sub test_wwrap_given_space_at_lenp1()
+  Local p% = 1, s$ = "Moses Supposes"
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 5))
+  assert_int_equals(7, p%)
+End Sub
+
+Sub test_wwrap_given_cr_at_lenp1()
+  Local p% = 1, s$ = str.decode$("Moses\rSupposes")
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 5))
+  assert_int_equals(7, p%)
+End Sub
+
+Sub test_wwrap_given_lf_at_lenp1()
+  Local p% = 1, s$ = str.decode$("Moses\nSupposes")
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 5))
+  assert_int_equals(7, p%)
+End Sub
+
+Sub test_wwrap_given_crlf_at_lenp1()
+  Local p% = 1, s$ = str.decode$("Moses\r\nSupposes")
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 5))
+  assert_int_equals(8, p%)
+End Sub
+
+Sub test_wwrap_given_crlf_at_lenm1()
+  Local p% = 1, s$ = str.decode$("Moses\r\nSupposes")
+  assert_string_equals("Moses", str.wwrap$(s$, p%, 7))
+  assert_int_equals(8, p%)
+End Sub
+
+Sub test_wwrap_given_word_too_long()
+  Local p% = 1, s$ = "Moses supposes"
+  assert_string_equals("Mos", str.wwrap$(s$, p%, 3))
+  assert_int_equals(4, p%)
+
+  p% = 6
+  assert_string_equals(" su", str.wwrap$(s$, p%, 3))
+  assert_int_equals(9, p%)
+End Sub
+
+Sub test_wwrap_given_space_at_start()
+  Local p% = 1, s$ = str.decode$("  Moses Supposes")
+  assert_string_equals("  Moses", str.wwrap$(s$, p%, 7))
+  assert_int_equals(9, p%)
+End Sub
+
+Sub test_wwrap_given_cr_at_start()
+  Local p% = 1, s$ = str.decode$("\rMoses Supposes")
+  assert_string_equals("", str.wwrap$(s$, p%, 7))
+  assert_int_equals(2, p%)
+End Sub
+
+Sub test_wwrap_given_lf_at_start()
+  Local p% = 1, s$ = str.decode$("\nMoses Supposes")
+  assert_string_equals("", str.wwrap$(s$, p%, 7))
+  assert_int_equals(2, p%)
+End Sub
+
+Sub test_wwrap_given_crlf_at_start()
+  Local p% = 1, s$ = str.decode$("\r\nMoses Supposes")
+  assert_string_equals("", str.wwrap$(s$, p%, 7))
+  assert_int_equals(3, p%)
+End Sub
+
+Sub test_wwrap_given_space_at_end()
+  Local p% = 1, s$ = str.decode$("Moses supposes  ")
+  assert_string_equals("Moses supposes  ", str.wwrap$(s$, p%, 30))
+  assert_int_equals(17, p%)
+End Sub
+
+Sub test_wwrap_given_cr_at_end()
+  Local p% = 1, s$ = str.decode$("Moses supposes\r")
+  assert_string_equals("Moses supposes", str.wwrap$(s$, p%, 30))
+  assert_int_equals(16, p%)
+End Sub
+
+Sub test_wwrap_given_lf_at_end()
+  Local p% = 1, s$ = str.decode$("Moses supposes\n")
+  assert_string_equals("Moses supposes", str.wwrap$(s$, p%, 30))
+  assert_int_equals(16, p%)
+End Sub
+
+Sub test_wwrap_given_crlf_at_end()
+  Local p% = 1, s$ = str.decode$("Moses supposes\r\n")
+  assert_string_equals("Moses supposes", str.wwrap$(s$, p%, 30))
+  assert_int_equals(17, p%)
+End Sub
+
+Sub test_wwrap_given_broken_spaces()
+  Local p% = 1, s$ = str.decode$("Moses    supposes")
+  assert_string_equals("Moses  ", str.wwrap$(s$, p%, 7))
+  assert_int_equals(9, p%)
+End Sub

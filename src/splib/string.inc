@@ -284,3 +284,45 @@ Function str.encode$(s$)
   Next
   str.encode$ = t$
 End Function
+
+' Implements word wrapping by splitting a string on spaces.
+'
+' @param[in]       s$    the string.
+' @param[in, out]  p%    position in the string to start from.
+' @param[in]       len%  the 'line length'.
+' @return                segment of string up to len% characters with no broken
+'                        words, unless a word is longer than len%.
+Function str.wwrap$(s$, p%, len%)
+  Const slen% = Len(s$)
+  Local ch%, q%, word$
+  For q% = p% To slen% + 1
+    ch% = Choice(q% > slen%, 0, Peek(Var s$, q%))
+    Select Case ch%
+      Case 0, &h0A, &h0D, &h20 ' null, \n, \r, space
+        If Len(str.wwrap$) + Len(word$) > len% Then
+          If Len(word$) > len% Then
+            word$ = Left$(word$, len% - Len(str.wwrap$))
+            Cat str.wwrap$, word$
+            Inc p%, Len(word$)
+          EndIf
+          Exit For
+        EndIf
+        Cat str.wwrap$, word$
+        p% = q% + 1
+        Select Case ch%
+          Case &h0D
+            If Choice(p% > slen%, 0, Peek(Var s$, p%)) = &h0A Then Inc p%
+            Exit For
+          Case &h20
+            If Len(str.wwrap$) = len% Then Exit For
+            Cat str.wwrap$, " "
+            word$ = ""
+          Case Else
+            Exit For
+        End Select
+      Case Else
+        Cat word$, Chr$(ch%)
+    End Select
+  Next
+  p% = Min(p%, slen% + 1)
+End Function
