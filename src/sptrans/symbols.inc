@@ -10,7 +10,7 @@ If sys.err$ <> "" Then Error sys.err$
 
 Const sym.MAX_FILES% = 32
 Const sym.MAX_FUNCTIONS% = 256
-Const sym.MAX_IDENTIFIERS% = 4096
+Const sym.MAX_IDS% = 4096
 Const sym.MAX_ID_LEN% = 33
 Const sym.MAX_PATH_LEN% = 128
 Const sym.REFERENCES_SIZE_KB% = 32
@@ -18,7 +18,7 @@ Const sym.REFERENCES_SIZE_KB% = 32
 ' Files table/map data:
 '   K is case-sensitive file path
 '   V is "<file index>"
-Dim sym.files$(map2.new%(sym.MAX_FILES%)) Length sym.MAX_PATH_LEN% + 8
+Dim sym.files$(map2.new%(sym.MAX_FILES%)) Length sym.MAX_PATH_LEN%+8
 
 ' Functions table/map data:
 '   K is lower-case function name
@@ -28,7 +28,7 @@ Dim sym.functions$(map2.new%(sym.MAX_FUNCTIONS%)) Length 80
 ' Identifiers table/map data:
 '   K is lower-case identifier
 '   V is "<identifier index>"
-Dim sym.identifiers$(map2.new%(sym.MAX_IDENTIFIERS%)) Length sym.MAX_ID_LEN% + 8
+Dim sym.ids$(map2.new%(sym.MAX_IDS%)) Length sym.MAX_ID_LEN% + 8
 
 ' References table data:
 '   Entries are unsigned 32-bit integers
@@ -50,10 +50,10 @@ Sub sym.init(max_functions%, max_identifiers%, references_size_kb%)
   EndIf
 
   If max_identifiers% > 0 Then
-    Erase sym.MAX_IDENTIFIERS%
-    Erase sym.identifiers$()
-    Dim sym.MAX_IDENTIFIERS% = max_identifiers%
-    Dim sym.identifiers$(map2.new%(sym.MAX_IDENTIFIERS%)) Length sym.MAX_ID_LEN% + 8
+    Erase sym.MAX_IDS%
+    Erase sym.ids$()
+    Dim sym.MAX_IDS% = max_identifiers%
+    Dim sym.ids$(map2.new%(sym.MAX_IDS%)) Length sym.MAX_ID_LEN% + 8
   EndIf
 
   If references_size_kb% > 0 Then
@@ -69,7 +69,7 @@ Sub sym.init(max_functions%, max_identifiers%, references_size_kb%)
 
   map2.init(sym.files$(), sym.MAX_PATH_LEN%)
   map2.init(sym.functions$(), sym.MAX_ID_LEN%)
-  map2.init(sym.identifiers$(), sym.MAX_ID_LEN%)
+  map2.init(sym.ids$(), sym.MAX_ID_LEN%)
   ' WARNING! I won't be surprised if this is overrunning.
   Memory Set sym.P_REF_BASE%, &hFF, sym.REFERENCES_SIZE_KB% * 1024
   sym.ref_offset% = 0
@@ -158,8 +158,8 @@ End Function
 ' @return      sys.FAILURE on error, otherwise
 '              'identifier index' for the new or existing table entry.
 Function sym.add_identifier%(id$)
-  If map2.is_full%(sym.identifiers$()) Then
-    Local msg$ = "Too many identifiers, max " + Str$(sym.MAX_IDENTIFIERS%)
+  If map2.is_full%(sym.ids$()) Then
+    Local msg$ = "Too many identifiers, max " + Str$(sym.MAX_IDS%)
     sym.add_identifier% = sys.error%(sys.FAILURE, msg$)
     Exit Function
   EndIf
@@ -170,8 +170,8 @@ Function sym.add_identifier%(id$)
     Exit Function
   EndIf
 
-  Const sz% = map2.size%(sym.identifiers$())
-  sym.add_identifier% = Val(map2.put_if_absent$(sym.identifiers$(), LCase$(id$), Str$(sz%)))
+  Const sz% = map2.size%(sym.ids$())
+  sym.add_identifier% = Val(map2.put_if_absent$(sym.ids$(), LCase$(id$), Str$(sz%)))
 End Function
 
 ' Adds an entry to the 'References' table for the last added function.
