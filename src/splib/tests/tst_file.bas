@@ -40,6 +40,7 @@ add_test("test_get_files")
 add_test("test_get_files_given_not_found")
 add_test("test_get_files_given_not_dir")
 add_test("test_get_files_given_invalid")
+add_test("test_get_files_given_too_many")
 add_test("test_trim_extension")
 add_test("test_mkdir_abs_path")
 add_test("test_mkdir_rel_path")
@@ -84,8 +85,17 @@ Sub test_get_parent()
   assert_string_equals("test", file.get_parent$("test\foo.bas"))
   assert_string_equals("A:/test", file.get_parent$("A:/test/foo.bas"))
   assert_string_equals("A:\test", file.get_parent$("A:\test\foo.bas"))
+  assert_string_equals("A:", file.get_parent$("A:/test"))
+  assert_string_equals("A:", file.get_parent$("A:\test"))
+  assert_string_equals("\", file.get_parent$("\test"))
+  assert_string_equals("/", file.get_parent$("/test"))
   assert_string_equals("..", file.get_parent$("../foo.bas"))
   assert_string_equals("..", file.get_parent$("..\foo.bas"))
+  assert_string_equals("", file.get_parent$("/"))
+  assert_string_equals("", file.get_parent$("\"))
+  assert_string_equals("", file.get_parent$("A:/"))
+  assert_string_equals("", file.get_parent$("A:"))
+  assert_string_equals("", file.get_parent$("A:\"))
 End Sub
 
 Sub test_get_name()
@@ -630,6 +640,19 @@ Sub test_get_files_given_invalid()
 
   assert_int_equals(sys.FAILURE, file.get_files%(TMPDIR$, "*", "wombat", actual$()))
   assert_error("Invalid file type 'wombat'")
+End Sub
+
+Sub test_get_files_given_too_many()
+  given_file_tree()
+  Local actual$(array.new%(2)) Length 128
+  Local expected$(array.new%(2)) Length 128
+
+  array.fill(actual$(), "")
+  assert_int_equals(4, file.get_files%(TMPDIR$ + "/wombat-dir", "*", "all", actual$()))
+  array.fill(expected$(), "")
+  expected$(BASE% + 0) = "one.foo" ' Which of the 4 files is present will be system dependent.
+  expected$(BASE% + 1) = "subdir"
+  assert_string_array_equals(expected$(), actual$())
 End Sub
 
 Sub test_trim_extension()

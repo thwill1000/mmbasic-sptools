@@ -343,6 +343,9 @@ End Function
 ' @param       pattern$  file pattern to match on, e.g. "*.bas".
 ' @param       type$     type of files to return: "dir", "file" or "all".
 ' @param[out]  out$()    the names of matching files are copied into this array.
+'                        If there are too many matching files then this array
+'                        will be incomplete, but the returned number of files
+'                        will be correct.
 ' @return                the number of files matching the pattern.
 Function file.get_files%(d$, pattern$, type$, out$())
   If Not file.is_directory%(d$) Then
@@ -360,16 +363,17 @@ Function file.get_files%(d$, pattern$, type$, out$())
       Exit Function
   End Select
 
+  Local i% = Mm.Info(Option Base)
   Do While f$ <> ""
     If file.fnmatch%(pattern$, f$) Then
-      out$(file.get_files% + Mm.Info(Option Base)) = f$
+      If i% <= Bound(out$(), 1) Then out$(i%) = f$ : Inc i%
       Inc file.get_files%
     EndIf
     f$ = Dir$()
   Loop
 
   If file.get_files% > 0 Then
-    Sort out$(), , &b10, Mm.Info(Option Base), file.get_files%
+    Sort out$(), , &b10, Mm.Info(Option Base), i% - Mm.Info(Option Base)
   EndIf
 End Function
 
@@ -386,13 +390,25 @@ End Function
 
 ' Gets the parent directory of 'f$', or the empty string if it does not have one.
 Function file.get_parent$(f$)
+  Select Case Len(f$)
+    Case 1
+      If f$ = "/" Or f$ = "\" Then Exit Function
+    Case 2
+      If Mid$(f$, 2, 1) = ":" Then Exit Function
+    Case 3
+      Select Case Right$(f$, 2)
+        Case ":/", ":\"
+          Exit Function
+      End Select
+  End Select
   Local i%
-
   For i% = Len(f$) To 1 Step -1
     If InStr("/\", Mid$(f$, i%, 1)) > 0 Then Exit For
   Next i%
-
   If i% > 0 Then file.get_parent$ = Left$(f$, i% - 1)
+  If file.get_parent$ = "" Then
+    If InStr("/\", Left$(f$, 1)) Then file.get_parent$ = Left$(f$, 1)
+  EndIf
 End Function
 
 Function file.is_absolute%(f$)
