@@ -475,11 +475,13 @@ Sub twm.redraw()
   Next y%
 End Sub
 
-Sub twm.cls()
+Sub twm.cls(x%, y%, w%, h%)
   twm.lock_vga_cursor(1)
-  Memory Set twm.pc%, 32, twm.w% * twm.h%
-  Memory Set twm.pa%, twm.at%, twm.w% * twm.h%
-  twm.redraw()
+  Local s$ = Space$(Choice(w%, w%, twm.w%)), yy%
+  For yy% = y% To y% + Choice(h%, h%, twm.h%) - 1
+    twm.x% = x% : twm.y% = yy%
+    twm.print(s$)
+  Next
   twm.lock_vga_cursor(0)
 End Sub
 
