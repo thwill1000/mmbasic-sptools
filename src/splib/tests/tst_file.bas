@@ -789,27 +789,28 @@ Sub test_depth_first_given_dir()
   ut.create_file(TMPDIR$ + "/zzz")
   ut.create_file(TMPDIR$ + "/bar-dir/wombat")
 
+  Dim actual$(list.new%(10))
+  list.init(actual$())
+  assert_int_equals(sys.SUCCESS, file.depth_first%(TMPDIR$, "depth_first_callback%", 5))
+
   ' The order of files at the same level may be a bit variable.
   ' The important thing is that the contents of a directory is visited before
   ' the directory itself is.
   Local expected$(list.new%(10))
   list.init(expected$())
-  If sys.is_device%("mmb4l") Then
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+  If actual$(BASE%) = file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5") Then
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
   Else
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
+    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
     list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
   EndIf
-  Dim actual$(list.new%(10))
-  list.init(actual$())
-  assert_int_equals(sys.SUCCESS, file.depth_first%(TMPDIR$, "depth_first_callback%", 5))
   assert_string_array_equals(expected$(), actual$())
 
   Erase actual$()
