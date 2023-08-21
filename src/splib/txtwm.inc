@@ -606,6 +606,7 @@ End Sub
 ' Sounds the console "bell".
 Sub twm.bell()
   Play Tone 800, 800, 200
+'!if not defined(PICOMITE)
   Local s$ = LCase$(Mm.Info$(Option Console))
   Select Case s$
     Case "screen" : Exit Sub
@@ -615,6 +616,7 @@ Sub twm.bell()
   End Select
   Print Chr$(7);
   If s$ = "both" Then Option Console Both
+'!endif
 End Sub
 
 ' Toggle whether the VGA cursor is lit or not,
@@ -643,10 +645,13 @@ Sub twm.lock_vga_cursor(lock%)
   Inc twm.cursor_locked%, Choice(lock%, 1, -1))
   If twm.id% = -1 Then Exit Sub
 
-  If lock% < 0 Then Error "Unbalanced cursor lock/unlock."
+  If twm.cursor_locked% < 0 Then Error "Unbalanced cursor lock/unlock."
+
+  ' No need to restore cell contents if unlocking.
+  If Not lock% Then Exit Sub
 
   ' Character cell contents has already been restored and we are just counting up.
-  If lock% > 1 Then Exit Sub
+  If twm.cursor_locked% > 1 Then Exit Sub
 
   ' Do not restore character cell contents if cursor is out of bounds,
   ' if there are issues may need to check for < 0 too.
