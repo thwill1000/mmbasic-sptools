@@ -83,18 +83,6 @@ Sub main()
   menu.main_loop()
 End Sub
 
-Sub keys_cursor_ext(x%)
-  If x% < 0 Then Exit Sub
-  x% =    ctrl.keydown%(32)  * ctrl.A ' Space
-  Inc x%, ctrl.keydown%(98)  * ctrl.B ' B
-  Inc x%, (ctrl.keydown%(101) Or ctrl.keydown%(113)) * ctrl.SELECT ' E or Q
-  Inc x%, ctrl.keydown%(115) * ctrl.START ' S
-  Inc x%, ctrl.keydown%(128) * ctrl.UP
-  Inc x%, ctrl.keydown%(129) * ctrl.DOWN
-  Inc x%, ctrl.keydown%(130) * ctrl.LEFT
-  Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
-End Sub
-
 Sub fx_test_int()
   If Not sound.fx_ptr% Then Exit Sub
   Local n% = Peek(Byte sound.fx_ptr%)

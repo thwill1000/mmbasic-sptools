@@ -57,7 +57,7 @@ If sys.err$ <> "" Then Error sys.err$
 '!info defined CTRL_USE_ON_PS2
 '!info defined CTRL_USE_KEYDOWN
 
-Const ctrl.VERSION = 910  ' 0.9.10
+Const ctrl.VERSION = 911 ' 0.9.11
 
 ' Button values as returned by controller driver subroutines.
 Const ctrl.R      = &h01
@@ -321,6 +321,20 @@ Sub keys_cursor(x%)
   Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
 End Sub
 
+Sub keys_cursor_ext(x%)
+  If x% < 0 Then Exit Sub
+  x% =    ctrl.keydown%(32)  * ctrl.A ' Space
+  Inc x%, ctrl.keydown%(98)  * ctrl.B ' B
+  Inc x%, (ctrl.keydown%(101) Or ctrl.keydown%(113)) * ctrl.SELECT ' E or Q
+  Inc x%, ctrl.keydown%(115) * ctrl.START ' S
+  Inc x%, ctrl.keydown%(128) * ctrl.UP
+  Inc x%, ctrl.keydown%(129) * ctrl.DOWN
+  Inc x%, ctrl.keydown%(130) * ctrl.LEFT
+  Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
+End Sub
+
+'!endif ' CTRL_NO_CURSORS
+
 Sub ctrl.open_driver(d$)
   Cat ctrl.open_drivers$, d$ + ","
 End Sub
@@ -336,8 +350,6 @@ Sub ctrl.close_driver(d$)
       ctrl.open_drivers$ = Mid$(ctrl.open_drivers$, 1, idx% - 1) + Mid$(ctrl.open_drivers$, idx% + Len(d$) + 1)
   End Select
 End Sub
-
-'!endif ' CTRL_NO_CURSORS
 
 '!if defined(PICOMITE) && !defined(PGLCD2)
 
