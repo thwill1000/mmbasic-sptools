@@ -63,8 +63,8 @@ Dim twm.pa% ' pointer to the attribute data
 '                   Each window requires 7 + 2 * (width * height) bytes.
 Sub twm.init(max_num%, mem_sz%)
   If twm.max_num% > 0 Then Error "'txtwm' already initialised"
-  If max_num% < 1 Or max_num% > 10 Then Error "invalid max number of windows: " + Str$(max_num%)
-  If mem_sz% < 100 Then Error "invalid memory size: " + Str$(mem_sz%)
+  If max_num% < 1 Or max_num% > 10 Then Error "Invalid 'max_num'; must be between 1 and 10: " + Str$(max_num%)
+  If mem_sz% < 100 Then Error "Invalid 'mem_sz'; must be >= 100: " + Str$(mem_sz%)
 
   twm.max_num% = max_num%
   twm.id%      = -1
@@ -72,9 +72,8 @@ Sub twm.init(max_num%, mem_sz%)
   twm.fw%      = Mm.Info(FontWidth)
   twm.fh%      = Mm.Info(FontHeight)
 
-  ' Allocate data buffer.
-  ' TODO: don't allocate 8 bytes for every byte required.
-  Dim twm.data%(mem_sz% - 1)
+  ' Allocate data buffer (possibly with a few extra bytes).
+  Dim twm.data%((mem_sz% \ 8) + 1)
 
   ' Allocate array of pointers (one for each window) into the data buffer.
   ' Because MMBasic can't have 1 element arrays we always allocate space for at least 2 windows.
@@ -217,20 +216,18 @@ End Sub
 Function twm.new_win%(x%, y%, w%, h%)
   If twm.num% > Bound(twm.ptr%(), 1) Then Error "maximum number of windows reached: " + Str$(twm.num%)
 
-  Local ptr%
-
   ' Store pointer into the data buffer for the new window.
+  Local ptr%
   If twm.num% = 0 Then
     ptr% = Peek(VarAddr twm.data%())
   Else
     ptr% = twm.ptr%(twm.num% - 1)
-    ptr% = ptr% + 7 + Peek(Byte ptr% + 2) * Peek(Byte ptr% + 3) * 2
+    Inc ptr%, 7 + Peek(Byte ptr% + 2) * Peek(Byte ptr% + 3) * 2
   EndIf
   twm.ptr%(twm.num%) = ptr%
 
-  ' TODO: don't allocate 8 bytes for every byte required.
-  Local reqd% = ptr% + 7 + w% * h% * 2 - twm.ptr%(0)
-  Local alloc% = Bound(twm.data%(), 1) + 1
+  Const reqd% = ptr% + 7 + w% * h% * 2 - twm.ptr%(0)
+  Const alloc% = (Bound(twm.data%(), 1) - Bound(twm.data%(), 0)) * 8
   If reqd% > alloc% Then
     Error "out of txtwm memory: " + Str$(alloc%) + " bytes allocated, " + Str$(reqd%) + " required"
   EndIf

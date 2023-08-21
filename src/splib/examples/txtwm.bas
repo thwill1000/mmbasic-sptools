@@ -8,6 +8,8 @@ Option Default None
 #Include "../system.inc"
 #Include "../txtwm.inc"
 
+If sys.is_device%("mmb4l") Then Option CodePage CMM2
+
 Cls
 
 Option Console Serial
@@ -82,7 +84,7 @@ For i% = 1 To 255
 Next
 
 Sub boxes()
-  twm.init(1, 10007)
+  twm.init(1, 10008)
   Local win1% = twm.new_win%(0, 0, 100, 50)
   twm.switch(win1%)
   twm.box(0, 0, 100, 50)
