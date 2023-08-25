@@ -47,6 +47,7 @@ End Sub
 Sub main()
   Local s$, t
 
+  in.init()
   opt.init()
 
   cli.parse(Mm.CmdLine$)

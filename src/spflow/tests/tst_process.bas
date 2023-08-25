@@ -16,14 +16,11 @@ Option Explicit On
 #Include "../../splib/vt100.inc"
 #Include "../../common/sptools.inc"
 #Include "../../sptest/unittest.inc"
+#Include "../../sptrans/input.inc"
 #Include "../../sptrans/keywords.inc"
 #Include "../../sptrans/lexer.inc"
 #Include "../options.inc"
 #Include "../process.inc"
-
-Dim in.files$(1) = ("input.bas", "")
-Dim in.num_open_files% = 1
-Dim in.line_num%(1)
 
 keywords.init()
 
@@ -37,6 +34,9 @@ run_tests()
 End
 
 Sub setup_test()
+  in.init()
+  list.push(in.files$(), "input.bas")
+  in.num_open_files% = 1
   opt.init()
   pro.init()
 End Sub

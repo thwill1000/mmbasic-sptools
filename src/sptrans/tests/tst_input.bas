@@ -37,11 +37,10 @@ Sub teardown_test()
   For fnbr% = 1 To list.size%(in.files$())
     If list.get$(in.files$(), fnbr% - 1) <> "" Then Close fnbr%
   Next
-  list.clear(in.files$())
-  in.num_open_files% = 0
 End Sub
 
 Sub test_open_given_file()
+  in.init()
   Const f$ = TMPDIR$ + "/foo.bas"
   ut.create_file(f$)
 
@@ -53,6 +52,7 @@ Sub test_open_given_file()
 End Sub
 
 Sub test_open_given_dir()
+  in.init()
   Const f$ = TMPDIR$ + "/foo.bas"
   MkDir f$
 
@@ -62,6 +62,7 @@ Sub test_open_given_dir()
 End Sub
 
 Sub test_open_given_not_found()
+  in.init()
   Const f$ = TMPDIR$ + "/not_found.bas"
 
   assert_int_equals(sys.FAILURE, in.open%(f$))
@@ -70,6 +71,8 @@ Sub test_open_given_not_found()
 End Sub
 
 Sub test_open_given_too_many()
+  in.init()
+
   ' Open the maximum number of files (5).
   Local files$(array.new%(5)) = ("one", "two", "three", "four", "five")
   Local f$, i%
@@ -104,6 +107,7 @@ Sub test_open_given_too_many()
 End Sub
 
 Sub test_open_given_relative()
+  in.init()
   ut.create_file(TMPDIR$ + "/foo.bas")
   MkDir TMPDIR$ + "/bar"
   ut.create_file(TMPDIR$ + "/bar/wombat.inc")

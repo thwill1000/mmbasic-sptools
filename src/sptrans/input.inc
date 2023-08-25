@@ -11,15 +11,25 @@ If sys.err$ <> "" Then Error sys.err$
 ' Stack of open input source files.
 Const MAX_NUM_FILES = 5
 Dim in.files$(list.new%(MAX_NUM_FILES))
-list.init(in.files$())
 
 ' Available as a separate variable for convenience,
 ' but should always = list.size%(in.files$())
-Dim in.num_open_files% = 0
+ ' Initialised to -1 to flag that init() has not been called.
+Dim in.num_open_files% = -1
 
 Dim in.line_num%(MAX_NUM_FILES)
 
+Sub in.init()
+  list.init(in.files$())
+  in.num_open_files% = 0
+  Local i%
+  For i% = Bound(in.line_num%(), 0) To Bound(in.line_num%(), 1)
+    in.line_num%(i%) = 0
+  Next
+End Sub
+
 Function in.open%(f$)
+  If in.num_open_files% = -1 Then Error "Not initialised"
   If in.num_open_files% = MAX_NUM_FILES Then
     in.open% = sys.error%(sys.FAILURE, "Too many open #Include files")
     Exit Function

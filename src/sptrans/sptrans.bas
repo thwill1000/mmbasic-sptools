@@ -57,6 +57,7 @@ End Sub
 Sub main()
   Local s$, t
 
+  in.init()
   opt.init()
   def.init()
   keywords.init()

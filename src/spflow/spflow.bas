@@ -45,6 +45,7 @@ End Sub
 Sub main()
   Local s$
 
+  in.init()
   opt.init()
   pro.init()
 
