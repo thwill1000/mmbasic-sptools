@@ -27,7 +27,7 @@ Sub tg.subtree(name$)
   If name$ <> GLOBAL_SCOPE$ Then out.print("()")
   If Not opt.no_location Then
     out.print(" <")
-    If in.line_num(1) > 0 Then out.print(Field$(v$, 2, ",") + ":")
+    If in.line_num%(1) > 0 Then out.print(Field$(v$, 2, ",") + ":")
     out.print(Field$(v$, 3, ",") + ">")
   EndIf
 

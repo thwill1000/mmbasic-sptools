@@ -17,7 +17,7 @@ list.init(in.files$())
 ' but should always = list.size%(in.files$())
 Dim in.num_open_files% = 0
 
-Dim in.line_num(MAX_NUM_FILES)
+Dim in.line_num%(MAX_NUM_FILES)
 
 Function in.open%(f$)
   If in.num_open_files% = MAX_NUM_FILES Then
@@ -40,7 +40,7 @@ Function in.open%(f$)
     list.push(in.files$(), f_abs$)
     in.num_open_files% = list.size%(in.files$())
     Open f_abs$ For Input As #in.num_open_files%
-    in.line_num(in.num_open_files% - 1) = 0
+    in.line_num%(in.num_open_files% - 1) = 0
   Else
     in.open% = sys.error%(sys.FAILURE, "#Include file '" + f_abs$ + "' not found")
   EndIf
@@ -56,6 +56,5 @@ Function in.readln$()
   Local s$
   Line Input #in.num_open_files%, s$
   in.readln$ = s$
-  Local i = in.num_open_files% - 1
-  in.line_num(i) = in.line_num(i) + 1
+  Inc in.line_num%(in.num_open_files% - 1)
 End Function

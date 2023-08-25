@@ -49,7 +49,7 @@ Sub test_open_given_file()
   assert_no_error()
   assert_int_equals(1, list.size%(in.files$()))
   assert_string_equals(f$, list.get$(in.files$(0)))
-  assert_int_equals(0, in.line_num(0))
+  assert_int_equals(0, in.line_num%(0))
 End Sub
 
 Sub test_open_given_dir()
@@ -85,7 +85,7 @@ Sub test_open_given_too_many()
   For i% = Bound(files$(), 0) TO Bound(files$(), 1)
     f$ = TMPDIR$ + "/" + files$(i%) + ".bas"
     assert_string_equals(f$, list.get$(in.files$(), i%))
-    assert_int_equals(0, in.line_num(i%))
+    assert_int_equals(0, in.line_num%(i%))
   Next
 
   ' Try to open a 6th file.
@@ -99,7 +99,7 @@ Sub test_open_given_too_many()
   For i% = Bound(files$(), 0) TO Bound(files$(), 1)
     f$ = TMPDIR$ + "/" + files$(i%) + ".bas"
     assert_string_equals(f$, list.get$(in.files$(), i%))
-    assert_int_equals(0, in.line_num(i%))
+    assert_int_equals(0, in.line_num%(i%))
   Next
 End Sub
 
@@ -115,6 +115,6 @@ Sub test_open_given_relative()
   assert_int_equals(2, list.size%(in.files$()))
   assert_string_equals(TMPDIR$ + "/foo.bas", list.get$(in.files$(), 0))
   assert_string_equals(TMPDIR$ + "/bar/wombat.inc", list.get$(in.files$(), 1))
-  assert_int_equals(0, in.line_num(0))
-  assert_int_equals(0, in.line_num(1))
+  assert_int_equals(0, in.line_num%(0))
+  assert_int_equals(0, in.line_num%(1))
 End Sub

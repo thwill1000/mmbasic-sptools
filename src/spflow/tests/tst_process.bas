@@ -2,8 +2,9 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-Option Explicit On
+Option Base 0
 Option Default Integer
+Option Explicit On
 
 #Include "../../splib/system.inc"
 #Include "../../splib/array.inc"
@@ -21,8 +22,8 @@ Option Default Integer
 #Include "../process.inc"
 
 Dim in.files$(1) = ("input.bas", "")
-Dim in.num_open_files = 1
-Dim in.line_num(1)
+Dim in.num_open_files% = 1
+Dim in.line_num%(1)
 
 keywords.init()
 
@@ -52,10 +53,10 @@ Sub test_simple_sub()
 
   Local pass
   For pass = 1 To 2
-    For in.line_num(0) = 1 To 7
-      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
+    For in.line_num%(0) = 1 To 7
+      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num%(0))))
       process(pass)
-    Next in.line_num(0)
+    Next in.line_num%(0)
     pass_completed(pass)
   Next pass
 
@@ -84,10 +85,10 @@ Sub test_simple_fn()
 
   Local pass
   For pass = 1 To 2
-    For in.line_num(0) = 1 To 4
-      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
+    For in.line_num%(0) = 1 To 4
+      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num%(0))))
       process(pass)
-    Next in.line_num(0)
+    Next in.line_num%(0)
     pass_completed(pass)
   Next pass
 
@@ -113,10 +114,10 @@ Sub test_self_recursive_sub()
 
   Local pass
   For pass = 1 To 2
-    For in.line_num(0) = 1 To 4
-      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
+    For in.line_num%(0) = 1 To 4
+      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num%(0))))
       process(pass)
-    Next in.line_num(0)
+    Next in.line_num%(0)
     pass_completed(pass)
   Next pass
 
@@ -143,10 +144,10 @@ Sub test_self_recursive_fn()
 
   Local pass
   For pass = 1 To 2
-    For in.line_num(0) = 1 To 4
-      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num(0))))
+    For in.line_num%(0) = 1 To 4
+      assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(in.line_num%(0))))
       process(pass)
-    Next in.line_num(0)
+    Next in.line_num%(0)
     pass_completed(pass)
   Next pass
 

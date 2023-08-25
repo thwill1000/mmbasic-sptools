@@ -38,7 +38,7 @@ End Sub
 Sub cerror(msg$)
   Local i = in.num_open_files% - 1
   Print
-  Print "[" + in.files$(i) + ":" + Str$(in.line_num(i)) + "] Error: " + msg$
+  Print "[" + in.files$(i) + ":" + Str$(in.line_num%(i)) + "] Error: " + msg$
   End
 End Sub
 
@@ -84,7 +84,7 @@ Sub main()
     cout("   ")
 
     Do
-      cout(BS$ + Mid$("\|/-", ((in.line_num(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
+      cout(BS$ + Mid$("\|/-", ((in.line_num%(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
       s$ = in.readln$()
       If pass = 1 Then
