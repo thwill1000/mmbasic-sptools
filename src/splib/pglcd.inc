@@ -26,12 +26,12 @@ Sub pglcd.end(break%)
   If break% Then
     Local f$ = "", msg$ = "Exited due to Ctrl-C"
   Else
-    Local f$ = "A:/pglcd/menu.bas", x% = Mm.Info(Exists File f$)
+    Local f$ = "A:/GameMite/menu.bas", x% = Mm.Info(Exists File f$)
     If Not x% Then
       On Error Skip
-      x% = Mm.Info(Exists File "B:/pglcd/menu.bas")
+      x% = Mm.Info(Exists File "B:/GameMite/menu.bas")
       If Mm.ErrNo Then x% = 0
-      If x% Then f$ = "B:/pglcd/menu.bas"
+      If x% Then f$ = "B:/GameMite/menu.bas"
     EndIf
     Local msg$ = Choice(x%, "Loading menu ...", "Menu program not found!")
   EndIf
