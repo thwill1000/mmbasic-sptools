@@ -529,7 +529,7 @@ End Sub
 '!endif ' PICOMITE
 
 '!ifdef PGLCD2
-' Gamepad on PicoGAME LCD 2
+' Gamepad on the Game*Mite
 ' The single 'crazy' PORT call efficiently reads the buttons in the correct
 ' order for the return bitmap but we then have to mask out filler values.
 Sub ctrl.pglcd2(x%)

@@ -53,7 +53,7 @@ Sub sound.init(fx_int$, music_int$)
   sound.fx_int$ = Choice(Len(fx_int$), fx_int$, "sound.fx_default_int")
   sound.music_int$ = Choice(Len(music_int$), music_int$, "sound.music_default_int")
 
-  ' On the PicoGAME LCD we always play an octave higher.
+  ' On the Game*Mite we always play an octave higher.
   Const offset% = Choice(sys.is_device%("pglcd"), 12, 0)
   Local i%
   For i% = 0 To 127

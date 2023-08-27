@@ -163,7 +163,7 @@ End Sub
 main_menu_data:
 Data "\x9F Controller Test \x9F|"
 Data "|"
-Data " 1) PicoGAME LCD gamepad          |menu.cmd_open|music_menu_data"
+Data " 1) GameMite gamepad             |menu.cmd_open|music_menu_data"
 Data " 2) Keyboard: Cursor keys & Space |menu.cmd_open|music_menu_data"
 Data "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|"
 Data ""
