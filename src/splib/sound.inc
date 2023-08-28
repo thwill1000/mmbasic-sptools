@@ -27,7 +27,7 @@ If sys.err$ <> "" Then Error sys.err$
 'SetPin GP6,PWM3A
 '!endif
 
-Const sound.VERSION% = 901 ' 0.9.1
+Const sound.VERSION% = 902 ' 0.9.2
 
 Const sound.FX_FLAG% = &b01
 Const sound.MUSIC_FLAG% = &b10
@@ -47,6 +47,8 @@ Dim sound.music_done_cb$
 Dim sound.music_int$
 Dim sound.music_ptr%
 Dim sound.music_start_ptr%
+Dim sound.music_tick% = 200
+Dim sound.music_volume% = 15
 
 ' Initialises sound engine.
 Sub sound.init(fx_int$, music_int$)
@@ -82,7 +84,7 @@ Sub sound.enable(flags%)
 
   If flags% And sound.MUSIC_FLAG% Then
     If Not (sound.enabled% And sound.MUSIC_FLAG%) Then
-      Execute "SetTick 200, " + sound.music_int$ + ", 1"
+      Execute "SetTick " + Str$(sound.music_tick%) + ", " + sound.music_int$ + ", 1"
       sound.enabled% = sound.enabled% Or sound.MUSIC_FLAG%
     EndIf
   Else
@@ -142,6 +144,18 @@ Sub sound.term()
 '!endif
 End Sub
 
+' Gets the size of INTEGER array required to hold music/fx DATA.
+Function sound.data_size%(data_label$)
+  Local num_bytes%
+  Read Save
+  Restore data_label$
+  Read num_bytes%
+  Read Restore
+  sound.data_size% = num_bytes% \ 8
+  If sound.data_size% Mod 8 Then Inc sound.data_size%
+  If Mm.Info(Option Base) Then Inc sound.data_size%
+End Function
+
 ' Loads music/fx from DATA statements into notes%() array.
 Sub sound.load_data(data_label$, notes%())
   Local i%, num_notes%, num_channels%
@@ -171,11 +185,11 @@ Sub sound.music_default_int()
   If Not sound.music_ptr% Then Exit Sub
   Local n% = Peek(Byte sound.music_ptr%)
   If n% < 255 Then
-    Play Sound 1, B, S, sound.F!(n%), (n% > 0) * 15
+    Play Sound 1, B, S, sound.F!(n%), (n% > 0) * sound.music_volume%
     n% = Peek(Byte sound.music_ptr% + 1)
-    Play Sound 2, B, S, sound.F!(n%), (n% > 0) * 15
+    Play Sound 2, B, S, sound.F!(n%), (n% > 0) * sound.music_volume%
     n% = Peek(Byte sound.music_ptr% + 2)
-    Play Sound 3, B, S, sound.F!(n%), (n% > 0) * 15
+    Play Sound 3, B, S, sound.F!(n%), (n% > 0) * sound.music_volume%
     Inc sound.music_ptr%, 3
     Exit Sub
   EndIf
