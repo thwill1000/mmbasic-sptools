@@ -10,29 +10,28 @@ sys.provides("ctrl")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-'!if not(defined(PGLCD1) or defined(PGLCD2) or defined(PICOMITE) or defined(CMM2) or defined(MMB4L))
-  '!error "File 'ctrl.inc' was transpiled without CMM2, MMB4L, PGLCD1, PGLCD2 or PICOMITE defined"
+'!if not(defined(GAMEMITE) or or defined(PICOMITE) or defined(CMM2) or defined(MMB4L))
+  '!error "File 'ctrl.inc' was transpiled without CMM2, MMB4L, GAMEMITE or PICOMITE defined"
 '!endif
 
 '!if defined(PICOMITE)
   '!undef PICOMITE
 '!endif
 
-'!if not(defined(PGLCD1) xor defined(PGLCD2) xor defined(CMM2) xor defined(MMB4L))
-  '!error "File 'ctrl.inc' was transpiled with more than one of CMM2, MMB4L, PGLCD1, PGLCD2 and PICOMITE defined"
+'!if not(defined(GAMEMITE) xor defined(CMM2) xor defined(MMB4L))
+  '!error "File 'ctrl.inc' was transpiled with more than one of CMM2, MMB4L, GAMEMITE and PICOMITE defined"
 '!endif
 
-'!if defined(PGLCD1) || defined(PGLCD2)
+'!if defined(GAMEMITE)
   '!define PICOMITE
 '!endif
 
 '!info defined CMM2
 '!info defined MMB4L
-'!info defined PGLCD1
-'!info defined PGLCD2
+'!info defined GAMEMITE
 '!info defined PICOMITE
 
-'!if defined(PGLCD1) Or defined(PGLCD2)
+'!if defined(GAMEMITE)
   '!if !defined(CTRL_NO_SNES)
     '!define CTRL_NO_SNES
   '!endif
@@ -351,7 +350,7 @@ Sub ctrl.close_driver(d$)
   End Select
 End Sub
 
-'!if defined(PICOMITE) && !defined(PGLCD2)
+'!if defined(PICOMITE) && !defined(GAMEMITE)
 
 ' Atari joystick on PicoGAME Port A.
 Sub atari_a(x%)
@@ -528,7 +527,7 @@ End Sub
 
 '!endif ' PICOMITE
 
-'!ifdef PGLCD2
+'!if defined(GAMEMITE)
 ' Gamepad on the Game*Mite
 ' The single 'crazy' PORT call efficiently reads the buttons in the correct
 ' order for the return bitmap but we then have to mask out filler values.
@@ -548,7 +547,7 @@ Sub ctrl.gamemite(x%)
       ctrl.close_driver("ctrl.gamemite")
   End Select
 End Sub
-'!endif
+'!endif ' GAMEMITE
 
 '!ifdef CMM2
 

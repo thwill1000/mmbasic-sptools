@@ -2,7 +2,7 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-'!if !defined(PICOMITE) && ( defined(PGLCD1) || defined(PGLCD2) )
+'!if !defined(PICOMITE) && defined(GAMEMITE)
   '!define PICOMITE
 '!endif
 
@@ -158,7 +158,7 @@ Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
   sys.is_device% = 1
   Do While Len(devices$(ii%)) > 0
     d$ = LCase$(devices$(ii%))
-'!if defined(PGLCD2)
+'!if defined(GAMEMITE)
     If d$ = "gamemite" Then Exit Function
 '!endif
     Select Case Mm.Device$

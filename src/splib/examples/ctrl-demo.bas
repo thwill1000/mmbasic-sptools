@@ -5,10 +5,8 @@ Option Base 0
 Option Default None
 Option Explicit On
 
-'!if defined(PGLCD1)
-' For PicoGAME LCD 1 running PicoMite MMBasic 5.07.07
-'!elif defined(PGLCD2)
-' For PicoGAME LCD 2 running PicoMite MMBasic 5.07.07
+'!if defined(GAMEMITE)
+' For GameMite running PicoMite MMBasic 5.07.07
 '!elif defined(PICOMITE)
 ' For PicoGAME VGA 1.4 running PicoMiteVGA MMBasic 5.07.07
 '!elif defined(CMM2)
@@ -86,7 +84,7 @@ End Sub
 Sub restore_controller_data()
   Select Case Mm.Device$
     Case "PicoMite", "PicoMiteVGA"
-'!if defined(PGLCD2)
+'!if defined(GAMEMITE)
       Restore controller_data_gamemite
 '!elif true
       Restore controller_data_picomite

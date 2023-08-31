@@ -9,12 +9,6 @@ sys.provides("sound")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-'!if !defined(SOUND_MONO) && !defined(SOUND_RAW)
-  '!if defined(PGLCD1)
-    '!define SOUND_RAW
-  '!endif
-'!endif
-
 '!if defined(SOUND_MONO) && defined(SOUND_RAW)
   '!error "File 'sound.inc' was transpiled with more than one of SOUND_MONO and SOUND_RAW defined"
 '!endif
