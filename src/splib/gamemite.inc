@@ -5,11 +5,11 @@
 '!ifndef NO_INCLUDE_GUARDS
 On Error Skip 1 : Dim sys.VERSION$ = ""
 If sys.VERSION$ = "" Then Error "'system.inc' not included"
-sys.provides("pglcd")
+sys.provides("gamemite")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-Sub pglcd.end(break%)
+Sub gamemite.end(break%)
   Page Write 0
   Colour Rgb(White), Rgb(Black)
   Cls

@@ -26,7 +26,7 @@ Option Explicit On
 #Include "../string.inc"
 #Include "../txtwm.inc"
 #Include "../menu.inc"
-#Include "../pglcd.inc"
+#Include "../gamemite.inc"
 
 Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
 Dim CTRL_DRIVERS$(1) = ("ctrl.pglcd2", "keys_cursor")
@@ -150,7 +150,7 @@ Sub on_quit()
   Const msg$ = str.decode$("\nAre you sure you want to quit this program?")  
   Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
     Case "Yes"
-      pglcd.end()
+      gamemite.end()
     Case "No"
       twm.switch(menu.win1%)
       twm.redraw()
