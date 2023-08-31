@@ -87,7 +87,7 @@ Sub restore_controller_data()
   Select Case Mm.Device$
     Case "PicoMite", "PicoMiteVGA"
 '!if defined(PGLCD2)
-      Restore controller_data_pglcd2
+      Restore controller_data_gamemite
 '!elif true
       Restore controller_data_picomite
 '!endif
@@ -194,10 +194,10 @@ Sub print_ctrl_option(idx%, selected%)
   print_at(2, idx% + 5, s$, selected%)
 End Sub
 
-controller_data_pglcd2:
+controller_data_gamemite:
 
 Data "keys_cursor", "Keyboard: Cursor keys & Space"
-Data "ctrl.pglcd2", "PicoGAME LCD 2 gamepad"
+Data "ctrl.gamemite", "GameMite gamepad"
 Data "", ""
 
 controller_data_picomite:

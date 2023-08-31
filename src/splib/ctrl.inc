@@ -532,7 +532,7 @@ End Sub
 ' Gamepad on the Game*Mite
 ' The single 'crazy' PORT call efficiently reads the buttons in the correct
 ' order for the return bitmap but we then have to mask out filler values.
-Sub ctrl.pglcd2(x%)
+Sub ctrl.gamemite(x%)
   Select Case x%
     Case >= 0
       x% = Port(GP12,2,GP11,2,GP8,1,GP8,1,GP11,1,GP10,1,GP9,1,GP13,3,GP13,3)
@@ -541,11 +541,11 @@ Sub ctrl.pglcd2(x%)
     Case ctrl.OPEN
       Local i%
       For i% = 8 To 15 : SetPin Mm.Info(PinNo "GP" + Str$(i%)), Din, PullUp : Next
-      ctrl.open_driver("ctrl.pglcd2")
+      ctrl.open_driver("ctrl.gamemite")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       Local i%
       For i% = 8 To 15 : SetPin Mm.Info(PinNo "GP" + Str$(i%)), Off : Next
-      ctrl.close_driver("ctrl.pglcd2")
+      ctrl.close_driver("ctrl.gamemite")
   End Select
 End Sub
 '!endif

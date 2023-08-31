@@ -29,7 +29,7 @@ Option Explicit On
 #Include "../gamemite.inc"
 
 Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
-Dim CTRL_DRIVERS$(1) = ("ctrl.pglcd2", "keys_cursor")
+Dim CTRL_DRIVERS$(1) = ("ctrl.gamemite", "keys_cursor")
 
 If sys.is_device%("mmb4l") Then Option CodePage CMM2
 If sys.is_device%("mmb4w", "cmm2*") Then Option Console Serial

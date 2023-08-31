@@ -72,7 +72,7 @@ main()
 Error "Invalid state"
 
 Sub main()
-  Local ctrl$ = Choice(sys.is_device%("pglcd2"), "ctrl.pglcd2", "keys_cursor_ext")
+  Local ctrl$ = Choice(sys.is_device%("pglcd2"), "ctrl.gamemite", "keys_cursor_ext")
   ctrl.init_keys()
   sys.override_break()
   Call ctrl$, ctrl.OPEN
