@@ -43,7 +43,7 @@ Sub main()
   ctrl.init_keys()
   sys.override_break()
   sound.init()
-  Local ctrl_idx% = Choice(sys.is_device%("pglcd2"), 0, 1)
+  Local ctrl_idx% = Choice(sys.is_device%("gamemite"), 0, 1)
   menu.init(CTRL_DRIVERS$(ctrl_idx%), "menu_cb")
   menu.load_data("main_menu_data")
   menu.selection% = ctrl_idx% + 2

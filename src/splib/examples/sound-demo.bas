@@ -72,7 +72,7 @@ main()
 Error "Invalid state"
 
 Sub main()
-  Local ctrl$ = Choice(sys.is_device%("pglcd2"), "ctrl.gamemite", "keys_cursor_ext")
+  Const ctrl$ = Choice(sys.is_device%("gamemite"), "ctrl.gamemite", "keys_cursor_ext")
   ctrl.init_keys()
   sys.override_break()
   Call ctrl$, ctrl.OPEN
@@ -205,7 +205,7 @@ Sub update_menu_data(data_label$)
     menu.items$(idx% + 1) = " TYPE:    " + TYPES$(type_idx%) + " |cmd_type"
     menu.items$(idx% + 2) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
   EndIf
-  If sys.is_device%("pglcd") Then
+  If sys.is_device%("gamemite") Then
     menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and A to select |")
   EndIf
 End Sub
