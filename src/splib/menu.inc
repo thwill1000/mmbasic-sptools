@@ -199,7 +199,8 @@ Function menu.msgbox%(msg$, buttons$(), default%)
     If Not released% Then key% = 0 : Continue Do
     valid% = 0
     Select Case key%
-      Case ctrl.A
+      Case ctrl.A, ctrl.SELECT
+        key% = ctrl.SELECT
         valid% = 1
       Case ctrl.LEFT
         If menu.msgbox% = 1 Then menu.msgbox% = 0 : valid% = 1
@@ -208,7 +209,7 @@ Function menu.msgbox%(msg$, buttons$(), default%)
     End Select
     If valid% Then menu.play_valid_fx() Else menu.play_invalid_fx()
     Pause ctrl.UI_DELAY
-  Loop Until key% = ctrl.A
+  Loop Until key% = ctrl.SELECT
 End Function
 
 Sub menu.button(x%, y%, txt$, selected%)

@@ -44,7 +44,8 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
     If Not released% Then key% = 0 : Continue Do
     valid% = 0
     Select Case key%
-      Case ctrl.A
+      Case ctrl.A, ctrl.SELECT
+        key% = ctrl.SELECT
         valid% = 1
       Case ctrl.LEFT
         If msgbox.show% > 0 Then Inc msgbox.show%, -1 : valid% =1
@@ -53,7 +54,7 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
     End Select
     msgbox.beep(valid%)
     Pause ctrl.UI_DELAY - 100
-  Loop Until key% = ctrl.A
+  Loop Until key% = ctrl.SELECT
 
   ctrl.wait_until_idle(ctrl$, "keys_cursor")
 End Function

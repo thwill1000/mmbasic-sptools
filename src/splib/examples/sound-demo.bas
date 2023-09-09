@@ -161,7 +161,7 @@ End Sub
 
 Sub cmd_menu(key%)
   Select Case key%
-    Case ctrl.A
+    Case ctrl.A, ctrl.SELECT
       menu.play_valid_fx(1)
       update_menu_data(Field$(menu.items$(menu.selection%), 3, "|"))
       menu.render()
@@ -177,14 +177,14 @@ Sub default_handler(key%)
       For i% = 0 To menu.item_count% - 1
         If Field$(menu.items$(i%), 1, "|") = "BACK" Then
           menu.selection% = i%
-          cmd_menu(ctrl.A)
+          cmd_menu(ctrl.SELECT)
           Exit Sub
         EndIf
       Next
       menu.play_invalid_fx(1)
 
-    Case ctrl.SELECT
-      cmd_quit(key%)
+    Case ctrl.START
+      cmd_quit(ctrl.SELECT)
 
     Case Else
       menu.play_invalid_fx(1)
@@ -206,13 +206,13 @@ Sub update_menu_data(data_label$)
     menu.items$(idx% + 2) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
   EndIf
   If sys.is_device%("gamemite") Then
-    menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and A to select |")
+    menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and SELECT|")
   EndIf
 End Sub
 
 Sub cmd_play_fx(key%)
   Select Case key%
-    Case ctrl.A
+    Case ctrl.A, ctrl.SELECT
       Const item$ = menu.items$(menu.selection%)
       Execute "sound.play_fx(sound.FX_" + Field$(item$, 3, "|") + "%())"
       Do While sound.is_playing%() : Loop ' Do not block within EXECUTE.
@@ -223,7 +223,7 @@ End Sub
 
 Sub cmd_play_music(key%)
   Select Case key%
-    Case ctrl.A
+    Case ctrl.A, ctrl.SELECT
       Local music%(255), track$ = Field$(menu.items$(menu.selection%), 3, "|")
       sound.load_data(track$ + "_music_data", music%())
       sound.play_music(music%())
@@ -241,7 +241,7 @@ End Sub
 
 Sub cmd_play_wav(key%)
   Select Case key%
-    Case ctrl.A
+    Case ctrl.A, ctrl.SELECT
       Const filename$ = Field$(menu.items$(menu.selection%), 3, "|")
       Do While sound.is_playing%() : Loop
       sound.term()
