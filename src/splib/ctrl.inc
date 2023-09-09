@@ -56,7 +56,7 @@ If sys.err$ <> "" Then Error sys.err$
 '!info defined CTRL_USE_ON_PS2
 '!info defined CTRL_USE_KEYDOWN
 
-Const ctrl.VERSION = 911 ' 0.9.11
+Const ctrl.VERSION = 10000 ' 1.0.0
 
 ' Button values as returned by controller driver subroutines.
 Const ctrl.R      = &h01

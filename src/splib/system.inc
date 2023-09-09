@@ -6,7 +6,7 @@
   '!define PICOMITE
 '!endif
 
-Const sys.VERSION$ = "2.0.0-a1"
+Const sys.VERSION$ = "1.0.0"
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))

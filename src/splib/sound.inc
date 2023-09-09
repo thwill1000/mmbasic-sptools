@@ -21,7 +21,7 @@ If sys.err$ <> "" Then Error sys.err$
 'SetPin GP6,PWM3A
 '!endif
 
-Const sound.VERSION% = 902 ' 0.9.2
+Const sound.VERSION% = 10000 ' 1.0.0
 
 Const sound.FX_FLAG% = &b01
 Const sound.MUSIC_FLAG% = &b10

@@ -1,8 +1,10 @@
 ChangeLog
 ---------
 
-Version 2.0.0-a1 - ??-???-2021:
- - Many changes that I failed to record as they were being done :-(
+Version 1.0.0 - 13-Sep-2023:
+ - First official release including another three years worth of
+   undocumented changes; I hope to do better going forward.
+ - This is the version used to build the GameMite v1.0.0 code.
 
 Version 1b3 - Unreleased:
  - Changed maximum number of tokens supported per line from 100 => 255.
