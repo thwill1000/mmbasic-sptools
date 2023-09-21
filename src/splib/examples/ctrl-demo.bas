@@ -102,7 +102,7 @@ End Sub
 
 Sub show_menu()
   Cls
-  print_at(0, 0, "MMBasic Controller Driver Test " + sys.format_version$(ctrl.VERSION))
+  print_at(0, 0, "MMBasic Controller Driver Test " + sys.format_version$())
   print_at(0, 1, "Running on " + Mm.Device$ + " " + Str$(Mm.Info(Version)))
   print_at(0, 3,  "Select driver using [A-Z]")
   print_at(0, 4,  "Then 'play' with controller to test response")

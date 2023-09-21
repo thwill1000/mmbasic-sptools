@@ -1,6 +1,6 @@
-' Copyright (c) 2021 Thomas Hugo Williams
+' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07
 
 ' TODO
 ' ----
@@ -14,11 +14,13 @@
 ' Wildcards/Globbing
 ' Compact 'ls' output
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("console", "file", "string")
 sys.provides("commands")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const cmd.ALL_COMMANDS$ = " backup cd cat cp edit exit help ls mkdir mv pwd rm touch version "
 Const cmd.EXIT_SUCCESS% = 0
@@ -324,7 +326,7 @@ End Sub
 
 Sub cmd.version()
   ' TODO: duplicated from common/sptools.inc
-  con.println("spsh (SP Tools) Release " + sys.VERSION$ + " for Colour Maximite 2, MMBasic 5.07")
+  con.println("spsh (SP Tools) Release " + sys.format_version$() + " for Colour Maximite 2, MMBasic 5.07")
   con.println("Copyright (c) 2020-2021 Thomas Hugo Williams")
   con.println("A Toy Plastic Trumpet Production for Sockpuppet Studios.")
   con.println("License MIT <https://opensource.org/licenses/MIT>")

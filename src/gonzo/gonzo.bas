@@ -49,7 +49,7 @@ Sub main()
   If cmd$ = "" Then
     con.cls()
     con.foreground("yellow")
-    con.println("Welcome to gonzo v" + sys.VERSION$)
+    con.println("Welcome to gonzo v" + sys.format_version$())
   EndIf
 
   gonzo.connect(cmd$ = "");

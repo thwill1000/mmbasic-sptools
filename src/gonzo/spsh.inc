@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMB4L 0.6.0
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("console", "file", "string")
 sys.provides("spsh")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const spsh.IN_FNBR = 2
 Const spsh.MAX_FILES = 200

@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMB4L 0.6.0
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("array", "console", "file", "history", "inifile", "map", "string", "spsh", "gonzo")
 sys.provides("command")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 ' @return  1 if the exit flag is set, otherwise 0.
 Function cmd.do_command%(cmd$, argc%, argv$())
@@ -663,7 +665,7 @@ Sub cmd.version(cmd$, argc%, argv$())
   If Not gonzo.check_arg_min%(cmd$, argc%, 0) Then Exit Sub
 
   ' TODO: duplicated from common/sptools.inc
-  con.println("gonzo (SP Tools) Release " + sys.VERSION$ + " for MMB4L 2022.01.00")
+  con.println("gonzo (SP Tools) Release " + sys.format_version$() + " for MMB4L 2022.01.00")
   con.println("Copyright (c) 2021-2022 Thomas Hugo Williams")
   con.println("A Toy Plastic Trumpet Production for Sockpuppet Studios.")
   con.println("License MIT <https://opensource.org/licenses/MIT>")

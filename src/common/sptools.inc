@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("file")
 sys.provides("sptools")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 ' Gets the 'sptools' installation directory.
 Function spt.get_install_dir$()
@@ -28,7 +30,7 @@ Function spt.get_install_dir$()
 End Function
 
 Sub spt.print_version(name$)
-  Print name$ " (SP Tools) Version " + sys.VERSION$ + " for MMBasic 5.07"
+  Print name$ " (SP Tools) Version " + sys.format_version$() + " for MMBasic 5.07"
   Print "Copyright (c) 2020-2023 Thomas Hugo Williams"
   Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
   Print "License MIT <https://opensource.org/licenses/MIT>"

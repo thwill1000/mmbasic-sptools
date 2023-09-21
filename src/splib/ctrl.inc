@@ -3,9 +3,9 @@
 
 ' MMBasic Controller Library
 
-'!ifndef NO_INCLUDE_GUARDS
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.provides("ctrl")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -55,8 +55,6 @@ If sys.err$ <> "" Then Error sys.err$
 '!info defined CTRL_USE_INKEY
 '!info defined CTRL_USE_ON_PS2
 '!info defined CTRL_USE_KEYDOWN
-
-Const ctrl.VERSION = 10000 ' 1.0.0
 
 ' Button values as returned by controller driver subroutines.
 Const ctrl.R      = &h01

@@ -6,7 +6,7 @@
   '!define PICOMITE
 '!endif
 
-Const sys.VERSION$ = "1.0.0"
+Const sys.VERSION = 10100 ' 1.1.0
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
@@ -17,7 +17,7 @@ Const sys.FAILURE = -1
 Dim sys.break_flag%
 Dim sys.err$
 
-'!ifndef NO_INCLUDE_GUARDS
+'!if !defined(NO_INCLUDE_GUARDS)
 Const sys.MAX_INCLUDES% = 20
 Dim sys.includes$(sys.MAX_INCLUDES%) Length 20
 
@@ -68,6 +68,7 @@ End Sub
 
 ' Formats an integer version as a minor.major.micro string.
 Function sys.format_version$(v%, fw%)
+  If Not v% Then v% = sys.VERSION
   Local a% = v%\10000, b% = (v%-a%*10000)\100, c% = v%-a%*10000-b%*100
   Local d% = Choice(fw%, 2, 1)
   Local s$ = Str$(a%)+"."+Str$(b%,d%,0,"0")+"."+Str$(c%,d%,0,"0")

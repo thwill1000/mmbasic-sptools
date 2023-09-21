@@ -95,7 +95,7 @@ Sub render_cb(cb_data$)
   Const msg$ = "Hold " + Choice(menu.selection% = 3, "SPACE", "A") + " to QUIT"
   menu.items$(Bound(menu.items$(), 1)) = str.centre$(msg$, menu.width% - 4) + "|"
   menu.render_item(Bound(menu.items$(), 1))
-  Local s$ = "v" + sys.format_version$(ctrl.VERSION)
+  Local s$ = "v" + sys.format_version$()
   twm.print_at(menu.width% - Len(s$) - 2, menu.height% - 2, s$)
 End Sub
 
