@@ -569,7 +569,7 @@ Function gonzo.check_arg_max%(cmd$, argc%, maximum%)
 End Function
 
 Function gonzo.check_arg_min%(cmd$, argc%, minimum%)
-  gonzo.check_arg_max% = gonzo.check_arg_range%(cmd$, argc%, minimum%, 100)
+  gonzo.check_arg_min% = gonzo.check_arg_range%(cmd$, argc%, minimum%, 100)
 End Function
 
 Function gonzo.check_arg_range%(cmd$, argc%, minimum%, maximum%)
