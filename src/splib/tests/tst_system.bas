@@ -19,6 +19,7 @@ add_test("test_provides_given_duplicates")
 add_test("test_provides_given_too_many")
 add_test("test_requires")
 add_test("test_format_version")
+add_test("test_format_firmware_version")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -87,9 +88,16 @@ Sub test_requires()
 End Sub
 
 Sub test_format_version()
-  assert_string_equals("10.07.08b7", sys.format_version$(10070807, 1))
-  assert_string_equals("5.07.08b7", sys.format_version$(5070807, 1))
-  assert_string_equals("5.06.00", sys.format_version$(5060000, 1))
-  assert_string_equals("5.6.0", sys.format_version$(50600))
-  assert_string_equals("0.9.9", sys.format_version$(909))
+  assert_string_equals("5.6 alpha 0", sys.format_version$(506000))
+  assert_string_equals("5.6 beta 0", sys.format_version$(506100))
+  assert_string_equals("5.6 rc 0", sys.format_version$(506200))
+  assert_string_equals("5.6.0", sys.format_version$(506300))
+  assert_string_equals("5.6.153", sys.format_version$(506453))
+  assert_string_equals("0.9.9", sys.format_version$(9309))
+End Sub
+
+Sub test_format_firmware_version()
+  assert_string_equals("10.07.08b7", sys.format_firmware_version$(10070807))
+  assert_string_equals("5.07.08b7", sys.format_firmware_version$(5070807))
+  assert_string_equals("5.06.00", sys.format_firmware_version$(5060000))
 End Sub

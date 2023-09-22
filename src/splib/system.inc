@@ -6,7 +6,7 @@
   '!define PICOMITE
 '!endif
 
-Const sys.VERSION = 10100 ' 1.1.0
+Const sys.VERSION = 101300 ' 1.1.0
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
@@ -66,22 +66,25 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
 End Sub
 '!endif
 
-' Formats an integer version as a minor.major.micro string.
-Function sys.format_version$(v%, fw%)
-  If Not v% Then v% = sys.VERSION
-  Local a% = v%\10000, b% = (v%-a%*10000)\100, c% = v%-a%*10000-b%*100
-  Local d% = Choice(fw%, 2, 1)
-  Local s$ = Str$(a%)+"."+Str$(b%,d%,0,"0")+"."+Str$(c%,d%,0,"0")
-  If fw% Then
-    If v% >= 10000000 Then
-      s$ = Mid$(s$,1,2) + "." + Mid$(s$,3)
-    ElseIf v% >= 100000 Then
-      s$ = Mid$(s$,1,1) + "." + Mid$(s$,2)
-    EndIf
-    Const beta% = Right$(s$, 3) <> ".00"
-    s$ = Mid$(s$,1,Len(s$)-3) + Choice(beta%, "b" + Str$(Val(Right$(s$,2))), "")
-  EndIf
-  sys.format_version$ = s$
+' Formats an SP Tools integer version as a string.
+Function sys.format_version$(v%)
+  Const v_% = Choice(v%, v%, sys.VERSION), a% = v_%\10^5, b% = (v_%-a%*10^5)\10^3
+  Local c% = v_%-a%*10^5-b%*10^3, s$ = Str$(a%) + "." + Str$(b%)
+  Select Case c%
+    Case < 100 : Cat s$, " alpha "
+    Case < 200 : Cat s$, " beta " : Inc c%, -100
+    Case < 300 : Cat s$, " rc " : Inc c%, -200
+    Case Else  : Cat s$, "." : Inc c%, -300
+  End Select
+  sys.format_version$ = s$ + Str$(c%)
+End Function
+
+' Formats a firmware integer version as a string.
+Function sys.format_firmware_version$(v%)
+  Const v_% = Choice(v%, v%, sys.FIRMWARE), a% = v_%\10^6, b% = (v_%-a%*10^6)\10^4
+  Const c% = (v_%-a%*10^6-b%*10^4)\100, d% = v_%-a%*10^6-b%*10^4-c%*100
+  Local s$ = Str$(a%) + "." + Str$(b%,2,0,"0") + "." + Str$(c%,2,0,"0")
+  sys.format_firmware_version$ = s$ + Choice(d%, "b" + Str$(d%), "")
 End Function
 
 ' Overrides Ctrl-C behaviour such that:
