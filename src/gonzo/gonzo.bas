@@ -14,6 +14,7 @@ Option Explicit On
 #Include "../splib/string.inc"
 #Include "../splib/inifile.inc"
 #Include "../splib/file.inc"
+#Include "../common/sptools.inc"
 #Include "history.inc"
 #Include "console.inc"
 #Include "spsh.inc"

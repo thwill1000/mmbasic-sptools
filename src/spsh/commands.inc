@@ -325,11 +325,5 @@ Sub cmd.touch()
 End Sub
 
 Sub cmd.version()
-  ' TODO: duplicated from common/sptools.inc
-  con.println("spsh (SP Tools) Release " + sys.format_version$() + " for Colour Maximite 2, MMBasic 5.07")
-  con.println("Copyright (c) 2020-2021 Thomas Hugo Williams")
-  con.println("A Toy Plastic Trumpet Production for Sockpuppet Studios.")
-  con.println("License MIT <https://opensource.org/licenses/MIT>")
-  con.println("This is free software: you are free to change and redistribute it.")
-  con.println("There is NO WARRANTY, to the extent permitted by law.")
+  spt.print_version("spsh", , , "con.println")
 End Sub

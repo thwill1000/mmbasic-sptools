@@ -9,6 +9,7 @@ Option Explicit On
 #Include "../splib/system.inc"
 #Include "../splib/string.inc"
 #Include "../splib/file.inc"
+#Include "../common/sptools.inc"
 #Include "console.inc"
 #Include "commands.inc"
 
