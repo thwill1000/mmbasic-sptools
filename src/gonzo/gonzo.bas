@@ -31,10 +31,8 @@ main()
 End
 
 Sub main()
-  Local cmd$
-  Local argc%
-  Local argv$(array.new%(10))
-  Local cmd_line$ = str.trim$(Mm.CmdLine$)
+  Local argc%, argv$(array.new%(10)), cmd$
+  Local cmd_line$ = str.trim$(Mm.CmdLine$), result%
 
   If file.mkdir%("~/.gonzo") <> sys.SUCCESS Then Error sys.err$
 
@@ -47,16 +45,20 @@ Sub main()
 
   If cmd_line$ <> "" Then gonzo.parse_cmd_line(cmd_line$, cmd$, argc%, argv$())
 
-  If cmd$ = "" Then
-    con.cls()
-    con.foreground("yellow")
-    con.println("Welcome to gonzo v" + sys.format_version$())
-  EndIf
+  Select Case cmd$
+    Case ""
+      con.cls()
+      con.foreground("yellow")
+      con.println("Welcome to gonzo v" + sys.format_version$())
+    Case "-v", "--version"
+      result% = cmd.do_command%("version", 0, argv$())
+      cmd$ = "exit"
+  End Select
 
-  gonzo.connect(cmd$ = "");
+  If cmd$ <> "exit" Then gonzo.connect(cmd$ = "");
 
   If cmd$ <> "" Then
-    cmd.do_command(cmd$, argc%, argv$())
+    result% = cmd.do_command%(cmd$, argc%, argv$())
 
     If Mm.Device$ <> "MMB4L" Then
       ' Move cursor up one line on both VGA and Serial Console.
