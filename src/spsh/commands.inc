@@ -162,7 +162,7 @@ Sub cmd.execute()
   Local program$ = cmd.cmd$
   If LCase$(file.get_extension$(program$)) <> ".bas" Then Cat program$, ".bas"
 
-  If Not file.exists%(program$) Then program$ = Mm.Info(Search Path) + program$
+  If Not file.exists%(program$) Then program$ = Mm.Info(Option Search Path) + program$
 
   If Not file.exists%(program$) Then
     con.errorln("No such file or command: " + program$)
