@@ -36,6 +36,7 @@ Black
 Blit
 Blue
 Bmp
+Bound
 Box
 Break
 Brown
@@ -56,6 +57,7 @@ CFunAddr
 CFunction
 ChDir
 Checkbox
+Choice
 Chr$
 Cin
 CInt
