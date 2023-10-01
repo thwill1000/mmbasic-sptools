@@ -5,9 +5,9 @@
 ' MD5 algorithm from https://en.wikipedia.org/wiki/MD5
 ' XXTEA algorithm from https://en.wikipedia.org/wiki/XXTEA
 
-'!ifndef NO_INCLUDE_GUARDS
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("array")
 sys.provides("crypt")
 If sys.err$ <> "" Then Error sys.err$

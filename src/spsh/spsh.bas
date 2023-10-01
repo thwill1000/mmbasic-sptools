@@ -1,6 +1,6 @@
-' Copyright (c) 2021 Thomas Hugo Williams
+' Copyright (c) 2021-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 5.07
 
 Option Base 0
 Option Default None
@@ -9,6 +9,7 @@ Option Explicit On
 #Include "../splib/system.inc"
 #Include "../splib/string.inc"
 #Include "../splib/file.inc"
+#Include "../common/sptools.inc"
 #Include "console.inc"
 #Include "commands.inc"
 
@@ -17,8 +18,13 @@ End
 
 Sub main()
 
-  Local cmd_line$ = sys.cmdline$()
+  Local cmd_line$ = str.trim$(Mm.CmdLine$)
   If cmd_line$ <> "" Then parse(cmd_line$)
+  If cmd.cmd$ = "--version" Or cmd.cmd$ = "-v" Then
+    cmd.cmd$ = "version"
+    cmd.do_command()
+    cmd.cmd$ = "exit"
+  EndIf
   If cmd.cmd$ <> "" Then
     cmd.do_command()
 
@@ -40,10 +46,6 @@ Sub main()
     If cmd.cmd$ <> "" Then cmd.do_command()
   Loop
 End Sub
-
-Function sys.cmdline$()
-  sys.cmdline$ = str.trim$(Mm.CmdLine$)
-End Function
 
 Sub parse(cmd_line$)
   cmd.cmd$ = str.next_token$(cmd_line$)

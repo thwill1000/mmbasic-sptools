@@ -7,9 +7,9 @@
 ' The capacity of the map is the capacity of the array - 1, with the final element
 ' storing "${key_len},${size}".
 
-'!ifndef NO_INCLUDE_GUARDS
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("array")
 sys.provides("map2")
 If sys.err$ <> "" Then Error sys.err$

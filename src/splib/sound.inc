@@ -2,9 +2,9 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-'!ifndef NO_INCLUDE_GUARDS
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.provides("sound")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -20,8 +20,6 @@ If sys.err$ <> "" Then Error sys.err$
 'SetPin GP4,PWM2A
 'SetPin GP6,PWM3A
 '!endif
-
-Const sound.VERSION% = 10000 ' 1.0.0
 
 Const sound.FX_FLAG% = &b01
 Const sound.MUSIC_FLAG% = &b10

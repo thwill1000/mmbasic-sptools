@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMB4L 0.6.0
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("array", "console", "file", "history", "inifile", "map", "string")
 sys.provides("gonzo")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 Const CRLF = Chr$(&h0D) + Chr$(&h0A)
 Const ECHO = &h01
@@ -81,11 +83,8 @@ Sub gonzo.connect(verbose%)
 End Sub
 
 Sub gonzo.update_title(prefix$)
-  If prefix$ = "" Then
-    Console SetTitle gonzo.device_name$ + " - " + gonzo.comspec$ + " - gonzo v" + sys.VERSION$
-  Else
-    Console SetTitle prefix$ + " - " + gonzo.device_name$ + " - " + gonzo.comspec$ + " - gonzo v" + sys.VERSION$
-  EndIf
+  Const title$ = gonzo.device_name$ + " - " + gonzo.comspec$ + " - gonzo v" + sys.format_version$()
+  Console SetTitle Choice(prefix$ = "", title$, prefix$ + " - " + title$)
 End Sub
 
 Function gonzo.prompt_for_comspec$()
@@ -570,7 +569,7 @@ Function gonzo.check_arg_max%(cmd$, argc%, maximum%)
 End Function
 
 Function gonzo.check_arg_min%(cmd$, argc%, minimum%)
-  gonzo.check_arg_max% = gonzo.check_arg_range%(cmd$, argc%, minimum%, 100)
+  gonzo.check_arg_min% = gonzo.check_arg_range%(cmd$, argc%, minimum%, 100)
 End Function
 
 Function gonzo.check_arg_range%(cmd$, argc%, minimum%, maximum%)

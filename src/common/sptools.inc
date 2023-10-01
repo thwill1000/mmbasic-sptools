@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("file")
 sys.provides("sptools")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 ' Gets the 'sptools' installation directory.
 Function spt.get_install_dir$()
@@ -27,11 +29,18 @@ Function spt.get_install_dir$()
   spt.get_install_dir$ = d$
 End Function
 
-Sub spt.print_version(name$)
-  Print name$ " (SP Tools) Version " + sys.VERSION$ + " for MMBasic 5.07"
-  Print "Copyright (c) 2020-2023 Thomas Hugo Williams"
-  Print "A Toy Plastic Trumpet Production for Sockpuppet Studios."
-  Print "License MIT <https://opensource.org/licenses/MIT>"
-  Print "This is free software: you are free to change and redistribute it."
-  Print "There is NO WARRANTY, to the extent permitted by law."
+Sub spt.print_version(name$, year%, platform$, println$)
+  If Not year% Then year% = 2020
+  If platform$ = "" Then platform$ = "MMBasic 5.07"
+  If println$ = "" Then println$ = "spt.println"
+  Call println$, name$ + " (SP Tools) Version " + sys.format_version$() + " for " + platform$
+  Call println$, "Copyright (c) " + Str$(year%) + "-2023 Thomas Hugo Williams"
+  Call println$, "A Toy Plastic Trumpet Production for Sockpuppet Studios."
+  Call println$, "License MIT <https://opensource.org/licenses/MIT>"
+  Call println$, "This is free software: you are free to change and redistribute it."
+  Call println$, "There is NO WARRANTY, to the extent permitted by law."
+End Sub
+
+Sub spt.println(s$)
+  Print s$
 End Sub

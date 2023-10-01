@@ -2,11 +2,13 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-On Error Skip 1 : Dim sys.VERSION$ = ""
-If sys.VERSION$ = "" Then Error "'system.inc' not included"
+'!if !defined(NO_INCLUDE_GUARDS)
+On Error Skip 1 : Dim sys.VERSION = -1
+If sys.VERSION = -1 Then Error "'system.inc' not included"
 sys.requires("defines")
 sys.provides("expression")
 If sys.err$ <> "" Then Error sys.err$
+'!endif
 
 ' Evaluates an !IF preprocessor expression on the current line.
 '

@@ -155,7 +155,7 @@ Sub menu_cb(cb_data$)
 End Sub
 
 Sub render_cb(cb_data$)
-  Const s$ = "v" + sys.format_version$(sound.VERSION%)
+  Const s$ = "v" + sys.format_version$()
   twm.print_at(menu.width% - Len(s$) - 2, menu.height% - 2, s$)
 End Sub
 
