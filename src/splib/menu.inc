@@ -102,39 +102,44 @@ Sub menu.render_item(idx%)
 End Sub
 
 Sub menu.main_loop()
-  Local cmd$, key%, new_sel%
+  Local key%
   Do
     If sys.break_flag% Then menu.on_break()
     Call menu.ctrl$, key%
     If Not key% Then keys_cursor(key%)
-    If Not key% Then Continue Do
-
-    Select Case key%
-      Case ctrl.A, ctrl.B, ctrl.START, ctrl.SELECT, ctrl.LEFT, ctrl.RIGHT
-        ' TODO: there is a bug in CALL which means it can't handle the case
-        '       where an expression that provides the command name contains a
-        '       comma or single-quote.
-        cmd$ = Field$(menu.items$(menu.selection%), 2, "|")
-        Call cmd$, key%
-
-      Case ctrl.DOWN, ctrl.UP
-        new_sel% = menu.selection%
-        Do
-          Inc new_sel%, Choice(key% = ctrl.DOWN, 1, -1)
-          If new_sel% < 0 Or new_sel% >= menu.item_count% Then
-            new_sel% = menu.selection%
-            menu.play_invalid_fx()
-            Pause ctrl.UI_DELAY
-            Exit Do
-          EndIf
-        Loop Until Len(Field$(menu.items$(new_sel%), 2, "|"))
-        menu.select_item(new_sel%)
-
-      Case Else
-        menu.play_invalid_fx()
-        Pause ctrl.UI_DELAY
-    End Select
+    menu.process_key(key%)
   Loop
+End Sub
+
+Sub menu.process_key(key%)
+  Local cmd$, new_sel%
+  If Not key% Then Exit Sub
+
+  Select Case key%
+    Case ctrl.A, ctrl.B, ctrl.START, ctrl.SELECT, ctrl.LEFT, ctrl.RIGHT
+      ' TODO: there is a bug in CALL which means it can't handle the case
+      '       where an expression that provides the command name contains a
+      '       comma or single-quote.
+      cmd$ = Field$(menu.items$(menu.selection%), 2, "|")
+      Call cmd$, key%
+
+    Case ctrl.DOWN, ctrl.UP
+      new_sel% = menu.selection%
+      Do
+        Inc new_sel%, Choice(key% = ctrl.DOWN, 1, -1)
+        If new_sel% < 0 Or new_sel% >= menu.item_count% Then
+          new_sel% = menu.selection%
+          menu.play_invalid_fx()
+          Pause ctrl.UI_DELAY
+          Exit Do
+        EndIf
+      Loop Until Len(Field$(menu.items$(new_sel%), 2, "|"))
+      menu.select_item(new_sel%)
+
+    Case Else
+      menu.play_invalid_fx()
+      Pause ctrl.UI_DELAY
+  End Select
 End Sub
 
 Sub menu.select_item(new_sel%)
