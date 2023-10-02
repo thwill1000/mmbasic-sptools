@@ -88,6 +88,11 @@ Sub test_requires()
 End Sub
 
 Sub test_format_version()
+  ' Override sys.VERSION to make test stable.
+  Erase sys.VERSION
+  Dim sys.VERSION As Integer = 123456
+  assert_string_equals("1.23.156", sys.format_version$())
+
   assert_string_equals("5.6 alpha 0", sys.format_version$(506000))
   assert_string_equals("5.6 beta 0", sys.format_version$(506100))
   assert_string_equals("5.6 rc 0", sys.format_version$(506200))
@@ -97,7 +102,20 @@ Sub test_format_version()
 End Sub
 
 Sub test_format_firmware_version()
-  assert_string_equals("10.07.08b7", sys.format_firmware_version$(10070807))
-  assert_string_equals("5.07.08b7", sys.format_firmware_version$(5070807))
-  assert_string_equals("5.06.00", sys.format_firmware_version$(5060000))
+  ' Override sys.FIRMWARE to make test stable.
+  Erase sys.FIRMWARE
+  Dim sys.FIRMWARE As Integer = 12345600
+  assert_string_equals("12.34.56", sys.format_firmware_version$())
+
+  If Mm.Device$ = "MMB4L" Then
+    assert_string_equals("0.6.0", sys.format_firmware_version$(60000))
+    assert_string_equals("10.7.8b7", sys.format_firmware_version$(10070807))
+    assert_string_equals("5.7.8b7", sys.format_firmware_version$(5070807))
+    assert_string_equals("5.6.0", sys.format_firmware_version$(5060000))
+  Else
+    assert_string_equals("0.06.00", sys.format_firmware_version$(60000))
+    assert_string_equals("10.07.08b7", sys.format_firmware_version$(10070807))
+    assert_string_equals("5.07.08b7", sys.format_firmware_version$(5070807))
+    assert_string_equals("5.06.00", sys.format_firmware_version$(5060000))
+  EndIf
 End Sub

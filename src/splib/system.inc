@@ -9,7 +9,11 @@
 Const sys.VERSION = 101300 ' 1.1.0
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
-const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
+If Mm.Info$(Device) = "MMB4L" Then
+  Const sys.FIRMWARE = Mm.Info(Version) \ 100
+Else
+  Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
+EndIf
 
 Const sys.SUCCESS = 0
 Const sys.FAILURE = -1
@@ -83,7 +87,8 @@ End Function
 Function sys.format_firmware_version$(v%)
   Const v_% = Choice(v%, v%, sys.FIRMWARE), a% = v_%\10^6, b% = (v_%-a%*10^6)\10^4
   Const c% = (v_%-a%*10^6-b%*10^4)\100, d% = v_%-a%*10^6-b%*10^4-c%*100
-  Local s$ = Str$(a%) + "." + Str$(b%,2,0,"0") + "." + Str$(c%,2,0,"0")
+  Const digits% = Choice(Mm.Info(Device) = "MMB4L", 1, 2)
+  Const s$ = Str$(a%) + "." + Str$(b%,digits%,0,"0") + "." + Str$(c%,digits%,0,"0")
   sys.format_firmware_version$ = s$ + Choice(d%, "b" + Str$(d%), "")
 End Function
 
