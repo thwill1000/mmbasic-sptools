@@ -1,6 +1,29 @@
 ChangeLog
 ---------
 
+Version 1.1.0 - 1-Oct-2023:
+ - gonzo:
+   - Fixed --version command line argument.
+   - Fixed undeclared variable bug in gonzo.check_arg_min%().
+ - splib:
+   - Changed sys.VERSION to be a 6 or 7-digit integer: {A}ABBCDD
+     - {A}A is the 1 or 2-digit major version.
+     - BB   is the 2-digit minor version.
+     - C    = 0 for alpha
+            = 1 for beta
+            = 2 for release candidate
+            = 3..9 for release.
+     - DD   is the micro version if c <= 3.
+            If c > 3 Then CDD - 300 is the micro version.
+     e.g. 1234567 would be version 12.34.267
+   - Added function sys.format_firmware_version$()
+     - replaces the 'fw%' parameter to sys.format_version$().
+   - Added subroutine menu.process_key().
+ - spsh:
+   - Fixed --version command line argument.
+ - sptrans:
+   - Fixed BOUND and CHOICE not being recognised as keywords.
+
 Version 1.0.0 - 13-Sep-2023:
  - First official release including another three years worth of
    undocumented changes; I hope to do better going forward.
