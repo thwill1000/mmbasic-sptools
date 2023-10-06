@@ -380,11 +380,9 @@ End Function
 ' Gets the name of file/directory 'f$' minus any path information.
 Function file.get_name$(f$)
   Local i%
-
   For i% = Len(f$) To 1 Step -1
     If InStr("/\", Mid$(f$, i%, 1)) > 0 Then Exit For
-  Next i%
-
+  Next
   file.get_name$ = Mid$(f$, i% + 1)
 End Function
 
@@ -404,7 +402,7 @@ Function file.get_parent$(f$)
   Local i%
   For i% = Len(f$) To 1 Step -1
     If InStr("/\", Mid$(f$, i%, 1)) > 0 Then Exit For
-  Next i%
+  Next
   If i% > 0 Then file.get_parent$ = Left$(f$, i% - 1)
   If file.get_parent$ = "" Then
     If InStr("/\", Left$(f$, 1)) Then file.get_parent$ = Left$(f$, 1)

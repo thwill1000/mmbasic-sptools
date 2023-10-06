@@ -467,11 +467,11 @@ Sub twm.redraw()
       Text vx%, vy%, ch$,,,, twm.fg%(at%), twm.bg%(at%)
       If at% And &b01000000 Then Text vx%+1, vy%, ch$,,,, twm.fg%(at%), -1
       Inc vx%, twm.fw%
-    Next x%
+    Next ' x%
     Inc pa%, twm.w%
     Inc pc%, twm.w%
     Inc vy%, twm.fh%
-  Next y%
+  Next ' y%
 End Sub
 
 Sub twm.cls(x%, y%, w%, h%)
