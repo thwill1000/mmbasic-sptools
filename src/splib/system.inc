@@ -6,7 +6,7 @@
   '!define PICOMITE
 '!endif
 
-Const sys.VERSION = 101300 ' 1.1.0
+Const sys.VERSION = 102001 ' 1.2 alpha 1
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 If Mm.Info$(Device) = "MMB4L" Then

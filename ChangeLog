@@ -1,6 +1,8 @@
 ChangeLog
 ---------
 
+Version 1.2.0 - ??-???-????:
+
 Version 1.1.0 - 1-Oct-2023:
  - gonzo:
    - Fixed --version command line argument.
