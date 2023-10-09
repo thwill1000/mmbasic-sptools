@@ -138,7 +138,7 @@ Function ut.sanitise_string$(s$)
   ut.sanitise_string$ = s2$
 End Function
 
-Sub assert_int_array_equals(expected%(), actual%())
+Sub assert_int_array_equals(expected%(), actual%(), use_hex%)
   Inc ut.asserts_count%
 
   If Bound(expected%(), 1) <> Bound(actual%(), 1) Then
@@ -156,8 +156,8 @@ Sub assert_int_array_equals(expected%(), actual%())
     Inc count%
     If count% > ut.MAX_ARRAY_DIFFS% Then Continue For
     indexes%(j%) = i%
-    e$(j%) = Str$(expected%(i%))
-    a$(j%) = Str$(actual%(i%))
+    e$(j%) = Choice(use_hex%, "&h" + Hex$(expected%(i%), 16), Str$(expected%(i%)))
+    a$(j%) = Choice(use_hex%, "&h" + Hex$(actual%(i%), 16), Str$(actual%(i%)))
     Inc j%
   Next
 

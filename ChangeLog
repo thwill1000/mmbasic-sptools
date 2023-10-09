@@ -2,6 +2,9 @@ ChangeLog
 ---------
 
 Version 1.2.0 - ??-???-????:
+ - sptest:
+   - Added option 'use_hex%' flag to assert_int_array_equals() which if set
+     causes it to use hexadecimal format.
 
 Version 1.1.0 - 1-Oct-2023:
  - gonzo:
