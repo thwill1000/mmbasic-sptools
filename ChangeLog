@@ -2,6 +2,13 @@ ChangeLog
 ---------
 
 Version 1.2.0 - ??-???-????:
+ - splib:
+   - Added subs/functions to 'bits.inc' to handle bit-sets > 64 bits:
+       bits.big_clear()
+       bits.big_fill()
+       bits.big_get%()
+       bits.big_set()
+       bits.fill()
  - sptest:
    - Added option 'use_hex%' flag to assert_int_array_equals() which if set
      causes it to use hexadecimal format.
