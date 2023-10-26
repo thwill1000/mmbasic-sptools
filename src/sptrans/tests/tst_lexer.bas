@@ -47,6 +47,7 @@ add_test("test_old_tokens_cleared")
 add_test("test_parse_command_line")
 add_test("test_csub")
 add_test("test_define_font")
+add_test("test_hash_bang")
 add_test("test_insert_token")
 add_test("test_remove_token")
 add_test("test_replace_token")
@@ -498,6 +499,10 @@ Sub test_define_font()
   expect_token(0, TK_NUMBER,     "0.12345")
   expect_token(1, TK_NUMBER,     "00")
   expect_token(2, TK_IDENTIFIER, "AABBCC")
+End Sub
+
+Sub test_hash_bang()
+  expect_parse_succeeds("#!/foo/bar", 1, TK_COMMENT, "#!/foo/bar")
 End Sub
 
 Sub test_insert_token()

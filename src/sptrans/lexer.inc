@@ -198,7 +198,7 @@ End Sub
 Sub lx.parse_comment_or_directive()
   If lx.num = 0 Then
     ' Only the first token on a line will be recognised as a directive.
-    If lx.next_char$ = "!" Then
+    If lx.char$ = "'" And lx.next_char$ = "!" Then
       lx.parse_directive()
       Exit Sub
     EndIf
@@ -257,6 +257,16 @@ Sub lx.advance_until(disallowed$)
 End Sub
 
 Sub lx.parse_identifier()
+  If lx.char$ = "#" Then
+    ' A token beginning with # is only a valid identifier if
+    ' followed by a letter, digit, full-stop or underscore.
+    ' Otherwise treat as a comma.
+    If Not InStr("._abcdefghijklmnopqrstuvwxyz0123456789", lx.next_char$) Then
+      lx.parse_comment_or_directive()
+      Exit Sub
+    EndIf
+  EndIf
+
   Local start = lx.pos
 
   lx.advance()
@@ -264,7 +274,7 @@ Sub lx.parse_identifier()
 
   If lx.char$ = " " Then
     ' Handle old-school REM statements.
-    If LCase$(Mid$(lx.line$, start, lx.pos - start)) = "rem") Then
+    If LCase$(Mid$(lx.line$, start, lx.pos - start)) = "rem" Then
       lx.store(TK_COMMENT, start, Len(lx.line$) - start + 1)
       lx.char$ = Chr$(10)
       Exit Sub
