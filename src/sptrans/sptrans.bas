@@ -17,6 +17,7 @@ Const CR$ = Chr$(13)
 #Include "../splib/string.inc"
 #Include "../splib/file.inc"
 #Include "../splib/map.inc"
+#Include "../splib/map2.inc"
 #Include "../splib/set.inc"
 #Include "../splib/vt100.inc"
 #Include "../common/sptools.inc"
@@ -30,6 +31,8 @@ Const CR$ = Chr$(13)
 #Include "expression.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
+#Include "symbols.inc"
+#Include "symproc.inc"
 
 Sub cendl(always%)
   If Not Len(opt.outfile$) Then Exit Sub
@@ -46,7 +49,8 @@ End Sub
 Sub cerror(msg$)
   Local i% = in.num_open_files% - 1
   Print
-  Print "[" + in.files$(i%) + ":" + Str$(in.line_num%(i%)) + "] Error: " + msg$
+  If i% >= 0 Then Print "[" + in.files$(i%) + ":" + Str$(in.line_num%(i%)) + "] ";
+  Print "Error: " + msg$
   If Mm.Device$ = "MMB4L" Then
     End 1
   Else
@@ -61,6 +65,7 @@ Sub main()
   opt.init()
   def.init()
   keywords.init()
+  symproc.init()
 
   cli.parse(Mm.CmdLine$)
   If sys.err$ <> "" Then Print "sptrans: "; sys.err$ : End
@@ -114,6 +119,8 @@ Sub main()
       EndIf
     EndIf
 
+    If trok% = sys.SUCCESS And opt.list_all% Then trok% = symproc.process%()
+
     Select Case trok%
       Case sys.FAILURE:     cerror(sys.err$)
       Case sys.SUCCESS:     pp.print_line(pretty_print%)
@@ -130,10 +137,13 @@ Sub main()
 
   Loop Until in.num_open_files% = 0
 
-  If Not opt.quiet Then Print BS$ "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
-
   out.close()
 
+  If opt.list_all% Then
+    If list_symbols%() <> sys.SUCCESS Then cerror(sys.err$)
+  EndIf
+
+  If Not opt.quiet Then Print BS$ "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
 End Sub
 
 Sub open_include()
@@ -160,6 +170,28 @@ Sub close_include()
   If lx.parse_basic%(s$) = sys.SUCCESS Then pp.print_line(1)
   If sys.err$ = "" Then in.close()
 End Sub
+
+Function list_symbols%()
+  list_symbols% = list_symbols_for%("identifiers", "sym.dump_names%")
+  If list_symbols% = sys.SUCCESS Then
+    list_symbols% = list_symbols_for%("functions", "sym.dump_functions%")
+  EndIf
+  If list_symbols% = sys.SUCCESS Then
+    list_symbols% = list_symbols_for%("references", "sym.dump_references%")
+  EndIf
+End Function
+
+Function list_symbols_for%(type$, dump_sub$)
+  Local f$, fnbr%
+  If Len(opt.outfile$) Then
+    f$ = opt.outfile$ + "." + type$
+    fnbr% = 10
+    Open f$ For Output As fnbr%
+    ? BS$ "Writing '" + f$ "' ..." 
+  EndIf
+  list_symbols_for% = Call(dump_sub$, fnbr%)
+  If fnbr% Then Close fnbr%
+End Function
 
 main()
 End

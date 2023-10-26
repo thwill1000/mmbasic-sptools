@@ -29,6 +29,7 @@ Sub cli.parse(s$)
       Case "I", "include-only" : cli.parse_no_arg("include-only", i)
       Case "i", "indent"       : cli.parse_arg("indent", i, "<number>")
       Case "k", "keywords"     : cli.parse_arg("keywords", i, "{l|p|u}")
+      Case "list-all"          : cli.parse_no_arg("list-all", i) 
       Case "h", "help"         : cli.usage() : End
       Case "n", "no-comments"  : cli.parse_no_arg("no-comments", i)
       Case "q", "quiet"        : cli.parse_no_arg("quiet", i)
@@ -128,6 +129,7 @@ Sub cli.usage()
   Print "                         if omitted then original formatting will be preserved"
   Print "  -I, --include-only     inline #INCLUDEd files and format the output,"
   Print "                         without processing directives"
+  Print "  --list-all             generate symbol lists"
   Print "  -k, --keywords=l|p|u   controls keyword capitalisation:"
   Print "                           l - lowercase"
   Print "                           p - PascalCase"

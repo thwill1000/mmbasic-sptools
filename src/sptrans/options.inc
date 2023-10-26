@@ -27,6 +27,8 @@ Dim opt.keywords     ' -1    : preserve keyword capitalisation
                      '  0    : lowercase keywords
                      '  1    : PascalCase keywords
                      '  2    : UPPERCASE keywords
+Dim opt.list_all%    '  0    : do not generate symbol lists
+                     '  1    : generate symbol lists
 Dim opt.quiet        '  0    : run with normal console output
                      '  1    : run with minimal console output
 Dim opt.spacing      ' -1    : preserve spacing
@@ -44,6 +46,7 @@ Sub opt.init()
   opt.include_only = 0
   opt.indent_sz = -1
   opt.keywords = -1
+  opt.list_all% = 0
   opt.quiet = 0
   opt.spacing = -1
   opt.infile$ = ""
@@ -75,6 +78,7 @@ Sub opt.set(name$, value$)
     Case "include-only" : opt.set_include_only(value$)
     Case "indent"       : opt.set_indent_sz(value$)
     Case "keywords"     : opt.set_keywords(value$)
+    Case "list-all"     : opt.set_list_all(value$)
     Case "no-comments"  : opt.set_no_comments(value$)
     Case "quiet"        : opt.set_quiet(value$)
     Case "spacing"      : opt.set_spacing(value$)
@@ -163,6 +167,15 @@ Sub opt.set_keywords(value$)
     Case "upper", "u", "2"                     : opt.keywords = 2
     Case Else
       sys.err$ = "expects 'preserve|lower|pascal|upper' argument"
+  End Select
+End Sub
+
+Sub opt.set_list_all(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.list_all% = 0
+    Case "on", "1"                 : opt.list_all% = 1
+    Case Else
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 

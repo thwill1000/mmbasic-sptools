@@ -128,3 +128,15 @@ Sub map2.clear(mp$())
   Next
   mp$(ub%) = Str$(key_len%) + ",0"
 End Sub
+
+' Prints the contents of the map.
+Sub map2.dump(mp$(), fnbr%)
+  Const lb% = Bound(mp$(), 0), ub% = Bound(mp$(), 1), sz% = Val(Field$(mp$(ub%), 2))
+  Const width% = Len(Str$(sz%))
+  Local i%
+  For i% = lb% To lb% + sz% - 1
+    Print #fnbr%, "[" Str$(i%, width%) "] ";
+    Print #fnbr%, mp$(i%)
+  Next
+  Print #fnbr%, "END"
+End Sub

@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -35,6 +35,7 @@ add_test("test_format_only")
 add_test("test_include_only")
 add_test("test_indent")
 add_test("test_keywords")
+add_test("test_list_all")
 add_test("test_quiet")
 add_test("test_spacing")
 add_test("test_output_file")
@@ -210,6 +211,18 @@ Sub test_keywords()
 
   cli.parse("--keywords=3 " + INPUT_FILE$)
   assert_error("option --keywords expects {l|p|u} argument")
+End Sub
+
+Sub test_list_all()
+  opt.list_all% = 0
+  cli.parse("--list-all " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.list_all%)
+
+  opt.list_all% = 0
+  cli.parse("--list-all=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option --list-all does not expect argument")
+  assert_int_equals(0, opt.list_all%)
 End Sub
 
 Sub test_quiet()

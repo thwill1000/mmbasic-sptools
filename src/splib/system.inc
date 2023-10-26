@@ -22,7 +22,7 @@ Dim sys.break_flag%
 Dim sys.err$
 
 '!if !defined(NO_INCLUDE_GUARDS)
-Const sys.MAX_INCLUDES% = 20
+Const sys.MAX_INCLUDES% = 30
 Dim sys.includes$(sys.MAX_INCLUDES%) Length 20
 
 Sub sys.provides(f$)
