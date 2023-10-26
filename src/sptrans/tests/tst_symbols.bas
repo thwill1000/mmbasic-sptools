@@ -26,11 +26,11 @@ add_test("test_add_fn_given_absent")
 add_test("test_add_fn_given_present")
 add_test("test_add_fn_given_too_many")
 add_test("test_add_fn_given_too_long")
-add_test("test_add_id_given_absent")
-add_test("test_add_id_given_present")
-add_test("test_add_id_given_too_many")
-add_test("test_add_id_given_too_long")
-add_test("test_add_id_given_hash_prefix")
+add_test("test_add_name_given_absent")
+add_test("test_add_name_given_present")
+add_test("test_add_name_given_too_many")
+add_test("test_add_name_given_too_long")
+add_test("test_add_name_given_hash_prefix")
 add_test("test_add_ref_given_absent")
 add_test("test_add_ref_given_present")
 add_test("test_add_ref_given_too_many")
@@ -90,7 +90,7 @@ End Sub
 Sub test_add_fn_given_absent()
   assert_int_equals(0, sym.add_function%("FN_1", "my_file.inc", 42))
   assert_string_equals("FN_1,0,42,0,0", map2.get$(sym.functions$(), "fn_1"))
-  assert_string_equals("0", map2.get$(sym.ids$(), "fn_1"))
+  assert_string_equals("0", map2.get$(sym.names$(), "fn_1"))
   assert_string_equals("0", map2.get$(sym.files$(), "my_file.inc"))
   assert_int_equals(sys.FAILURE, sym.get_reference%("fn_1", 0))
   assert_error("Reference index out of bounds")
@@ -98,7 +98,7 @@ Sub test_add_fn_given_absent()
   sys.err$ = ""
   assert_int_equals(1, sym.add_function%("FN_2", "your_file.inc", 99))
   assert_string_equals("FN_2,1,99,4,1", map2.get$(sym.functions$(), "fn_2"))
-  assert_string_equals("1", map2.get$(sym.ids$(), "fn_2"))
+  assert_string_equals("1", map2.get$(sym.names$(), "fn_2"))
   assert_string_equals("1", map2.get$(sym.files$(), "your_file.inc"))
   assert_int_equals(sys.FAILURE, sym.get_reference%("fn_2", 0))
   assert_error("Reference index out of bounds")
@@ -131,77 +131,77 @@ Sub test_add_fn_given_too_long()
 
   Const name_34$ = String$(34, "a")
   assert_int_equals(sys.FAILURE, sym.add_function%(name_34$, "my_file.inc", 42))
-  assert_error("Identifier too long, max 33 characters")
+  assert_error("Name too long, max 33 characters")
   assert_int_equals(1, map2.size%(sym.functions$()))
 End Sub
 
-Sub test_add_id_given_absent()
-  assert_int_equals(0, sym.add_identifier%("FOO"))
-  assert_string_equals("0", map2.get$(sym.ids$(), "foo"))
-  assert_int_equals(1, map2.size%(sym.ids$()))
+Sub test_add_name_given_absent()
+  assert_int_equals(0, sym.add_name%("FOO"))
+  assert_string_equals("0", map2.get$(sym.names$(), "foo"))
+  assert_int_equals(1, map2.size%(sym.names$()))
 
-  assert_int_equals(1, sym.add_identifier%("BAR"))
-  assert_string_equals("1", map2.get$(sym.ids$(), "bar"))
-  assert_int_equals(2, map2.size%(sym.ids$()))
+  assert_int_equals(1, sym.add_name%("BAR"))
+  assert_string_equals("1", map2.get$(sym.names$(), "bar"))
+  assert_int_equals(2, map2.size%(sym.names$()))
 End Sub
 
-Sub test_add_id_given_present()
-  assert_int_equals(0, sym.add_identifier%("foo"))
-  assert_int_equals(1, sym.add_identifier%("bar"))
+Sub test_add_name_given_present()
+  assert_int_equals(0, sym.add_name%("foo"))
+  assert_int_equals(1, sym.add_name%("bar"))
 
   ' Add duplicates.
-  assert_int_equals(0, sym.add_identifier%("foo"))
-  assert_int_equals(1, sym.add_identifier%("bar"))
-  assert_int_equals(2, map2.size%(sym.ids$()))
+  assert_int_equals(0, sym.add_name%("foo"))
+  assert_int_equals(1, sym.add_name%("bar"))
+  assert_int_equals(2, map2.size%(sym.names$()))
 End Sub
 
-Sub test_add_id_given_too_many()
+Sub test_add_name_given_too_many()
   Local i%
-  For i% = 1 To sym.MAX_IDS%
-    assert_int_equals(i% - 1, sym.add_identifier%("id_" + Str$(i%)))
+  For i% = 1 To sym.MAX_NAMES%
+    assert_int_equals(i% - 1, sym.add_name%("id_" + Str$(i%)))
   Next
 
-  assert_int_equals(sys.FAILURE, sym.add_identifier%("straw"))
-  assert_error("Too many identifiers, max 300")
-  assert_int_equals(sym.MAX_IDS%, map2.size%(sym.ids$()))
+  assert_int_equals(sys.FAILURE, sym.add_name%("straw"))
+  assert_error("Too many names, max 300")
+  assert_int_equals(sym.MAX_NAMES%, map2.size%(sym.names$()))
 End Sub
 
-Sub test_add_id_given_too_long()
+Sub test_add_name_given_too_long()
   Const id_33$ = String$(33, "a")
-  assert_int_equals(0, sym.add_identifier%(id_33$))
+  assert_int_equals(0, sym.add_name%(id_33$))
 
   Const id_34$ = String$(34, "a")
-  assert_int_equals(sys.FAILURE, sym.add_identifier%(id_34$))
-  assert_error("Identifier too long, max 33 characters")
-  assert_int_equals(1, map2.size%(sym.ids$()))
+  assert_int_equals(sys.FAILURE, sym.add_name%(id_34$))
+  assert_error("Name too long, max 33 characters")
+  assert_int_equals(1, map2.size%(sym.names$()))
 End Sub
 
-Sub test_add_id_given_hash_prefix()
-  assert_int_equals(0, sym.add_identifier%("#foo"))
-  assert_string_equals("0", map2.get$(sym.ids$(), "foo"))
-  assert_int_equals(1, map2.size%(sym.ids$()))
+Sub test_add_name_given_hash_prefix()
+  assert_int_equals(0, sym.add_name%("#foo"))
+  assert_string_equals("0", map2.get$(sym.names$(), "foo"))
+  assert_int_equals(1, map2.size%(sym.names$()))
 End Sub
 
 Sub test_add_ref_given_absent()
   assert_int_equals(0, sym.add_function%("my_function_1", "my_file.inc", 42))
 
   assert_int_equals(1, sym.add_reference%("foo"))
-  assert_string_equals("1", map2.get$(sym.ids$(), "foo"))
+  assert_string_equals("1", map2.get$(sym.names$(), "foo"))
   assert_int_equals(1, sym.get_reference%("my_function_1", 0))
 
   assert_int_equals(2, sym.add_reference%("bar"))
-  assert_string_equals("2", map2.get$(sym.ids$(), "bar"))
+  assert_string_equals("2", map2.get$(sym.names$(), "bar"))
   assert_int_equals(2, sym.get_reference%("my_function_1", 1))
 
   ' Start adding references from a new function.
   assert_int_equals(3, sym.add_function%("my_function_2", "my_file.inc", 42))
 
   assert_int_equals(2, sym.add_reference%("bar"))
-  assert_string_equals("2", map2.get$(sym.ids$(), "bar"))
+  assert_string_equals("2", map2.get$(sym.names$(), "bar"))
   assert_int_equals(2, sym.get_reference%("my_function_2", 0))
 
   assert_int_equals(1, sym.add_reference%("foo"))
-  assert_string_equals("1", map2.get$(sym.ids$(), "foo"))
+  assert_string_equals("1", map2.get$(sym.names$(), "foo"))
   assert_int_equals(1, sym.get_reference%("my_function_2", 1))
 
   ' Verify contents of the 'References' table.
@@ -251,16 +251,16 @@ Sub test_add_ref_given_too_long()
 
   Const id_34$ = String$(34, "a")
   assert_int_equals(sys.FAILURE, sym.add_reference%(id_34$))
-  assert_error("Identifier too long, max 33 characters")
+  assert_error("Name too long, max 33 characters")
 End Sub
 
 Sub test_add_combination()
-  assert_int_equals(0, sym.add_identifier%("global_1"))
-  assert_int_equals(1, sym.add_identifier%("global_2"))
+  assert_int_equals(0, sym.add_name%("global_1"))
+  assert_int_equals(1, sym.add_name%("global_2"))
   assert_int_equals(2, sym.add_function%("FN_1", "file_1", 100))
   assert_int_equals(3, sym.add_reference%("local_1"))
   assert_int_equals(4, sym.add_reference%("local_2"))
-  assert_int_equals(5, sym.add_identifier%("global_3"))
+  assert_int_equals(5, sym.add_name%("global_3"))
   assert_int_equals(6, sym.add_function%("FN_2", "file_1", 200))
   assert_int_equals(3, sym.add_reference%("local_1"))
   assert_int_equals(4, sym.add_reference%("local_2"))
@@ -275,18 +275,18 @@ Sub test_add_combination()
   assert_string_equals("1", map2.get$(sym.files$(), "file_2"))
   assert_string_equals("2", map2.get$(sym.files$(), "file_3"))
 
-  ' Validate contents of 'Identifiers' table.
-  assert_int_equals(10, map2.size%(sym.ids$()))
-  assert_string_equals("0", map2.get$(sym.ids$(), "global_1"))
-  assert_string_equals("1", map2.get$(sym.ids$(), "global_2"))
-  assert_string_equals("2", map2.get$(sym.ids$(), "fn_1"))
-  assert_string_equals("3", map2.get$(sym.ids$(), "local_1"))
-  assert_string_equals("4", map2.get$(sym.ids$(), "local_2"))
-  assert_string_equals("5", map2.get$(sym.ids$(), "global_3"))
-  assert_string_equals("6", map2.get$(sym.ids$(), "fn_2"))
-  assert_string_equals("7", map2.get$(sym.ids$(), "local_3"))
-  assert_string_equals("8", map2.get$(sym.ids$(), "fn_3"))
-  assert_string_equals("9", map2.get$(sym.ids$(), "fn_4"))
+  ' Validate contents of 'Names' table.
+  assert_int_equals(10, map2.size%(sym.names$()))
+  assert_string_equals("0", map2.get$(sym.names$(), "global_1"))
+  assert_string_equals("1", map2.get$(sym.names$(), "global_2"))
+  assert_string_equals("2", map2.get$(sym.names$(), "fn_1"))
+  assert_string_equals("3", map2.get$(sym.names$(), "local_1"))
+  assert_string_equals("4", map2.get$(sym.names$(), "local_2"))
+  assert_string_equals("5", map2.get$(sym.names$(), "global_3"))
+  assert_string_equals("6", map2.get$(sym.names$(), "fn_2"))
+  assert_string_equals("7", map2.get$(sym.names$(), "local_3"))
+  assert_string_equals("8", map2.get$(sym.names$(), "fn_3"))
+  assert_string_equals("9", map2.get$(sym.names$(), "fn_4"))
 
   ' Validate contents of 'Functions' table.
   assert_int_equals(4, map2.size%(sym.functions$()))
@@ -303,8 +303,8 @@ Sub test_add_combination()
 End Sub
 
 Sub test_get_id_given_hash_prefix()
-  assert_int_equals(0, sym.add_identifier%("foo"))
-  assert_int_equals(1, sym.add_identifier%("#bar"))
+  assert_int_equals(0, sym.add_name%("foo"))
+  assert_int_equals(1, sym.add_name%("#bar"))
 
   assert_int_equals(0, sym.get_id%("foo"))
   assert_int_equals(0, sym.get_id%("#foo"))
