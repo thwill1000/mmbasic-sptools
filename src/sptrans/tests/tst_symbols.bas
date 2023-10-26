@@ -30,11 +30,13 @@ add_test("test_add_id_given_absent")
 add_test("test_add_id_given_present")
 add_test("test_add_id_given_too_many")
 add_test("test_add_id_given_too_long")
+add_test("test_add_id_given_hash_prefix")
 add_test("test_add_ref_given_absent")
 add_test("test_add_ref_given_present")
 add_test("test_add_ref_given_too_many")
 add_test("test_add_ref_given_too_long")
 add_test("test_add_combination")
+add_test("test_get_id_given_hash_prefix")
 
 run_tests()
 
@@ -174,6 +176,12 @@ Sub test_add_id_given_too_long()
   assert_int_equals(1, map2.size%(sym.ids$()))
 End Sub
 
+Sub test_add_id_given_hash_prefix()
+  assert_int_equals(0, sym.add_identifier%("#foo"))
+  assert_string_equals("0", map2.get$(sym.ids$(), "foo"))
+  assert_int_equals(1, map2.size%(sym.ids$()))
+End Sub
+
 Sub test_add_ref_given_absent()
   assert_int_equals(0, sym.add_function%("my_function_1", "my_file.inc", 42))
 
@@ -292,4 +300,14 @@ Sub test_add_combination()
   Local actual%(10), i%
   For i% = 0 To 10 : actual%(i%) = Peek(Word sym.P_REF_BASE% + 4 * i%) : Next
   assert_int_array_equals(expected%(), actual%())
+End Sub
+
+Sub test_get_id_given_hash_prefix()
+  assert_int_equals(0, sym.add_identifier%("foo"))
+  assert_int_equals(1, sym.add_identifier%("#bar"))
+
+  assert_int_equals(0, sym.get_id%("foo"))
+  assert_int_equals(0, sym.get_id%("#foo"))
+  assert_int_equals(1, sym.get_id%("bar"))
+  assert_int_equals(1, sym.get_id%("#bar"))
 End Sub

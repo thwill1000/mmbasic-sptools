@@ -166,14 +166,17 @@ Function sym.add_identifier%(id$)
     Exit Function
   EndIf
 
-  If Len(id$) > sym.MAX_ID_LEN% Then
+  ' Ignore # prefix.
+  Local id_$ = Choice(Left$(id$, 1) = "#", Mid$(id$, 2), id$)
+
+  If Len(id_$) > sym.MAX_ID_LEN% Then
     Local msg$ = "Identifier too long, max " + Str$(sym.MAX_ID_LEN%) + " characters"
     sym.add_identifier% = sys.error%(sys.FAILURE, msg$)
     Exit Function
   EndIf
 
   Const sz% = map2.size%(sym.ids$())
-  sym.add_identifier% = Val(map2.put_if_absent$(sym.ids$(), LCase$(id$), Str$(sz%)))
+  sym.add_identifier% = Val(map2.put_if_absent$(sym.ids$(), LCase$(id_$), Str$(sz%)))
 End Function
 
 ' Adds an entry to the 'References' table for the last added function.
@@ -234,3 +237,18 @@ Sub sym.dump_references(start%, num%)
     Inc i%
   Next
 End Sub
+
+' Gets the "index" for an identifier.
+'
+' @param   name$  the identifier.
+' @return         the identifier's index, or sys.FAILURE.
+Function sym.get_id%(name$)
+  ' Ignore # prefix.
+  Local name_$ = Choice(Left$(name$, 1) = "#", Mid$(name$, 2), name$)
+  Local id_data$ = map2.get$(sym.ids$(), LCase$(name_$))
+  If id_data$ = sys.NO_DATA$ Then
+    sym.get_id% = sys.error%(sys.FAILURE, "Identifier not found")
+  Else
+    sym.get_id% = Val(id_data$)
+  EndIf
+End Function
