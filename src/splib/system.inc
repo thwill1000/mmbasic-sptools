@@ -164,13 +164,17 @@ End Function
 Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
   Local devices$(5 + Mm.Info(Option Base)) Length 16 = (d1$, d2$, d3$, d4$, d5$, "")
   Local d$, ii% = Mm.Info(Option Base)
+'!comment_if defined(GAMEMITE)
+  Const device$ = Mm.Device$
+'!endif
+'!uncomment_if defined(GAMEMITE)
+'  Const device$ = "GameMite"
+'!endif
+
   sys.is_device% = 1
   Do While Len(devices$(ii%)) > 0
     d$ = LCase$(devices$(ii%))
-'!if defined(GAMEMITE)
-    If d$ = "gamemite" Then Exit Function
-'!endif
-    Select Case Mm.Device$
+    Select Case device$
       Case "MMB4L"
         If d$ = "mmb4l" Then
           Exit Function
@@ -187,6 +191,8 @@ Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
         If d$ = "pm" Or d$ = "pm*" Then Exit Function
       Case "PicoMiteVGA"
         If d$ = "pmvga" Or d$ = "pm*" Then Exit Function
+      Case "GameMite"
+        If d$ = "pm" Or d$ = "pm*" Or d$ = "gamemite" Then Exit Function
       Case Else
         Error "Unknown device: " + Mm.Device$
     End Select
