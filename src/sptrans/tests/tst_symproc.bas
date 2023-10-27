@@ -8,6 +8,7 @@ Option Explicit On
 
 #Include "../../splib/system.inc"
 #Include "../../splib/array.inc"
+#Include "../../splib/bits.inc"
 #Include "../../splib/list.inc"
 #Include "../../splib/string.inc"
 #Include "../../splib/file.inc"

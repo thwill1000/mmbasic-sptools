@@ -8,6 +8,7 @@ Option Explicit On
 
 #Include "../../splib/system.inc"
 #Include "../../splib/array.inc"
+#Include "../../splib/bits.inc"
 #Include "../../splib/list.inc"
 #Include "../../splib/string.inc"
 #Include "../../splib/file.inc"
@@ -56,6 +57,11 @@ add_test("test_get_names")
 add_test("test_get_functions")
 add_test("test_get_referenced_ids")
 add_test("test_get_referenced_ids_given_too_many", "test_get_ref_id_too_many")
+add_test("test_get_orphans_invalid_root")
+add_test("test_get_orphans_small_array")
+add_test("test_get_orphans")
+add_test("test_get_orphans_recurses")
+add_test("test_get_orphans_not_global")
 
 run_tests()
 
@@ -641,4 +647,72 @@ Sub test_get_ref_id_too_many()
   expected%(1) = 2
   expected%(2) = 3
   assert_int_array_equals(expected%(), actual%())
+End Sub
+
+Sub test_get_orphans_invalid_root()
+  Local orphans%(2)
+  assert_int_equals(sys.FAILURE, sym.get_orphans%(0, orphans%()))
+  assert_error("Invalid FUNCTION/SUB id")
+End Sub
+
+Sub test_get_orphans_small_array()
+  assert_int_equals(0, sym.add_function%("*global*", "myfile.bas", 1))
+  Local orphans%(2)
+  On Error Ignore
+  Local result% = sym.get_orphans%(0, orphans%())
+  assert_raw_error("Array too small; minimum 5 elements required")
+End Sub
+
+Sub test_get_orphans()
+  assert_int_equals(0, sym.add_reference%("*global*"))
+  assert_int_equals(0, sym.add_function%("*global*", "myfile.bas", 1))
+  assert_int_equals(1, sym.add_reference%("foo"))
+  assert_int_equals(1, sym.add_function%("foo", "myfile.inc", 42))
+  assert_int_equals(2, sym.add_function%("bar", "myfile.inc", 43))
+
+  Local orphans%(array.new%(5))
+  assert_int_equals(1, sym.get_orphans%(0, orphans%()))
+  assert_no_error()
+  assert_int_equals(0, bits.big_get%(orphans%(), 0))
+  assert_int_equals(0, bits.big_get%(orphans%(), 1))
+  assert_int_equals(1, bits.big_get%(orphans%(), 2))
+End Sub
+
+Sub test_get_orphans_recurses()
+  ' => global (0)
+  '    => foo (1)
+  '       => bar (2)
+  assert_int_equals(0, sym.add_reference%("*global*"))
+  assert_int_equals(0, sym.add_function%("*global*", "myfile.bas", 1))
+  assert_int_equals(1, sym.add_reference%("foo"))
+  assert_int_equals(1, sym.add_function%("foo", "myfile.inc", 42))
+  assert_int_equals(2, sym.add_reference%("bar"))
+  assert_int_equals(2, sym.add_function%("bar", "myfile.inc", 43))
+
+  Local orphans%(array.new%(5))
+  assert_int_equals(0, sym.get_orphans%(0, orphans%()))
+  assert_no_error()
+  assert_int_equals(0, bits.big_get%(orphans%(), 0))
+  assert_int_equals(0, bits.big_get%(orphans%(), 1))
+  assert_int_equals(0, bits.big_get%(orphans%(), 2))
+End Sub
+
+Sub test_get_orphans_not_global()
+  ' => global (0)
+  '    => foo (1)
+  '       => bar (2)
+  assert_int_equals(0, sym.add_reference%("*global*"))
+  assert_int_equals(0, sym.add_function%("*global*", "myfile.bas", 1))
+  assert_int_equals(1, sym.add_reference%("foo"))
+  assert_int_equals(1, sym.add_function%("foo", "myfile.inc", 42))
+  assert_int_equals(2, sym.add_reference%("bar"))
+  assert_int_equals(2, sym.add_function%("bar", "myfile.inc", 43))
+
+
+  Local orphans%(array.new%(5))
+  assert_int_equals(2, sym.get_orphans%(1, orphans%()))
+  assert_no_error()
+  assert_int_equals(1, bits.big_get%(orphans%(), 0))
+  assert_int_equals(1, bits.big_get%(orphans%(), 1))
+  assert_int_equals(0, bits.big_get%(orphans%(), 2))
 End Sub

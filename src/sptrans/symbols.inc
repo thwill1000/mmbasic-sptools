@@ -5,6 +5,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
+sys.requires("bits")
 sys.requires("map2")
 sys.provides("symbols")
 If sys.err$ <> "" Then Error sys.err$
@@ -416,4 +417,69 @@ Function sym.dump_references_from_fn%(fnbr%, idx%)
     Print #fnbr%, "        " refs$(i%);
     Print #fnbr%, Choice(map2.get$(sym.functions$(), refs$(i%)) = sys.NO_DATA, "", "()")
   Next
+End Function
+
+' Gets unreferenced/unreachable names.
+'
+' @param       fn_id%      the function id to start search from.
+'                          NOTE: This will be flagged as unreachable in
+'                          orphans%() unless it is recursive.
+' @param[out]  orphans%()  the result is returned using this as a bitmap.
+'                          If bit 'x' is set to 1 then the name with id 'x'
+'                          is unreachable.
+'                          Must be called with >= sym.MAX_NAMES / 64 elements.
+' @return                  the number of unreachable names.
+Function sym.get_orphans%(fn_id%, orphans%())
+  If sym.id_to_fn$(fn_id%) = sys.NO_DATA$ Then
+    sym.get_orphans% = sys.error%(sys.FAILURE, "Invalid FUNCTION/SUB id")
+    Exit Function
+  EndIf
+
+  If (Bound(orphans%(), 1) + 1) * 64 < sym.MAX_NAMES Then
+    Local x% = sym.MAX_NAMES \ 64 + Choice(sym.MAX_NAMES Mod 64, 1, 0)
+    Error "Array too small; minimum " + Str$(x%) + " elements required"
+    Exit Function
+  EndIf
+
+  Local i%, num%, refs%(sym.MAX_REFERENCES - 1), stack%(63), stack_ptr%
+
+  ' Set all bits to 1 indicating an orphan.
+  bits.big_fill(orphans%(), 1)
+
+  sym.get_orphans% = map2.size%(sym.names$())
+  stack%(stack_ptr%) = fn_id%
+  Inc stack_ptr%
+
+  Do While stack_ptr% > 0
+    Inc stack_ptr%, -1
+    num% = sym.get_referenced_ids%(stack%(stack_ptr%), refs%())
+    If num% < 0 Then sym.get_orphans% = num% : Exit Function
+    For i% = 0 To num% - 1
+      If Not bits.big_get%(orphans%(), refs%(i%)) Then Continue For
+      bits.big_clear(orphans%(), refs%(i%))
+      Inc sym.get_orphans%, -1
+      If sym.id_to_fn$(refs%(i%)) <> sys.NO_DATA$ Then
+        stack%(stack_ptr%) = refs%(i%) ' Add function reference to stack.
+        Inc stack_ptr%
+      EndIf
+    Next
+  Loop
+End Function
+
+Function sym.dump_orphan_fns%(fnbr%)
+  Local orphans%(array.new%(sym.MAX_NAMES \ 64) + 1)
+  sym.dump_orphan_fns% = sym.get_orphans%(0, orphans%())
+  If sym.dump_orphan_fns% < 0 Then Exit Function
+  bits.big_clear(orphans%(), 0)
+
+  Local fn$, i%, id%
+  For i% = 0 To map2.size%(sym.functions$()) - 1
+    fn$ = Mid$(sym.functions$(i%), sym.MAX_NAME_LEN + 1)
+    id% = Val(Field$(fn$, 5))
+    If bits.big_get%(orphans%(), id%) Then
+      Print #fnbr%, fn$
+    EndIf  
+  Next
+
+  If sym.dump_orphan_fns% >= 0 Then sym.dump_orphan_fns% = sys.SUCCESS
 End Function

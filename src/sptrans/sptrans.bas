@@ -13,6 +13,7 @@ Const CR$ = Chr$(13)
 
 #Include "../splib/system.inc"
 #Include "../splib/array.inc"
+#Include "../splib/bits.inc"
 #Include "../splib/list.inc"
 #Include "../splib/string.inc"
 #Include "../splib/file.inc"
@@ -178,6 +179,9 @@ Function list_symbols%()
   EndIf
   If list_symbols% = sys.SUCCESS Then
     list_symbols% = list_symbols_for%("references", "sym.dump_references%")
+  EndIf
+  If list_symbols% = sys.SUCCESS Then
+    list_symbols% = list_symbols_for%("orphans", "sym.dump_orphan_fns%")
   EndIf
 End Function
 
