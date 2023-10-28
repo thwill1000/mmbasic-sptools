@@ -11,10 +11,12 @@ Dim in.num_open_files = 1
 
 #Include "../../splib/system.inc"
 #Include "../../splib/array.inc"
+#Include "../../splib/bits.inc"
 #Include "../../splib/list.inc"
 #Include "../../splib/string.inc"
 #Include "../../splib/file.inc"
 #Include "../../splib/map.inc"
+#Include "../../splib/map2.inc"
 #Include "../../splib/set.inc"
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
@@ -24,6 +26,7 @@ Dim in.num_open_files = 1
 #Include "../options.inc"
 #Include "../defines.inc"
 #Include "../expression.inc"
+#Include "../symbols.inc"
 #Include "../trans.inc"
 
 keywords.init()
@@ -105,6 +108,10 @@ add_test("test_elif_given_uncomment_if")
 add_test("test_elif_given_ifdef")
 add_test("test_elif_given_shortcut_expr")
 add_test("test_info_defined")
+add_test("test_dynamic_call")
+add_test("test_dynamic_call_given_no_arg")
+add_test("test_dynamic_call_given_too_many_args", "test_dynamic_too_many_args")
+add_test("test_dynamic_call_given_too_many_names", "test_dynamic_too_many_names")
 
 run_tests()
 
@@ -113,6 +120,7 @@ End
 Sub setup_test()
   opt.init()
   def.init()
+  sym.init(32, 300, 1)
 
   ' TODO: extract into trans.init() or trans.reset().
   tr.clear_replacements()
@@ -1316,6 +1324,37 @@ Sub test_info_defined()
   expect_transpile_error("'!info", "!info directive expects two arguments")
   expect_transpile_error("'!info defined", "!info directive expects two arguments")
   expect_transpile_error("'!info foo bar", "!info directive has invalid first argument: foo")
+End Sub
+
+Sub test_dynamic_call()
+  assert_int_equals(0, sym.add_function%("*global*", "my_file.bas", 42))
+  expect_transpile_omits("'!dynamic_call foo")
+  expect_transpile_omits("'!dynamic_call bar")
+  assert_int_equals(3, sym.add_function%("wombat", "my_file.bas", 99))
+  expect_transpile_omits("'!dynamic_call snafu")
+
+  Local ids%(4)
+  assert_int_equals(2, sym.get_referenced_ids%(0, ids%()))
+  assert_string_equals("foo", sym.id_to_name$(ids%(0)))
+  assert_string_equals("bar", sym.id_to_name$(ids%(1)))
+  assert_int_equals(1, sym.get_referenced_ids%(3, ids%()))
+  assert_string_equals("snafu", sym.id_to_name$(ids%(0)))
+End Sub
+
+Sub test_dynamic_call_given_no_arg()
+  expect_transpile_error("'!dynamic_call", "!dynamic_call directive expects <id> argument")
+End Sub
+
+Sub test_dynamic_too_many_args()
+  expect_transpile_error("'!dynamic_call foo bar", "!dynamic_call directive has too many arguments")
+End Sub
+
+Sub test_dynamic_too_many_names()
+  Local i%, id%
+  For i% = 0 To sym.MAX_NAMES% - 1
+    id% = sym.add_name%("name_" + Str$(i%))
+  Next
+  expect_transpile_error("'!dynamic_call foo", "!dynamic_call directive invalid; too many names, max 300")
 End Sub
 
 Sub expect_replacement(i%, from$, to_$)

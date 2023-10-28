@@ -5,7 +5,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
-sys.requires("options", "set", "defines", "expression")
+sys.requires("options", "set", "defines", "expression", "symbols")
 sys.provides("trans")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -92,6 +92,9 @@ Function tr.transpile%()
     EndIf
   EndIf
 
+  '!dynamic_call tr.process_elif
+  '!dynamic_call tr.process_else
+  '!dynamic_call tr.process_endif
   Select Case lx.token_lc$(0)
     Case "'!endif", "'!else", "'!elif"
       ' TODO: Requiring the trailing brackets in the CALL may be an MMBasic bug.
@@ -157,6 +160,7 @@ Function tr.transpile%()
     Case "!comments"     : tr.process_comments()
     Case "!comment_if"   : tr.process_if()
     Case "!define"       : tr.process_define()
+    Case "!dynamic_call" : tr.process_dynamic_call()
     Case "!elif"         : tr.process_elif()
     Case "!else"         : tr.process_else()
     Case "!empty-lines"  : tr.process_empty_lines()
@@ -184,12 +188,14 @@ Function tr.transpile%()
 End Function
 
 Function tr.is_known_directive%(t$)
-  Local u$ = "|" + Mid$(t$, 2) + "|"
-  If InStr("|comments|comment_if|define|elif|else|empty-lines|endif|error|if|ifdef|", u$) Then
-    tr.is_known_directive% = 1
-  ElseIf InStr("|ifndef|info|indent|replace|spacing|uncomment_if|undef|unreplace|", u$) Then
-    tr.is_known_directive% = 1
-  EndIf
+  Select Case Mid$(t$, 2)
+    Case "comments", "comment_if", "define", "dynamic_call", "elif", "else", "empty-lines", "endif"
+      tr.is_known_directive% = 1
+    Case "error", "if", "ifdef", "ifndef", "info", "indent", "replace", "spacing", "uncomment_if"
+      tr.is_known_directive% = 1
+    Case "undef", "unreplace"
+      tr.is_known_directive% = 1
+  End Select
 End Function
 
 Sub tr.process_elif()
@@ -582,6 +588,18 @@ Sub tr.process_define()
   If lx.num > 2 Then sys.err$ = "has too many arguments"
   If sys.err$ = "" Then def.define(lx.token$(1))
   If sys.err$ <> "" Then sys.err$ = "!define directive " + sys.err$
+End Sub
+
+Sub tr.process_dynamic_call()
+  If lx.num < 2 Then sys.err$ = "expects <id> argument"
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then
+    Const id% = sym.add_reference%(lx.token$(1))
+    If id% < 0 Then sys.err$ = "invalid; " + LCase$(Left$(sys.err$, 1)) + Mid$(sys.err$, 2)
+  EndIf
+  If sys.err$ <> "" Then
+    sys.err$ = "!dynamic_call directive " + sys.err$
+  EndIf
 End Sub
 
 Sub tr.process_spacing()

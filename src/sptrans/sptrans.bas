@@ -30,9 +30,9 @@ Const CR$ = Chr$(13)
 #Include "output.inc"
 #Include "pprint.inc"
 #Include "expression.inc"
+#Include "symbols.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
-#Include "symbols.inc"
 #Include "symproc.inc"
 
 Sub cendl(always%)
@@ -173,6 +173,10 @@ Sub close_include()
 End Sub
 
 Function list_symbols%()
+  '!dynamic_call sym.dump_names%
+  '!dynamic_call sym.dump_functions%
+  '!dynamic_call sym.dump_references%
+  '!dynamic_call sym.dump_orphan_fns%
   list_symbols% = list_symbols_for%("identifiers", "sym.dump_names%")
   If list_symbols% = sys.SUCCESS Then
     list_symbols% = list_symbols_for%("functions", "sym.dump_functions%")
