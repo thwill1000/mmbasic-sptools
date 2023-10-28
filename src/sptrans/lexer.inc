@@ -560,3 +560,39 @@ Sub lx.replace_token(idx%, replacement$, type%)
     Inc lx.start(j%), shift%
   Next
 End Sub
+
+' Sets the number of spaces before a token.
+'
+' @param  idx%  the token index.
+' @param  n%    the number of spaces.
+' @return       sys.SUCCESS on success, otherwise sys.FAILURE and sets 'sys.err$'.
+Function lx.set_space_before%(idx%, n%)
+  If idx% < 0 Or idx% >= lx.num Then sys.err$ = "Invalid token index: " + Str$(idx%)
+  If n% < 0 Then sys.err$ = "Invalid number of spaces: " + Str$(n%)
+  If Len(sys.err$) Then lx.set_space_before% = sys.FAILURE : Exit Function
+
+  Const p% = Choice(idx%, lx.start(idx% - 1) + lx.len(idx% - 1) - 1, 0)
+  Const q% = lx.start(idx%)
+  lx.line$ = Left$(lx.line$, p%) + Space$(n%) + Mid$(lx.line$, q%)
+  Const delta% = n% - q% + p% + 1
+  Local i%
+  For i% = idx% To lx.num - 1 : Inc lx.start(i%), delta% : Next
+End Function
+
+' Sets the number of spaces after a token.
+'
+' @param  idx%  the token index.
+' @param  n%    the number of spaces.
+' @return       sys.SUCCESS on success, otherwise sys.FAILURE and sets 'sys.err$'.
+Function lx.set_space_after%(idx%, n%)
+  If idx% < 0 Or idx% >= lx.num Then sys.err$ = "Invalid token index: " + Str$(idx%)
+  If n% < 0 Then sys.err$ = "Invalid number of spaces: " + Str$(n%)
+  If Len(sys.err$) Then lx.set_space_after% = sys.FAILURE : Exit Function
+
+  Const p% = lx.start(idx%) + lx.len(idx%) ' Position of first char after token.
+  Const q% = lx.start(idx% + 1)            ' Position of first char of next token.
+  lx.line$ = Left$(lx.line$, p% - 1) + Space$(n%) + Choice(q%, Mid$(lx.line$, q%), "")
+  Const delta% = n% - q% + p%
+  Local i%
+  For i% = idx% + 1 To lx.num - 1 : Inc lx.start(i%), delta% : Next
+End Function

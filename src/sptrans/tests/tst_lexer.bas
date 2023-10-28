@@ -51,6 +51,8 @@ add_test("test_hash_bang")
 add_test("test_insert_token")
 add_test("test_remove_token")
 add_test("test_replace_token")
+add_test("test_set_space_before")
+add_test("test_set_space_after")
 
 run_tests()
 
@@ -628,6 +630,80 @@ Sub test_replace_token()
   assert_string_equals("  wombat  ", lx.line$)
   expect_token_count(1)
   expect_token(0, TK_KEYWORD, "wombat", 3)
+End Sub
+
+Sub test_set_space_before()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Print 200"))
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(0, 4))
+  assert_string_equals("    Print 200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 5)
+  expect_token(1, TK_NUMBER, "200", 11)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(1, 4))
+  assert_string_equals("    Print    200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 5)
+  expect_token(1, TK_NUMBER, "200", 14)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(0, 1))
+  assert_string_equals(" Print    200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 2)
+  expect_token(1, TK_NUMBER, "200", 11)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(1, 0))
+  assert_string_equals(" Print200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 2)
+  expect_token(1, TK_NUMBER, "200", 7)
+
+  assert_int_equals(sys.FAILURE, lx.set_space_before%(-1, 1))
+  assert_error("Invalid token index: -1")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_before%(2, 1))
+  assert_error("Invalid token index: 2")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_before%(0, -2))
+  assert_error("Invalid number of spaces: -2")
+End Sub
+
+Sub test_set_space_after()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Print 200"))
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(0, 4))
+  assert_string_equals("Print    200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 10)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(1, 4))
+  assert_string_equals("Print    200    ", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 10)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(0, 0))
+  assert_string_equals("Print200    ", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 6)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(1, 0))
+  assert_string_equals("Print200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 6)
+
+  assert_int_equals(sys.FAILURE, lx.set_space_after%(-1, 1))
+  assert_error("Invalid token index: -1")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_after%(2, 1))
+  assert_error("Invalid token index: 2")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_after%(0, -2))
+  assert_error("Invalid number of spaces: -2")
 End Sub
 
 Sub expect_parse_succeeds(line$, expected_count%, type0%, txt0$)
