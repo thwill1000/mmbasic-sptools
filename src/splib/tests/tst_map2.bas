@@ -19,8 +19,10 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 add_test("test_new")
 add_test("test_init")
 add_test("test_init_given_invalid_key_len")
-add_test("test_put")
+add_test("test_put_given_absent")
+add_test("test_put_given_present")
 add_test("test_put_given_full")
+add_test("test_put_given_full_and_present")
 add_test("test_put_given_key_too_long")
 add_test("test_put_sorts_entries")
 add_test("test_put_if_absent_given_absent")
@@ -69,7 +71,7 @@ Sub test_init_given_invalid_key_len()
   assert_raw_error("Invalid key length, must be > 0")
 End Sub
 
-Sub test_put()
+Sub test_put_given_absent()
   Local mp$(map2.new%(10))
   Const lb% = Bound(mp$(), 0), ub% = Bound(mp$(), 1)
   map2.init(mp$(), 8)
@@ -81,6 +83,17 @@ Sub test_put()
   map2.put(mp$(), "wom", "bat")
   assert_string_equals("wom     bat", mp$(lb% + 1))
   assert_string_equals("8,2", mp$(ub%))
+End Sub
+
+Sub test_put_given_present()
+  Local mp$(map2.new%(10))
+  Const lb% = Bound(mp$(), 0), ub% = Bound(mp$(), 1)
+  map2.init(mp$(), 8)
+  map2.put(mp$(), "foo", "bar")
+
+  map2.put(mp$(), "foo", "bat")
+  assert_string_equals("foo     bat", mp$(lb%))
+  assert_string_equals("8,1", mp$(ub%))
 End Sub
 
 Sub test_put_given_full()
@@ -98,6 +111,25 @@ Sub test_put_given_full()
   assert_int_equals(10, map2.size%(mp$()))
   For i% = lb% To ub% - 1
     assert_string_equals("value_" + Str$(i%), map2.get$(mp$(), "key_" + Str$(i%)))
+  Next
+  assert_string_equals("8,10", mp$(ub%))
+End Sub
+
+Sub test_put_given_full_and_present()
+  Local expected$, i%, mp$(map2.new%(10))
+  Const lb% = Bound(mp$(), 0), ub% = Bound(mp$(), 1)
+  map2.init(mp$(), 8)
+  For i% = lb% To ub% - 1
+    map2.put(mp$(), "key_" + Str$(i%), "value_" + Str$(i%))
+  Next
+
+  map2.put(mp$(), "key_1", "foobar")
+
+  assert_no_error()
+  assert_int_equals(10, map2.size%(mp$()))
+  For i% = lb% To ub% - 1
+    expected$ = Choice(i% = 1, "foobar", "value_" + Str$(i%))
+    assert_string_equals(expected$, map2.get$(mp$(), "key_" + Str$(i%)))
   Next
   assert_string_equals("8,10", mp$(ub%))
 End Sub
