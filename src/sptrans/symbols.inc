@@ -11,6 +11,7 @@ sys.provides("symbols")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
+Const sym.FUNCTION_ENTRY_LEN = 110
 Const sym.MAX_FILES% = 32
 Const sym.MAX_FUNCTIONS% = 256
 Const sym.MAX_NAMES% = 4096
@@ -25,9 +26,10 @@ Const sym.REFERENCES_SIZE_KB% = 32
 Dim sym.files$(map2.new%(sym.MAX_FILES%)) Length sym.MAX_PATH_LEN% + 8
 
 ' Functions table/map data:
-'   K is lower-case function name
-'   V is "<function name>,<file index>,<line number>,<reference offset>,<name id>"
-Dim sym.functions$(map2.new%(sym.MAX_FUNCTIONS%)) Length 80
+'   K is lower-case function name (33 chars)
+'   V is "<function name>,<file index>,<line number>,<reference offset>,<name id>,<start>,<end>"
+'                33      1     2      1      5      1         8        1    5    1   9   1  9
+Dim sym.functions$(map2.new%(sym.MAX_FUNCTIONS%)) Length sym.FUNCTION_ENTRY_LEN
 
 ' Names table/map data:
 '   K is lower-case name
@@ -53,7 +55,7 @@ Sub sym.init(max_functions%, max_names%, references_size_kb%)
     Erase sym.MAX_FUNCTIONS%
     Erase sym.functions$()
     Dim sym.MAX_FUNCTIONS% = max_functions%
-    Dim sym.functions$(map2.new%(sym.MAX_FUNCTIONS%)) Length 80
+    Dim sym.functions$(map2.new%(sym.MAX_FUNCTIONS%)) Length sym.FUNCTION_ENTRY_LEN
   EndIf
 
   If max_names% > 0 Then
@@ -116,10 +118,12 @@ End Function
 '    add_reference%() will be adding references from this function.
 '
 ' @param  fn_name$  function name including type suffix.
-' @param  file$     the path to the file containing the function.
+' @param  file$     the path to the source file containing the function.
 ' @param  line%     the line on which the function starts in file$.
+' @param  sline%    the line on which the function starts in transpiled file.
+' @param  scol%     the column on which the function starts in transpiled file.
 ' @return           sys.FAILURE on error, otherwise "name id" for the function.
-Function sym.add_function%(fn_name$, file$, line%)
+Function sym.add_function%(fn_name$, file$, line%, sline%, scol%)
   If map2.is_full%(sym.functions$()) Then
     Local msg$ = "Too many FUNCTION/SUBs, max " + Str$(sym.MAX_FUNCTIONS%)
     sym.add_function% = sys.error%(sys.FAILURE, msg$)
@@ -148,8 +152,27 @@ Function sym.add_function%(fn_name$, file$, line%)
   EndIf
 
   v$ = fn_name$ + "," + Str$(file_ref%) + "," + Str$(line%) + ","
-  Cat v$, Str$(sym.ref_offset%) + "," + Str$(sym.add_function%)
+  Cat v$, Str$(sym.ref_offset%) + "," + Str$(sym.add_function%) + ","
+  Cat v$, Str$(sline%) + ":" + Str$(scol%)+ ",0:0"
   map2.put(sym.functions$(), LCase$(fn_name$), v$)
+End Function
+
+' Updates an entry in the 'Functions' table with an end line/column.
+'
+' @param  fn_name$  function name including type suffix.
+' @param  eline%    the line on which the function ends in the transpiled file.
+' @param  ecol%     the column on which the functions ends in the transpiled file.
+' @return           sys.FAILURE on error, otherwise "name id" for the function.
+Function sym.end_function%(fn_name$, eline%, ecol%)
+  Local fn_data$
+  sym.end_function% = sym.name_to_fn%(fn_name$, fn_data$)
+  If sym.end_function% < 0 Then Exit Function
+  If Right$(fn_data$, 3) <> "0:0" Then
+    sym.end_function% = sys.error%(sys.FAILURE, "FUNCTION/SUB already ended")
+    Exit Function
+  EndIf
+  fn_data$ = Left$(fn_data$, Len(fn_data$) - 3) + Str$(eline%) + ":" + Str$(ecol%)
+  map2.put(sym.functions$(), LCase$(fn_name$), fn_data$)
 End Function
 
 ' Adds a name to the 'Names' table.

@@ -30,6 +30,9 @@ add_test("test_add_fn_given_absent")
 add_test("test_add_fn_given_present")
 add_test("test_add_fn_given_too_many")
 add_test("test_add_fn_given_too_long")
+add_test("test_end_fn_given_not_found")
+add_test("test_end_fn_given_found")
+add_test("test_end_fn_given_ended")
 add_test("test_add_name_given_absent")
 add_test("test_add_name_given_present")
 add_test("test_add_name_given_too_many")
@@ -120,14 +123,14 @@ End Sub
 
 Sub test_add_fn_given_absent()
   assert_int_equals(0, sym.add_function%("FN_1", "my_file.inc", 42))
-  assert_string_equals("FN_1,0,42,0,0", map2.get$(sym.functions$(), "fn_1"))
+  assert_string_equals("FN_1,0,42,0,0,0:0,0:0", map2.get$(sym.functions$(), "fn_1"))
   assert_string_equals("0", map2.get$(sym.names$(), "fn_1"))
   assert_string_equals("0", map2.get$(sym.files$(), "my_file.inc"))
   assert_int_equals(0, sym.get_references%("fn_1", actual$()))
 
   sys.err$ = ""
   assert_int_equals(1, sym.add_function%("FN_2", "your_file.inc", 99))
-  assert_string_equals("FN_2,1,99,4,1", map2.get$(sym.functions$(), "fn_2"))
+  assert_string_equals("FN_2,1,99,4,1,0:0,0:0", map2.get$(sym.functions$(), "fn_2"))
   assert_string_equals("1", map2.get$(sym.names$(), "fn_2"))
   assert_string_equals("1", map2.get$(sym.files$(), "your_file.inc"))
   assert_int_equals(0, sym.get_references%("fn_2", actual$()))
@@ -162,6 +165,32 @@ Sub test_add_fn_given_too_long()
   assert_int_equals(sys.FAILURE, sym.add_function%(name_34$, "my_file.inc", 42))
   assert_error("Name too long, max 33 characters")
   assert_int_equals(1, map2.size%(sym.functions$()))
+End Sub
+
+Sub test_end_fn_given_not_found()
+  assert_int_equals(sys.FAILURE, sym.end_function%("foo", 5, 42))
+  assert_error("FUNCTION/SUB not found")
+End Sub
+
+Sub test_end_fn_given_found()
+  assert_int_equals(0, sym.add_function%("FN_1", "my_file.inc", 42, 10, 1))
+  assert_int_equals(1, sym.add_function%("FN_2", "my_file.inc", 99, 20, 2))
+
+  Local fn_data$
+  assert_int_equals(0, sym.end_function%("fn_1", 11, 13))
+  assert_int_equals(0, sym.name_to_fn%("fn_1", fn_data$))
+  assert_string_equals("FN_1,0,42,0,0,10:1,11:13", fn_data$)
+  assert_int_equals(1, sym.end_function%("fn_2", 25, 10))
+  assert_int_equals(1, sym.name_to_fn%("fn_2", fn_data$))
+  assert_string_equals("FN_2,0,99,4,1,20:2,25:10", fn_data$)
+End Sub
+
+Sub test_end_fn_given_ended()
+  assert_int_equals(0, sym.add_function%("FN_1", "my_file.inc", 42, 10, 1))
+  assert_int_equals(0, sym.end_function%("fn_1", 11, 13))
+
+  assert_int_equals(sys.FAILURE, sym.end_function%("fn_1", 11, 13))
+  assert_error("FUNCTION/SUB already ended")
 End Sub
 
 Sub test_add_name_given_absent()
@@ -329,10 +358,10 @@ Sub test_add_combination()
 
   ' Validate contents of 'Functions' table.
   assert_int_equals(4, map2.size%(sym.functions$()))
-  assert_string_equals("FN_1,0,100,0,2", map2.get$(sym.functions$(), "fn_1"))
-  assert_string_equals("FN_2,0,200,12,6", map2.get$(sym.functions$(), "fn_2"))
-  assert_string_equals("FN_3,1,300,28,8", map2.get$(sym.functions$(), "fn_3"))
-  assert_string_equals("FN_4,2,400,36,9", map2.get$(sym.functions$(), "fn_4"))
+  assert_string_equals("FN_1,0,100,0,2,0:0,0:0", map2.get$(sym.functions$(), "fn_1"))
+  assert_string_equals("FN_2,0,200,12,6,0:0,0:0", map2.get$(sym.functions$(), "fn_2"))
+  assert_string_equals("FN_3,1,300,28,8,0:0,0:0", map2.get$(sym.functions$(), "fn_3"))
+  assert_string_equals("FN_4,2,400,36,9,0:0,0:0", map2.get$(sym.functions$(), "fn_4"))
 
   ' Validate contents of 'References' table.
   Local expected%(10) = (3,4,&hFFFFFFFF,3,4,7,&hFFFFFFFF,7,&hFFFFFFFF,&hFFFFFFFF,&hFFFFFFFF)
@@ -489,13 +518,13 @@ Sub test_name_to_fn_given_present()
 
   Local fn_data$
   assert_int_equals(1, sym.name_to_fn%("fn_1", fn_data$))
-  assert_string_equals("FN_1,0,42,0,1", fn_data$)
+  assert_string_equals("FN_1,0,42,0,1,0:0,0:0", fn_data$)
   assert_int_equals(1, sym.name_to_fn%("FN_1", fn_data$))
-  assert_string_equals("FN_1,0,42,0,1", fn_data$)
+  assert_string_equals("FN_1,0,42,0,1,0:0,0:0", fn_data$)
   assert_int_equals(2, sym.name_to_fn%("fn_2", fn_data$))
-  assert_string_equals("FN_2,0,99,4,2", fn_data$)
+  assert_string_equals("FN_2,0,99,4,2,0:0,0:0", fn_data$)
   assert_int_equals(2, sym.name_to_fn%("FN_2", fn_data$))
-  assert_string_equals("FN_2,0,99,4,2", fn_data$)
+  assert_string_equals("FN_2,0,99,4,2,0:0,0:0", fn_data$)
 End Sub
 
 Sub test_name_to_fn_given_absent()
@@ -514,9 +543,9 @@ Sub test_id_to_fn()
   fn_data$ = sym.id_to_fn$(0)
   assert_string_equals(sys.NO_DATA$, fn_data$)
   fn_data$ = sym.id_to_fn$(1)
-  assert_string_equals("FN_1,0,42,0,1", fn_data$)
+  assert_string_equals("FN_1,0,42,0,1,0:0,0:0", fn_data$)
   fn_data$ = sym.id_to_fn$(2)
-  assert_string_equals("FN_2,0,99,4,2", fn_data$)
+  assert_string_equals("FN_2,0,99,4,2,0:0,0:0", fn_data$)
   fn_data$ = sym.id_to_fn$(3)
   assert_string_equals(sys.NO_DATA$, fn_data$)
 End Sub
@@ -592,9 +621,9 @@ Sub test_get_functions()
   assert_int_equals(2, sym.add_function%("wombat", "my_file2", 44))
 
   assert_int_equals(3, sym.get_functions%(actual$()))
-  expected$(0) = "bar,0,43,4,1"
-  expected$(1) = "foo,0,42,0,0"
-  expected$(2) = "wombat,1,44,8,2"
+  expected$(0) = "bar,0,43,4,1,0:0,0:0"
+  expected$(1) = "foo,0,42,0,0,0:0,0:0"
+  expected$(2) = "wombat,1,44,8,2,0:0,0:0"
   assert_string_array_equals(expected$(), actual$())
 
   ' Test behaviour when array capacity < num. of functions.

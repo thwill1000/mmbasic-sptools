@@ -21,10 +21,11 @@ Option Explicit On
 #Include "../input.inc"
 #Include "../keywords.inc"
 #Include "../lexer.inc"
+#Include "../output.inc"
 #Include "../symbols.inc"
 #Include "../symproc.inc"
 
-Dim actual$(9), expected$(9), lines$(9)
+Dim actual$(10), expected$(10), lines$(10)
 
 keywords.init()
 
@@ -39,6 +40,9 @@ add_test("test_split_globals_bug_2")
 add_test("test_nested_sub")
 add_test("test_given_unbalanced_end_sub")
 add_test("test_given_duplicate_sub")
+add_test("test_given_start_not_col_1")
+add_test("test_given_end_not_last_tok")
+add_test("test_given_leading_comment")
 
 run_tests()
 
@@ -48,6 +52,7 @@ Sub setup_test()
   in.init()
   list.push(in.files$(), "my_file.bas")
   in.num_open_files% = 1
+  out.line_num = 0
   symproc.init(32, 300, 1)
   clear_arrays()
 End Sub
@@ -61,6 +66,7 @@ End Sub
 Sub parse_and_process(lines$())
   Local i%
   For i% = 1 To Bound(lines$(), 1)
+    Inc out.line_num
     in.line_num%(0) = i%
     assert_int_equals(sys.SUCCESS, lx.parse_basic%(lines$(i%)))
     assert_int_equals(sys.SUCCESS, symproc.process%())
@@ -83,7 +89,7 @@ Sub test_initial_state()
   ' One function representing the global scope.
   clear_arrays()
   assert_int_equals(1, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
   assert_string_array_equals(expected$(), actual$())
 
   ' No references.
@@ -108,7 +114,7 @@ Sub test_global_vars()
   ' Check functions.
   clear_arrays()
   assert_int_equals(1, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
   assert_string_array_equals(expected$(), actual$())
 
   ' Check references.
@@ -143,11 +149,11 @@ Sub test_sub_declarations()
   ' Check functions.
   clear_arrays()
   assert_int_equals(5, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
-  expected$(1) = "my_cfunction,0,1,4,1"
-  expected$(2) = "my_csub,0,3,8,2"
-  expected$(3) = "my_function,0,5,12,3"
-  expected$(4) = "my_sub,0,7,16,4"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "my_cfunction,0,1,4,1,1:1,2:13"
+  expected$(2) = "my_csub,0,3,8,2,3:1,4:8"
+  expected$(3) = "my_function,0,5,12,3,5:1,6:12"
+  expected$(4) = "my_sub,0,7,16,4,7:1,8:7"
   assert_string_array_equals(expected$(), actual$())
 
   ' Check references, note *global* does not reference sub declarations.
@@ -178,9 +184,9 @@ Sub test_call_from_sub()
   ' Check functions.
   clear_arrays()
   assert_int_equals(3, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
-  expected$(1) = "bar,0,4,12,2"
-  expected$(2) = "foo,0,1,4,1"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "bar,0,4,12,2,4:1,5:7"
+  expected$(2) = "foo,0,1,4,1,1:1,3:7"
   assert_string_array_equals(expected$(), actual$())
 
   ' Check references.
@@ -206,7 +212,7 @@ Sub test_call_from_global()
   ' Check functions.
   clear_arrays()
   assert_int_equals(1, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
   assert_string_array_equals(expected$(), actual$())
 
   ' Check references.
@@ -235,8 +241,8 @@ Sub test_split_globals()
   ' Check functions.
   clear_arrays()
   assert_int_equals(2, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
-  expected$(1) = "bar,0,2,8,2"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "bar,0,2,8,2,2:1,3:7"
   assert_string_array_equals(expected$(), actual$())
 
   ' Check references.
@@ -250,7 +256,7 @@ End Sub
 
 Sub test_split_globals_bug_1()
   lines$(1) = "Sub a()"
-  lines$(2) = "End Sub()"
+  lines$(2) = "End Sub"
   lines$(3) = "Dim b"
   lines$(4) = "Dim c"
   parse_and_process(lines$())
@@ -267,8 +273,8 @@ Sub test_split_globals_bug_1()
   ' Check functions.
   clear_arrays()
   assert_int_equals(2, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
-  expected$(1) = "a,0,1,4,1"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "a,0,1,4,1,1:1,2:7"
   assert_string_array_equals(expected$(), actual$())
 
   ' Check references.
@@ -300,9 +306,9 @@ Sub test_split_globals_bug_2()
   ' Check functions.
   clear_arrays()
   assert_int_equals(3, sym.get_functions%(actual$()))
-  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0"
-  expected$(1) = "a,0,1,4,1"
-  expected$(2) = "b,0,4,16,2"
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "a,0,1,4,1,1:1,2:7"
+  expected$(2) = "b,0,4,16,2,4:1,5:7"
   assert_string_array_equals(expected$(), actual$())
 
   ' Check references.
@@ -342,4 +348,55 @@ Sub test_given_duplicate_sub()
   assert_int_equals(sys.SUCCESS, lx.parse_basic%("Sub foo()"))
   assert_int_equals(sys.FAILURE, symproc.process%())
   assert_error("Duplicate FUNCTION/SUB")
+End Sub
+
+Sub test_given_start_not_col_1()
+  lines$(1) = "  Function my_function()"
+  lines$(2) = "End Function"
+  lines$(3) = "Print : Sub my_sub()"
+  lines$(4) = "End Sub"
+  parse_and_process(lines$())
+
+  clear_arrays()
+  assert_int_equals(3, sym.get_functions%(actual$()))
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "my_function,0,1,4,1,1:3,2:12"
+  expected$(2) = "my_sub,0,3,8,2,3:9,4:7"
+  assert_string_array_equals(expected$(), actual$())
+End Sub
+
+Sub test_given_end_not_last_tok()
+  lines$(1) = "Function my_function()"
+  lines$(2) = "End Function  "
+  lines$(3) = "Sub my_sub()"
+  lines$(4) = "End Sub : Print"
+  parse_and_process(lines$())
+
+  clear_arrays()
+  assert_int_equals(3, sym.get_functions%(actual$()))
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "my_function,0,1,4,1,1:1,2:12"
+  expected$(2) = "my_sub,0,3,8,2,3:1,4:7"
+  assert_string_array_equals(expected$(), actual$())
+End Sub
+
+Sub test_given_leading_comment()
+  lines$(1) = "Function my_function()"
+  lines$(2) = "End Function"
+  lines$(3) = "' Unrelated comment"
+  lines$(4) = ""
+  lines$(5) = "' Unrelated comment"
+  lines$(6) = "Dim foo"
+  lines$(7) = "' Comment about my_sub()"
+  lines$(8) = "' More comments"
+  lines$(9) = "Sub my_sub()"
+  lines$(10) = "End Sub"
+  parse_and_process(lines$())
+
+  clear_arrays()
+  assert_int_equals(3, sym.get_functions%(actual$()))
+  expected$(0) = symproc.GLOBAL_SCOPE + ",0,1,0,0,0:0,0:0"
+  expected$(1) = "my_function,0,1,4,1,1:1,2:12"
+  expected$(2) = "my_sub,0,9,16,3,7:1,10:7"
+  assert_string_array_equals(expected$(), actual$())
 End Sub

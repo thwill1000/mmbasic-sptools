@@ -7,12 +7,16 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
-sys.requires("lexer", "symbols")
+sys.requires("lexer", "output", "symbols")
 sys.provides("symproc")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
 Const symproc.GLOBAL_SCOPE = "*global*"
+
+' Line number in the transpiled code at which the leading comment for a
+' function potentially started.
+Dim symproc.comment_line%
 
 Dim symproc.scope$
 
@@ -22,20 +26,30 @@ Sub symproc.init(max_functions%, max_identifiers%, references_size_kb%))
   symproc.scope$ = symproc.GLOBAL_SCOPE
 End Sub
 
-Function symproc.fn_decl%(name$)
+' Called at the start a of FUNCTION/SUB definition.
+'
+' @param  idx%  index of the CFUNCTION/CSUB/FUNCTION/SUB token.
+Function symproc.fn_decl%(idx%)
   If symproc.scope$ <> symproc.GLOBAL_SCOPE Then
     symproc.fn_decl% = sys.error%(sys.FAILURE, "Nested FUNCTION/SUB")
   Else
-    Local fnbr% = in.num_open_files% - 1
-    symproc.fn_decl% = sym.add_function%(name$, in.files$(fnbr%), in.line_num%(fnbr%))
-    If symproc.fn_decl% >= 0 Then symproc.scope$ = name$
+    Const fnbr% = in.num_open_files% - 1, fn_name$ = lx.token_lc$(idx% + 1)
+    Const file$ = in.files$(fnbr%), line% = in.line_num%(fnbr%), scol% = lx.start(idx%)
+    Const sline% = Choice(symproc.comment_line%, symproc.comment_line%, out.line_num)
+    symproc.fn_decl% = sym.add_function%(fn_name$, file$, line%, sline%, scol%)
+    If symproc.fn_decl% >= 0 Then symproc.scope$ = fn_name$
   EndIf
 End Function
 
-Function symproc.fn_end%()
+' Called at the END of the current FUNCTION/SUB definition.
+'
+' @param  idx%  index of the CFUNCTION/CSUB/FUNCTION/SUB token.
+Function symproc.fn_end%(idx%)
   If symproc.scope$ = symproc.GLOBAL_SCOPE Then
     symproc.fn_end% = sys.error%(sys.FAILURE, "Unbalanced END FUNCTION/SUB")
   Else
+    Const ecol% = lx.start(idx%) + lx.len(idx%) - 1
+    symproc.fn_end% = sym.end_function%(symproc.scope$, out.line_num, ecol%)
     symproc.scope$ = symproc.GLOBAL_SCOPE
   EndIf
 End Function
@@ -46,7 +60,7 @@ Function symproc.identifier%(idx%)
 
   If idx% > 0 Then
     If InStr(" cfunction csub function sub ", " " + lx.token_lc$(idx% - 1) + " ") Then
-      symproc.identifier% = symproc.fn_decl%(lx.token_lc$(idx%))
+      symproc.identifier% = symproc.fn_decl%(idx% - 1)
       Exit Function
     EndIf
   EndIf
@@ -63,13 +77,18 @@ Function symproc.keyword%(idx%)
   If idx% < lx.num - 1 Then
     If lx.token_lc$(idx%) = "end" Then
       If InStr(" cfunction csub function sub ", " " + lx.token_lc$(idx% + 1) + " ") Then
-        symproc.keyword% = symproc.fn_end%()
+        symproc.keyword% = symproc.fn_end%(idx% + 1)
       EndIf
     EndIf
   EndIf
 End Function
 
 Function symproc.process%()
+  If lx.num > 0 And lx.type(0) = TK_COMMENT Then
+    If Not symproc.comment_line% Then symproc.comment_line% = out.line_num%
+    Exit Function
+  EndIf
+
   Local i%
   For i% = 0 To lx.num - 1
     Select Case lx.type(i%)
@@ -81,5 +100,6 @@ Function symproc.process%()
     If symproc.process% < 0 Then Exit For
   Next
 
+  symproc.comment_line% = 0
   If symproc.process% >= 0 Then symproc.process% = sys.SUCCESS
 End Function
