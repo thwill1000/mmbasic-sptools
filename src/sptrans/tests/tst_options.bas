@@ -26,8 +26,7 @@ add_test("test_infile")
 add_test("test_list_all")
 add_test("test_keywords")
 add_test("test_outfile")
-add_test("test_pretty_print")
-add_test("test_process_directives")
+add_test("test_format")
 add_test("test_quiet")
 add_test("test_spacing")
 add_test("test_unknown")
@@ -528,48 +527,48 @@ Sub test_unknown()
   assert_error("unknown option: unknown")
 End Sub
 
-Sub test_pretty_print()
+Sub test_format()
   given_options("")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("colour=1")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("comments=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("comments=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("empty-lines=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("format-only=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("indent=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("keywords=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("help=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("include-only=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("no-comments=0")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("no-comments=1")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("spacing=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("version=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 End Sub
 
 Sub given_options(s$)
@@ -582,48 +581,4 @@ Sub given_options(s$)
     opt.set(k$, v$)
     Inc i%, 2
   Loop
-End Sub
-
-Sub test_process_directives()
-  given_options("")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("colour=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("comments=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("comments=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("empty-lines=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("format-only=1")
-  assert_int_equals(0, opt.process_directives%())
-
-  given_options("indent=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("keywords=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("help=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("include-only=1")
-  assert_int_equals(0, opt.process_directives%())
-
-  given_options("no-comments=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("no-comments=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("spacing=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("version=1")
-  assert_int_equals(1, opt.process_directives%())
 End Sub

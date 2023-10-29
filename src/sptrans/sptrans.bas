@@ -27,8 +27,9 @@ Const CR$ = Chr$(13)
 #Include "lexer.inc"
 #Include "options.inc"
 #Include "defines.inc"
+#Include "format.inc"
 #Include "output.inc"
-#Include "pprint.inc"
+#Include "highlight.inc"
 #Include "expression.inc"
 #Include "symbols.inc"
 #Include "trans.inc"
@@ -48,20 +49,14 @@ Sub cout(s$, always%)
 End Sub
 
 Sub cerror(msg$)
-  Local i% = in.num_open_files% - 1
+  Const i% = in.num_open_files% - 1
   Print
   If i% >= 0 Then Print "[" + in.files$(i%) + ":" + Str$(in.line_num%(i%)) + "] ";
   Print "Error: " + msg$
-  If Mm.Device$ = "MMB4L" Then
-    End 1
-  Else
-    End
-  EndIf
+  If Mm.Device$ = "MMB4L" Then End 1 Else End
 End Sub
 
 Sub main()
-  Local s$, t
-
   in.init()
   opt.init()
   def.init()
@@ -76,6 +71,7 @@ Sub main()
     End
   EndIf
 
+  Local s$
   If opt.outfile$ <> "" Then
     If file.exists%(opt.outfile$)) Then
       Line Input "Overwrite existing '" + opt.outfile$ + "' [y|N] ? ", s$
@@ -102,32 +98,56 @@ Sub main()
   cout(in.files$(0)) : cendl()
   cout("   ")
 
-  Local pretty_print% = opt.pretty_print%() Or opt.process_directives%()
-  Local trok%
-  t = Timer
+  Local ok%, t% = Timer
   Do
     cout(BS$ + Mid$("\|/-", ((in.line_num%(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
+    ' Parse
     s$ = in.readln$()
-    trok% = 0
-    If lx.parse_basic%(s$) = sys.SUCCESS Then
+    ok% = lx.parse_basic%(s$)
+
+    ' Transpile
+    If ok% = sys.SUCCESS Then
       If opt.format_only Then
-        trok% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
+        ok% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
       ElseIf opt.include_only Then
-        trok% = tr.transpile_includes%()
+        ok% = tr.transpile_includes%()
       Else
-        trok% = tr.transpile%()
+        ok% = tr.transpile%()
       EndIf
     EndIf
+    Select Case ok%
+      Case sys.FAILURE, sys.SUCCESS, tr.OMIT_LINE
+        ' Do nothing
+      Case tr.INCLUDE_FILE
+        open_include()
+        ok% = sys.SUCCESS
+      Case Else:
+        Error "Invalid trans state: " + Str$(ok%)
+    End Select
 
-    If trok% = sys.SUCCESS And opt.list_all% Then trok% = symproc.process%()
+    ' Process Symbols
+    If ok% = sys.SUCCESS And opt.list_all% Then ok% = symproc.process%()
 
-    Select Case trok%
-      Case sys.FAILURE:     cerror(sys.err$)
-      Case sys.SUCCESS:     pp.print_line(pretty_print%)
-      Case tr.INCLUDE_FILE: open_include() : pp.print_line(pretty_print%)
-      Case tr.OMIT_LINE:    ' Do nothing
-      Case Else:            Error "Unknown status: " + Str(trok%)
+    ' Format
+    If ok% = sys.SUCCESS And opt.format% Then ok% = fmt.format%()
+
+    ' Output
+    Select Case ok%
+      Case sys.FAILURE
+        cerror(sys.err$)
+      Case sys.SUCCESS
+        If opt.colour% Then hil.highlight() Else out.println(lx.line$)
+      Case fmt.OMIT_LINE
+        ' Do nothing
+      Case fmt.EMPTY_LINE_BEFORE
+        out.println()
+        If opt.colour% Then hil.highlight() Else out.println(lx.line$)
+      Case fmt.EMPTY_LINE_AFTER
+        If opt.colour% Then hil.highlight() Else out.println(lx.line$)
+        out.println()
+      Case Else
+        Error "Invalid format state: " + Str$(ok%)
     End Select
 
     If Eof(#in.num_open_files%) Then
@@ -168,7 +188,9 @@ Sub close_include()
   Cat s$, str.quote$(in.files$(in.num_open_files% - 1))
   If Len(s$) < 79 Then Cat s$, " "
   Do While Len(s$) < 80 : Cat s$, "-" : Loop
-  If lx.parse_basic%(s$) = sys.SUCCESS Then pp.print_line(1)
+  If lx.parse_basic%(s$) = sys.SUCCESS Then
+    If opt.colour% Then hil.highlight() Else out.println(lx.line$)
+  EndIf
   If sys.err$ = "" Then in.close()
 End Sub
 

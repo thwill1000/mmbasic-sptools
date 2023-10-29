@@ -13,7 +13,7 @@ If sys.err$ <> "" Then Error sys.err$
 
 Const sym.FUNCTION_ENTRY_LEN = 110
 Const sym.MAX_FILES% = 32
-Const sym.MAX_FUNCTIONS% = 256
+Const sym.MAX_FUNCTIONS% = 512
 Const sym.MAX_NAMES% = 4096
 Const sym.MAX_NAME_LEN% = 33
 Const sym.MAX_PATH_LEN% = 128

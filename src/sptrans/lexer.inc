@@ -43,7 +43,7 @@ Dim lx.line$
 Dim lx.next_char$
 Dim lx.num         ' number of tokens.
 Dim lx.pos
-Dim lx.csub        ' 1 if we are tokenising within a CSUB definition, otherwise 0.
+Dim lx.csub        ' 1 if we are tokenising within a CFUNCTION|CSUB definition, otherwise 0.
 Dim lx.font        ' 1 if we are tokenising within a DEFINEFONT definition, otherwise 0.
 
 ' Parses a line of BASIC code.
@@ -291,7 +291,7 @@ Sub lx.parse_identifier()
   If keywords.contains%(Mid$(lx.line$, start, ln%)) Then
     lx.store(TK_KEYWORD, start, ln%)
     Select Case lx.token_lc$(lx.num - 1)
-      Case "csub" :       lx.csub = Not lx.csub
+      Case "csub", "cfunction" : lx.csub = Not lx.csub
       Case "definefont" : lx.font = Not lx.font
     End Select
   Else

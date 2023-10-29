@@ -10,15 +10,17 @@ sys.provides("options")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-Dim opt.colour       '  0    : no syntax colouring of console output
-                     '  1    : VT100 syntax colouring of console output
+Dim opt.colour       '  0    : no syntax highlighting of console output
+                     '  1    : VT100 syntax highlighting of console output
 Dim opt.comments     ' -1    : preserve comments
                      '  0    : omit all comments
+Dim opt.format%      '  0    : format step required
+                     '  1    : format step not required
 Dim opt.empty_lines  ' -1    : preserve empty lines
                      '  0    : omit all empty lines
                      '  1    : include empty line between each Function/Sub
 Dim opt.format_only  '  0    : transpile
-                     '  1    : just format / pretty-print
+                     '  1    : just format
 Dim opt.include_only '  0    : transpile
                      '  1    : just inline #INCLUDEd files
 Dim opt.indent_sz    ' -1    : preserve indenting
@@ -41,6 +43,7 @@ Dim opt.outfile$     ' output file/path, empty for output to console
 Sub opt.init()
   opt.colour = 0
   opt.comments = -1
+  opt.format% = 0
   opt.empty_lines = -1
   opt.format_only = 0
   opt.include_only = 0
@@ -52,18 +55,6 @@ Sub opt.init()
   opt.infile$ = ""
   opt.outfile$ = ""
 End Sub
-
-' Do the options require pretty-printing ?
-Function opt.pretty_print%()
-  Local z% = opt.colour Or opt.comments <> -1 Or opt.empty_lines <> -1
-  z% = z% Or opt.indent_sz <> -1 Or opt.keywords <> -1 Or opt.spacing <> -1
-  opt.pretty_print% = z%
-End Function
-
-' Do the options require !directives to be processed ?
-Function opt.process_directives%()
-  opt.process_directives% = Not (opt.include_only Or opt.format_only)
-End Function
 
 ' Sets the value for an option.
 '
@@ -87,6 +78,10 @@ Sub opt.set(name$, value$)
     Case Else
       sys.err$ = "unknown option: " + name$
   End Select
+
+  Local z% = opt.comments <> -1 Or opt.empty_lines <> -1
+  z% = z% Or opt.indent_sz <> -1 Or opt.keywords <> -1 Or opt.spacing <> -1
+  opt.format% = z%
 End Sub
 
 Sub opt.set_colour(value$)
