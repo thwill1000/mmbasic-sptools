@@ -45,6 +45,8 @@ add_test("Empty lines - preserve if option is -1", "test_preserve_empty_lines")
 add_test("Empty lines - ignore if option is 0", "test_ignore_empty_lines")
 add_test("Empty lines - before FUNCTION/SUB if option is 1", "test_insert_empty_lines")
 add_test("Empty lines - respects leading comment before function", "test_empty_lines_given_comment")
+add_test("Omit comments", "test_omit_comments")
+add_test("Preserve comments", "test_preserve_comments")
 
 run_tests()
 
@@ -643,3 +645,58 @@ Sub test_empty_lines_given_comment()
   expected$(7) = "End Sub"
   assert_string_array_equals(expected$(), out$())
 End Sub
+
+
+Sub test_omit_comments()
+  in$(0) = "' leading space"
+  in$(1) = "'no leading space"
+  in$(2) = "'_leading underscore"
+  in$(3) = "' license"
+  in$(4) = "' LICENCE"
+  in$(5) = "' copyRIGHT"
+  in$(6) = "' (c)"
+  in$(7) = "REM legacy comment"
+
+  opt.comments% = 0
+  format_lines()
+
+  ' expected$() is initially empty.
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_preserve_comments()
+  in$(0) = "' leading space"
+  in$(1) = "'no leading space"
+  in$(2) = "'_leading underscore"
+  in$(3) = "' license"
+  in$(4) = "' LICENCE"
+  in$(5) = "' copyRIGHT"
+  in$(6) = "' (c)"
+  in$(7) = "REM legacy comment"
+
+  opt.comments% = -1
+  format_lines()
+
+  assert_string_array_equals(in$(), out$())
+End Sub
+
+Sub expect_token(i%, type%, txt$, start%)
+  Local ok% = (lx.type(i) = type%)
+  ok% = ok% And (lx.token$(i) = txt$)
+  ok% = ok% And (lx.len(i%) = Len(txt$))
+  If start% Then ok% = ok% And (lx.start%(i%) = start%)
+  If Not ok% Then
+    Local msg$ = "expected " + token_to_string$(type%, txt$, Len(txt$), start%)
+    Cat msg$, ", found " + token_to_string$(lx.type(i), lx.token$(i), lx.len(i), lx.start(i))
+    assert_fail(msg$)
+  EndIf
+End Sub
+
+Function token_to_string$(type%, txt$, len%, start%)
+  Local s$
+  Cat s$, Str$(type%)
+  Cat s$, ", " + txt$
+  Cat s$, ", " + Str$(len%)
+  If start% Then Cat s$, ", " + Str$(start%)
+  token_to_string$ = "{ " + s$ + " }"
+End Function

@@ -45,6 +45,18 @@ Function fmt.format%()
 
   For i% = 0 To lx.num% - 1
 
+    If opt.comments% = 0 Then
+      ' Remove comments.
+      If lx.type%(i%) = TK_COMMENT Then
+        lx.remove_token(i%)
+        If lx.num = 0 Then
+          fmt.format% = fmt.OMIT_LINE
+          Exit Function
+        EndIf
+        Continue For
+      EndIf
+    EndIf
+
     t$ = "|" + lx.token_lc$(i) + "|"
 
     ' Tokens requiring us to decrease the indent level before.
@@ -100,8 +112,10 @@ Function fmt.format%()
   Next ' iteration over tokens.
 
   ' Remove trailing whitespace.
-  fmt.format% = lx.set_space_after%(lx.num% - 1, 0)
-  If fmt.format% < 0 Then Exit Function
+  If lx.num% Then
+    fmt.format% = lx.set_space_after%(lx.num% - 1, 0)
+    If fmt.format% < 0 Then Exit Function
+  EndIf
 
   ' "Fix" the indent level if it goes badly wrong.
   If fmt.indent_lvl% < 0 Then fmt.indent_lvl% = 0

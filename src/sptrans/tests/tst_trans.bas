@@ -1035,24 +1035,13 @@ Sub test_omit_and_line_spacing()
 End Sub
 
 Sub test_comments_directive()
+  ' Omit all comments.
   expect_transpile_omits("'!comments off")
   assert_int_equals(0, opt.comments)
 
-  expect_transpile_omits("' This is a comment")
-  assert_string_equals("", lx.line$)
-
-  expect_transpile_succeeds("Dim a = 1 ' This is also a comment", 4)
-  expect_token(0, TK_KEYWORD, "Dim")
-  expect_token(1, TK_IDENTIFIER, "a")
-  expect_token(2, TK_SYMBOL, "=")
-  expect_token(3, TK_NUMBER, "1")
-  assert_string_equals("Dim a = 1", lx.line$)
-
+  ' Preserve comments.
   expect_transpile_omits("'!comments on")
   assert_int_equals(-1, opt.comments)
-
-  expect_transpile_succeeds("' This is a third comment", 1)
-  expect_token(0, TK_COMMENT, "' This is a third comment")
 End Sub
 
 Sub test_always_defined_values()

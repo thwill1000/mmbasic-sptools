@@ -148,9 +148,9 @@ Function tr.transpile%()
   EndIf
 
   If lx.type(0) <> TK_DIRECTIVE Then
-    tr.empty_line_flag% = (lx.num = 0)
-    tr.transpile% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
-    tr.omitted_line_flag% = tr.transpile% = tr.OMIT_LINE
+    tr.empty_line_flag% = (lx.num% = 0)
+    tr.transpile% = sys.SUCCESS
+    tr.omitted_line_flag% = 0
     Exit Function
   EndIf
 
@@ -665,18 +665,3 @@ Sub tr.dump_replacements()
     Print Choice(tr.replacements$(i%, 1) = Chr$(0), "<null>", tr.replacements$(i%, 1))
   Next
 End Sub
-
-' Removes all comment tokens from the current line.
-'
-' @return  tr.OMIT_LINE if as a result of calling this function the line
-'          is now empty, otherwise 1.
-Function tr.remove_comments%()
-  If lx.num = 0 Then Exit Function
-
-  Local i%
-  Do While i% < lx.num
-    If lx.type(i%) = TK_COMMENT Then lx.remove_token(i%)
-    Inc i%
-  Loop
-  tr.remove_comments% = Choice(lx.num = 0, tr.OMIT_LINE, sys.SUCCESS)
-End Function
