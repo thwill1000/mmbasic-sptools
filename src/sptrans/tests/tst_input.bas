@@ -23,6 +23,10 @@ add_test("test_open_given_dir")
 add_test("test_open_given_not_found")
 add_test("test_open_given_too_many")
 add_test("test_open_given_relative")
+add_test("test_readln_gvn_empty_buffer")
+add_test("test_readln_gvn_non_empty_buffer")
+add_test("test_readln_gvn_eof")
+add_test("test_buffer_line_gvn_full")
 
 run_tests()
 
@@ -30,6 +34,7 @@ End
 
 Sub setup_test()
   MkDir TMPDIR$
+  in.init()
 End Sub
 
 Sub teardown_test()
@@ -40,7 +45,6 @@ Sub teardown_test()
 End Sub
 
 Sub test_open_given_file()
-  in.init()
   Const f$ = TMPDIR$ + "/foo.bas"
   ut.create_file(f$)
 
@@ -52,7 +56,6 @@ Sub test_open_given_file()
 End Sub
 
 Sub test_open_given_dir()
-  in.init()
   Const f$ = TMPDIR$ + "/foo.bas"
   MkDir f$
 
@@ -62,7 +65,6 @@ Sub test_open_given_dir()
 End Sub
 
 Sub test_open_given_not_found()
-  in.init()
   Const f$ = TMPDIR$ + "/not_found.bas"
 
   assert_int_equals(sys.FAILURE, in.open%(f$))
@@ -71,8 +73,6 @@ Sub test_open_given_not_found()
 End Sub
 
 Sub test_open_given_too_many()
-  in.init()
-
   ' Open the maximum number of files (5).
   Local files$(array.new%(5)) = ("one", "two", "three", "four", "five")
   Local f$, i%
@@ -107,7 +107,6 @@ Sub test_open_given_too_many()
 End Sub
 
 Sub test_open_given_relative()
-  in.init()
   ut.create_file(TMPDIR$ + "/foo.bas")
   MkDir TMPDIR$ + "/bar"
   ut.create_file(TMPDIR$ + "/bar/wombat.inc")
@@ -122,3 +121,60 @@ Sub test_open_given_relative()
   assert_int_equals(0, in.line_num%(0))
   assert_int_equals(0, in.line_num%(1))
 End Sub
+
+Sub test_readln_gvn_empty_buffer()
+  Const f$ = TMPDIR$ + "/test_readln_gvn_empty_buffer.bas"
+  ut.write_data_file(TMPDIR$ + "/test_readln_gvn_empty_buffer.bas", "input_data")
+
+  assert_int_equals(sys.SUCCESS, in.open%(f$))
+  assert_int_equals(0, list.size%(in.buffer$()))
+  assert_string_equals("10 Print " + str.quote$("Hello World"), in.readln$())
+End Sub
+
+Sub test_readln_gvn_non_empty_buffer()
+  Const f$ = TMPDIR$ + "/test_readln_gvn_empty_buffer.bas"
+  ut.write_data_file(TMPDIR$ + "/test_readln_gvn_empty_buffer.bas", "input_data")
+
+  assert_int_equals(sys.SUCCESS, in.open%(f$))
+  assert_int_equals(0, list.size%(in.buffer$()))
+  assert_int_equals(sys.SUCCESS, in.buffer_line%("Dim a = 42"))
+  assert_int_equals(sys.SUCCESS, in.buffer_line%("Const PI = 3.142"))
+  assert_string_equals("Dim a = 42", in.readln$())
+  assert_string_equals("Const PI = 3.142", in.readln$())
+  assert_string_equals("10 Print " + str.quote$("Hello World"), in.readln$())
+End Sub
+
+Sub test_readln_gvn_eof()
+  Const f$ = TMPDIR$ + "/test_readln_gvn_empty_buffer.bas"
+  ut.write_data_file(TMPDIR$ + "/test_readln_gvn_empty_buffer.bas", "input_data")
+
+  assert_int_equals(sys.SUCCESS, in.open%(f$))
+  assert_string_equals("10 Print " + str.quote$("Hello World"), in.readln$())
+  assert_string_equals("20 Goto 10", in.readln$())
+
+  ' Does not currently report EOF but keeps returning empty lines.
+  assert_string_equals("", in.readln$())
+  assert_string_equals("", in.readln$())
+  assert_int_equals(4, in.line_num%(0))
+End Sub
+
+Sub test_buffer_line_gvn_full()
+  Const f$ = TMPDIR$ + "/test_readln_gvn_empty_buffer.bas"
+  ut.write_data_file(TMPDIR$ + "/test_readln_gvn_empty_buffer.bas", "input_data")
+
+  assert_int_equals(sys.SUCCESS, in.open%(f$))
+  assert_int_equals(0, list.size%(in.buffer$()))
+  assert_int_equals(sys.SUCCESS, in.buffer_line%("one"))
+  assert_int_equals(sys.SUCCESS, in.buffer_line%("two"))
+  assert_int_equals(sys.SUCCESS, in.buffer_line%("three"))
+  assert_int_equals(sys.SUCCESS, in.buffer_line%("four"))
+  assert_int_equals(sys.SUCCESS, in.buffer_line%("five"))
+  assert_int_equals(sys.FAILURE, in.buffer_line%("six"))
+  assert_error("Input buffer full")
+End Sub
+
+input_data:
+Data "text/json" ' Will convert single => double quote.
+Data "10 Print 'Hello World'"
+Data "20 Goto 10"
+Data "<EOF>"

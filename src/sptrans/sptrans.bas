@@ -85,12 +85,9 @@ Sub main()
 
   out.open(opt.outfile$)
 
-  If Not opt.format_only Then
-    If opt.colour Then out.print(TK_COLOUR$(TK_COMMENT))
-    out.print("' Transpiled on " + DateTime$(Now))
-    If opt.colour Then out.print(vt100.colour$("reset"))
-    out.endl()
-    out.endl()
+  If Not opt.format_only% Then
+    If in.buffer_line%("' Transpiled on " + DateTime$(Now)) <> sys.SUCCESS Then cerror(sys.err$)
+    If in.buffer_line%("") Then cerror(sys.err$)
   EndIf
 
   cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
@@ -121,7 +118,7 @@ Sub main()
         ' Do nothing
       Case tr.INCLUDE_FILE
         open_include()
-        ok% = sys.SUCCESS
+        ok% = tr.OMIT_LINE
       Case Else:
         Error "Invalid trans state: " + Str$(ok%)
     End Select
@@ -168,30 +165,23 @@ Sub main()
 End Sub
 
 Sub open_include()
-  Local s$ = "' BEGIN: #Include "
-  Cat s$, lx.line$
+  Local s$ = "' #Include " + str.quote$(file.get_canonical$(tr.include$))
   If Len(s$) < 79 Then Cat s$, " "
-  Do While Len(s$) < 80 : Cat s$, "-" : Loop
-  If lx.parse_basic%(s$) = sys.SUCCESS Then
-    If in.open%(tr.include$) = sys.SUCCESS Then
-      Local i = in.num_open_files%
-      cout(CR$ + Space$((i - 1) * 2) + in.files$(i - 1)) : cendl()
-      cout(" " + Space$(i * 2))
-    Else
-      cerror(sys.err$)
-    EndIf
+  If Len(s$) < 80 Then Cat s$, String$(80 - Len(s$), "-")
+  If in.buffer_line%(s$) <> sys.SUCCESS Then cerror(sys.err$)
+
+  If in.open%(tr.include$) = sys.SUCCESS Then
+    Local i% = in.num_open_files%
+    cout(CR$ + Space$((i% - 1) * 2) + in.files$(i% - 1)) : cendl()
+    cout(" " + Space$(i% * 2))
+  Else
+    cerror(sys.err$)
   EndIf
 End Sub
 
 Sub close_include()
-  Local s$ = "' END:   #Include "
-  Cat s$, str.quote$(in.files$(in.num_open_files% - 1))
-  If Len(s$) < 79 Then Cat s$, " "
-  Do While Len(s$) < 80 : Cat s$, "-" : Loop
-  If lx.parse_basic%(s$) = sys.SUCCESS Then
-    If opt.colour% Then hil.highlight() Else out.println(lx.line$)
-  EndIf
-  If sys.err$ = "" Then in.close()
+  If in.buffer_line%("' " + String$(78, "-")) <> sys.SUCCESS Then cerror(sys.err$)
+  in.close()
 End Sub
 
 Function list_symbols%()

@@ -10,6 +10,11 @@ sys.provides("input")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
+' List of buffered input lines; in.readln$() first reads values from
+' this list. Only if it is empty does it read from an input file.
+Const in.BUFFER_SIZE = 5
+Dim in.buffer$(list.new%(in.BUFFER_SIZE))
+
 ' Stack of open input source files.
 Const MAX_NUM_FILES = 5
 Dim in.files$(list.new%(MAX_NUM_FILES))
@@ -65,8 +70,19 @@ Sub in.close()
 End Sub
 
 Function in.readln$()
-  Local s$
-  Line Input #in.num_open_files%, s$
-  in.readln$ = s$
-  Inc in.line_num%(in.num_open_files% - 1)
+  If list.size%(in.buffer$()) Then
+    in.readln$ = list.get$(in.buffer$(), 0)
+    list.remove(in.buffer$(), 0)
+  Else
+    Line Input #in.num_open_files%, in.readln$
+    Inc in.line_num%(in.num_open_files% - 1)
+  EndIf
+End Function
+
+Function in.buffer_line%(line$)
+  If list.is_full%(in.buffer$()) Then
+    in.buffer_line% = sys.error%(sys.FAILURE, "Input buffer full")
+  Else
+    list.add(in.buffer$(), line$)
+  EndIf
 End Function
