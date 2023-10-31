@@ -646,7 +646,6 @@ Sub test_empty_lines_given_comment()
   assert_string_array_equals(expected$(), out$())
 End Sub
 
-
 Sub test_omit_comments()
   in$(0) = "' leading space"
   in$(1) = "'no leading space"
@@ -660,8 +659,17 @@ Sub test_omit_comments()
   opt.comments% = 0
   format_lines()
 
-  ' expected$() is initially empty.
+  expected$(0) = "' leading underscore"
+  expected$(1) = "' license"
+  expected$(2) = "' LICENCE"
+  expected$(3) = "' copyRIGHT"
+  expected$(4) = "' (c)"
   assert_string_array_equals(expected$(), out$())
+
+  ' Check that token type of modified token is still TK_COMMENT.
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("'_leading underscore"))
+  assert_int_equals(sys.success, fmt.format%())
+  expect_token(0, TK_COMMENT, "' leading underscore", 0)
 End Sub
 
 Sub test_preserve_comments()

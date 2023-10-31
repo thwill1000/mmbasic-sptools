@@ -41,23 +41,29 @@ Function fmt.format%()
     Exit Function
   EndIf
 
-  Local i%, indent%, t$, u$
+  Local i%, indent%, keep%, t$, u$
 
   For i% = 0 To lx.num% - 1
 
+    t$ = "|" + lx.token_lc$(i) + "|"
+
     If opt.comments% = 0 Then
-      ' Remove comments.
+      ' Remove comments unless they contain "license", "licence",
+      ' (c), or "copyright" or begin with the underscore '_' character.
       If lx.type%(i%) = TK_COMMENT Then
-        lx.remove_token(i%)
-        If lx.num = 0 Then
-          fmt.format% = fmt.OMIT_LINE
-          Exit Function
+        keep% = Left$(t$, 3) = "|'_"
+        If keep% Then lx.replace_token(i%, "' " + Mid$(lx.token$(i%), 3), TK_COMMENT)
+        Inc keep%, InStr(t$,"license")+InStr(t$,"licence")+InStr(t$,"(c)")+InStr(t$,"copyright")
+        If Not keep% Then
+          lx.remove_token(i%)
+          If lx.num% = 0 Then
+            fmt.format% = fmt.OMIT_LINE
+            Exit Function
+          EndIf
         EndIf
         Continue For
       EndIf
     EndIf
-
-    t$ = "|" + lx.token_lc$(i) + "|"
 
     ' Tokens requiring us to decrease the indent level before.
     If Instr("|end|", t$) Then

@@ -166,11 +166,6 @@ Sub main()
 End Sub
 
 Sub open_include()
-  Local s$ = "' #Include " + str.quote$(file.get_canonical$(tr.include$))
-  If Len(s$) < 79 Then Cat s$, " "
-  If Len(s$) < 80 Then Cat s$, String$(80 - Len(s$), "-")
-  If in.buffer_line%(s$) <> sys.SUCCESS Then cerror(sys.err$)
-
   If in.open%(tr.include$) = sys.SUCCESS Then
     Local i% = in.num_open_files%
     cout(CR$ + Space$((i% - 1) * 2) + in.files$(i% - 1)) : cendl()
@@ -178,10 +173,16 @@ Sub open_include()
   Else
     cerror(sys.err$)
   EndIf
+
+  Const f$ = in.files$(in.num_open_files% - 1)
+  If in.buffer_line%("") <> sys.SUCCESS Then cerror(sys.err$)
+  If in.buffer_line%("'_" + f$ + " ++++") <> sys.SUCCESS Then cerror(sys.err$)
 End Sub
 
 Sub close_include()
-  If in.buffer_line%("' " + String$(78, "-")) <> sys.SUCCESS Then cerror(sys.err$)
+  Const f$ = in.files$(in.num_open_files% - 1)
+  If in.buffer_line%("") <> sys.SUCCESS Then cerror(sys.err$)
+  If in.buffer_line%("'_---- " + f$) <> sys.SUCCESS Then cerror(sys.err$)
   in.close()
 End Sub
 
