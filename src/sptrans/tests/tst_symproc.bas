@@ -33,6 +33,7 @@ keywords.init()
 add_test("test_initial_state")
 add_test("test_global_vars")
 add_test("test_sub_declarations")
+add_test("test_sub_decl_given_rsrvd_name")
 add_test("test_call_from_sub")
 add_test("test_call_from_global")
 add_test("test_split_globals")
@@ -164,6 +165,12 @@ Sub test_sub_declarations()
   assert_int_equals(0, sym.get_references%("my_csub", actual$()))
   assert_int_equals(0, sym.get_references%("my_function", actual$()))
   assert_int_equals(0, sym.get_references%("my_sub", actual$()))
+End Sub
+
+Sub test_sub_decl_given_rsrvd_name()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Sub output()"))
+  assert_int_equals(sys.FAILURE, symproc.process%())
+  assert_error("FUNCTION/SUB name 'output' is reserved")
 End Sub
 
 Sub test_call_from_sub()

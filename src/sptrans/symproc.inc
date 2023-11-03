@@ -81,6 +81,16 @@ Function symproc.keyword%(idx%)
       EndIf
     EndIf
   EndIf
+
+  ' In theory keywords that are not MMBasic commands or functions can be used
+  ' as function names (or identifiers in general). For the moment to simplify
+  ' things 'sptrans' disallows this.
+  If idx% > 0 Then
+    If InStr(" cfunction csub function sub ", " " + lx.token_lc$(idx% - 1) + " ") Then
+      symproc.keyword% = sys.error%(sys.FAILURE, "FUNCTION/SUB name '" + lx.token$(idx%) + "' is reserved")
+      Exit Function
+    EndIf
+  EndIf
 End Function
 
 Function symproc.process%()
