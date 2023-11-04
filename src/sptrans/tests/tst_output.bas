@@ -29,13 +29,11 @@ Dim out_next%
 
 keywords.init()
 
-add_test("test_print")
-add_test("test_println")
-add_test("test_println_given_line_num")
-add_test("test_endl")
 add_test("test_line")
 add_test("test_line_gvn_colour")
 add_test("test_line_gvn_empty")
+add_test("test_line_gvn_line_num")
+add_test("test_line_gvn_line_num_colour")
 add_test("test_line_csub")
 add_test("test_line_csub_gvn_colour")
 add_test("test_line_cfunc")
@@ -98,46 +96,6 @@ Sub expect_colours(colour%)
   YE$ = Choice(colour%, vt100.colour$("yellow"), "")
 End Sub
 
-Sub test_print()
-  out.print("foo")
-  out.print("bar")
-
-  assert_int_equals(1, out.line_num%)
-  assert_int_equals(BASE, out_next%)
-  assert_string_equals("foobar", out$(BASE + 0))
-End Sub
-
-Sub test_println()
-  out.println("foo")
-  out.println("bar")
-
-  assert_int_equals(2, out.line_num%)
-  assert_int_equals(BASE + 2, out_next%)
-  assert_string_equals("foo", out$(BASE + 0))
-  assert_string_equals("bar", out$(BASE + 1))
-End Sub
-
-Sub test_println_given_line_num()
-  out.line_num_width% = 5
-  out.println("foo")
-  out.println("bar")
-
-  assert_int_equals(2, out.line_num%)
-  assert_int_equals(BASE + 2, out_next%)
-  assert_string_equals("1     foo", out$(BASE + 0))
-  assert_string_equals("2     bar", out$(BASE + 1))
-End Sub
-
-Sub test_endl()
-  out.println("foo")
-  out.endl()
-
-  assert_int_equals(2, out.line_num%)
-  assert_int_equals(BASE + 2, out_next%)
-  assert_string_equals("foo", out$(BASE + 0))
-  assert_string_equals("", out$(BASE + 1))
-End Sub
-
 Sub test_line(colour%)
   in$(0) = "Dim a = 1 + 2"
   in$(1) = "Dim b$ = " + str.quote$("foo")
@@ -170,6 +128,34 @@ Sub test_line_gvn_empty()
   output_lines()
 
   assert_string_array_equals(in$(), out$())
+End Sub
+
+Sub test_line_gvn_line_num(colour%)
+  in$(0) = "Dim a = 1 + 2"
+  in$(1) = "Dim b$ = " + str.quote$("foo")
+  in$(2) = "'!if defined(bar)"
+  in$(3) = "100 Dim line_number"
+  in$(4) = "wombat: Dim label"
+
+  out.line_num_width% = 5
+  expect_colours(colour%)
+  opt.colour% = colour%
+  output_lines()
+
+  expected$(0) = "1     " + CY$ + "Dim " + WH$ + "a " + WH$ + "= " + GR$ + "1 " + WH$ + "+ " + GR$ + "2" + RS$
+  expected$(1) = "2     " + CY$ + "Dim " + WH$ + "b$ " + WH$ + "= " + MA$ + str.quote$("foo") + RS$
+  expected$(2) = "3     " + RD$ + "'!if " + WH$ + "defined" + WH$ + "(" + WH$ + "bar" + WH$ + ")" + RS$
+  expected$(3) = "4     " + GR$ + "100 " + CY$ + "Dim " + WH$ + "line_number" + RS$
+  expected$(4) = "5     " + GR$ + "wombat: " + CY$ + "Dim " + WH$ + "label" + RS$
+  Local i%
+  For i% = 5 To Bound(out$(), 1)
+    expected$(i%) = str.rpad$(Str$(i% + 1), 6)
+  Next
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_line_gvn_line_num_colour()
+  test_line_gvn_line_num(1)
 End Sub
 
 Sub test_line_csub(fn$, colour%)

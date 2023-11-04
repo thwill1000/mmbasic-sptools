@@ -46,34 +46,23 @@ Sub out.close()
   out.file_num% = 0
 End Sub
 
-Sub out.print(s$)
+Sub out.write(s$)
   If out.append% Then
     Call out.write_cb$, out.file_num%, s$
+    If Right$(s$, Len(out.eol$)) = out.eol$ Then out.append% = 0
   Else
     Inc out.line_num%
     out.append% = 1
-    If out.line_num_width% Then out.print(str.rpad$(Str$(out.line_num%), out.line_num_width%) + " ")
-    out.print(s$)
+    If out.line_num_width% Then out.write(str.rpad$(Str$(out.line_num%), out.line_num_width%) + " ")
+    out.write(s$)
   EndIf
 End Sub
 
-Sub out.endl()
-  If out.append% = 0 Then out.print() ' to print a line number if necessary
-  Call out.write_cb$, out.file_num%, out.eol$
-  out.append% = 0
-End Sub
-
-Sub out.println(s$)
-  out.print(s$)
-  out.endl()
-End Sub
-
 Sub out.line()
-  If out.append% Then out.endl()
   If lx.num% = 0 Then
     out.empty_line()
   Else
-    If opt.colour% Then out.highlight() Else out.println(lx.line$)
+    If opt.colour% Then out.highlight() Else out.write(lx.line$ + out.eol$)
     out.empty_line_flag% = 0
     out.omitted_line_flag% = 0
   EndIf
@@ -84,12 +73,12 @@ Sub out.highlight()
   For i% = 0 To lx.num% - 1
     ' Record entry and exit from CSUB definition.
     If InStr("|cfunction|csub|", "|" + lx.token_lc$(i%) + "|") Then out.within_csub% = Not out.within_csub%
-    out.print(Space$(n%))
+    out.write(Space$(n%))
     col$ = out.colour$(i%)
-    out.print(col$ + lx.token$(i%))
+    out.write(col$ + lx.token$(i%))
     n% = lx.start%(i% + 1) - lx.start%(i%) - lx.len%(i%)
   Next
-  out.println(vt100.colour$("reset"))
+  out.write(vt100.colour$("reset") + out.eol$)
 End Sub
 
 ' Gets the syntax highlighting colour to use for token 'i%'.
@@ -118,7 +107,7 @@ End Sub
 Sub out.empty_line()
   If out.line_num% = 0 Then Exit Sub
   If out.omitted_line_flag% And out.empty_line_flag% Then Exit Sub
-  out.println()
+  out.write(out.eol$)
   out.empty_line_flag% = 1
   out.omitted_line_flag% = 0
 End Sub
