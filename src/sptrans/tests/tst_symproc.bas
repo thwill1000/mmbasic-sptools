@@ -21,6 +21,7 @@ Option Explicit On
 #Include "../input.inc"
 #Include "../keywords.inc"
 #Include "../lexer.inc"
+#Include "../options.inc"
 #Include "../output.inc"
 #Include "../symbols.inc"
 #Include "../symproc.inc"

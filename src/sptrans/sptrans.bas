@@ -29,7 +29,6 @@ Const CR$ = Chr$(13)
 #Include "defines.inc"
 #Include "format.inc"
 #Include "output.inc"
-#Include "highlight.inc"
 #Include "expression.inc"
 #Include "symbols.inc"
 #Include "trans.inc"
@@ -134,14 +133,14 @@ Sub main()
       Case sys.FAILURE
         cerror(sys.err$)
       Case sys.SUCCESS
-        If opt.colour% Then hil.highlight() Else out.println(lx.line$)
+        out.line()
       Case fmt.OMIT_LINE
         ' Do nothing
       Case fmt.EMPTY_LINE_BEFORE
         out.println()
-        If opt.colour% Then hil.highlight() Else out.println(lx.line$)
+        If lx.num% Then out.line()
       Case fmt.EMPTY_LINE_AFTER
-        If opt.colour% Then hil.highlight() Else out.println(lx.line$)
+        If lx.num% Then out.line()
         out.println()
       Case Else
         Error "Invalid format state: " + Str$(ok%)
