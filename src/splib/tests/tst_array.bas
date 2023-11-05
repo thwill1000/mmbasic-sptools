@@ -24,6 +24,11 @@ add_test("test_case_insens_bsearch")
 add_test("test_join_floats")
 add_test("test_join_ints")
 add_test("test_join_strings")
+add_test("test_qsort_ints_gvn_ordered")
+add_test("test_qsort_ints_gvn_reversed")
+add_test("test_qsort_ints_gvn_identical")
+add_test("test_qsort_ints_gvn_two")
+add_test("test_qsort_ints_gvn_comparator")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
 
@@ -396,3 +401,47 @@ Sub test_join_strings()
   assert_string_equals("two*t...",  array.join_strings$(a$(), "*", BASE + 1, 2, 8))
   assert_string_equals("two*three", array.join_strings$(a$(), "*", BASE + 1, 2, 9))
 End Sub
+
+Sub test_qsort_ints_gvn_ordered()
+  Local in%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+  Local expected%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
+  assert_int_array_equals(expected%(), in%())
+End Sub
+
+Sub test_qsort_ints_gvn_reversed()
+  Local in%(array.new%(10)) = (10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+  Local expected%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
+  assert_int_array_equals(expected%(), in%())
+End Sub
+
+Sub test_qsort_ints_gvn_identical()
+  Local in%(array.new%(10)) = (5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+  Local expected%(array.new%(10)) = (5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
+  assert_int_array_equals(expected%(), in%())
+End Sub
+
+Sub test_qsort_ints_gvn_two()
+  Local in%(array.new%(2)) = (2, 1)
+  Local expected%(array.new%(2)) = (1, 2)
+
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
+  assert_int_array_equals(expected%(), in%())
+End Sub
+
+Sub test_qsort_ints_gvn_comparator()
+  Local in%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+  Local expected%(array.new%(10)) = (10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%(), BASE, 10, "reverse_comparator%"))
+  assert_int_array_equals(expected%(), in%())
+End Sub
+
+Function reverse_comparator%(a%, b%)
+  reverse_comparator% = b% - a%
+End Function

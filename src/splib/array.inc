@@ -195,3 +195,55 @@ Function array.join_strings$(a$(), delim$, lb%, num%, slen%)
     array.join_strings$ = Left$(s$, slen_% - 3) + "..."
   EndIf
 End Function
+
+' Partitions an integer array and returns the pivot index.
+Function array.partition_ints%(a%(), low%, high%, compare_fn$)
+  Local i% = low% - 1, j%, pivot% = a%(high%), swap%, tmp%
+  For j% = low% To high% - 1
+    swap% = Choice(compare_fn$ = "", a%(j%) <= pivot%, Call(compare_fn$, a%(j%), pivot%) <= 0)
+    If swap% Then
+      Inc i%
+      tmp% = a%(i%) : a%(i%) = a%(j%) : a%(j%) = tmp%
+    EndIf
+  Next j%
+  Inc i%
+  tmp% = a%(i%) : a%(i%) = a%(high%) : a%(high%) = tmp%
+  array.partition_ints% = i%
+End Function
+
+' Quick sorts an integer array.
+'
+' @param[in,out]  a%()  array to be sorted.
+' @param  lb%           lower bound to start the sort from;
+'                       if 0/unset then sort from the first element.
+' @param  num%          number of elements to sort; defaults to all.
+' @param  compare_fn$   comparison function; defaults to ascending.
+' @return               sys.SUCCESS on success, otherwise sys.FAILURE;
+'                       see sys.err$ for details.
+Function array.qsort_ints%(a%(), lb%, num%, compare_fn$)
+   Const BASE = Mm.Info(Option Base)
+   Local low% = Choice(lb% = 0, BASE, lb%)
+   Local high% = Choice(num% = 0, Bound(a%(), 1), lb% + num% - 1)
+   Local stack%(array.new%(2), array.new%(high% - low% + 1))
+   Local pivot_index%, top% = BASE
+   stack%(BASE, top%) = low%
+   stack%(BASE + 1, top%) = high%
+   Do
+     If top% >= BASE Then
+       low% = stack%(BASE, top%)
+       high% = stack%(BASE + 1, top%)
+       Inc top%, -1
+       pivot_index% = array.partition_ints%(a%(), low%, high%, compare_fn$)
+       If pivot_index% - 1 > low% Then
+         Inc top%
+         stack%(BASE, top%) = low%
+         stack%(BASE + 1, top%) = pivot_index% - 1
+       EndIf
+       If pivot_index% + 1 < high% Then
+         Inc top%
+         stack%(BASE, top%) = pivot_Index% + 1
+         stack%(BASE + 1, top%) = high%
+       EndIf
+     EndIf
+   Loop Until top% < BASE
+End Function
