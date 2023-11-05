@@ -38,6 +38,7 @@ add_test("test_keywords")
 add_test("test_list_all")
 add_test("test_quiet")
 add_test("test_spacing")
+add_test("test_tree_shake")
 add_test("test_output_file")
 add_test("test_unknown_option")
 add_test("test_too_many_arguments")
@@ -267,6 +268,28 @@ Sub test_spacing()
   assert_error("option --spacing expects {0|1|2} argument")
 End Sub
 
+Sub test_tree_shake()
+  opt.tree_shake = 0
+  cli.parse("--tree-shake " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.tree_shake)
+
+  opt.tree_shake = 0
+  cli.parse("-T " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.tree_shake)
+
+  opt.tree_shake = 0
+  cli.parse("--tree-shake=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option --tree-shake does not expect argument")
+  assert_int_equals(0, opt.tree_shake)
+
+  opt.tree_shake = 0
+  cli.parse("-T=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option -T does not expect argument")
+  assert_int_equals(0, opt.tree_shake)
+End Sub
+
 Sub test_output_file()
   ' Test with unquoted filename.
   cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$)
@@ -305,7 +328,7 @@ Sub test_incompatible_arguments()
 End Sub
 
 Sub test_everything()
-  cli.parse("-f -C -e=1 -i=2 -s=0 -n -q " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  cli.parse("-f -C -e=1 -i=2 -s=0 -n -q -T " + INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_int_equals(1, opt.format_only)
@@ -317,4 +340,5 @@ Sub test_everything()
   assert_int_equals(2, opt.indent_sz)
   assert_int_equals(1, opt.quiet)
   assert_int_equals(0, opt.spacing)
+  assert_int_equals(1, opt.tree_shake)
 End Sub

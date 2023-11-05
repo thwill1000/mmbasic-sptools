@@ -34,6 +34,7 @@ Const CR$ = Chr$(13)
 #Include "trans.inc"
 #Include "cmdline.inc"
 #Include "symproc.inc"
+#Include "treeshake.inc"
 #Include "console.inc"
 
 Sub main()
@@ -78,7 +79,7 @@ Sub main()
   con.out(in.files$(0)) : con.endl()
   con.out("   ")
 
-  Local ok%, t% = Timer
+  Local ok%, symproc% = opt.tree_shake% Or opt.list_all%, t% = Timer
   Do
     con.out(BS$ + Mid$("\|/-", ((in.line_num%(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
@@ -111,16 +112,16 @@ Sub main()
         Exit Do
       Case sys.SUCCESS
         out.line()
-        If opt.list_all% Then ok% = symproc.process%()
+        If symproc% Then ok% = symproc.process%()
       Case fmt.OMIT_LINE
         out.omit_line()
       Case fmt.EMPTY_LINE_BEFORE
         out.empty_line()
         out.line()
-        If opt.list_all% Then ok% = symproc.process%()
+        If symproc% Then ok% = symproc.process%()
       Case fmt.EMPTY_LINE_AFTER
         out.line()
-        If opt.list_all% Then ok% = symproc.process%()
+        If symproc% Then ok% = symproc.process%()
         out.empty_line()
       Case Else
         Error "Invalid format state: " + Str$(ok%)
@@ -138,6 +139,11 @@ Sub main()
   If ok% < 0 Then con.error(sys.err$)
 
   out.close()
+
+  If opt.tree_shake% Then
+    con.out(BS$ + "Shaking the tree ...") : con.endl()
+    If tree.shake%() <> sys.SUCCESS Then con.error(sys.err$)
+  EndIf
 
   If opt.list_all% Then
     If list_symbols%() <> sys.SUCCESS Then con.error(sys.err$)

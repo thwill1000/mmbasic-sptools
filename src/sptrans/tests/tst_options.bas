@@ -29,6 +29,7 @@ add_test("test_outfile")
 add_test("test_format")
 add_test("test_quiet")
 add_test("test_spacing")
+add_test("test_tree_shake")
 add_test("test_unknown")
 
 run_tests()
@@ -465,6 +466,39 @@ Sub test_spacing()
   sys.err$ = ""
   opt.set("spacing", "3")
   assert_error("expects 'on|minimal|compact|generous' argument")
+End Sub
+
+Sub test_tree_shake()
+  Local elements$(10) Length 10, i
+
+  assert_int_equals(0, opt.tree_shake)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.tree_shake = 999
+    opt.set("tree-shake", elements$(i))
+    assert_int_equals(0, opt.tree_shake)
+    Inc i
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.tree_shake = 999
+    opt.set("tree-shake", elements$(i))
+    assert_int_equals(1, opt.tree_shake)
+    Inc i
+  Loop
+
+  opt.set("tree-shake", "foo")
+  assert_error("expects 'on|off' argument")
 End Sub
 
 Sub test_infile()

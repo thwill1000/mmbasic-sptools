@@ -37,6 +37,8 @@ Dim opt.spacing      ' -1    : preserve spacing
                      '  0    : omit all unnecessary (non-indent) spaces
                      '  1    : space compactly
                      '  2    : space generously
+Dim opt.tree_shake   '  0    : do not perform tree-shaking
+                     '  1    : perform tree-shaking
 Dim opt.infile$      ' input file/path
 Dim opt.outfile$     ' output file/path, empty for output to console
 
@@ -52,6 +54,7 @@ Sub opt.init()
   opt.list_all% = 0
   opt.quiet = 0
   opt.spacing = -1
+  opt.tree_shake = 0
   opt.infile$ = ""
   opt.outfile$ = ""
 End Sub
@@ -73,6 +76,7 @@ Sub opt.set(name$, value$)
     Case "no-comments"  : opt.set_no_comments(value$)
     Case "quiet"        : opt.set_quiet(value$)
     Case "spacing"      : opt.set_spacing(value$)
+    Case "tree-shake"   : opt.set_tree_shake(value$)
     Case "infile"       : opt.set_infile(value$)
     Case "outfile"      : opt.set_outfile(value$)
     Case Else
@@ -199,6 +203,15 @@ Sub opt.set_spacing(value$)
     Case "generous", "2"                       : opt.spacing = 2
     Case Else
       sys.err$ = "expects 'on|minimal|compact|generous' argument"
+  End Select
+End Sub
+
+Sub opt.set_tree_shake(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.tree_shake = 0
+    Case "on", "1"                 : opt.tree_shake = 1
+    Case Else
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 

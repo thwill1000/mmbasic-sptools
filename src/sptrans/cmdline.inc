@@ -34,6 +34,7 @@ Sub cli.parse(s$)
       Case "n", "no-comments"  : cli.parse_no_arg("no-comments", i)
       Case "q", "quiet"        : cli.parse_no_arg("quiet", i)
       Case "s", "spacing"      : cli.parse_arg("spacing", i, "{0|1|2}")
+      Case "T", "tree-shake"   : cli.parse_no_arg("tree-shake", i)
       Case "v", "version"      : spt.print_version("sptrans") : End
       Case Else:
         If Left$(lx.option$(i), 1) = "D" Then
@@ -144,6 +145,7 @@ Sub cli.usage()
   Print "                           2 - generous spacing"
   Print "                         if omitted then original token spacing will be"
   Print "                         preserved"
+  Print "  -T, --tree-shake       remove unused functions & subroutines"
   Print "  -v, --version          output version information and exit"
   Print
   Print "Note that --no-comments, --empty-lines, --indent and --spacing will be"
