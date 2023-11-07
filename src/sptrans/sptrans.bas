@@ -34,26 +34,7 @@ Const CR$ = Chr$(13)
 #Include "trans.inc"
 #Include "cmdline.inc"
 #Include "symproc.inc"
-
-Sub cendl(always%)
-  If Not Len(opt.outfile$) Then Exit Sub
-  If Not always% And opt.quiet Then Exit Sub
-  Print
-End Sub
-
-Sub cout(s$, always%)
-  If Not Len(opt.outfile$) Then Exit Sub
-  If Not always% And opt.quiet Then Exit Sub
-  Print s$;
-End Sub
-
-Sub cerror(msg$)
-  Const i% = in.num_open_files% - 1
-  Print
-  If i% >= 0 Then Print "[" + in.files$(i%) + ":" + Str$(in.line_num%(i%)) + "] ";
-  Print "Error: " + msg$
-  If Mm.Device$ = "MMB4L" Then End 1 Else End
-End Sub
+#Include "console.inc"
 
 Sub main()
   in.init()
@@ -88,18 +69,18 @@ Sub main()
   out.open(opt.outfile$)
 
   If Not opt.format_only% Then
-    If in.buffer_line%("' Transpiled on " + DateTime$(Now)) <> sys.SUCCESS Then cerror(sys.err$)
-    If in.buffer_line%("") Then cerror(sys.err$)
+    If in.buffer_line%("' Transpiled on " + DateTime$(Now)) <> sys.SUCCESS Then con.error(sys.err$)
+    If in.buffer_line%("") Then con.error(sys.err$)
   EndIf
 
-  cout("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : cendl()
-  If in.open%(opt.infile$) <> sys.SUCCESS Then cerror(sys.err$)
-  cout(in.files$(0)) : cendl()
-  cout("   ")
+  con.out("Transpiling from '" + opt.infile$ + "' to '" + opt.outfile$ + "' ...") : con.endl()
+  If in.open%(opt.infile$) <> sys.SUCCESS Then con.error(sys.err$)
+  con.out(in.files$(0)) : con.endl()
+  con.out("   ")
 
   Local ok%, t% = Timer
   Do
-    cout(BS$ + Mid$("\|/-", ((in.line_num%(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
+    con.out(BS$ + Mid$("\|/-", ((in.line_num%(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
 
     ' Parse
     s$ = in.readln$()
@@ -148,18 +129,18 @@ Sub main()
 
     If Eof(#in.num_open_files%) Then
       If in.num_open_files% > 1 Then close_include() Else in.close()
-      If sys.err$ <> "" Then cerror(sys.err$)
-      cout(BS$ + " " + CR$ + Space$(1 + in.num_open_files% * 2))
+      If sys.err$ <> "" Then con.error(sys.err$)
+      con.out(BS$ + " " + CR$ + Space$(1 + in.num_open_files% * 2))
     EndIf
 
   Loop Until in.num_open_files% = 0
 
-  If ok% < 0 Then cerror(sys.err$)
+  If ok% < 0 Then con.error(sys.err$)
 
   out.close()
 
   If opt.list_all% Then
-    If list_symbols%() <> sys.SUCCESS Then cerror(sys.err$)
+    If list_symbols%() <> sys.SUCCESS Then con.error(sys.err$)
   EndIf
 
   If Not opt.quiet Then Print BS$ "Time taken = " + Format$((Timer - t) / 1000, "%.1f s")
@@ -168,21 +149,21 @@ End Sub
 Sub open_include()
   If in.open%(tr.include$) = sys.SUCCESS Then
     Local i% = in.num_open_files%
-    cout(CR$ + Space$((i% - 1) * 2) + in.files$(i% - 1)) : cendl()
-    cout(" " + Space$(i% * 2))
+    con.out(CR$ + Space$((i% - 1) * 2) + in.files$(i% - 1)) : con.endl()
+    con.out(" " + Space$(i% * 2))
   Else
-    cerror(sys.err$)
+    con.error(sys.err$)
   EndIf
 
   Const f$ = in.files$(in.num_open_files% - 1)
-  If in.buffer_line%("") <> sys.SUCCESS Then cerror(sys.err$)
-  If in.buffer_line%("'_" + f$ + " ++++") <> sys.SUCCESS Then cerror(sys.err$)
+  If in.buffer_line%("") <> sys.SUCCESS Then con.error(sys.err$)
+  If in.buffer_line%("'_" + f$ + " ++++") <> sys.SUCCESS Then con.error(sys.err$)
 End Sub
 
 Sub close_include()
   Const f$ = in.files$(in.num_open_files% - 1)
-  If in.buffer_line%("") <> sys.SUCCESS Then cerror(sys.err$)
-  If in.buffer_line%("'_---- " + f$) <> sys.SUCCESS Then cerror(sys.err$)
+  If in.buffer_line%("") <> sys.SUCCESS Then con.error(sys.err$)
+  If in.buffer_line%("'_---- " + f$) <> sys.SUCCESS Then con.error(sys.err$)
   in.close()
 End Sub
 
