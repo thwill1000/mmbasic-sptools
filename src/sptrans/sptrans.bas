@@ -62,6 +62,9 @@ Sub main()
   keywords.init()
   symproc.init()
 
+  ' Sanity check
+  If tr.OMIT_LINE <> fmt.OMIT_LINE Then Error "Sanity check failed"
+
   cli.parse(Mm.CmdLine$)
   If sys.err$ <> "" Then Print "sptrans: "; sys.err$ : End
 
@@ -101,50 +104,47 @@ Sub main()
     ' Parse
     s$ = in.readln$()
     ok% = lx.parse_basic%(s$)
+    If ok% < 0 Then Exit Do
 
     ' Transpile
-    If ok% = sys.SUCCESS Then
-      If opt.format_only Then
-        ok% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
-      ElseIf opt.include_only Then
-        ok% = tr.transpile_includes%()
-      Else
-        ok% = tr.transpile%()
-      EndIf
+    If opt.format_only Then
+      ok% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
+    ElseIf opt.include_only Then
+      ok% = tr.transpile_includes%()
+    Else
+      ok% = tr.transpile%()
     EndIf
-    Select Case ok%
-      Case sys.FAILURE, sys.SUCCESS, tr.OMIT_LINE
-        ' Do nothing
-      Case tr.INCLUDE_FILE
-        open_include()
-        ok% = tr.OMIT_LINE
-      Case Else:
-        Error "Invalid trans state: " + Str$(ok%)
-    End Select
-
-    ' Process Symbols
-    If ok% = sys.SUCCESS And opt.list_all% Then ok% = symproc.process%()
+    If ok% < 0 Then
+      Exit Do
+    ElseIf ok% = tr.INCLUDE_FILE Then
+      open_include()
+      ok% = fmt.OMIT_LINE
+    EndIf
 
     ' Format
     If ok% = sys.SUCCESS And opt.format% Then ok% = fmt.format%()
 
-    ' Output
+    ' Output / Process Symbols
     Select Case ok%
       Case sys.FAILURE
-        cerror(sys.err$)
+        Exit Do
       Case sys.SUCCESS
         out.line()
+        If opt.list_all% Then ok% = symproc.process%()
       Case fmt.OMIT_LINE
-        ' Do nothing
+        ' Do nothing.
       Case fmt.EMPTY_LINE_BEFORE
         out.println()
-        If lx.num% Then out.line()
+        out.line()
+        If opt.list_all% Then ok% = symproc.process%()
       Case fmt.EMPTY_LINE_AFTER
-        If lx.num% Then out.line()
+        out.line()
+        If opt.list_all% Then ok% = symproc.process%()
         out.println()
       Case Else
         Error "Invalid format state: " + Str$(ok%)
     End Select
+    If ok% < 0 Then Exit Do
 
     If Eof(#in.num_open_files%) Then
       If in.num_open_files% > 1 Then close_include() Else in.close()
@@ -153,6 +153,8 @@ Sub main()
     EndIf
 
   Loop Until in.num_open_files% = 0
+
+  If ok% < 0 Then cerror(sys.err$)
 
   out.close()
 
