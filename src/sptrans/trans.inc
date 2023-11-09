@@ -42,12 +42,6 @@ Dim tr.include$
 ' corresponding to the directive that set this flag.
 Dim tr.omit_flag%
 
-' Was the last non-omitted line empty after transpilation ?
-Dim tr.empty_line_flag%
-
-' Was the last line omitted ?
-Dim tr.omitted_line_flag%
-
 Const tr.INCLUDE_FILE = 1
 Const tr.OMIT_LINE = 2
 
@@ -101,7 +95,6 @@ Function tr.transpile%()
       Call "tr.process_" + Mid$(lx.token_lc$(0), 3) + "()"
       If sys.err$ = "" Then
         lx.reset("") ' Is this really necessary ?
-        tr.omitted_line_flag% = 1
         tr.transpile% = tr.OMIT_LINE
       Else
         tr.transpile% = sys.FAILURE
@@ -119,7 +112,6 @@ Function tr.transpile%()
       EndIf
     EndIf
     lx.reset("")
-    tr.omitted_line_flag% = 1
     tr.transpile% = tr.OMIT_LINE
     Exit Function
   EndIf
@@ -131,26 +123,14 @@ Function tr.transpile%()
     Exit Function
   EndIf
 
-  If lx.num = 0 Then                  ' IF this line is empty
-    If tr.omitted_line_flag% Then     ' AND the last line was omitted
-      If tr.empty_line_flag% Then     ' AND the last non-omitted line was empty
-        tr.transpile% = tr.OMIT_LINE  ' THEN omit this line.
-        Exit Function
-      EndIf
-    EndIf
-  EndIF
-
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
     tr.transpile% = Choice(sys.err$ = "", tr.INCLUDE_FILE, sys.FAILURE)
-    tr.omitted_line_flag% = 0
     Exit Function
   EndIf
 
   If lx.type(0) <> TK_DIRECTIVE Then
-    tr.empty_line_flag% = (lx.num% = 0)
     tr.transpile% = sys.SUCCESS
-    tr.omitted_line_flag% = 0
     Exit Function
   EndIf
 
@@ -181,9 +161,7 @@ Function tr.transpile%()
   If sys.err$ <> "" Then
     tr.transpile% = sys.FAILURE
   ElseIf tr.transpile% = tr.OMIT_LINE Then
-    ' lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
     lx.reset("")
-    tr.omitted_line_flag% = 1
   EndIf
 End Function
 

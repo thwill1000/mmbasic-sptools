@@ -20,12 +20,14 @@ TK_COLOUR$(TK_SYMBOL)     = vt100.colour$("white")
 TK_COLOUR$(TK_DIRECTIVE)  = vt100.colour$("red")
 TK_COLOUR$(TK_LABEL)      = vt100.colour$("green")
 
-Dim out.append% = 0
+Dim out.append%
 Dim out.eol$ = Chr$(10)
-Dim out.file_num% = 0
-Dim out.line_num% = 0
+Dim out.empty_line_flag% ' Last non-omitted line was empty.
+Dim out.file_num%
+Dim out.line_num%
 Dim out.line_num_width% = 5
-Dim out.within_csub% = 0
+Dim out.omitted_line_flag% ' Last line was omitted.
+Dim out.within_csub%
 Dim out.write_cb$ = "out.default_cb"
 
 Sub out.default_cb(fnbr%, s$)
@@ -69,11 +71,11 @@ End Sub
 Sub out.line()
   If out.append% Then out.endl()
   If lx.num% = 0 Then
-    out.endl()
-  ElseIf opt.colour% Then
-    out.highlight()
+    out.empty_line()
   Else
-    out.println(lx.line$)
+    If opt.colour% Then out.highlight() Else out.println(lx.line$)
+    out.empty_line_flag% = 0
+    out.omitted_line_flag% = 0
   EndIf
 End Sub
 
@@ -108,3 +110,15 @@ Function out.colour$(i%)
     out.colour$ = TK_COLOUR$(TK_NUMBER)
   EndIf
 End Function
+
+Sub out.omit_line()
+  out.omitted_line_flag% = 1
+End Sub
+
+Sub out.empty_line()
+  If out.line_num% = 0 Then Exit Sub
+  If out.omitted_line_flag% And out.empty_line_flag% Then Exit Sub
+  out.println()
+  out.empty_line_flag% = 1
+  out.omitted_line_flag% = 0
+End Sub

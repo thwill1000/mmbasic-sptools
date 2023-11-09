@@ -84,7 +84,6 @@ add_test("test_endif_given_no_if")
 add_test("test_endif_given_args")
 add_test("test_endif_given_trail_comment")
 add_test("test_error_directive")
-add_test("test_omit_and_line_spacing")
 add_test("test_comments_directive")
 add_test("test_always_defined_values")
 add_test("test_always_undefined_values")
@@ -126,8 +125,8 @@ Sub setup_test()
   tr.clear_replacements()
   tr.include$ = ""
   tr.omit_flag% = 0
-  tr.empty_line_flag% = 0
-  tr.omitted_line_flag% = 0
+  'tr.empty_line_flag% = 0
+  'tr.omitted_line_flag% = 0
 
   Local i%, j%
   For i% = Bound(tr.num_comments(), 0) To Bound(tr.num_comments(), 1)
@@ -1002,36 +1001,6 @@ Sub test_error_directive()
   expect_transpile_error("'!error " + str.quote$("This is an error"), "This is an error")
   expect_transpile_error("'!error", "!error directive has missing " + str.quote$("message") + " argument")
   expect_transpile_error("'!error 42", "!error directive has missing " + str.quote$("message") + " argument")
-End Sub
-
-' If the result of transpiling a line is such that the line is omitted
-' and that omission then causes two empty lines to run sequentially then
-' we automatically omit the second empty line.
-Sub test_omit_and_line_spacing()
-  expect_transpile_succeeds("", 0)
-  expect_transpile_succeeds("", 0)
-
-  expect_transpile_omits("'!define foo")
-  assert_int_equals(0, tr.omit_flag%)
-
-  ' Should be omitted, because the last line was omitted AND
-  ' the last non-omitted line was empty.
-  expect_transpile_omits("")
-  assert_int_equals(0, tr.omit_flag%)
-
-  expect_transpile_omits("'!ifndef foo")
-  assert_int_equals(1, tr.omit_flag%)
-
-  expect_transpile_omits("bar")
-  assert_int_equals(1, tr.omit_flag%)
-
-  expect_transpile_omits("'!endif")
-  assert_int_equals(0, tr.omit_flag%)
-
-  ' Should be omitted, because the last line was omitted AND
-  ' the last non-omitted line was empty.
-  expect_transpile_omits("")
-  assert_int_equals(0, tr.omit_flag%)
 End Sub
 
 Sub test_comments_directive()

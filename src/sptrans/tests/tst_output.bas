@@ -42,6 +42,10 @@ add_test("test_line_cfunc")
 add_test("test_line_cfunc_gvn_colour")
 add_test("test_line_comment")
 add_test("test_line_comment_gvn_colour")
+add_test("test_omit_line")
+add_test("test_empty_line")
+add_test("test_empty_line_gvn_omit")
+add_test("test_empty_line_gvn_start")
 
 run_tests()
 
@@ -59,6 +63,8 @@ Sub setup_test()
   out.line_num% = 0
   out.line_num_width% = 0
   out.write_cb$ = "write_cb"
+  opt.colour% = 0
+  expect_colours(opt.colour%)
 End Sub
 
 Sub write_cb(fnbr%, s$)
@@ -156,11 +162,14 @@ Sub test_line_gvn_colour()
 End Sub
 
 Sub test_line_gvn_empty()
-  out.line()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("foo"))
+  in$(0) = "foo"
+  in$(1) = ""
+  in$(0) = "bar"
 
-  assert_int_equals(1, out.line_num%)
-  assert_int_equals(BASE + 1, out_next%)
-  assert_string_equals("", out$(BASE + 0))
+  output_lines()
+
+  assert_string_array_equals(in$(), out$())
 End Sub
 
 Sub test_line_csub(fn$, colour%)
@@ -217,4 +226,59 @@ End Sub
 
 Sub test_line_comment_gvn_colour()
   test_line_comment(1)
+End Sub
+
+Sub test_omit_line()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("foo"))
+  out.line()
+  out.omit_line()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("bar"))
+  out.line()
+
+  expected$(0) = "foo"
+  expected$(1) = "bar"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_empty_line()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("foo"))
+  out.line()
+  out.empty_line()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("bar"))
+  out.line()
+
+  expected$(0) = "foo"
+  expected$(1) = ""
+  expected$(2) = "bar"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' IF the current line is empty
+' AND the last line was omitted
+' AND the last non-omitted line was empty
+' THEN omit this line.
+Sub test_empty_line_gvn_omit()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("foo"))
+  out.line()
+  out.empty_line()
+  out.omit_line()
+  out.empty_line()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("bar"))
+  out.line()
+
+  expected$(0) = "foo"
+  expected$(1) = ""
+  expected$(2) = "bar"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+' Omit empty lines at start of file.
+Sub test_empty_line_gvn_start()
+  out.empty_line()
+  out.empty_line()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("foo"))
+  out.line()
+
+  expected$(0) = "foo"
+  assert_string_array_equals(expected$(), out$())
 End Sub

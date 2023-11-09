@@ -132,15 +132,15 @@ Sub main()
         out.line()
         If opt.list_all% Then ok% = symproc.process%()
       Case fmt.OMIT_LINE
-        ' Do nothing.
+        out.omit_line()
       Case fmt.EMPTY_LINE_BEFORE
-        out.println()
+        out.empty_line()
         out.line()
         If opt.list_all% Then ok% = symproc.process%()
       Case fmt.EMPTY_LINE_AFTER
         out.line()
         If opt.list_all% Then ok% = symproc.process%()
-        out.println()
+        out.empty_line()
       Case Else
         Error "Invalid format state: " + Str$(ok%)
     End Select
