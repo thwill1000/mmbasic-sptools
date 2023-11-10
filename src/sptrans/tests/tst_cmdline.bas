@@ -221,8 +221,18 @@ Sub test_list_all()
   assert_int_equals(1, opt.list_all%)
 
   opt.list_all% = 0
+  cli.parse("-L " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.list_all%)
+
+  opt.list_all% = 0
   cli.parse("--list-all=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
   assert_error("option --list-all does not expect argument")
+  assert_int_equals(0, opt.list_all%)
+
+  opt.list_all% = 0
+  cli.parse("-L=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option -L does not expect argument")
   assert_int_equals(0, opt.list_all%)
 End Sub
 
@@ -328,7 +338,7 @@ Sub test_incompatible_arguments()
 End Sub
 
 Sub test_everything()
-  cli.parse("-f -C -e=1 -i=2 -s=0 -n -q -T " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  cli.parse("-f -C -e=1 -i=2 -s=0 -n -q -T -L " + INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_int_equals(1, opt.format_only)
@@ -338,6 +348,7 @@ Sub test_everything()
   assert_int_equals(0, opt.comments)
   assert_int_equals(1, opt.empty_lines)
   assert_int_equals(2, opt.indent_sz)
+  assert_int_equals(1, opt.list_all%)
   assert_int_equals(1, opt.quiet)
   assert_int_equals(0, opt.spacing)
   assert_int_equals(1, opt.tree_shake)
