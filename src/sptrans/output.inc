@@ -62,6 +62,12 @@ Sub out.line()
   If lx.num% = 0 Then
     out.empty_line()
   Else
+    If lx.type%(0) = TK_COMMENT Then
+      If Left$(lx.token$(0), 2) = "'_" Then
+        ' Remove an underscore if is the first character in the comment.
+        lx.replace_token(0, "' " + Mid$(lx.token$(0), 3), TK_COMMENT)
+      EndIf
+    EndIf
     If opt.colour% Then out.highlight() Else out.write(lx.line$ + out.eol$)
     out.empty_line_flag% = 0
     out.omitted_line_flag% = 0

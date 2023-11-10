@@ -79,11 +79,13 @@ Sub write_cb(fnbr%, s$)
 End Sub
 
 Sub output_lines()
-  Local i%
+  Local i%, result%
   For i% = Bound(in$(), 0) To Bound(in$(), 1)
-    assert_int_equals(sys.SUCCESS, lx.parse_basic%(in$(i%)))
+    result% = lx.parse_basic%(in$(i%))
+    If result% <> sys.SUCCESS Then Exit For
     out.line()
   Next
+  assert_int_equals(sys.SUCCESS, result%)
 End Sub
 
 Sub expect_colours(colour%)
@@ -199,6 +201,8 @@ Sub test_line_comment(colour%)
   in$(0) = "' Comment 1"
   in$(1) = "foo 'Comment2"
   in$(2) = "bar REM Comment 3"
+  in$(3) = "'_Comment 4"
+  in$(4) = "' _Comment 5"
 
   expect_colours(colour%)
   opt.colour% = colour%
@@ -207,6 +211,8 @@ Sub test_line_comment(colour%)
   expected$(0) = YE$ + "' Comment 1" + RS$
   expected$(1) = WH$ + "foo " + YE$ + "'Comment2" + RS$
   expected$(2) = WH$ + "bar " + YE$ + "REM Comment 3" + RS$
+  expected$(3) = YE$ + "' Comment 4" + RS$ ' Leading _ should be stripped.
+  expected$(4) = YE$ + "' _Comment 5" + RS$
   assert_string_array_equals(expected$(), out$())
 End Sub
 

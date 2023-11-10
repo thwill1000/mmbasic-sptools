@@ -52,7 +52,6 @@ Function fmt.format%()
       ' (c), or "copyright" or begin with the underscore '_' character.
       If lx.type%(i%) = TK_COMMENT Then
         keep% = Left$(t$, 3) = "|'_"
-        If keep% Then lx.replace_token(i%, "' " + Mid$(lx.token$(i%), 3), TK_COMMENT)
         Inc keep%, InStr(t$,"license")+InStr(t$,"licence")+InStr(t$,"(c)")+InStr(t$,"copyright")
         If Not keep% Then
           lx.remove_token(i%)
