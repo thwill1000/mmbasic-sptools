@@ -7,7 +7,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
-sys.requires("array", "output", "symbols")
+sys.requires("array", "console", "output", "symbols")
 sys.provides("treeshake")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -32,11 +32,13 @@ Function tree.shake%()
   Local was_omitted% ' Last input line was omitted
 
   Do While Not Eof(#1)
+    con.spin()
     Inc line_num%
     Line Input #1, s$
 
     If line_num% = sline% Then
       Do While Not Eof(#1) And line_num% < eline%
+        con.spin()
         Inc line_num%
         Line Input #1, s$
       Loop
@@ -103,6 +105,7 @@ Function tree.get_orphan_fns%(indexes%())
   ' Copy orphaned functions into the array.
   Local fn$, i%, j%, id%
   For i% = 0 To map2.size%(sym.functions$()) - 1
+    con.spin()
     fn$ = Mid$(sym.functions$(i%), sym.MAX_NAME_LEN + 1)
     id% = Val(Field$(fn$, 5))
     If bits.big_get%(orphans%(), id%) Then

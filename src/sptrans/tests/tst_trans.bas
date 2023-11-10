@@ -26,6 +26,11 @@ Dim in.num_open_files = 1
 #Include "../options.inc"
 #Include "../defines.inc"
 #Include "../expression.inc"
+
+sys.provides("console")
+Sub con.spin()
+End Sub
+
 #Include "../symbols.inc"
 #Include "../trans.inc"
 

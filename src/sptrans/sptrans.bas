@@ -8,9 +8,6 @@ Option Base 0
 Option Explicit On
 Option Default Integer
 
-Const BS$ = Chr$(8)
-Const CR$ = Chr$(13)
-
 #Include "../splib/system.inc"
 #Include "../splib/array.inc"
 #Include "../splib/bits.inc"
@@ -30,12 +27,12 @@ Const CR$ = Chr$(13)
 #Include "format.inc"
 #Include "output.inc"
 #Include "expression.inc"
+#Include "console.inc"
 #Include "symbols.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
 #Include "symproc.inc"
 #Include "treeshake.inc"
-#Include "console.inc"
 
 Sub main()
   in.init()
@@ -81,7 +78,7 @@ Sub main()
 
   Local ok%, symproc% = opt.tree_shake% Or opt.list_all%, t% = Timer
   Do
-    con.out(BS$ + Mid$("\|/-", ((in.line_num%(in.num_open_files% - 1) \ 8) Mod 4) + 1, 1))
+    con.spin()
 
     ' Parse
     s$ = in.readln$()
@@ -142,7 +139,9 @@ Sub main()
 
   If opt.tree_shake% Then
     con.out(BS$ + "Shaking the tree ...") : con.endl()
+    con.out("   ")
     If tree.shake%() <> sys.SUCCESS Then con.error(sys.err$)
+    con.out(BS$ + BS$)
   EndIf
 
   If opt.list_all% Then
@@ -196,10 +195,12 @@ Function list_symbols_for%(type$, dump_sub$)
     f$ = opt.outfile$ + "." + type$
     fnbr% = 10
     Open f$ For Output As fnbr%
-    ? BS$ "Writing '" + f$ "' ..." 
+    con.out(BS$ + "Writing '" + f$ + "' ...") : con.endl()
+    con.out("   ")
   EndIf
   list_symbols_for% = Call(dump_sub$, fnbr%)
   If fnbr% Then Close fnbr%
+  If Len(opt.outfile$) Then con.out(BS$ + BS$)
 End Function
 
 main()

@@ -23,6 +23,11 @@ Option Explicit On
 #Include "../lexer.inc"
 #Include "../options.inc"
 #Include "../output.inc"
+
+sys.provides("console")
+Sub con.spin()
+End Sub
+
 #Include "../symbols.inc"
 #Include "../symproc.inc"
 

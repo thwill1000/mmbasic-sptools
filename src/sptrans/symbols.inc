@@ -5,8 +5,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
-sys.requires("bits")
-sys.requires("map2")
+sys.requires("bits", "map2", "console")
 sys.provides("symbols")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -412,6 +411,7 @@ Function sym.dump_references%(fnbr%)
   Const sz% = Val(Field$(sym.functions$(ub%), 2)), width% = Len(Str$(sz%))
   Local i%
   For i% = lb% To lb% + sz% - 1
+    con.spin()
     Print #fnbr%, "[" Str$(i%, width%) "] ";
     Print #fnbr%, Field$(sym.functions$(i%), 1, " ")
     sym.dump_references% = sym.dump_references_from_fn%(fnbr%, i%)
@@ -474,6 +474,7 @@ Function sym.get_orphans%(fn_id%, orphans%())
   Inc stack_ptr%
 
   Do While stack_ptr% > 0
+    con.spin()
     Inc stack_ptr%, -1
     num% = sym.get_referenced_ids%(stack%(stack_ptr%), refs%())
     If num% < 0 Then sym.get_orphans% = num% : Exit Function

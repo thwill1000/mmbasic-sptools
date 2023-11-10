@@ -18,6 +18,11 @@ Option Explicit On
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
 #Include "../../common/sptools.inc"
+
+sys.provides("console")
+Sub con.spin()
+End Sub
+
 #Include "../symbols.inc"
 
 Dim actual$(9), expected$(9)

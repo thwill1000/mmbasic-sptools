@@ -10,6 +10,9 @@ sys.provides("console")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
+Const BS$ = Chr$(8)
+Const CR$ = Chr$(13)
+
 Sub con.endl(always%)
   If Not Len(opt.outfile$) Then Exit Sub
   If Not always% And opt.quiet Then Exit Sub
@@ -28,4 +31,11 @@ Sub con.error(msg$)
   If i% >= 0 Then Print "[" + in.files$(i%) + ":" + Str$(in.line_num%(i%)) + "] ";
   Print "Error: " + msg$
   If Mm.Device$ = "MMB4L" Then End 1 Else End
+End Sub
+
+Sub con.spin()
+  Static i% = 0
+  con.out(BS$ + Mid$("\|/-", (i% \ 20) + 1, 1))
+  Inc i%
+  i% = i% Mod 80
 End Sub
