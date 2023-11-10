@@ -335,6 +335,10 @@ Sub test_incompatible_arguments()
   setup_test()
   cli.parse("-q " + INPUT_FILE$)
   assert_error("--quiet option incompatible with writing to console")
+
+  setup_test()
+  cli.parse("-T " + INPUT_FILE$)
+  assert_error("--tree-shake option incompatible with writing to console")
 End Sub
 
 Sub test_everything()

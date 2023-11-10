@@ -70,6 +70,8 @@ Sub cli.parse(s$)
     sys.err$ = "--format-only and --include-only options are mutually exclusive"
   ElseIf opt.quiet And Not Len(opt.outfile$) Then
     sys.err$ = "--quiet option incompatible with writing to console"
+  ElseIf opt.tree_shake And Not Len(opt.outfile$) Then
+    sys.err$ = "--tree-shake option incompatible with writing to console"
   EndIf
 End Sub
 
