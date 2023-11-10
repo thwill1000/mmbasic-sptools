@@ -9,9 +9,19 @@ Version 1.2.0 - ??-???-????:
        bits.big_get%()
        bits.big_set()
        bits.fill()
+   - Added str.rtrim$() function
+   - Added array.qsort_ints%() function
+   - Fixed bug with sys.is_device%("gamemite") always returning 1 if not
+     transpiled.
+   - Fixed bug in map2.put() when element already present.
  - sptest:
    - Added option 'use_hex%' flag to assert_int_array_equals() which if set
      causes it to use hexadecimal format.
+ - sptrans:
+   - Added new features/options:
+     --list-all    Output lists of identifiers, Functions/Subs,
+                   references and orphan Functions/Subs.
+     --tree-shake  Remove unused Functions/Subs.
 
 Version 1.1.0 - 1-Oct-2023:
  - gonzo:

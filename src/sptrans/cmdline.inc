@@ -132,7 +132,8 @@ Sub cli.usage()
   Print "                         if omitted then original formatting will be preserved"
   Print "  -I, --include-only     inline #INCLUDEd files and format the output,"
   Print "                         without processing directives"
-  Print "  -L, --list-all         generate all symbol files"
+  Print "  -L, --list-all         output lists of identifiers, Functions/Subs,"
+  Print "                         references and orphan Functions/Subs"
   Print "  -k, --keywords=l|p|u   controls keyword capitalisation:"
   Print "                           l - lowercase"
   Print "                           p - PascalCase"
@@ -147,7 +148,7 @@ Sub cli.usage()
   Print "                           2 - generous spacing"
   Print "                         if omitted then original token spacing will be"
   Print "                         preserved"
-  Print "  -T, --tree-shake       remove unused functions & subroutines"
+  Print "  -T, --tree-shake       remove unused Functions/Subs"
   Print "  -v, --version          output version information and exit"
   Print
   Print "Note that --no-comments, --empty-lines, --indent and --spacing will be"
