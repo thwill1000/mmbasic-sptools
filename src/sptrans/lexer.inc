@@ -111,7 +111,7 @@ Sub lx.advance()
 End Sub
 
 Sub lx.parse_number()
-  If InStr(".0123456789", lx.char$) Then
+  If InStr("#.0123456789", lx.char$) Then
     lx.parse_decimal()
   ElseIf lx.char$ = "&" Then
     If InStr("abcdefh0123456789", lx.next_char$) Then
@@ -128,6 +128,8 @@ End Sub
 
 Sub lx.parse_decimal()
   Local start = lx.pos
+
+  If lx.char$ = "#" Then lx.advance()
 
   lx.advance_while("0123456789")
 
@@ -258,10 +260,13 @@ End Sub
 
 Sub lx.parse_identifier()
   If lx.char$ = "#" Then
-    ' A token beginning with # is only a valid identifier if
-    ' followed by a letter, digit, full-stop or underscore.
-    ' Otherwise treat as a comma.
-    If Not InStr("._abcdefghijklmnopqrstuvwxyz0123456789", lx.next_char$) Then
+    If InStr("0123456789", lx.next_char$) Then
+      lx.parse_number()
+      Exit Sub
+    Else If Not InStr("._abcdefghijklmnopqrstuvwxyz", lx.next_char$) Then
+      ' A token beginning with # is only a valid identifier if
+      ' followed by a letter, digit, full-stop or underscore.
+      ' Otherwise treat as a comment.
       lx.parse_comment_or_directive()
       Exit Sub
     EndIf

@@ -31,6 +31,7 @@ add_test("test_identifiers")
 add_test("test_includes")
 add_test("test_integer_literals")
 add_test("test_integer_literals_with_e")
+add_test("test_integer_with_hash_prefix")
 add_test("test_keywords")
 add_test("test_octal_literals")
 add_test("test_real_literals")
@@ -215,6 +216,11 @@ Sub test_integer_literals_with_e()
   expect_parse_succeeds("12345ENDPROC", 2)
   expect_token(0, TK_NUMBER,     "12345")
   expect_token(1, TK_IDENTIFIER, "ENDPROC")
+End Sub
+
+Sub test_integer_with_hash_prefix()
+  expect_parse_succeeds("Open s$ For Output As #2", 6, TK_KEYWORD, "Open")
+  expect_token(5, TK_NUMBER, "#2")
 End Sub
 
 Sub test_keywords()
