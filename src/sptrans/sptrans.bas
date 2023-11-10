@@ -54,7 +54,7 @@ Sub main()
 
   Local s$
   If opt.outfile$ <> "" Then
-    If file.exists%(opt.outfile$)) Then
+    If file.exists%(opt.outfile$) Then
       Line Input "Overwrite existing '" + opt.outfile$ + "' [y|N] ? ", s$
       If LCase$(s$) <> "y" Then Print "CANCELLED" : End
     EndIf
@@ -187,6 +187,7 @@ Function list_symbols%()
   If list_symbols% = sys.SUCCESS Then
     list_symbols% = list_symbols_for%("orphans", "sym.dump_orphan_fns%")
   EndIf
+  If Not Len(opt.outfile$) Then Print
 End Function
 
 Function list_symbols_for%(type$, dump_sub$)
@@ -197,6 +198,9 @@ Function list_symbols_for%(type$, dump_sub$)
     Open f$ For Output As fnbr%
     con.out(BS$ + "Writing '" + f$ + "' ...") : con.endl()
     con.out("   ")
+  Else
+    Print
+    Print "-- " type$ " " String$(68 - Len(type$), "-")
   EndIf
   list_symbols_for% = Call(dump_sub$, fnbr%)
   If fnbr% Then Close fnbr%

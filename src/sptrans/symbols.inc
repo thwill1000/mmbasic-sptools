@@ -505,5 +505,7 @@ Function sym.dump_orphan_fns%(fnbr%)
     EndIf  
   Next
 
+  Print #fnbr%, "END"
+
   If sym.dump_orphan_fns% >= 0 Then sym.dump_orphan_fns% = sys.SUCCESS
 End Function
