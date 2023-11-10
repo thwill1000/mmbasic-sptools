@@ -67,7 +67,7 @@ Sub main()
   out.open(opt.outfile$)
 
   If Not opt.format_only% Then
-    If in.buffer_line%("' Transpiled on " + DateTime$(Now)) <> sys.SUCCESS Then con.error(sys.err$)
+    If in.buffer_line%("'_Transpiled on " + DateTime$(Now)) <> sys.SUCCESS Then con.error(sys.err$)
     If in.buffer_line%("") Then con.error(sys.err$)
   EndIf
 
