@@ -30,6 +30,7 @@ Dim out.omitted_line_flag% ' Last line was omitted.
 Dim out.within_csub%
 Dim out.write_cb$ = "out.default_cb"
 
+'!dynamic_call out.default_cb
 Sub out.default_cb(fnbr%, s$)
   Print #fnbr%, s$;
 End Sub
