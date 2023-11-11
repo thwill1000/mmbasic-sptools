@@ -2,7 +2,7 @@
 
 Development tools for MMBasic running on the [Colour Maximite 2](http://geoffg.net/maximite.html).
 
-Written in MMBasic 5.07 by Thomas Hugo Williams in 2020-2022.
+Written for MMBasic 5.07 / MMB4L 0.6.0 by Thomas Hugo Williams in 2020-2023.
 
 SP Tools is distributed for free subject to the [LICENSE](LICENSE), but if you use it then perhaps you would like to buy me a coffee?
 
@@ -24,14 +24,13 @@ SP Tools is distributed for free subject to the [LICENSE](LICENSE), but if you u
  4.3. Command-line options<br>
  4.4. Known issues
 5. FAQ<br>
- 5.1. General<br>
- 5.2. ```sptrans```
+ 5.1. General
 
 ## 1. Installation
 
 1. Download the latest release:
-    - https://github.com/thwill1000/sptools/releases/download/r1b2/sptools-r1b2.zip
-    - or clone/download the latest work in progress: https://github.com/thwill1000/sptools
+    - https://github.com/thwill1000/mmbasic-sptools/releases/download/r1b2/sptools-r1b2.zip
+    - or clone/download the latest work in progress: https://github.com/thwill1000/mmbasic-sptools
 
 2. Extract all the files to ```/sptools/```
     - if you install in a different directory then you need to edit the value of ```SPT_INSTALL_DIR$``` in ```/src/common/sptools.inc```.

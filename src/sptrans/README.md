@@ -60,10 +60,11 @@ Written for MMBasic 5.07 and MMB4L 0.6.0 by Thomas Hugo Williams in 2020-2023.
     * It has no effect when an output file is specified.
 
 * ```--crunch```
-    * TODO
+    * Equivalent to ```--empty-lines=0 --indent=0 --no-comments --spacing=0```.
 
 * ```-D<id>```
-    * TODO
+    *  Define ```<id>``` for interrogation by the ```!if```, ```!elif```, ```!ifdef```, ```!ifndef```, ```!comment_if``` and ```!uncomment_if``` directives.
+    *  Equivalent to having the ```!define <id>``` directive at the start of a program.
 
 * ```-e, --empty-lines=off|single```
     * Control inclusion of empty lines in the pre-processed output:<br/>
@@ -72,7 +73,7 @@ Written for MMBasic 5.07 and MMB4L 0.6.0 by Thomas Hugo Williams in 2020-2023.
     * The default is to include all existing empty lines.
 
 * ```-f, --format-only```
-    * Only format the output, do not follow #Includes or process directives.
+    * Only format the output, do not follow ```#Include``` or process directives.
     * Useful if you just want to reformat the whitespace in a single file.
 
 * ```-h, --help```
@@ -83,29 +84,33 @@ Written for MMBasic 5.07 and MMB4L 0.6.0 by Thomas Hugo Williams in 2020-2023.
     * The default is to use the existing indentation.
 
 * ```-I, --include-only```
-    * TODO
+    * Process ```#Include``` and formatting options from the command-line, do not process directives.
 
 * ```-k, --keyword=l|p|u```
-    * TODO
+    * Update keyword capitalisation:
+         * ```l``` - lowercase"
+         * ```p``` - PascalCase"
+         * ```u``` - UPPERCASE
 
 * ```-L, --list-all```
-    * TODO
+    * Output files containing lists of the identifiers, Functions/Subs, references and orphan (unreferenced) Functions/Subs in the processed program.
 
 * ```-n, --no-comments```
     * Do not include comments in the pre-processed output.
 
 * ```-q, --quiet```
-    * TODO
+    * Write no output to the console except on an error.
 
 * ```-s, --spacing=minimal|compact|generous```
-    * Control output of spacing between tokens, see the description of the ```'!spacing``` directive for details:
+    * Control output of spacing between tokens, see the description of the ```!spacing``` directive for details:
          * `minimal` (or 0)
          * `compact` (or 1)
          * `generous` (or 2)
     * The default is to use the existing spacing. 
 
 * ```-T, --tree-shake```
-    * TODO
+    * Remove unused Functions/Subs from the processed program.
+    * Note that if a program contains Functions/Subs that are only called via ```CALL``` then the ```!dynamic_call <function name>``` directive must be used to prevent them from being removed.
 
 * ```-v, --version```
     * Display version information and then exit.
@@ -271,22 +276,22 @@ TODO
 
 ### 4.4 Miscellaneous directives
 
-#### '!dynamic_call
+#### '!dynamic_call \<function name\>
 
 TODO
 
-#### '!error
+#### '!error "\<message\>"
 
 TODO
 
-#### '!info
+#### '!info defined \<id\>
 
 TODO
 
 ## 5. Known issues
 
 1. Automatic indenting does not handle multiple statement lines correctly.
-    * to be honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
+    * If I am honest the auto-indent code is a "hive of scum and villainy" that I need to put under unit-test and rewrite.
 
 ## 6. FAQ
 
