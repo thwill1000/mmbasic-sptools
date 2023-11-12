@@ -7,7 +7,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
-sys.requires("lexer", "output", "symbols")
+sys.requires("lexer", "input", "output", "symbols")
 sys.provides("symproc")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -20,7 +20,7 @@ Dim symproc.comment_line%
 
 Dim symproc.scope$
 
-Sub symproc.init(max_functions%, max_identifiers%, references_size_kb%))
+Sub symproc.init(max_functions%, max_identifiers%, references_size_kb%)
   sym.init(max_functions%, max_identifiers%, references_size_kb%)
   If sym.add_function%(symproc.GLOBAL_SCOPE, in.files$(0), 1) <> sys.SUCCESS Then Error sys.err$
   symproc.scope$ = symproc.GLOBAL_SCOPE

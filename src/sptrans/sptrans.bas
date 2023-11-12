@@ -29,9 +29,9 @@ Option Default Integer
 #Include "expression.inc"
 #Include "console.inc"
 #Include "symbols.inc"
+#Include "symproc.inc"
 #Include "trans.inc"
 #Include "cmdline.inc"
-#Include "symproc.inc"
 #Include "treeshake.inc"
 
 Sub main()

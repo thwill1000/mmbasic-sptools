@@ -5,7 +5,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
-sys.requires("options", "set", "defines", "expression", "symbols")
+sys.requires("options", "set", "defines", "expression", "symbols", "symproc")
 sys.provides("trans")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -488,7 +488,7 @@ Function tr.process_info%()
   Else
     Local defined% = def.is_defined%(lx.token$(2))
     If defined% Then
-      lx.replace_token(0, "' Preprocessor value " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
+      lx.replace_token(0, "'_Preprocessor value " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
       lx.remove_token(2)
       lx.remove_token(1)
       tr.process_info% = sys.SUCCESS
@@ -572,7 +572,7 @@ Sub tr.process_dynamic_call()
   If lx.num < 2 Then sys.err$ = "expects <id> argument"
   If lx.num > 2 Then sys.err$ = "has too many arguments"
   If sys.err$ = "" Then
-    Const id% = sym.add_reference%(lx.token$(1))
+    Const id% = symproc.identifier%(1)
     If id% < 0 Then sys.err$ = "invalid; " + LCase$(Left$(sys.err$, 1)) + Mid$(sys.err$, 2)
   EndIf
   If sys.err$ <> "" Then

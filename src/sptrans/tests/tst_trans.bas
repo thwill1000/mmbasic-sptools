@@ -6,9 +6,6 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-Const MAX_NUM_FILES = 5
-Dim in.num_open_files = 1
-
 #Include "../../splib/system.inc"
 #Include "../../splib/array.inc"
 #Include "../../splib/bits.inc"
@@ -31,7 +28,12 @@ sys.provides("console")
 Sub con.spin()
 End Sub
 
+sys.provides("output")
+Dim out.line_num%
+
 #Include "../symbols.inc"
+#Include "../input.inc"
+#Include "../symproc.inc"
 #Include "../trans.inc"
 
 keywords.init()
@@ -124,14 +126,14 @@ End
 Sub setup_test()
   opt.init()
   def.init()
-  sym.init(32, 300, 1)
+  symproc.init(32, 300, 1)
+
+  in.num_open_files% = 1
 
   ' TODO: extract into trans.init() or trans.reset().
   tr.clear_replacements()
   tr.include$ = ""
   tr.omit_flag% = 0
-  'tr.empty_line_flag% = 0
-  'tr.omitted_line_flag% = 0
 
   Local i%, j%
   For i% = Bound(tr.num_comments(), 0) To Bound(tr.num_comments(), 1)
@@ -1281,7 +1283,7 @@ Sub test_info_defined()
   expect_transpile_omits("'!info defined foo")
   expect_transpile_omits("'!define foo")
   expect_transpile_succeeds("'!info defined foo", 1)
-  expect_token(0, TK_COMMENT, "' Preprocessor value FOO defined")
+  expect_token(0, TK_COMMENT, "'_Preprocessor value FOO defined")
   expect_transpile_omits("'!undef foo")
   expect_transpile_omits("'!info defined foo")
   expect_transpile_error("'!info", "!info directive expects two arguments")
@@ -1290,18 +1292,22 @@ Sub test_info_defined()
 End Sub
 
 Sub test_dynamic_call()
-  assert_int_equals(0, sym.add_function%("*global*", "my_file.bas", 42))
-  expect_transpile_omits("'!dynamic_call foo")
-  expect_transpile_omits("'!dynamic_call bar")
-  assert_int_equals(3, sym.add_function%("wombat", "my_file.bas", 99))
-  expect_transpile_omits("'!dynamic_call snafu")
+  expect_transpile_omits("'!dynamic_call fn_a")
+  expect_transpile_omits("'!dynamic_call fn_b")
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Function wombat%()"))
+  assert_int_equals(3, symproc.fn_decl%(0))
+  expect_transpile_omits("'!dynamic_call fn_c")
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("End Function"))
+  assert_int_equals(3, symproc.fn_end%(0))
+  expect_transpile_omits("'!dynamic_call fn_d")
 
   Local ids%(4)
-  assert_int_equals(2, sym.get_referenced_ids%(0, ids%()))
-  assert_string_equals("foo", sym.id_to_name$(ids%(0)))
-  assert_string_equals("bar", sym.id_to_name$(ids%(1)))
+  assert_int_equals(3, sym.get_referenced_ids%(0, ids%()))
+  assert_string_equals("fn_a", sym.id_to_name$(ids%(0)))
+  assert_string_equals("fn_b", sym.id_to_name$(ids%(1)))
+  assert_string_equals("fn_d", sym.id_to_name$(ids%(2)))
   assert_int_equals(1, sym.get_referenced_ids%(3, ids%()))
-  assert_string_equals("snafu", sym.id_to_name$(ids%(0)))
+  assert_string_equals("fn_c", sym.id_to_name$(ids%(0)))
 End Sub
 
 Sub test_dynamic_call_given_no_arg()
