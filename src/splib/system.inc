@@ -2,8 +2,55 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-'!if !defined(PICOMITE) && defined(GAMEMITE)
-  '!define PICOMITE
+'!info defined CMM2
+'!info defined GAMEMITE
+'!info defined MMB4L
+'!info defined MMB4W
+'!info defined PICOMITE
+'!info defined PICOMITEVGA
+
+'!if defined(CMM2)
+  '!define PLATFORM_DEFINED
+'!endif
+
+'!if defined(GAMEMITE)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(MMB4L)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(MMB4W)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(PICOMITE)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(PICOMITEVGA)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
 '!endif
 
 Const sys.VERSION = 102001 ' 1.2 alpha 1
