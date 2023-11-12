@@ -3,6 +3,11 @@ ChangeLog
 
 Version 1.2.0 - ??-???-????:
  - splib:
+   - Added sys.DEVICE constant.
+     If "A:/.spconfig" (or if missing "A:/.config") exists and contains such
+     a line then this will equal the value read from:
+       device = "Some Other Device"
+     Otherwise it will equal MM.DEVICE$.
    - Added subs/functions to 'bits.inc' to handle bit-sets > 64 bits:
        bits.big_clear()
        bits.big_fill()

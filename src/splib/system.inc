@@ -7,6 +7,7 @@
 '!endif
 
 Const sys.VERSION = 102001 ' 1.2 alpha 1
+Const sys.DEVICE = sys.get_config$("device", Mm.Device$)
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 If Mm.Info$(Device) = "MMB4L" Then
@@ -70,6 +71,36 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
 End Sub
 '!endif
 
+' Reads property from config (.ini) file.
+'
+' @param  key$      case-insensitive key for property to lookup.
+' @param  default$  value to return if property or file is not present.
+' @param  file$     file to read. If empty then read "A:/.spconfig", or
+'                   if that is not present "A:/.config".
+Function sys.get_config$(key$, default$, file$)
+  sys.get_config$ = default$
+  If file$ = "" Then
+    Const file_$ = Choice(Mm.Info(Exists File "A:/.spconfig"), "A:/.spconfig", "A:/.config")
+  Else
+    Const file_$ = file$
+  EndIf
+  If Not Mm.Info(Exists File file_$) Then Exit Function
+
+  Local key_$ = LCase$(key$), s$, v$
+  Open file_$ For Input As #1
+  Do While Not Eof(#1)
+    Line Input #1, s$
+    If LCase$(Field$(Field$(s$, 1, "=", Chr$(34)),1, "#;", Chr$(34))) = key_$ Then
+      v$ = Field$(Field$(s$, 2, "=", Chr$(34)), 1, "#;", Chr$(34))
+      If Left$(v$, 1) = Chr$(34) Then v$ = Mid$(v$, 2)
+      If Right$(v$, 1) = Chr$(34) Then v$ = Mid$(v$, 1, Len(v$) - 1)
+      sys.get_config$ = v$
+      Exit Do
+    EndIf
+  Loop
+  Close #1
+End Function
+
 ' Formats an SP Tools integer version as a string.
 Function sys.format_version$(v%)
   Const v_% = Choice(v%, v%, sys.VERSION), a% = v_%\10^5, b% = (v_%-a%*10^5)\10^3
@@ -125,7 +156,7 @@ End Sub
 Function sys.string_prop$(key$)
   Select Case LCase$(key$)
     Case "home"
-      Select Case Mm.Device$
+      Select Case sys.DEVICE
         Case "MMB4L"
           sys.string_prop$ = Mm.Info$(EnvVar "HOME")
         Case "MMBasic for Windows"
@@ -134,9 +165,9 @@ Function sys.string_prop$(key$)
           sys.string_prop$ = "A:"
       End Select
     Case "separator"
-      sys.string_prop$ = Choice(Mm.Device$ = "MMBasic for Windows", "\", "/")
+      sys.string_prop$ = Choice(sys.DEVICE = "MMBasic for Windows", "\", "/")
     Case "tmpdir"
-      Select Case Mm.Device$
+      Select Case sys.DEVICE
         Case "MMB4L"
           sys.string_prop$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
         Case "MMBasic for Windows"
@@ -152,50 +183,39 @@ End Function
 ' Are we running on one of the given devices ?
 '
 ' @param  d1$, d2$, ... d5$  one of:
-'                mmb4l    - MMBasic for Linux
+'                mmb4l    - MMB4L (aka MMBasic for Linux)
 '                mmb4w    - MMBasic for Windows
 '                cmm2     - Colour Maximite 2 (G1)
 '                cmm2g2   - Colour Maximite 2 (G2)
 '                cmm2*    - any Colour Maximite 2
-'                gamemite - GameMite
-'                pm       - PicoMite (including GameMite)
+'                gamemite - Game*Mite
+'                pgvga    - PicoGAME VGA
+'                pm       - PicoMite
 '                pmvga    - PicoMiteVGA
-'                pm*      - any PicoMite (including GameMite)
+'                pmvga*   - PicoMiteVGA or PicoGAME VGA
+'                pm*      - PicoMite, PicoMiteVGA, PicoGAME VGA and Game*Mite
 Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
   Local devices$(5 + Mm.Info(Option Base)) Length 16 = (d1$, d2$, d3$, d4$, d5$, "")
-  Local d$, ii% = Mm.Info(Option Base)
-'!comment_if defined(GAMEMITE)
-  Const device$ = Mm.Device$
-'!endif
-'!uncomment_if defined(GAMEMITE)
-'  Const device$ = "GameMite"
-'!endif
+  Local ii% = Mm.Info(Option Base), match$
 
   sys.is_device% = 1
   Do While Len(devices$(ii%)) > 0
-    d$ = LCase$(devices$(ii%))
-    Select Case device$
+    Select Case sys.DEVICE
+      Case "Colour Maximite 2" : match$ = "|cmm2|cmm2*|"
+      Case "Colour Maximite 2 G2" : match$ = "|cmm2g2|cmm2*"
+      Case "Game*Mite" : match$ = "|pm*|gamemite|"
       Case "MMB4L"
-        If d$ = "mmb4l" Then
-          Exit Function
-        ElseIf d$ = "mmb4l-armv6l" And Mm.Info$(Arch) = "Linux armv6l" Then
-          Exit Function
+        If LCase$(devices$(ii%)) = "mmb4l-armv6l" Then
+          If Mm.Info$(Arch) = "Linux armv6l" Then Exit Function
         EndIf
-      Case "MMBasic for Windows"
-        If d$ = "mmb4w" Then Exit Function
-      Case "Colour Maximite 2"
-        If d$ = "cmm2" Or d$ = "cmm2*" Then Exit Function
-      Case "Colour Maximite 2 G2"
-        If d$ = "cmm2g2" Or d$ = "cmm2*" Then Exit Function
-      Case "PicoMite"
-        If d$ = "pm" Or d$ = "pm*" Then Exit Function
-      Case "PicoMiteVGA"
-        If d$ = "pmvga" Or d$ = "pm*" Then Exit Function
-      Case "GameMite"
-        If d$ = "pm" Or d$ = "pm*" Or d$ = "gamemite" Then Exit Function
-      Case Else
-        Error "Unknown device: " + Mm.Device$
+        match$ = "|mmb4l|"
+      Case "MMBasic for Windows" : match$ = "|mmb4w|"
+      Case "PicoGAME VGA" : match$ = "|pgvga|pmvga*|pm*|"
+      Case "PicoMite" : match$ = "|pm|pm*|"
+      Case "PicoMiteVGA": match$ = "|pmvga|pmvga*|pm*|"
+      Case Else : Error "Unknown device: " + sys.DEVICE
     End Select
+    If InStr(match$, "|" + LCase$(devices$(ii%)) + "|") Then Exit Function
     Inc ii%
   Loop
   sys.is_device% = 0
