@@ -18,8 +18,8 @@ Sub menu.init(ctrl$, callback$)
 
   Font 1
   If sys.is_device%("mmb4l") Then
-    Dim menu.height% = Mm.VRes
-    Dim menu.width% = Mm.HRes
+    Dim menu.height% = Min(Mm.VRes, 50)
+    Dim menu.width% = Min(Mm.HRes, 100)
   Else
     Dim menu.height% = Mm.VRes \ Mm.Info(FontHeight)
     Dim menu.width% = Mm.HRes \ Mm.Info(FontWidth)
