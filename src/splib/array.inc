@@ -224,7 +224,7 @@ Function array.qsort_ints%(a%(), lb%, num%, compare_fn$)
    Const BASE = Mm.Info(Option Base)
    Local low% = Choice(lb% = 0, BASE, lb%)
    Local high% = Choice(num% = 0, Bound(a%(), 1), lb% + num% - 1)
-   Local stack%(array.new%(2), array.new%(high% - low% + 1))
+   Local stack%(array.new%(2), array.new%(Max(2, high% - low% + 1)))
    Local pivot_index%, top% = BASE
    stack%(BASE, top%) = low%
    stack%(BASE + 1, top%) = high%

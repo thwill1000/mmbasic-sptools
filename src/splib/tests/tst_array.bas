@@ -27,7 +27,8 @@ add_test("test_join_strings")
 add_test("test_qsort_ints_gvn_ordered")
 add_test("test_qsort_ints_gvn_reversed")
 add_test("test_qsort_ints_gvn_identical")
-add_test("test_qsort_ints_gvn_two")
+add_test("test_qsort_ints_gvn_1_element")
+add_test("test_qsort_ints_gvn_2_elements")
 add_test("test_qsort_ints_gvn_comparator")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
@@ -426,7 +427,16 @@ Sub test_qsort_ints_gvn_identical()
   assert_int_array_equals(expected%(), in%())
 End Sub
 
-Sub test_qsort_ints_gvn_two()
+Sub test_qsort_ints_gvn_1_element()
+  Local in%(array.new%(2)) = (2, 1)
+  Local expected%(array.new%(2)) = (2, 1)
+
+  ' Sort 1 element of a two element array.
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%(), BASE, 1))
+  assert_int_array_equals(expected%(), in%())
+End Sub
+
+Sub test_qsort_ints_gvn_2_elements()
   Local in%(array.new%(2)) = (2, 1)
   Local expected%(array.new%(2)) = (1, 2)
 
