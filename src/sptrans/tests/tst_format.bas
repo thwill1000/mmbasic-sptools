@@ -25,7 +25,8 @@ Dim expected$(NUM_LINES) Length 64, in$(NUM_LINES) Length 64, out$(NUM_LINES) Le
 
 keywords.init()
 
-add_test("Indenting - multi-line IF THEN", "test_indent_multi_line_if_then")
+add_test("Indenting - multi-line IF THEN ENDIF", "test_indent_multi_line_if_then")
+add_test("Indenting - multi-line IF THEN END IF", "test_indent_multi_line_end_if")
 add_test("Indenting - single-line IF THEN", "test_indent_single_line_if_then")
 add_test("Indenting - CONTINUE FOR", "test_indent_continue_for")
 add_test("Indenting - SUB", "test_indent_sub")
@@ -98,6 +99,20 @@ Sub test_indent_multi_line_if_then()
   expected$(0) = "If a = b Then"
   expected$(1) = "  Print c"
   expected$(2) = "EndIf"
+  assert_string_array_equals(expected$(), out$())
+End Sub
+
+Sub test_indent_multi_line_end_if()
+  in$(0) = "If a = b Then"
+  in$(1) = "Print c"
+  in$(2) = "End If"
+
+  opt.indent_sz% = 2
+  format_lines()
+
+  expected$(0) = "If a = b Then"
+  expected$(1) = "  Print c"
+  expected$(2) = "End If"
   assert_string_array_equals(expected$(), out$())
 End Sub
 

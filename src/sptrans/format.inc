@@ -67,7 +67,7 @@ Function fmt.format%()
     ' Tokens requiring us to decrease the indent level before.
     If Instr("|end|", t$) Then
       u$ = "|" + lx.token_lc$(i + 1) + "|"
-      If Instr("|csub|sub|function|", u$) Then
+      If Instr("|csub|if|sub|function|", u$) Then
         Inc fmt.indent_lvl%, -1
       ElseIf Instr("|select|", u$) Then
         Inc fmt.indent_lvl%, -2
