@@ -10,7 +10,7 @@ If sys.err$ <> "" Then Error sys.err$
 '!endif
 
 Sub gamemite.end(break%)
-  Page Write 0
+  FrameBuffer Write N
   Colour Rgb(White), Rgb(Black)
   Cls
 
