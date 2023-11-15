@@ -146,6 +146,7 @@ For
 Format$
 Fr
 Frame
+FrameBuffer
 Frequency
 Function
 F11
