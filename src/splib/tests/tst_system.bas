@@ -119,7 +119,7 @@ Sub test_format_version()
 
   assert_string_equals("5.6 alpha 0", sys.format_version$(506000))
   assert_string_equals("5.6 beta 0", sys.format_version$(506100))
-  assert_string_equals("5.6 rc 0", sys.format_version$(506200))
+  assert_string_equals("5.6 RC 0", sys.format_version$(506200))
   assert_string_equals("5.6.0", sys.format_version$(506300))
   assert_string_equals("5.6.153", sys.format_version$(506453))
   assert_string_equals("0.9.9", sys.format_version$(9309))

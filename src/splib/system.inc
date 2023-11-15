@@ -53,7 +53,7 @@
   '!endif
 '!endif
 
-Const sys.VERSION = 102001 ' 1.2 alpha 1
+Const sys.VERSION = 102201 ' 1.2.0 RC 1
 Const sys.DEVICE = sys.get_config$("device", Mm.Device$)
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
@@ -155,7 +155,7 @@ Function sys.format_version$(v%)
   Select Case c%
     Case < 100 : Cat s$, " alpha "
     Case < 200 : Cat s$, " beta " : Inc c%, -100
-    Case < 300 : Cat s$, " rc " : Inc c%, -200
+    Case < 300 : Cat s$, " RC " : Inc c%, -200
     Case Else  : Cat s$, "." : Inc c%, -300
   End Select
   sys.format_version$ = s$ + Str$(c%)
