@@ -30,7 +30,7 @@ list.init(ut.test_names$())
 list.init(ut.test_subs$())
 
 Function ut.get_tmp_dir$()
-  Const stem$ = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:/tmp", sys.string_prop$("tmpdir"))
+  Const stem$ = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:/tmp", sys.TMPDIR$())
   Const name$ = file.trim_extension$(file.get_name$(Mm.Info(Current)))
   ut.get_tmp_dir$ = stem$ + file.SEPARATOR + name$
 End Function
@@ -450,7 +450,7 @@ End Sub
 
 Sub ut.run_first()
   Print "Building list of tests ..."
-  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Output As #1
+  Open sys.TMPDIR$() + "/sptest.lst" For Output As #1
   Print #1, Time$
   Local f$ = file.find$(Cwd$, "*st*.bas", "file")
   Local first$
@@ -507,7 +507,7 @@ End Function
 
 Sub ut.run_next()
   Local f$, start_time$
-  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Input As #1
+  Open sys.TMPDIR$() + "/sptest.lst" For Input As #1
   Line Input #1, start_time$
 
   Do

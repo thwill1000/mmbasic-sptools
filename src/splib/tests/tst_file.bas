@@ -153,9 +153,9 @@ Sub test_get_canonical()
   assert_string_equals(expected_path$(parent$), file.get_canonical$(".."))
 
   ' Tilde expansion
-  assert_string_equals(expected_path$(sys.string_prop$("home")), file.get_canonical$("~"))
-  assert_string_equals(expected_path$(sys.string_prop$("home") + "/dir"), file.get_canonical$("~/dir"))
-  assert_string_equals(expected_path$(sys.string_prop$("home") + "/dir"), file.get_canonical$("~\dir"))
+  assert_string_equals(expected_path$(sys.HOME$()), file.get_canonical$("~"))
+  assert_string_equals(expected_path$(sys.HOME$() + "/dir"), file.get_canonical$("~/dir"))
+  assert_string_equals(expected_path$(sys.HOME$() + "/dir"), file.get_canonical$("~\dir"))
 End Sub
 
 Function expected_path$(f$)

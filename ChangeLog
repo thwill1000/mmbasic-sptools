@@ -16,6 +16,8 @@ Version 1.2.0 - ??-???-????:
        bits.fill()
    - Added str.rtrim$() function
    - Added array.qsort_ints%() function
+   - Added sys.HOME$(), sys.SEPARATOR$() and sys.TMPDIR$() functions
+     - replaces sys.string_prop$().
    - Fixed bug with sys.is_device%("gamemite") always returning 1 if not
      transpiled.
    - Fixed bug in map2.put() when element already present.

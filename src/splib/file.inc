@@ -9,7 +9,7 @@ sys.provides("file")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-Const file.SEPARATOR = sys.string_prop$("separator")
+Const file.SEPARATOR = sys.SEPARATOR$()
 
 ' Gets the number of files in directory d$ whose names match pattern$.
 '
@@ -255,9 +255,9 @@ Function file.get_canonical$(f$)
       tmp$ = "A:" + tmp$
     Case "~"
       If tmp$ = "~" Then
-        tmp$ = sys.string_prop$("home")
+        tmp$ = sys.HOME$()
       ElseIf Left$(tmp$, 2) = "~/" Or Left$(tmp$, 2) = "~\" Then
-        tmp$ = sys.string_prop$("home") + Mid$(tmp$, 2)
+        tmp$ = sys.HOME$() + Mid$(tmp$, 2)
       Else
         tmp$ = Cwd$ + "/" + tmp$
       EndIf

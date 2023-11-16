@@ -200,30 +200,29 @@ Sub sys.restore_break()
   Option Break 3
 End Sub
 
-Function sys.string_prop$(key$)
-  Select Case LCase$(key$)
-    Case "home"
-      Select Case sys.DEVICE
-        Case "MMB4L"
-          sys.string_prop$ = Mm.Info$(EnvVar "HOME")
-        Case "MMBasic for Windows"
-          sys.string_prop$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
-        Case Else
-          sys.string_prop$ = "A:"
-      End Select
-    Case "separator"
-      sys.string_prop$ = Choice(sys.DEVICE = "MMBasic for Windows", "\", "/")
-    Case "tmpdir"
-      Select Case sys.DEVICE
-        Case "MMB4L"
-          sys.string_prop$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
-        Case "MMBasic for Windows"
-          sys.string_prop$ = Mm.Info$(EnvVar "TMP")
-        Case Else
-          sys.string_prop$ = "A:/tmp"
-      End Select
+Function sys.HOME$()
+  Select Case sys.DEVICE
+    Case "MMB4L"
+      sys.HOME$ = Mm.Info$(EnvVar "HOME")
+    Case "MMBasic for Windows"
+      sys.HOME$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
     Case Else
-      Error "Unknown property: " + key$
+      sys.HOME$ = "A:"
+  End Select
+End Function
+
+Function sys.SEPARATOR$()
+  sys.SEPARATOR$ = Choice(sys.DEVICE = "MMBasic for Windows", "\", "/")
+End Function
+
+Function sys.TMPDIR$()
+  Select Case sys.DEVICE
+    Case "MMB4L"
+      sys.TMPDIR$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
+    Case "MMBasic for Windows"
+      sys.TMPDIR$ = Mm.Info$(EnvVar "TMP")
+    Case Else
+      sys.TMPDIR$ = "A:/tmp"
   End Select
 End Function
 

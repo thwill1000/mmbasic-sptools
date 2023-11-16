@@ -381,7 +381,7 @@ Sub cmd.rtest(cmd$, argc%, argv$())
   If count% And Not gonzo.check_file_exists%(f$) Then Exit Sub
 
   ' Write list of tests - copied from "unittest.inc"
-  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Output As #gonzo.OUT_FNBR
+  Open sys.TMPDIR$() + "/sptest.lst" For Output As #gonzo.OUT_FNBR
   Print #gonzo.OUT_FNBR, Time$
   If Len(f$) Then
     Print #gonzo.OUT_FNBR, file.get_canonical$(f$)
@@ -398,8 +398,8 @@ Sub cmd.rtest(cmd$, argc%, argv$())
   Close #gonzo.OUT_FNBR
 
   ' Transform into a gonzo script file.
-  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Input As #gonzo.IN_FNBR
-  Open sys.string_prop$("tmpdir") + "/sptest.gs" For Output As #gonzo.OUT_FNBR
+  Open sys.TMPDIR$() + "/sptest.lst" For Input As #gonzo.IN_FNBR
+  Open sys.TMPDIR$() + "/sptest.gs" For Output As #gonzo.OUT_FNBR
   Line Input #gonzo.IN_FNBR, f$ ' Time
   Local s$ = "rex Drive " + str.quote$("B:") + " : ChDir " + str.quote$("B:/")
   Cat s$, ": Drive " + str.quote$("A:") + " : ChDir " + str.quote$("A:/")
@@ -426,7 +426,7 @@ Sub cmd.rtest(cmd$, argc%, argv$())
   Close #gonzo.IN_FNBR
 
   ' Execute gonzo script file.
-  Local take_args$(1) = ( sys.string_prop$("tmpdir") + "/sptest.gs", "" )
+  Local take_args$(1) = ( sys.TMPDIR$() + "/sptest.gs", "" )
   cmd.take("take", 1, take_args$())
 End Sub
 
@@ -534,7 +534,7 @@ Sub cmd.send(cmd$, argc%, argv$())
   ' Transpile file if requested.
   Local command$, tmp_file$
   If trans_flag% Then
-    tmp_file$ = sys.string_prop$("tmpdir") + "/gonzo.trans." + Str$(Int(Rnd() * 1e6))
+    tmp_file$ = sys.TMPDIR$() + "/gonzo.trans." + Str$(Int(Rnd() * 1e6))
     On Error Skip 1
     Kill tmp_file$
     On Error Clear
@@ -692,7 +692,7 @@ Sub cmd.xreceive(cmd$, argc%, argv$())
   If sys.err$ = "" Then
     ' Trim padding off received file.
     Open local_file$ For Input As #gonzo.IN_FNBR
-    Local tmp_file$ = sys.string_prop$("tmpdir") + "/" + local_file$
+    Local tmp_file$ = sys.TMPDIR$() + "/" + local_file$
     Open tmp_file$ For Output As #gonzo.OUT_FNBR
     Local remaining% = file_size%
     Do While remaining% > 0
