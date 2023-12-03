@@ -384,6 +384,9 @@ Sub setup_spacing_test()
   in$(42) = "? Mm.Info(Exists " + str.quote$("foo") + ")"
   in$(43) = "foo'comment1"
   in$(44) = "bar    ' comment2"
+  in$(45) = "Dim a As Integer = 10"
+  in$(46) = "Dim a As Float = 10.0"
+  in$(47) = "Dim a As String = " + str.quote$("foobar")
 End Sub
 
 Sub test_minimal_spacing()
@@ -437,6 +440,9 @@ Sub test_minimal_spacing()
   expected$(42) = "?Mm.Info(Exists " + str.quote$("foo") + ")"
   expected$(43) = "foo'comment1"
   expected$(44) = "bar    ' comment2"
+  expected$(45) = "Dim a As Integer =10"
+  expected$(46) = "Dim a As Float =10.0"
+  expected$(47) = "Dim a As String =" + str.quote$("foobar")
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -491,6 +497,9 @@ Sub test_compact_spacing()
   expected$(42) = "?Mm.Info(Exists " + str.quote$("foo") + ")"
   expected$(43) = "foo 'comment1"
   expected$(44) = "bar    ' comment2"
+  expected$(45) = "Dim a As Integer =10"
+  expected$(46) = "Dim a As Float =10.0"
+  expected$(47) = "Dim a As String =" + str.quote$("foobar")
   assert_string_array_equals(expected$(), out$())
 End Sub
 
@@ -545,6 +554,9 @@ Sub test_generous_spacing()
   expected$(42) = "? Mm.Info(Exists " + str.quote$("foo") + ")"
   expected$(43) = "foo 'comment1"
   expected$(44) = "bar    ' comment2"
+  expected$(45) = "Dim a As Integer = 10"
+  expected$(46) = "Dim a As Float = 10.0"
+  expected$(47) = "Dim a As String = " + str.quote$("foobar")
   assert_string_array_equals(expected$(), out$())
 End Sub
 

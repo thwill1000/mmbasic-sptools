@@ -217,7 +217,7 @@ Function fmt.num_spaces_minimal%(i%)
       If lx.token$(i%) = "?" Then
         n% = 1
       Else
-        n% = InStr("|is|step|", "|" + lx.token_lc$(i% - 1) + "|") > 0
+        n% = InStr("|float|integer|is|step|string|", "|" + lx.token_lc$(i% - 1) + "|") > 0
       EndIf
   End Select
   fmt.num_spaces_minimal% = n%
@@ -258,7 +258,7 @@ Function fmt.num_spaces_compact%(i%)
               n% = 1
           End Select
         Case Else
-          n% = InStr("|case|is|step|", "|" + lx.token_lc$(i% - 1) + "|") > 0
+          n% = InStr("|case|float|integer|is|step|string|", "|" + lx.token_lc$(i% - 1) + "|") > 0
       End Select
   End Select
   fmt.num_spaces_compact% = n%
