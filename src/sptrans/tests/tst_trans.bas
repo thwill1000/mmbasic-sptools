@@ -118,6 +118,9 @@ add_test("test_dynamic_call")
 add_test("test_dynamic_call_given_no_arg")
 add_test("test_dynamic_call_given_too_many_args", "test_dynamic_too_many_args")
 add_test("test_dynamic_call_given_too_many_names", "test_dynamic_too_many_names")
+add_test("test_disable_format")
+add_test("test_disable_format_gvn_2_args")
+add_test("test_disable_format_gvn_invalid")
 
 run_tests()
 
@@ -1325,6 +1328,32 @@ Sub test_dynamic_too_many_names()
   Next
   expect_transpile_error("'!dynamic_call foo", "!dynamic_call directive invalid; too many names, max 300")
 End Sub
+
+Sub test_disable_format()
+  Local directives$(1) = ("disable-format", "disable_format"), i%
+  For i% = Bound(directives$(), 0) To Bound(directives$(), 1)
+    opt.disable_format% = 0
+    expect_transpile_omits("'!" + directives$(i%))
+    assert_int_equals(1, opt.disable_format%)
+
+    opt.disable_format% = 0
+    expect_transpile_omits("'!" + directives$(i%) + " on")
+    assert_int_equals(1, opt.disable_format%)
+
+    opt.disable_format% = 1
+    expect_transpile_omits("'!" + directives$(i%) + " off")
+    assert_int_equals(0, opt.disable_format%)
+  Next
+End Sub
+
+Sub test_disable_format_gvn_2_args()
+  expect_transpile_error("'!disable-format on foo", "!disable-format directive has too many arguments")
+End Sub
+
+Sub test_disable_format_gvn_invalid()
+  expect_transpile_error("'!disable-format foo", "!disable-format directive expects 'on|off' argument")
+End Sub
+
 
 Sub expect_replacement(i%, from$, to_$)
   assert_true(from$ = tr.replacements$(i%, 0), "Assert failed, expected from$ = '" + from$ + "', but was '" + tr.replacements$(i%, 0) + "'")

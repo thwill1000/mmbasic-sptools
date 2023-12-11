@@ -18,6 +18,7 @@ Option Default Integer
 add_test("test_colour")
 add_test("test_comments")
 add_test("test_crunch")
+add_test("test_disable_format")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_include_only")
@@ -151,6 +152,39 @@ Sub test_crunch()
   Loop
 
   opt.set("crunch", "foo")
+  assert_error("expects 'on|off' argument")
+End Sub
+
+Sub test_disable_format()
+  Local elements$(10) Length 10, i%
+
+  assert_int_equals(0, opt.disable_format%)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i% = 0
+  Do While elements$(i%) <> Chr$(0)
+    opt.disable_format% = 999
+    opt.set("disable-format", elements$(i%))
+    assert_int_equals(0, opt.disable_format%)
+    Inc i%
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i% = 0
+  Do While elements$(i%) <> Chr$(0)
+    opt.disable_format% = 999
+    opt.set("disable-format", elements$(i%))
+    assert_int_equals(1, opt.disable_format%)
+    Inc i%
+  Loop
+
+  opt.set("format-only", "foo")
   assert_error("expects 'on|off' argument")
 End Sub
 
@@ -602,6 +636,9 @@ Sub test_format()
   assert_int_equals(1, opt.format%)
 
   given_options("version=1")
+  assert_int_equals(0, opt.format%)
+
+  given_options("spacing=0,disable-format=1")
   assert_int_equals(0, opt.format%)
 End Sub
 

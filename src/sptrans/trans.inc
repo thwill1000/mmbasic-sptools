@@ -140,6 +140,7 @@ Function tr.transpile%()
     Case "!comments"     : tr.process_comments()
     Case "!comment_if"   : tr.process_if()
     Case "!define"       : tr.process_define()
+    Case "!disable-format", "!disable_format" : tr.process_disable_format()
     Case "!dynamic_call" : tr.process_dynamic_call()
     Case "!elif"         : tr.process_elif()
     Case "!else"         : tr.process_else()
@@ -167,9 +168,11 @@ End Function
 
 Function tr.is_known_directive%(t$)
   Select Case Mid$(t$, 2)
-    Case "comments", "comment_if", "define", "dynamic_call", "elif", "else", "empty-lines", "endif"
+    Case "comments", "comment_if", "define", "disable-format", "disable_format"
       tr.is_known_directive% = 1
-    Case "error", "if", "ifdef", "ifndef", "info", "indent", "replace", "spacing", "uncomment_if"
+    Case "dynamic_call", "elif", "else", "empty-lines", "endif", "error", "if"
+      tr.is_known_directive% = 1
+    Case "ifdef", "ifndef", "info", "indent", "replace", "spacing", "uncomment_if"
       tr.is_known_directive% = 1
     Case "undef", "unreplace"
       tr.is_known_directive% = 1
@@ -566,6 +569,12 @@ Sub tr.process_define()
   If lx.num > 2 Then sys.err$ = "has too many arguments"
   If sys.err$ = "" Then def.define(lx.token$(1))
   If sys.err$ <> "" Then sys.err$ = "!define directive " + sys.err$
+End Sub
+
+Sub tr.process_disable_format()
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then opt.set("disable-format", Choice(lx.num = 2, lx.token$(1), "on"))
+  If sys.err$ <> "" Then sys.err$ = "!disable-format directive " + sys.err$
 End Sub
 
 Sub tr.process_dynamic_call()

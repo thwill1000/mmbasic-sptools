@@ -16,6 +16,8 @@ Dim opt.comments     ' -1    : preserve comments
                      '  0    : omit all comments
 Dim opt.format%      '  0    : format step required
                      '  1    : format step not required
+Dim opt.disable_format% '  0 : formatting enabled
+                     '  1    : formatting (explicitly) disabled
 Dim opt.empty_lines  ' -1    : preserve empty lines
                      '  0    : omit all empty lines
                      '  1    : include empty line between each Function/Sub
@@ -45,6 +47,7 @@ Dim opt.outfile$     ' output file/path, empty for output to console
 Sub opt.init()
   opt.colour = 0
   opt.comments = -1
+  opt.disable_format% = 0
   opt.format% = 0
   opt.empty_lines = -1
   opt.format_only = 0
@@ -67,6 +70,7 @@ Sub opt.set(name$, value$)
     Case "colour"       : opt.set_colour(value$)
     Case "comments"     : opt.set_comments(value$)
     Case "crunch"       : opt.set_crunch(value$)
+    Case "disable-format" : opt.set_disable_format(value$)
     Case "empty-lines"  : opt.set_empty_lines(value$)
     Case "format-only"  : opt.set_format_only(value$)
     Case "include-only" : opt.set_include_only(value$)
@@ -85,7 +89,7 @@ Sub opt.set(name$, value$)
 
   Local z% = opt.comments <> -1 Or opt.empty_lines <> -1
   z% = z% Or opt.indent_sz <> -1 Or opt.keywords <> -1 Or opt.spacing <> -1
-  opt.format% = z%
+  opt.format% = z% And Not opt.disable_format%
 End Sub
 
 Sub opt.set_colour(value$)
@@ -116,6 +120,14 @@ Sub opt.set_crunch(value$)
       opt.spacing = 0
     Case Else
       sys.err$ = "expects 'on|off' argument"
+  End Select
+End Sub
+
+Sub opt.set_disable_format(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.disable_format% = 0
+    Case "on", "1" : opt.disable_format% = 1
+    Case Else : sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
