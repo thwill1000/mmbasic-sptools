@@ -9,6 +9,34 @@ sys.provides("gamemite")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
+' Finds a Game*Mite file.
+'
+' @param  f$  filename/path to find.
+' @return     if f$ is not empty:
+'               - f$ if it is an absolute path,
+'               - otherwise "A:/GameMite/" + f$ if it exists,
+'               - otherwise "B:/GameMite/" + f$ if it exists,
+'               - if neither exists then "A:/GameMite/" + f$.
+'             if f$ is empty:
+'               - "A:/GameMite" if it exists,
+'               - otherwise "B:/GameMite" if it exists,
+'               - if neither exists then "A:/GameMite".
+Function gamemite.file$(f$)
+  If InStr("A:/B:/", UCase$(Left$(f$, 3))) Then
+    gamemite.file$ = f$
+  Else
+    Local f_$ = "A:/GameMite" + Choice(f$ = "", "", "/" + f$), x%
+    x% = Mm.Info(Exists File f_$)
+    If Not x% Then
+      f_$ = "B" + Mid$(f_$, 2)
+      On Error Skip ' Handle SD Card not present error.
+      x% = Mm.Info(Exists File f_$)
+    EndIf
+    If Not x% Then f_$ = "A" + Mid$(f_$, 2)
+    gamemite.file$ = f_$
+  EndIf
+End Function
+
 Sub gamemite.end(break%)
   FrameBuffer Write N
   Colour Rgb(White), Rgb(Black)
@@ -24,16 +52,11 @@ Sub gamemite.end(break%)
   twm.enable_cursor(1)
 
   If break% Then
-    Local f$ = "", msg$ = "Exited due to Ctrl-C"
+    Const f$ = "", msg$ = "Exited due to Ctrl-C"
   Else
-    Local f$ = "A:/GameMite/menu.bas", x% = Mm.Info(Exists File f$)
-    If Not x% Then
-      On Error Skip
-      x% = Mm.Info(Exists File "B:/GameMite/menu.bas")
-      If Mm.ErrNo Then x% = 0
-      If x% Then f$ = "B:/GameMite/menu.bas"
-    EndIf
-    Local msg$ = Choice(x%, "Loading menu ...", "Menu program not found!")
+    Const f$ = gamemite.file$("menu.bas")
+    Const x% = Mm.Info(Exists File f$)
+    Const msg$ = Choice(x%, "Loading menu ...", "Menu program not found!")
   EndIf
   Text 160, 110, msg$, CM
   If Len(f$) Then Run f$ Else End
