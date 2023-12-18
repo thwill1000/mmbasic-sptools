@@ -155,7 +155,7 @@ Function ctrl.keydown%(i%)
   If ctrl.key_type% = 0 Then Poke Var ctrl.key_map%(), i%, 0
 End Function
 
-' Iterates through array of controller drivers$(), opensing, polling and closing
+' Iterates through array of controller drivers$(), opening, polling and closing
 ' each in turn waiting for the user to provide an input that matches a mask%.
 '
 ' @param[in]      drivers$()  controller drivers to poll.
