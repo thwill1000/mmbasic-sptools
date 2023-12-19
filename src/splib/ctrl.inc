@@ -73,7 +73,7 @@ If sys.is_device%("cmm2*", "mmb4w") Then Dim ctrl.tick_nbr%
 Sub ctrl.init_keys(use_inkey%, period%, nbr%)
   ctrl.term_keys()
   Select Case Choice(use_inkey%, "Inkey", Mm.Device$)
-    Case "Colour Maximite", "Colour Maximite 2", "MMBasic for Windows"
+    Case "Colour Maximite 2", "Colour Maximite 2 G2", "MMBasic for Windows"
       ctrl.key_type% = 1 ' KEYDOWN
       ctrl.tick_nbr% = Choice(nbr% = 0, 4, nbr%)
       SetTick Choice(period% = 0, 40, period%), ctrl.on_tick(), ctrl.tick_nbr%
