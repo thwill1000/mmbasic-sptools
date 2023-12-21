@@ -174,6 +174,15 @@ Function str.trim$(s$)
   If en% >= st% Then str.trim$ = Mid$(s$, st%, en% - st% + 1)
 End Function
 
+' Returns a copy of s$ with trailing spaces removed.
+Function str.rtrim$(s$)
+  Local en%
+  For en% = Len(s$) To 1 Step -1
+    If Peek(Var s$, en%) <> 32 Then Exit For
+  Next
+  If en% >= 1 Then str.rtrim$ = Mid$(s$, 1, en%)
+End Function
+
 ' If s$ both begins and ends with " then returns a copy of s$ with those characters removed,
 ' otherwise returns an unmodified copy of s$.
 Function str.unquote$(s$)

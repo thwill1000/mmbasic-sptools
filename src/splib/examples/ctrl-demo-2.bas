@@ -9,12 +9,12 @@ Option Explicit On
 
 #Include "../system.inc"
 
-'!if defined PICOMITEVGA
+'!if defined(PICOMITEVGA)
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N , B }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { Mode 2 : FrameBuffer Create }
-'!elif defined PICOMITE
+'!elif defined(PICOMITE) || defined(GAMEMITE)
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
@@ -28,11 +28,16 @@ Option Explicit On
 #Include "../menu.inc"
 #Include "../gamemite.inc"
 
-Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
-Dim CTRL_DRIVERS$(1) = ("ctrl.gamemite", "keys_cursor")
+'!dynamic_call ctrl.gamemite
+'!dynamic_call keys_cursor_ext
 
-If sys.is_device%("mmb4l") Then Option CodePage CMM2
-If sys.is_device%("mmb4w", "cmm2*") Then Option Console Serial
+Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
+Dim CTRL_DRIVERS$(1) = ("ctrl.gamemite", "keys_cursor_ext")
+
+'!if !defined(GAMEMITE)
+If sys.is_platform%("mmb4l") Then Option CodePage CMM2
+If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
+'!endif
 Mode 7
 Page Write 1
 
@@ -43,7 +48,7 @@ Sub main()
   ctrl.init_keys()
   sys.override_break()
   sound.init()
-  Local ctrl_idx% = Choice(sys.is_device%("gamemite"), 0, 1)
+  Local ctrl_idx% = Choice(sys.PLATFORM$() = "Game*Mite", 0, 1)
   menu.init(CTRL_DRIVERS$(ctrl_idx%), "menu_cb")
   menu.load_data("main_menu_data")
   menu.selection% = ctrl_idx% + 2
@@ -75,18 +80,19 @@ Sub main()
   Loop
 End Sub
 
+'!dynamic_call menu_cb
 Sub menu_cb(cb_data$)
   Select Case Field$(cb_data$, 1, "|")
     Case "render"
-      render_cb(cb_data$)
+      on_render(cb_data$)
     Case "selection_changed"
-      selection_changed_cb(cb_data$)
+      on_selection_changed(cb_data$)
     Case Else
       Error "Invalid state"
   End Select
 End Sub
 
-Sub render_cb(cb_data$)
+Sub on_render(cb_data$)
   twm.box(5, 8, 30, 9)
   Local i%
   For i% = Bound(BUTTONS%(), 0) To Bound(BUTTONS%(), 1)
@@ -99,7 +105,7 @@ Sub render_cb(cb_data$)
   twm.print_at(menu.width% - Len(s$) - 2, menu.height% - 2, s$)
 End Sub
 
-Sub selection_changed_cb(cb_data$)
+Sub on_selection_changed(cb_data$)
   On Error Ignore
   Call menu.ctrl$, ctrl.CLOSE
   Local err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
@@ -109,7 +115,7 @@ Sub selection_changed_cb(cb_data$)
   Call menu.ctrl$, ctrl.OPEN
   err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
   On Error Abort
-  render_cb()
+  on_render()
 End Sub
 
 Sub render_button(key%, active%)

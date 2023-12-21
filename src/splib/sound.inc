@@ -9,12 +9,20 @@ sys.provides("sound")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-'!if defined(SOUND_MONO) && defined(SOUND_RAW)
-  '!error "File 'sound.inc' was transpiled with more than one of SOUND_MONO and SOUND_RAW defined"
-'!endif
-
 '!info defined SOUND_MONO
 '!info defined SOUND_RAW
+
+'!if defined(SOUND_MONO) && defined(SOUND_RAW)
+  '!error "File 'sound.inc' was pre-processed with more than one of SOUND_MONO and SOUND_RAW defined"
+'!endif
+
+'!if defined SOUND_RAW
+  '!dynamic_call sound.fx_raw_int
+  '!dynamic_call sound.music_raw_int
+'!else
+  '!dynamic_call sound.fx_default_int
+  '!dynamic_call sound.music_default_int
+'!endif
 
 '!uncomment_if SOUND_RAW
 'SetPin GP4,PWM2A
@@ -48,7 +56,7 @@ Sub sound.init(fx_int$, music_int$)
   sound.music_int$ = Choice(Len(music_int$), music_int$, "sound.music_default_int")
 
   ' On the Game*Mite we always play an octave higher.
-  Const offset% = Choice(sys.is_device%("gamemite"), 12, 0)
+  Const offset% = Choice(sys.PLATFORM$() = "Game*Mite", 12, 0)
   Local i%
   For i% = 0 To 127
     ' 16.35 Hz is C0, the lowest (?) frequency allowed.

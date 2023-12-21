@@ -6,15 +6,14 @@ Option Base 0
 Option Default Integer
 Option Explicit On
 
-Const MAX_NUM_FILES = 5
-Dim in.num_open_files = 1
-
 #Include "../../splib/system.inc"
 #Include "../../splib/array.inc"
+#Include "../../splib/bits.inc"
 #Include "../../splib/list.inc"
 #Include "../../splib/string.inc"
 #Include "../../splib/file.inc"
 #Include "../../splib/map.inc"
+#Include "../../splib/map2.inc"
 #Include "../../splib/set.inc"
 #Include "../../splib/vt100.inc"
 #Include "../../sptest/unittest.inc"
@@ -24,6 +23,17 @@ Dim in.num_open_files = 1
 #Include "../options.inc"
 #Include "../defines.inc"
 #Include "../expression.inc"
+
+sys.provides("console")
+Sub con.spin()
+End Sub
+
+sys.provides("output")
+Dim out.line_num%
+
+#Include "../symbols.inc"
+#Include "../input.inc"
+#Include "../symproc.inc"
 #Include "../trans.inc"
 
 keywords.init()
@@ -81,7 +91,6 @@ add_test("test_endif_given_no_if")
 add_test("test_endif_given_args")
 add_test("test_endif_given_trail_comment")
 add_test("test_error_directive")
-add_test("test_omit_and_line_spacing")
 add_test("test_comments_directive")
 add_test("test_always_defined_values")
 add_test("test_always_undefined_values")
@@ -105,6 +114,13 @@ add_test("test_elif_given_uncomment_if")
 add_test("test_elif_given_ifdef")
 add_test("test_elif_given_shortcut_expr")
 add_test("test_info_defined")
+add_test("test_dynamic_call")
+add_test("test_dynamic_call_given_no_arg")
+add_test("test_dynamic_call_given_too_many_args", "test_dynamic_too_many_args")
+add_test("test_dynamic_call_given_too_many_names", "test_dynamic_too_many_names")
+add_test("test_disable_format")
+add_test("test_disable_format_gvn_2_args")
+add_test("test_disable_format_gvn_invalid")
 
 run_tests()
 
@@ -113,13 +129,14 @@ End
 Sub setup_test()
   opt.init()
   def.init()
+  symproc.init(32, 300, 1)
+
+  in.num_open_files% = 1
 
   ' TODO: extract into trans.init() or trans.reset().
   tr.clear_replacements()
   tr.include$ = ""
   tr.omit_flag% = 0
-  tr.empty_line_flag% = 0
-  tr.omitted_line_flag% = 0
 
   Local i%, j%
   For i% = Bound(tr.num_comments(), 0) To Bound(tr.num_comments(), 1)
@@ -996,55 +1013,14 @@ Sub test_error_directive()
   expect_transpile_error("'!error 42", "!error directive has missing " + str.quote$("message") + " argument")
 End Sub
 
-' If the result of transpiling a line is such that the line is omitted
-' and that omission then causes two empty lines to run sequentially then
-' we automatically omit the second empty line.
-Sub test_omit_and_line_spacing()
-  expect_transpile_succeeds("", 0)
-  expect_transpile_succeeds("", 0)
-
-  expect_transpile_omits("'!define foo")
-  assert_int_equals(0, tr.omit_flag%)
-
-  ' Should be omitted, because the last line was omitted AND
-  ' the last non-omitted line was empty.
-  expect_transpile_omits("")
-  assert_int_equals(0, tr.omit_flag%)
-
-  expect_transpile_omits("'!ifndef foo")
-  assert_int_equals(1, tr.omit_flag%)
-
-  expect_transpile_omits("bar")
-  assert_int_equals(1, tr.omit_flag%)
-
-  expect_transpile_omits("'!endif")
-  assert_int_equals(0, tr.omit_flag%)
-
-  ' Should be omitted, because the last line was omitted AND
-  ' the last non-omitted line was empty.
-  expect_transpile_omits("")
-  assert_int_equals(0, tr.omit_flag%)
-End Sub
-
 Sub test_comments_directive()
+  ' Omit all comments.
   expect_transpile_omits("'!comments off")
   assert_int_equals(0, opt.comments)
 
-  expect_transpile_omits("' This is a comment")
-  assert_string_equals("", lx.line$)
-
-  expect_transpile_succeeds("Dim a = 1 ' This is also a comment", 4)
-  expect_token(0, TK_KEYWORD, "Dim")
-  expect_token(1, TK_IDENTIFIER, "a")
-  expect_token(2, TK_SYMBOL, "=")
-  expect_token(3, TK_NUMBER, "1")
-  assert_string_equals("Dim a = 1", lx.line$)
-
+  ' Preserve comments.
   expect_transpile_omits("'!comments on")
   assert_int_equals(-1, opt.comments)
-
-  expect_transpile_succeeds("' This is a third comment", 1)
-  expect_token(0, TK_COMMENT, "' This is a third comment")
 End Sub
 
 Sub test_always_defined_values()
@@ -1310,13 +1286,74 @@ Sub test_info_defined()
   expect_transpile_omits("'!info defined foo")
   expect_transpile_omits("'!define foo")
   expect_transpile_succeeds("'!info defined foo", 1)
-  expect_token(0, TK_COMMENT, "' Preprocessor value FOO defined")
+  expect_token(0, TK_COMMENT, "'_Preprocessor value FOO defined")
   expect_transpile_omits("'!undef foo")
   expect_transpile_omits("'!info defined foo")
   expect_transpile_error("'!info", "!info directive expects two arguments")
   expect_transpile_error("'!info defined", "!info directive expects two arguments")
   expect_transpile_error("'!info foo bar", "!info directive has invalid first argument: foo")
 End Sub
+
+Sub test_dynamic_call()
+  expect_transpile_omits("'!dynamic_call fn_a")
+  expect_transpile_omits("'!dynamic_call fn_b")
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Function wombat%()"))
+  assert_int_equals(3, symproc.fn_decl%(0))
+  expect_transpile_omits("'!dynamic_call fn_c")
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("End Function"))
+  assert_int_equals(3, symproc.fn_end%(0))
+  expect_transpile_omits("'!dynamic_call fn_d")
+
+  Local ids%(4)
+  assert_int_equals(3, sym.get_referenced_ids%(0, ids%()))
+  assert_string_equals("fn_a", sym.id_to_name$(ids%(0)))
+  assert_string_equals("fn_b", sym.id_to_name$(ids%(1)))
+  assert_string_equals("fn_d", sym.id_to_name$(ids%(2)))
+  assert_int_equals(1, sym.get_referenced_ids%(3, ids%()))
+  assert_string_equals("fn_c", sym.id_to_name$(ids%(0)))
+End Sub
+
+Sub test_dynamic_call_given_no_arg()
+  expect_transpile_error("'!dynamic_call", "!dynamic_call directive expects <id> argument")
+End Sub
+
+Sub test_dynamic_too_many_args()
+  expect_transpile_error("'!dynamic_call foo bar", "!dynamic_call directive has too many arguments")
+End Sub
+
+Sub test_dynamic_too_many_names()
+  Local i%, id%
+  For i% = 0 To sym.MAX_NAMES% - 1
+    id% = sym.add_name%("name_" + Str$(i%))
+  Next
+  expect_transpile_error("'!dynamic_call foo", "!dynamic_call directive invalid; too many names, max 300")
+End Sub
+
+Sub test_disable_format()
+  Local directives$(1) = ("disable-format", "disable_format"), i%
+  For i% = Bound(directives$(), 0) To Bound(directives$(), 1)
+    opt.disable_format% = 0
+    expect_transpile_omits("'!" + directives$(i%))
+    assert_int_equals(1, opt.disable_format%)
+
+    opt.disable_format% = 0
+    expect_transpile_omits("'!" + directives$(i%) + " on")
+    assert_int_equals(1, opt.disable_format%)
+
+    opt.disable_format% = 1
+    expect_transpile_omits("'!" + directives$(i%) + " off")
+    assert_int_equals(0, opt.disable_format%)
+  Next
+End Sub
+
+Sub test_disable_format_gvn_2_args()
+  expect_transpile_error("'!disable-format on foo", "!disable-format directive has too many arguments")
+End Sub
+
+Sub test_disable_format_gvn_invalid()
+  expect_transpile_error("'!disable-format foo", "!disable-format directive expects 'on|off' argument")
+End Sub
+
 
 Sub expect_replacement(i%, from$, to_$)
   assert_true(from$ = tr.replacements$(i%, 0), "Assert failed, expected from$ = '" + from$ + "', but was '" + tr.replacements$(i%, 0) + "'")

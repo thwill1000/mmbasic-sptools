@@ -14,7 +14,7 @@ Option Explicit On
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { Mode 2 : FrameBuffer Create }
-'!elif defined PICOMITE
+'!elif defined(PICOMITE) || defined(GAMEMITE)
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
@@ -63,8 +63,10 @@ Dim octave% = 0
 Dim octave_idx% = 0
 Dim type_idx% = 0
 
-If sys.is_device%("mmb4l") Then Option CodePage CMM2
-If sys.is_device%("mmb4w", "cmm2*") Then Option Console Serial
+'!if !defined(GAMEMITE)
+If sys.is_platform%("mmb4l") Then Option CodePage CMM2
+If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
+'!endif
 Mode 7
 Page Write 1
 
@@ -72,7 +74,9 @@ main()
 Error "Invalid state"
 
 Sub main()
-  Const ctrl$ = Choice(sys.is_device%("gamemite"), "ctrl.gamemite", "keys_cursor_ext")
+  '!dynamic_call ctrl.gamemite
+  '!dynamic_call keys_cursor_ext
+  Const ctrl$ = Choice(sys.PLATFORM$() = "Game*Mite", "ctrl.gamemite", "keys_cursor_ext")
   ctrl.init_keys()
   sys.override_break()
   Call ctrl$, ctrl.OPEN
@@ -83,6 +87,7 @@ Sub main()
   menu.main_loop()
 End Sub
 
+'!dynamic_call fx_test_int
 Sub fx_test_int()
   If Not sound.fx_ptr% Then Exit Sub
   Local n% = Peek(Byte sound.fx_ptr%)
@@ -124,6 +129,7 @@ Sub play_sound(num%, note%, volume%)
 '!endif
 End Sub
 
+'!dynamic_call music_test_int
 Sub music_test_int()
   If Not sound.music_ptr% Then Exit Sub
   Local num% = Peek(Byte sound.music_start_ptr%)
@@ -143,10 +149,11 @@ Sub music_test_int()
   EndIf
 End Sub
 
+'!dynamic_call menu_cb
 Sub menu_cb(cb_data$)
   Select Case Field$(cb_data$, 1, "|")
     Case "render"
-      render_cb()
+      on_render()
     Case "selection_changed"
       ' Do nothing.
     Case Else
@@ -154,7 +161,7 @@ Sub menu_cb(cb_data$)
   End Select
 End Sub
 
-Sub render_cb(cb_data$)
+Sub on_render(cb_data$)
   Const s$ = "v" + sys.format_version$()
   twm.print_at(menu.width% - Len(s$) - 2, menu.height% - 2, s$)
 End Sub
@@ -205,11 +212,13 @@ Sub update_menu_data(data_label$)
     menu.items$(idx% + 1) = " TYPE:    " + TYPES$(type_idx%) + " |cmd_type"
     menu.items$(idx% + 2) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
   EndIf
-  If sys.is_device%("gamemite") Then
+
+  If sys.PLATFORM$() = "Game*Mite" Then
     menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and SELECT|")
   EndIf
 End Sub
 
+'!dynamic_call cmd_play_fx
 Sub cmd_play_fx(key%)
   Select Case key%
     Case ctrl.A, ctrl.SELECT
@@ -221,6 +230,7 @@ Sub cmd_play_fx(key%)
   End Select
 End Sub
 
+'!dynamic_call cmd_play_music
 Sub cmd_play_music(key%)
   Select Case key%
     Case ctrl.A, ctrl.SELECT
@@ -239,6 +249,7 @@ Sub cmd_play_music(key%)
   End Select
 End Sub
 
+'!dynamic_call cmd_play_wav
 Sub cmd_play_wav(key%)
   Select Case key%
     Case ctrl.A, ctrl.SELECT
@@ -256,10 +267,12 @@ Sub cmd_play_wav(key%)
   End Select
 End Sub
 
+'!dynamic_call wav_done_cb
 Sub wav_done_cb()
   wav_done% = 1
 End Sub
 
+'!dynamic_call cmd_channel
 Sub cmd_channel(key%)
   Select Case key%
     Case ctrl.LEFT, ctrl.RIGHT
@@ -276,6 +289,7 @@ Sub cmd_channel(key%)
   End Select
 End Sub
 
+'!dynamic_call cmd_type
 Sub cmd_type(key%)
   Select Case key%
     Case ctrl.LEFT, ctrl.RIGHT
@@ -292,6 +306,7 @@ Sub cmd_type(key%)
   End Select
 End Sub
 
+'!dynamic_call cmd_octave
 Sub cmd_octave(key%)
   Select Case key%
     Case ctrl.LEFT, ctrl.RIGHT
@@ -308,6 +323,7 @@ Sub cmd_octave(key%)
   End Select
 End Sub
 
+'!dynamic_call cmd_quit
 Sub cmd_quit(key%)
   Select Case key%
     Case ctrl.A, ctrl.SELECT

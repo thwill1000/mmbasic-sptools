@@ -11,19 +11,27 @@ If sys.err$ <> "" Then Error sys.err$
 '!endif
 
 Sub menu.init(ctrl$, callback$)
+  Dim menu.OK_BTN$(1) Length 2 = ("OK", "")
   Dim YES_NO_BTNS$(1) Length 3 = ("Yes", "No")
 
   Dim menu.callback$ = callback$, menu.ctrl$ = ctrl$
   Dim menu.item_count%, menu.selection%
 
   Font 1
-  If sys.is_device%("mmb4l") Then
-    Dim menu.height% = Mm.VRes
-    Dim menu.width% = Mm.HRes
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' Dim menu.height% = Mm.VRes \ Mm.Info(FontHeight)
+  ' Dim menu.width% = Mm.HRes \ Mm.Info(FontWidth)
+  '!endif
+'!else
+  If sys.is_platform%("mmb4l") Then
+    Dim menu.height% = Min(Mm.VRes, 50)
+    Dim menu.width% = Min(Mm.HRes, 100)
   Else
     Dim menu.height% = Mm.VRes \ Mm.Info(FontHeight)
     Dim menu.width% = Mm.HRes \ Mm.Info(FontWidth)
   EndIf
+'!endif
   Local sz%
   Inc sz%, 7 + 2 * menu.height% * menu.width%
   Inc sz%, 7 + 2 * (menu.height% - 10) * (menu.width% - 10)
@@ -167,10 +175,13 @@ Sub menu.play_invalid_fx(block%)
   EndIf
 End Sub
 
-Function menu.msgbox%(msg$, buttons$(), default%)
+' @param  frameCol%  frame colour; one of the colours from 'txtwm.inc'.
+'                    If unspecified then uses twm.CYAN%.
+Function menu.msgbox%(msg$, buttons$(), default%, frameCol%)
   menu.msgbox% = default%
 
   Local base% = Mm.Info(Option Base), num% = Bound(buttons$(), 1) - base% + 1
+  If buttons$(base% + 1) = "" Then num% = 1 ' Single button.
   Local i%, key%, p%, released%, valid% = 1, word$, x%(num%)
   x%(base%) = 2
   For i% = base% + 1 To base% + num% - 1
@@ -179,7 +190,7 @@ Function menu.msgbox%(msg$, buttons$(), default%)
 
   twm.switch(menu.win2%)
   twm.cls()
-  twm.foreground(twm.CYAN%)
+  twm.foreground(Choice(frameCol%, frameCol%, twm.CYAN%))
   twm.box(0, 0, twm.w%, twm.h%)
   twm.foreground(twm.WHITE%)
 

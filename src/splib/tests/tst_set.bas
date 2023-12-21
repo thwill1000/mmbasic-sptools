@@ -22,9 +22,10 @@ add_test("test_clear_given_empty")
 add_test("test_clear_given_full")
 add_test("test_get")
 add_test("test_is_full")
-add_test("test_put")
+add_test("test_put_given_absent")
 add_test("test_put_given_present")
 add_test("test_put_given_full")
+add_test("test_put_given_full_and_present")
 add_test("test_remove")
 
 If InStr(Mm.CmdLine$, "--base") Then run_tests() Else run_tests("--base=1")
@@ -126,10 +127,26 @@ Sub test_is_full()
   assert_true(set.is_full%(my_set$()))
 End Sub
 
-Sub test_put()
+Sub test_put_given_absent()
   Local base% = Mm.Info(Option Base)
   Local my_set$(set.new%(20))
   set.init(my_set$())
+
+  set.put(my_set$(), "foo")
+  set.put(my_set$(), "bar")
+
+  assert_int_equals(2, set.size%(my_set$()))
+  assert_string_equals("bar", my_set$(base% + 0))
+  assert_string_equals("foo", my_set$(base% + 1))
+End Sub
+
+Sub test_put_given_present()
+  Local base% = Mm.Info(Option Base)
+  Local my_set$(set.new%(20))
+  set.init(my_set$())
+
+  set.put(my_set$(), "foo")
+  set.put(my_set$(), "bar")
 
   set.put(my_set$(), "foo")
   set.put(my_set$(), "bar")
@@ -154,20 +171,20 @@ Sub test_put_given_full()
   On Error Abort
 End Sub
 
-Sub test_put_given_present()
+Sub test_put_given_full_and_present()
   Local base% = Mm.Info(Option Base)
-  Local my_set$(set.new%(20))
+  Local my_set$(set.new%(10))
   set.init(my_set$())
 
-  set.put(my_set$(), "foo")
-  set.put(my_set$(), "bar")
+  Local i%
+  For i% = base% To base% + 9 : set.put(my_set$(), "item" + Str$(i%)) : Next
+  assert_int_equals(10, set.size%(my_set$()))
 
-  set.put(my_set$(), "foo")
-  set.put(my_set$(), "bar")
+  set.put(my_set$(), "item1")
 
-  assert_int_equals(2, set.size%(my_set$()))
-  assert_string_equals("bar", my_set$(base% + 0))
-  assert_string_equals("foo", my_set$(base% + 1))
+  assert_no_error()
+  assert_int_equals(10, set.size%(my_set$()))
+  assert_int_equals(1, set.get%(my_set$(), "item1"))
 End Sub
 
 Sub test_remove()

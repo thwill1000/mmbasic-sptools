@@ -1,17 +1,52 @@
 ChangeLog
 ---------
 
-Version 1.2.0 - ??-???-????:
+Version 1.2 RC 1 - 21-Dec-2023:
  - splib:
    - Added subs/functions to 'bits.inc' to handle bit-sets > 64 bits:
        bits.big_clear()
        bits.big_fill()
        bits.big_get%()
        bits.big_set()
+     and also for 64-bit sets:
        bits.fill()
+   - Added str.rtrim$() function
+     - right trims spaces from string.
+   - Added array.qsort_ints%() function
+     - quick sorts array of integers using user specified comparison function.
+   - Added sys.HOME$(), sys.SEPARATOR$() and sys.TMPDIR$() functions
+     - replaces sys.string_prop$().
+   - Added sys.PLATFORM$() function
+     - returns value of MM.INFO$(PLATFORM) if implemented and non-empty,
+       otherwise value of MM.DEVICE$.
+   - Added gamemite.file$() function
+     - given a non-absolute path looks for and returns file relative to
+       "A:/GameMite" or if not found, "B:/GameMite".
+   - Changed menu.msgbox%() to support
+     - message boxes with only one button.
+     - optional frame colour.
+   - Renamed sys.is_device%() => sys.is_platform$().
+   - Fixed bug in sys.is_device%("gamemite") which would always return 1 if not
+     pre-processed.
+   - Fixed bug in map2.put() when element already present.
  - sptest:
    - Added option 'use_hex%' flag to assert_int_array_equals() which if set
      causes it to use hexadecimal format.
+ - sptrans:
+   - Added new features/options:
+     -L, --list-all    Output lists of identifiers, functions/subs,
+                       references and orphan functions/subs.
+     -T, --tree-shake  Remove unused functionssSubs.
+   - Added new directives:
+     !DYNAMIC_CALL <fn-name>       Flags function/sub so it isn't removed by
+                                   tree-shaking, required if a function/sub is
+                                   only called via the CALL command/function.
+     !DISABLE_FORMAT [ ON | OFF ]  Disables/re-enables auto-formatting for a
+                                   section of code.
+   - Fixed indentation when auto-formatting END IF construct.
+   - Changed auto-formatting to always include space after FLOAT,INTEGER,STRING
+     keywords.
+   - Added missing entries to keyword list.
 
 Version 1.1.0 - 1-Oct-2023:
  - gonzo:

@@ -5,7 +5,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
-sys.requires("options", "set", "defines", "expression")
+sys.requires("options", "set", "defines", "expression", "symbols", "symproc")
 sys.provides("trans")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -41,12 +41,6 @@ Dim tr.include$
 ' If set we ignore/omit lines until we process an !ENDIF directive
 ' corresponding to the directive that set this flag.
 Dim tr.omit_flag%
-
-' Was the last non-omitted line empty after transpilation ?
-Dim tr.empty_line_flag%
-
-' Was the last line omitted ?
-Dim tr.omitted_line_flag%
 
 Const tr.INCLUDE_FILE = 1
 Const tr.OMIT_LINE = 2
@@ -92,13 +86,15 @@ Function tr.transpile%()
     EndIf
   EndIf
 
+  '!dynamic_call tr.process_elif
+  '!dynamic_call tr.process_else
+  '!dynamic_call tr.process_endif
   Select Case lx.token_lc$(0)
     Case "'!endif", "'!else", "'!elif"
       ' TODO: Requiring the trailing brackets in the CALL may be an MMBasic bug.
       Call "tr.process_" + Mid$(lx.token_lc$(0), 3) + "()"
       If sys.err$ = "" Then
         lx.reset("") ' Is this really necessary ?
-        tr.omitted_line_flag% = 1
         tr.transpile% = tr.OMIT_LINE
       Else
         tr.transpile% = sys.FAILURE
@@ -116,7 +112,6 @@ Function tr.transpile%()
       EndIf
     EndIf
     lx.reset("")
-    tr.omitted_line_flag% = 1
     tr.transpile% = tr.OMIT_LINE
     Exit Function
   EndIf
@@ -128,26 +123,14 @@ Function tr.transpile%()
     Exit Function
   EndIf
 
-  If lx.num = 0 Then                  ' IF this line is empty
-    If tr.omitted_line_flag% Then     ' AND the last line was omitted
-      If tr.empty_line_flag% Then     ' AND the last non-omitted line was empty
-        tr.transpile% = tr.OMIT_LINE  ' THEN omit this line.
-        Exit Function
-      EndIf
-    EndIf
-  EndIF
-
   If lx.token_lc$(0) = "#include" Then
     tr.process_include()
     tr.transpile% = Choice(sys.err$ = "", tr.INCLUDE_FILE, sys.FAILURE)
-    tr.omitted_line_flag% = 0
     Exit Function
   EndIf
 
   If lx.type(0) <> TK_DIRECTIVE Then
-    tr.empty_line_flag% = (lx.num = 0)
-    tr.transpile% = Choice(opt.comments = 0, tr.remove_comments%(), sys.SUCCESS)
-    tr.omitted_line_flag% = tr.transpile% = tr.OMIT_LINE
+    tr.transpile% = sys.SUCCESS
     Exit Function
   EndIf
 
@@ -157,6 +140,8 @@ Function tr.transpile%()
     Case "!comments"     : tr.process_comments()
     Case "!comment_if"   : tr.process_if()
     Case "!define"       : tr.process_define()
+    Case "!disable-format", "!disable_format" : tr.process_disable_format()
+    Case "!dynamic_call" : tr.process_dynamic_call()
     Case "!elif"         : tr.process_elif()
     Case "!else"         : tr.process_else()
     Case "!empty-lines"  : tr.process_empty_lines()
@@ -177,19 +162,21 @@ Function tr.transpile%()
   If sys.err$ <> "" Then
     tr.transpile% = sys.FAILURE
   ElseIf tr.transpile% = tr.OMIT_LINE Then
-    ' lx.parse_basic("' PROCESSED: " + Mid$(lx.line$, lx.start(0) + 1))
     lx.reset("")
-    tr.omitted_line_flag% = 1
   EndIf
 End Function
 
 Function tr.is_known_directive%(t$)
-  Local u$ = "|" + Mid$(t$, 2) + "|"
-  If InStr("|comments|comment_if|define|elif|else|empty-lines|endif|error|if|ifdef|", u$) Then
-    tr.is_known_directive% = 1
-  ElseIf InStr("|ifndef|info|indent|replace|spacing|uncomment_if|undef|unreplace|", u$) Then
-    tr.is_known_directive% = 1
-  EndIf
+  Select Case Mid$(t$, 2)
+    Case "comments", "comment_if", "define", "disable-format", "disable_format"
+      tr.is_known_directive% = 1
+    Case "dynamic_call", "elif", "else", "empty-lines", "endif", "error", "if"
+      tr.is_known_directive% = 1
+    Case "ifdef", "ifndef", "info", "indent", "replace", "spacing", "uncomment_if"
+      tr.is_known_directive% = 1
+    Case "undef", "unreplace"
+      tr.is_known_directive% = 1
+  End Select
 End Function
 
 Sub tr.process_elif()
@@ -504,7 +491,7 @@ Function tr.process_info%()
   Else
     Local defined% = def.is_defined%(lx.token$(2))
     If defined% Then
-      lx.replace_token(0, "' Preprocessor value " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
+      lx.replace_token(0, "'_Preprocessor value " + UCase$(lx.token$(2)) + " defined", TK_COMMENT)
       lx.remove_token(2)
       lx.remove_token(1)
       tr.process_info% = sys.SUCCESS
@@ -584,6 +571,24 @@ Sub tr.process_define()
   If sys.err$ <> "" Then sys.err$ = "!define directive " + sys.err$
 End Sub
 
+Sub tr.process_disable_format()
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then opt.set("disable-format", Choice(lx.num = 2, lx.token$(1), "on"))
+  If sys.err$ <> "" Then sys.err$ = "!disable-format directive " + sys.err$
+End Sub
+
+Sub tr.process_dynamic_call()
+  If lx.num < 2 Then sys.err$ = "expects <id> argument"
+  If lx.num > 2 Then sys.err$ = "has too many arguments"
+  If sys.err$ = "" Then
+    Const id% = symproc.identifier%(1)
+    If id% < 0 Then sys.err$ = "invalid; " + LCase$(Left$(sys.err$, 1)) + Mid$(sys.err$, 2)
+  EndIf
+  If sys.err$ <> "" Then
+    sys.err$ = "!dynamic_call directive " + sys.err$
+  EndIf
+End Sub
+
 Sub tr.process_spacing()
   If lx.num > 2 Then sys.err$ = " has too many arguments")
   If sys.err$ = "" Then opt.set_spacing(lx.token_lc$(1))
@@ -647,18 +652,3 @@ Sub tr.dump_replacements()
     Print Choice(tr.replacements$(i%, 1) = Chr$(0), "<null>", tr.replacements$(i%, 1))
   Next
 End Sub
-
-' Removes all comment tokens from the current line.
-'
-' @return  tr.OMIT_LINE if as a result of calling this function the line
-'          is now empty, otherwise 1.
-Function tr.remove_comments%()
-  If lx.num = 0 Then Exit Function
-
-  Local i%
-  Do While i% < lx.num
-    If lx.type(i%) = TK_COMMENT Then lx.remove_token(i%)
-    Inc i%
-  Loop
-  tr.remove_comments% = Choice(lx.num = 0, tr.OMIT_LINE, sys.SUCCESS)
-End Function

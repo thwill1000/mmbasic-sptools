@@ -10,15 +10,19 @@ sys.provides("options")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-Dim opt.colour       '  0    : no syntax colouring of console output
-                     '  1    : VT100 syntax colouring of console output
+Dim opt.colour       '  0    : no syntax highlighting of console output
+                     '  1    : VT100 syntax highlighting of console output
 Dim opt.comments     ' -1    : preserve comments
                      '  0    : omit all comments
+Dim opt.format%      '  0    : format step required
+                     '  1    : format step not required
+Dim opt.disable_format% '  0 : formatting enabled
+                     '  1    : formatting (explicitly) disabled
 Dim opt.empty_lines  ' -1    : preserve empty lines
                      '  0    : omit all empty lines
                      '  1    : include empty line between each Function/Sub
 Dim opt.format_only  '  0    : transpile
-                     '  1    : just format / pretty-print
+                     '  1    : just format
 Dim opt.include_only '  0    : transpile
                      '  1    : just inline #INCLUDEd files
 Dim opt.indent_sz    ' -1    : preserve indenting
@@ -27,40 +31,36 @@ Dim opt.keywords     ' -1    : preserve keyword capitalisation
                      '  0    : lowercase keywords
                      '  1    : PascalCase keywords
                      '  2    : UPPERCASE keywords
+Dim opt.list_all%    '  0    : do not generate symbol lists
+                     '  1    : generate symbol lists
 Dim opt.quiet        '  0    : run with normal console output
                      '  1    : run with minimal console output
 Dim opt.spacing      ' -1    : preserve spacing
                      '  0    : omit all unnecessary (non-indent) spaces
                      '  1    : space compactly
                      '  2    : space generously
+Dim opt.tree_shake   '  0    : do not perform tree-shaking
+                     '  1    : perform tree-shaking
 Dim opt.infile$      ' input file/path
 Dim opt.outfile$     ' output file/path, empty for output to console
 
 Sub opt.init()
   opt.colour = 0
   opt.comments = -1
+  opt.disable_format% = 0
+  opt.format% = 0
   opt.empty_lines = -1
   opt.format_only = 0
   opt.include_only = 0
   opt.indent_sz = -1
   opt.keywords = -1
+  opt.list_all% = 0
   opt.quiet = 0
   opt.spacing = -1
+  opt.tree_shake = 0
   opt.infile$ = ""
   opt.outfile$ = ""
 End Sub
-
-' Do the options require pretty-printing ?
-Function opt.pretty_print%()
-  Local z% = opt.colour Or opt.comments <> -1 Or opt.empty_lines <> -1
-  z% = z% Or opt.indent_sz <> -1 Or opt.keywords <> -1 Or opt.spacing <> -1
-  opt.pretty_print% = z%
-End Function
-
-' Do the options require !directives to be processed ?
-Function opt.process_directives%()
-  opt.process_directives% = Not (opt.include_only Or opt.format_only)
-End Function
 
 ' Sets the value for an option.
 '
@@ -70,19 +70,26 @@ Sub opt.set(name$, value$)
     Case "colour"       : opt.set_colour(value$)
     Case "comments"     : opt.set_comments(value$)
     Case "crunch"       : opt.set_crunch(value$)
+    Case "disable-format" : opt.set_disable_format(value$)
     Case "empty-lines"  : opt.set_empty_lines(value$)
     Case "format-only"  : opt.set_format_only(value$)
     Case "include-only" : opt.set_include_only(value$)
     Case "indent"       : opt.set_indent_sz(value$)
     Case "keywords"     : opt.set_keywords(value$)
+    Case "list-all"     : opt.set_list_all(value$)
     Case "no-comments"  : opt.set_no_comments(value$)
     Case "quiet"        : opt.set_quiet(value$)
     Case "spacing"      : opt.set_spacing(value$)
+    Case "tree-shake"   : opt.set_tree_shake(value$)
     Case "infile"       : opt.set_infile(value$)
     Case "outfile"      : opt.set_outfile(value$)
     Case Else
       sys.err$ = "unknown option: " + name$
   End Select
+
+  Local z% = opt.comments <> -1 Or opt.empty_lines <> -1
+  z% = z% Or opt.indent_sz <> -1 Or opt.keywords <> -1 Or opt.spacing <> -1
+  opt.format% = z% And Not opt.disable_format%
 End Sub
 
 Sub opt.set_colour(value$)
@@ -113,6 +120,14 @@ Sub opt.set_crunch(value$)
       opt.spacing = 0
     Case Else
       sys.err$ = "expects 'on|off' argument"
+  End Select
+End Sub
+
+Sub opt.set_disable_format(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.disable_format% = 0
+    Case "on", "1" : opt.disable_format% = 1
+    Case Else : sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 
@@ -166,6 +181,15 @@ Sub opt.set_keywords(value$)
   End Select
 End Sub
 
+Sub opt.set_list_all(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.list_all% = 0
+    Case "on", "1"                 : opt.list_all% = 1
+    Case Else
+      sys.err$ = "expects 'on|off' argument"
+  End Select
+End Sub
+
 Sub opt.set_no_comments(value$)
   Select Case LCase$(value$)
     Case "default", "off", "0", "" : opt.comments = -1
@@ -191,6 +215,15 @@ Sub opt.set_spacing(value$)
     Case "generous", "2"                       : opt.spacing = 2
     Case Else
       sys.err$ = "expects 'on|minimal|compact|generous' argument"
+  End Select
+End Sub
+
+Sub opt.set_tree_shake(value$)
+  Select Case LCase$(value$)
+    Case "default", "off", "0", "" : opt.tree_shake = 0
+    Case "on", "1"                 : opt.tree_shake = 1
+    Case Else
+      sys.err$ = "expects 'on|off' argument"
   End Select
 End Sub
 

@@ -29,10 +29,12 @@ Sub cli.parse(s$)
       Case "I", "include-only" : cli.parse_no_arg("include-only", i)
       Case "i", "indent"       : cli.parse_arg("indent", i, "<number>")
       Case "k", "keywords"     : cli.parse_arg("keywords", i, "{l|p|u}")
+      Case "L", "list-all"     : cli.parse_no_arg("list-all", i)
       Case "h", "help"         : cli.usage() : End
       Case "n", "no-comments"  : cli.parse_no_arg("no-comments", i)
       Case "q", "quiet"        : cli.parse_no_arg("quiet", i)
       Case "s", "spacing"      : cli.parse_arg("spacing", i, "{0|1|2}")
+      Case "T", "tree-shake"   : cli.parse_no_arg("tree-shake", i)
       Case "v", "version"      : spt.print_version("sptrans") : End
       Case Else:
         If Left$(lx.option$(i), 1) = "D" Then
@@ -68,6 +70,8 @@ Sub cli.parse(s$)
     sys.err$ = "--format-only and --include-only options are mutually exclusive"
   ElseIf opt.quiet And Not Len(opt.outfile$) Then
     sys.err$ = "--quiet option incompatible with writing to console"
+  ElseIf opt.tree_shake And Not Len(opt.outfile$) Then
+    sys.err$ = "--tree-shake option incompatible with writing to console"
   EndIf
 End Sub
 
@@ -111,11 +115,11 @@ Sub cli.usage()
   Print "the " out$ ", or the console if unspecified. By using the --format-only"
   Print "option it can also be used as a simple BASIC code formatter."
   Print
+  Print "  -C, --colour           syntax highlight the output,"
+  Print "                         only valid for output to VT100 serial console"
   Print "  --crunch               aggressively remove whitespace from the output, "
   Print "                         equivalent to:"
   Print "                           --empty-lines=0 --indent=0 --no-comments --spacing=0"
-  Print "  -C, --colour           syntax highlight the output,"
-  Print "                         only valid for output to VT100 serial console"
   Print "  -D<id>                 defines id, equivalent to !define <id> directive"
   Print "  -e, --empty-lines=0|1  controls output of empty lines:"
   Print "                           0 - omit all empty lines"
@@ -134,6 +138,8 @@ Sub cli.usage()
   Print "                           u - UPPERCASE"
   Print "                         if omitted then original capitalisation will be"
   Print "                         preserved"
+  Print "  -L, --list-all         output lists of identifiers, Functions/Subs,"
+  Print "                         references and orphan Functions/Subs"
   Print "  -n, --no-comments      do not include comments in the output"
   Print "  -q, --quiet            run with minimal console output"
   Print "  -s, --spacing=0|1|2    controls output of spaces between tokens:"
@@ -142,6 +148,7 @@ Sub cli.usage()
   Print "                           2 - generous spacing"
   Print "                         if omitted then original token spacing will be"
   Print "                         preserved"
+  Print "  -T, --tree-shake       remove unused Functions/Subs"
   Print "  -v, --version          output version information and exit"
   Print
   Print "Note that --no-comments, --empty-lines, --indent and --spacing will be"

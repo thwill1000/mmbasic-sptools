@@ -61,7 +61,7 @@ add_test("test_delete_given_unlimited")
 '   Base 1, Drive A
 '   Base 0, Drive B
 '   Base 1, Drive B
-If sys.is_device%("pm*") Then
+If sys.is_platform%("pm*") Then
   If InStr(Mm.CmdLine$, "--base=1 --drive=b") Then
     run_tests()
   ElseIf InStr(Mm.CmdLine$, "--base=1") Then
@@ -149,13 +149,13 @@ Sub test_get_canonical()
 
   ' TODO: should the parent of "A:" be "" or should it be "A:" ?
   Local parent$ = file.get_parent$(current$)
-  If parent$ = "" Then parent$ = Choice(Not sys.is_device%("pm*"), "A:", Mm.Info$(Drive))
+  If parent$ = "" Then parent$ = Choice(Not sys.is_platform%("pm*"), "A:", Mm.Info$(Drive))
   assert_string_equals(expected_path$(parent$), file.get_canonical$(".."))
 
   ' Tilde expansion
-  assert_string_equals(expected_path$(sys.string_prop$("home")), file.get_canonical$("~"))
-  assert_string_equals(expected_path$(sys.string_prop$("home") + "/dir"), file.get_canonical$("~/dir"))
-  assert_string_equals(expected_path$(sys.string_prop$("home") + "/dir"), file.get_canonical$("~\dir"))
+  assert_string_equals(expected_path$(sys.HOME$()), file.get_canonical$("~"))
+  assert_string_equals(expected_path$(sys.HOME$() + "/dir"), file.get_canonical$("~/dir"))
+  assert_string_equals(expected_path$(sys.HOME$() + "/dir"), file.get_canonical$("~\dir"))
 End Sub
 
 Function expected_path$(f$)
@@ -171,13 +171,13 @@ Sub test_exists()
   assert_false(file.exists%(file.get_parent$(f$) + "/foo/" + file.get_name$(f$)))
 
   ' Given A: drive.
-  Local expected% = Not sys.is_device%("mmb4w")
+  Local expected% = Not sys.is_platform%("mmb4w")
   assert_int_equals(expected%, file.exists%("A:"))
   assert_int_equals(expected%, file.exists%("A:/"))
   assert_int_equals(expected%, file.exists%("A:\"))
 
   ' Given C: drive.
-  If Not sys.is_device%("pm*") Then
+  If Not sys.is_platform%("pm*") Then
     assert_int_equals(1, file.exists%("C:"))
     assert_int_equals(1, file.exists%("C:/"))
     assert_int_equals(1, file.exists%("C:\"))
@@ -266,17 +266,17 @@ End Sub
 Sub test_is_directory()
   assert_true(file.is_directory%(Mm.Info$(Path)))
 
-  Const has_a% = Choice(sys.is_device%("mmb4w"), 0, 1)
+  Const has_a% = Choice(sys.is_platform%("mmb4w"), 0, 1)
   assert_int_equals(has_a%, file.is_directory%("A:"))
   assert_int_equals(has_a%, file.is_directory%("A:/"))
   assert_int_equals(has_a%, file.is_directory%("A:\"))
 
-  Const has_b% = Choice(sys.is_device%("mmb4w"), 0, 1)
+  Const has_b% = Choice(sys.is_platform%("mmb4w"), 0, 1)
   assert_int_equals(has_b%, file.is_directory%("A:"))
   assert_int_equals(has_b%, file.is_directory%("A:/"))
   assert_int_equals(has_b%, file.is_directory%("A:\"))
 
-  If Not sys.is_device%("pm*") Then
+  If Not sys.is_platform%("pm*") Then
     Const has_c% = 1
     assert_int_equals(has_c%, file.is_directory%("C:"))
     assert_int_equals(has_c%, file.is_directory%("C:/"))
@@ -319,7 +319,7 @@ Sub test_fnmatch()
 End Sub
 
 Sub test_find_all()
-  If sys.is_device%("pm*") Then Exit Sub
+  If sys.is_platform%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -362,7 +362,7 @@ Sub given_file_tree()
 End Sub
 
 Sub test_find_files()
-  If sys.is_device%("pm*") Then Exit Sub
+  If sys.is_platform%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -381,7 +381,7 @@ Sub test_find_files()
 End Sub
 
 Sub test_find_dirs()
-  If sys.is_device%("pm*") Then Exit Sub
+  If sys.is_platform%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -394,7 +394,7 @@ Sub test_find_dirs()
 End Sub
 
 Sub test_find_all_matching()
-  If sys.is_device%("pm*") Then Exit Sub
+  If sys.is_platform%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -412,7 +412,7 @@ Sub test_find_all_matching()
 End Sub
 
 Sub test_find_files_matching()
-  If sys.is_device%("pm*") Then Exit Sub
+  If sys.is_platform%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -426,7 +426,7 @@ Sub test_find_files_matching()
 End Sub
 
 Sub test_find_dirs_matching()
-  If sys.is_device%("pm*") Then Exit Sub
+  If sys.is_platform%("pm*") Then Exit Sub
   given_file_tree()
 
   Const CANON$ = file.get_canonical$(TMPDIR$)
@@ -436,7 +436,7 @@ Sub test_find_dirs_matching()
 End Sub
 
 Sub test_find_with_symlinks()
-  If Not sys.is_device%("mmb4l") Then Exit Sub
+  If Not sys.is_platform%("mmb4l") Then Exit Sub
 
   ' Setup.
   MkDir TMPDIR$
@@ -709,14 +709,14 @@ Sub test_mkdir_abs_path()
   assert_false(file.is_directory%(TMPDIR$ + "/foo/file/a"))
 
   ' Given root directory.
-  Local root_drive$ = Choice(sys.is_device%("pm*"), "A:", "C:")
+  Local root_drive$ = Choice(sys.is_platform%("pm*"), "A:", "C:")
   assert_int_equals(sys.SUCCESS, file.mkdir%(root_drive$ + "/"))
   assert_no_error()
   assert_int_equals(sys.SUCCESS, file.mkdir%(root_drive$ + "\"))
   assert_no_error()
   assert_int_equals(sys.SUCCESS, file.mkdir%(root_drive$))
   assert_no_error()
-  If Not sys.is_device%("mmb4w") Then
+  If Not sys.is_platform%("mmb4w") Then
     assert_int_equals(sys.SUCCESS, file.mkdir%("/"))
     assert_no_error()
     assert_int_equals(sys.SUCCESS, file.mkdir%("\"))

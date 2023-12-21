@@ -22,9 +22,10 @@ add_test("test_clear_given_full")
 add_test("test_get_key_index")
 add_test("test_get")
 add_test("test_is_full")
-add_test("test_put")
-add_test("test_put_given_full")
+add_test("test_put_given_absent")
 add_test("test_put_given_present")
+add_test("test_put_given_full")
+add_test("test_put_given_full_and_present")
 add_test("test_remove")
 add_test("test_remove_given_absent")
 add_test("test_remove_given_empty")
@@ -137,7 +138,7 @@ Sub test_is_full()
   assert_true(map.is_full%(my_map$()))
 End Sub
 
-Sub test_put()
+Sub test_put_given_absent()
   Local base% = Mm.Info(Option Base)
   Local my_map$(map.new%(20))
   map.init(my_map$())
@@ -153,26 +154,6 @@ Sub test_put()
   assert_string_equals("bar", my_map$(base% + 1 + 20))
   assert_string_equals("wom", my_map$(base% + 2))
   assert_string_equals("bat", my_map$(base% + 2 + 20))
-End Sub
-
-Sub test_put_given_full()
-  Local base% = Mm.Info(Option Base)
-  Local my_map$(map.new%(20))
-  map.init(my_map$())
-  Local i%
-  For i% = base% To base% + 19 : map.put(my_map$(), "key" + Str$(i%), "value" + Str$(i%)) : Next
-
-  ' Assert reports 'map full' error.
-  On Error Ignore
-  map.put(my_map$(), "too many", "value"))
-  assert_true(InStr(Mm.ErrMsg$, "map full") > 0, "Assert failed, expected error not thrown")
-  On Error Abort
-  assert_int_equals(20, map.size%(my_map$()))
-
-  ' Unless the key already exists.
-  map.put(my_map$(), "key15", "value")
-  assert_string_equals("value", map.get$(my_map$(), "key15"))
-  assert_int_equals(20, map.size%(my_map$()))
 End Sub
 
 Sub test_put_given_present()
@@ -195,6 +176,40 @@ Sub test_put_given_present()
   assert_string_equals("bar2", my_map$(base% + 1 + 20))
   assert_string_equals("wom",  my_map$(base% + 2))
   assert_string_equals("bat2", my_map$(base% + 2 + 20))
+End Sub
+
+Sub test_put_given_full()
+  Local base% = Mm.Info(Option Base)
+  Local my_map$(map.new%(20))
+  map.init(my_map$())
+  Local i%
+  For i% = base% To base% + 19 : map.put(my_map$(), "key" + Str$(i%), "value" + Str$(i%)) : Next
+
+  ' Assert reports 'map full' error.
+  On Error Ignore
+  map.put(my_map$(), "too many", "value"))
+  assert_true(InStr(Mm.ErrMsg$, "map full") > 0, "Assert failed, expected error not thrown")
+  On Error Abort
+  assert_int_equals(20, map.size%(my_map$()))
+
+  ' Unless the key already exists.
+  map.put(my_map$(), "key15", "value")
+  assert_string_equals("value", map.get$(my_map$(), "key15"))
+  assert_int_equals(20, map.size%(my_map$()))
+End Sub
+
+Sub test_put_given_full_and_present()
+  Local base% = Mm.Info(Option Base)
+  Local mp$(map.new%(10))
+  map.init(mp$())
+  Local i%
+  For i% = base% To base% + 9 : map.put(mp$(), "key" + Str$(i%), "value" + Str$(i%)) : Next
+
+  map.put(mp$(), "key1", "foobar")
+
+  assert_no_error()
+  assert_int_equals(10, map.size%(mp$()))
+  assert_string_equals("foobar", map.get$(mp$(), "key1"))
 End Sub
 
 Sub test_remove()

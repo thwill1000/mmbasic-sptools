@@ -10,7 +10,7 @@ sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-If sys.is_device%("mmb4w") Then Option Console Both
+If sys.is_platform%("mmb4w") Then Option Console Both
 
 Const TMPDIR$ = ut.get_tmp_dir$() ' Test specific temporary directory.
 
@@ -30,7 +30,7 @@ list.init(ut.test_names$())
 list.init(ut.test_subs$())
 
 Function ut.get_tmp_dir$()
-  Const stem$ = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:/tmp", sys.string_prop$("tmpdir"))
+  Const stem$ = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:/tmp", sys.TMPDIR$())
   Const name$ = file.trim_extension$(file.get_name$(Mm.Info(Current)))
   ut.get_tmp_dir$ = stem$ + file.SEPARATOR + name$
 End Function
@@ -358,7 +358,7 @@ Function ut.run_single_test%(idx%)
 
   ' Cache working directory and change drive.
   Const OLD_DIR = Cwd$
-  If sys.is_device%("pm*") Then
+  If sys.is_platform%("pm*") Then
     Const OLD_DRIVE = Mm.Info(Drive)
     Const NEW_DRIVE = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:", "A:")
     If Mm.Info$(Drive) <> NEW_DRIVE Then Drive NEW_DRIVE
@@ -419,7 +419,7 @@ Function ut.run_single_test%(idx%)
   EndIf
 
   ' Restore working directory and drive.
-  If sys.is_device%("pm*") Then
+  If sys.is_platform%("pm*") Then
     If Mm.Info(Drive) <> OLD_DRIVE Then Drive OLD_DRIVE
   EndIf
   If Cwd$ <> OLD_DIR Then ChDir OLD_DIR
@@ -450,7 +450,7 @@ End Sub
 
 Sub ut.run_first()
   Print "Building list of tests ..."
-  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Output As #1
+  Open sys.TMPDIR$() + "/sptest.lst" For Output As #1
   Print #1, Time$
   Local f$ = file.find$(Cwd$, "*st*.bas", "file")
   Local first$
@@ -507,7 +507,7 @@ End Function
 
 Sub ut.run_next()
   Local f$, start_time$
-  Open sys.string_prop$("tmpdir") + "/sptest.lst" For Input As #1
+  Open sys.TMPDIR$() + "/sptest.lst" For Input As #1
   Line Input #1, start_time$
 
   Do
@@ -548,7 +548,7 @@ Sub ut.run_same(find$, replace$)
     Cat cmdline$, find$
   EndIf
 
-  If sys.is_device%("cmm2*") Then
+  If sys.is_platform%("cmm2*") Then
     Execute "Run " + str.quote$(Mm.Info$(Current)) + ", " + cmdline$
   Else
     Run Mm.Info$(Current), cmdline$
@@ -556,7 +556,7 @@ Sub ut.run_same(find$, replace$)
 End Sub
 
 Sub ut.print_colour(c$)
-  If sys.is_device%("pm*") Then
+  If sys.is_platform%("pm*") Then
     Print vt100.colour$(c$);
     Exit Sub
   EndIf

@@ -2,18 +2,71 @@
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
-'!if !defined(PICOMITE) && defined(GAMEMITE)
-  '!define PICOMITE
+'!info defined CMM2
+'!info defined GAMEMITE
+'!info defined MMB4L
+'!info defined MMB4W
+'!info defined PICOMITE
+'!info defined PICOMITEVGA
+
+'!if defined(CMM2)
+  '!define PLATFORM_DEFINED
 '!endif
 
-Const sys.VERSION = 102001 ' 1.2 alpha 1
+'!if defined(GAMEMITE)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(MMB4L)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(MMB4W)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(PICOMITE)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+'!if defined(PICOMITEVGA)
+  '!if defined(PLATFORM_DEFINED)
+    '!error "Multiple platforms defined"
+  '!else
+    '!define PLATFORM_DEFINED
+  '!endif
+'!endif
+
+Const sys.VERSION = 102201 ' 1.2.0 RC 1
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
+  '!endif
+'!else
 If Mm.Info$(Device) = "MMB4L" Then
   Const sys.FIRMWARE = Mm.Info(Version) \ 100
 Else
   Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
 EndIf
+'!endif
 
 Const sys.SUCCESS = 0
 Const sys.FAILURE = -1
@@ -22,7 +75,7 @@ Dim sys.break_flag%
 Dim sys.err$
 
 '!if !defined(NO_INCLUDE_GUARDS)
-Const sys.MAX_INCLUDES% = 20
+Const sys.MAX_INCLUDES% = 30
 Dim sys.includes$(sys.MAX_INCLUDES%) Length 20
 
 Sub sys.provides(f$)
@@ -70,6 +123,36 @@ Sub sys.requires(f1$, f2$, f3$, f4$, f5$, f6$, f7$, f8$, f9$, f10$)
 End Sub
 '!endif
 
+' Reads property from config (.ini) file.
+'
+' @param  key$      case-insensitive key for property to lookup.
+' @param  default$  value to return if property or file is not present.
+' @param  file$     file to read. If empty then read "A:/.spconfig", or
+'                   if that is not present "A:/.config".
+Function sys.get_config$(key$, default$, file$)
+  sys.get_config$ = default$
+  If file$ = "" Then
+    Const file_$ = Choice(Mm.Info(Exists File "A:/.spconfig"), "A:/.spconfig", "A:/.config")
+  Else
+    Const file_$ = file$
+  EndIf
+  If Not Mm.Info(Exists File file_$) Then Exit Function
+
+  Local key_$ = LCase$(key$), s$, v$
+  Open file_$ For Input As #1
+  Do While Not Eof(#1)
+    Line Input #1, s$
+    If LCase$(Field$(Field$(s$, 1, "=", Chr$(34)),1, "#;", Chr$(34))) = key_$ Then
+      v$ = Field$(Field$(s$, 2, "=", Chr$(34)), 1, "#;", Chr$(34))
+      If Left$(v$, 1) = Chr$(34) Then v$ = Mid$(v$, 2)
+      If Right$(v$, 1) = Chr$(34) Then v$ = Mid$(v$, 1, Len(v$) - 1)
+      sys.get_config$ = v$
+      Exit Do
+    EndIf
+  Loop
+  Close #1
+End Function
+
 ' Formats an SP Tools integer version as a string.
 Function sys.format_version$(v%)
   Const v_% = Choice(v%, v%, sys.VERSION), a% = v_%\10^5, b% = (v_%-a%*10^5)\10^3
@@ -77,7 +160,7 @@ Function sys.format_version$(v%)
   Select Case c%
     Case < 100 : Cat s$, " alpha "
     Case < 200 : Cat s$, " beta " : Inc c%, -100
-    Case < 300 : Cat s$, " rc " : Inc c%, -200
+    Case < 300 : Cat s$, " RC " : Inc c%, -200
     Case Else  : Cat s$, "." : Inc c%, -300
   End Select
   sys.format_version$ = s$ + Str$(c%)
@@ -122,77 +205,99 @@ Sub sys.restore_break()
   Option Break 3
 End Sub
 
-Function sys.string_prop$(key$)
-  Select Case LCase$(key$)
-    Case "home"
-      Select Case Mm.Device$
-        Case "MMB4L"
-          sys.string_prop$ = Mm.Info$(EnvVar "HOME")
-        Case "MMBasic for Windows"
-          sys.string_prop$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
-        Case Else
-          sys.string_prop$ = "A:"
-      End Select
-    Case "separator"
-      sys.string_prop$ = Choice(Mm.Device$ = "MMBasic for Windows", "\", "/")
-    Case "tmpdir"
-      Select Case Mm.Device$
-        Case "MMB4L"
-          sys.string_prop$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
-        Case "MMBasic for Windows"
-          sys.string_prop$ = Mm.Info$(EnvVar "TMP")
-        Case Else
-          sys.string_prop$ = "A:/tmp"
-      End Select
+'!if defined(GAMEMITE)
+  '!replace { sys.HOME$ ( ) } { "A:" }
+'!else
+Function sys.HOME$()
+  Select Case Mm.Device$
+    Case "MMB4L"
+      sys.HOME$ = Mm.Info$(EnvVar "HOME")
+    Case "MMBasic for Windows"
+      sys.HOME$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
     Case Else
-      Error "Unknown property: " + key$
+      sys.HOME$ = "A:"
   End Select
 End Function
+'!endif
+
+'!if defined(GAMEMITE)
+  '!replace { sys.PLATFORM$ ( ) } { "Game*Mite" }
+'!else
+Function sys.PLATFORM$()
+  sys.PLATFORM$ = Choice(InStr(Mm.Device$, "PicoMite"), Mm.Info$(Platform), "")
+  If sys.PLATFORM$ = "" Then sys.PLATFORM$ = Mm.Device$
+
+  ' Allow platform to be overridden for unit-tests.
+  On Error Skip
+  sys.PLATFORM$ = sys.OVERRIDE_PLATFORM$
+  On Error Clear
+End Function
+'!endif
+
+'!if defined(GAMEMITE)
+  '!replace { sys.SEPARATOR$ ( ) } { "/" }
+'!else
+Function sys.SEPARATOR$()
+  sys.SEPARATOR$ = Choice(Mm.Device$ = "MMBasic for Windows", "\", "/")
+End Function
+'!endif
+
+'!if defined(GAMEMITE)
+  '!replace { sys.TMPDIR$ ( ) } { "A:/tmp" }
+'!else
+Function sys.TMPDIR$()
+  Select Case Mm.Device$
+    Case "MMB4L"
+      sys.TMPDIR$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
+    Case "MMBasic for Windows"
+      sys.TMPDIR$ = Mm.Info$(EnvVar "TMP")
+    Case Else
+      sys.TMPDIR$ = "A:/tmp"
+  End Select
+End Function
+'!endif
 
 ' Are we running on one of the given devices ?
 '
 ' @param  d1$, d2$, ... d5$  one of:
-'                mmb4l    - MMBasic for Linux
+'                mmb4l    - MMB4L (aka MMBasic for Linux)
 '                mmb4w    - MMBasic for Windows
 '                cmm2     - Colour Maximite 2 (G1)
 '                cmm2g2   - Colour Maximite 2 (G2)
 '                cmm2*    - any Colour Maximite 2
-'                gamemite - GameMite
-'                pm       - PicoMite (including GameMite)
+'                gamemite - Game*Mite
+'                pgvga    - PicoGAME VGA
+'                pm       - PicoMite
 '                pmvga    - PicoMiteVGA
-'                pm*      - any PicoMite (including GameMite)
-Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
+'                pmvga*   - PicoMiteVGA or PicoGAME VGA
+'                pm*      - PicoMite, PicoMiteVGA, PicoGAME VGA and Game*Mite
+Function sys.is_platform%(d1$, d2$, d3$, d4$, d5$)
+  Const platform$ = LCase$(sys.PLATFORM$())
   Local devices$(5 + Mm.Info(Option Base)) Length 16 = (d1$, d2$, d3$, d4$, d5$, "")
-  Local d$, ii% = Mm.Info(Option Base)
-  sys.is_device% = 1
+  Local ii% = Mm.Info(Option Base), match$
+
+  sys.is_platform% = 1
   Do While Len(devices$(ii%)) > 0
-    d$ = LCase$(devices$(ii%))
-'!if defined(GAMEMITE)
-    If d$ = "gamemite" Then Exit Function
-'!endif
-    Select Case Mm.Device$
-      Case "MMB4L"
-        If d$ = "mmb4l" Then
-          Exit Function
-        ElseIf d$ = "mmb4l-armv6l" And Mm.Info$(Arch) = "Linux armv6l" Then
-          Exit Function
+    If platform$ = LCase$(devices$(ii%)) Then Exit Function
+    Select Case platform$
+      Case "colour maximite 2" : match$ = "|cmm2|cmm2*|"
+      Case "colour maximite 2 g2" : match$ = "|cmm2g2|cmm2*"
+      Case "game*mite" : match$ = "|pm*|gamemite|"
+      Case "mmb4l"
+        If LCase$(devices$(ii%)) = "mmb4l-armv6l" Then
+          If Mm.Info$(Arch) = "Linux armv6l" Then Exit Function
         EndIf
-      Case "MMBasic for Windows"
-        If d$ = "mmb4w" Then Exit Function
-      Case "Colour Maximite 2"
-        If d$ = "cmm2" Or d$ = "cmm2*" Then Exit Function
-      Case "Colour Maximite 2 G2"
-        If d$ = "cmm2g2" Or d$ = "cmm2*" Then Exit Function
-      Case "PicoMite"
-        If d$ = "pm" Or d$ = "pm*" Then Exit Function
-      Case "PicoMiteVGA"
-        If d$ = "pmvga" Or d$ = "pm*" Then Exit Function
-      Case Else
-        Error "Unknown device: " + Mm.Device$
+        match$ = "|mmb4l|"
+      Case "mmbasic for windows" : match$ = "|mmb4w|"
+      Case "picogame vga" : match$ = "|pgvga|pmvga*|pm*|"
+      Case "picomite" : match$ = "|pm|pm*|"
+      Case "picomitevga": match$ = "|pmvga|pmvga*|pm*|"
+      Case Else : Error "Unknown platform: " + sys.PLATFORM$
     End Select
+    If InStr(match$, "|" + LCase$(devices$(ii%)) + "|") Then Exit Function
     Inc ii%
   Loop
-  sys.is_device% = 0
+  sys.is_platform% = 0
 End Function
 
 Function sys.error%(code%, msg$)

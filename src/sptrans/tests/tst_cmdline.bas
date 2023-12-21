@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2022 Thomas Hugo Williams
+' Copyright (c) 2020-2023 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -35,8 +35,10 @@ add_test("test_format_only")
 add_test("test_include_only")
 add_test("test_indent")
 add_test("test_keywords")
+add_test("test_list_all")
 add_test("test_quiet")
 add_test("test_spacing")
+add_test("test_tree_shake")
 add_test("test_output_file")
 add_test("test_unknown_option")
 add_test("test_too_many_arguments")
@@ -212,6 +214,28 @@ Sub test_keywords()
   assert_error("option --keywords expects {l|p|u} argument")
 End Sub
 
+Sub test_list_all()
+  opt.list_all% = 0
+  cli.parse("--list-all " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.list_all%)
+
+  opt.list_all% = 0
+  cli.parse("-L " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.list_all%)
+
+  opt.list_all% = 0
+  cli.parse("--list-all=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option --list-all does not expect argument")
+  assert_int_equals(0, opt.list_all%)
+
+  opt.list_all% = 0
+  cli.parse("-L=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option -L does not expect argument")
+  assert_int_equals(0, opt.list_all%)
+End Sub
+
 Sub test_quiet()
   opt.quiet = 0
   cli.parse("--quiet " + INPUT_FILE$ + " " + OUTPUT_FILE$)
@@ -254,6 +278,28 @@ Sub test_spacing()
   assert_error("option --spacing expects {0|1|2} argument")
 End Sub
 
+Sub test_tree_shake()
+  opt.tree_shake = 0
+  cli.parse("--tree-shake " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.tree_shake)
+
+  opt.tree_shake = 0
+  cli.parse("-T " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_no_error()
+  assert_int_equals(1, opt.tree_shake)
+
+  opt.tree_shake = 0
+  cli.parse("--tree-shake=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option --tree-shake does not expect argument")
+  assert_int_equals(0, opt.tree_shake)
+
+  opt.tree_shake = 0
+  cli.parse("-T=1 " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  assert_error("option -T does not expect argument")
+  assert_int_equals(0, opt.tree_shake)
+End Sub
+
 Sub test_output_file()
   ' Test with unquoted filename.
   cli.parse(INPUT_FILE$ + " " + OUTPUT_FILE$)
@@ -289,10 +335,14 @@ Sub test_incompatible_arguments()
   setup_test()
   cli.parse("-q " + INPUT_FILE$)
   assert_error("--quiet option incompatible with writing to console")
+
+  setup_test()
+  cli.parse("-T " + INPUT_FILE$)
+  assert_error("--tree-shake option incompatible with writing to console")
 End Sub
 
 Sub test_everything()
-  cli.parse("-f -C -e=1 -i=2 -s=0 -n -q " + INPUT_FILE$ + " " + OUTPUT_FILE$)
+  cli.parse("-f -C -e=1 -i=2 -s=0 -n -q -T -L " + INPUT_FILE$ + " " + OUTPUT_FILE$)
 
   assert_no_error()
   assert_int_equals(1, opt.format_only)
@@ -302,6 +352,8 @@ Sub test_everything()
   assert_int_equals(0, opt.comments)
   assert_int_equals(1, opt.empty_lines)
   assert_int_equals(2, opt.indent_sz)
+  assert_int_equals(1, opt.list_all%)
   assert_int_equals(1, opt.quiet)
   assert_int_equals(0, opt.spacing)
+  assert_int_equals(1, opt.tree_shake)
 End Sub

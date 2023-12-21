@@ -242,12 +242,19 @@ Function gonzo.send_rizzo%()
   gonzo.remote_file_cmd("MkDir " + str.quote$("/tmp"), 1)
 
   Open gonzo.RIZZO_FILE For Output As #gonzo.OUT_FNBR
-  Print #gonzo.OUT_FNBR, "Dim f$, s$, x%"
-  Print #gonzo.OUT_FNBR, "Line Input " + str.quote$("Filename? ") + ", f$"
+  Print #gonzo.OUT_FNBR, "Dim f_in$, f_out$, i% = 1, s$, x%"
+  Print #gonzo.OUT_FNBR, "Line Input " + str.quote$("Filename? ") + ", f_in$"
   Print #gonzo.OUT_FNBR, "Line Input " + str.quote$("Size? ") + ", s$"
   Print #gonzo.OUT_FNBR, "x% = Val(s$)"
-  Print #gonzo.OUT_FNBR, "Open f$ For Input As #1"
-  Print #gonzo.OUT_FNBR, "Open " str.quote$("/tmp/") " + f$ For Output As #2"
+  Print #gonzo.OUT_FNBR, "Do"
+  Print #gonzo.OUT_FNBR, "  If Not Len(Field$(f_in$, i%, " + str.quote$("/") + ")) Then"
+  Print #gonzo.OUT_FNBR, "    f_out$ = " + str.quote$("/tmp/") + " + Field$(f_in$, i% - 1, " + str.quote$("/") + ")"
+  Print #gonzo.OUT_FNBR, "    Exit Do"
+  Print #gonzo.OUT_FNBR, "  EndIf"
+  Print #gonzo.OUT_FNBR, "  Inc i%"
+  Print #gonzo.OUT_FNBR, "Loop"
+  Print #gonzo.OUT_FNBR, "Open f_in$ For Input As #1"
+  Print #gonzo.OUT_FNBR, "Open f_out$ For Output As #2"
   Print #gonzo.OUT_FNBR, "Do While x% > 0"
   Print #gonzo.OUT_FNBR, "  s$ = Input$(Min(255, x%), #1)"
   Print #gonzo.OUT_FNBR, "  Print #2, s$;"
@@ -255,8 +262,8 @@ Function gonzo.send_rizzo%()
   Print #gonzo.OUT_FNBR, "Loop"
   Print #gonzo.OUT_FNBR, "Close #2"
   Print #gonzo.OUT_FNBR, "Close #1"
-  Print #gonzo.OUT_FNBR, "Copy " str.quote$("/tmp/") " + f$ To f$"
-  Print #gonzo.OUT_FNBR, "Kill " str.quote$("/tmp/") " + f$"
+  Print #gonzo.OUT_FNBR, "Copy f_out$ To f_in$"
+  Print #gonzo.OUT_FNBR, "Kill f_out$"
   Print #gonzo.OUT_FNBR, "End"
   Close #gonzo.OUT_FNBR
 

@@ -43,7 +43,7 @@ Dim lx.line$
 Dim lx.next_char$
 Dim lx.num         ' number of tokens.
 Dim lx.pos
-Dim lx.csub        ' 1 if we are tokenising within a CSUB definition, otherwise 0.
+Dim lx.csub        ' 1 if we are tokenising within a CFUNCTION|CSUB definition, otherwise 0.
 Dim lx.font        ' 1 if we are tokenising within a DEFINEFONT definition, otherwise 0.
 
 ' Parses a line of BASIC code.
@@ -111,7 +111,7 @@ Sub lx.advance()
 End Sub
 
 Sub lx.parse_number()
-  If InStr(".0123456789", lx.char$) Then
+  If InStr("#.0123456789", lx.char$) Then
     lx.parse_decimal()
   ElseIf lx.char$ = "&" Then
     If InStr("abcdefh0123456789", lx.next_char$) Then
@@ -128,6 +128,8 @@ End Sub
 
 Sub lx.parse_decimal()
   Local start = lx.pos
+
+  If lx.char$ = "#" Then lx.advance()
 
   lx.advance_while("0123456789")
 
@@ -198,7 +200,7 @@ End Sub
 Sub lx.parse_comment_or_directive()
   If lx.num = 0 Then
     ' Only the first token on a line will be recognised as a directive.
-    If lx.next_char$ = "!" Then
+    If lx.char$ = "'" And lx.next_char$ = "!" Then
       lx.parse_directive()
       Exit Sub
     EndIf
@@ -257,6 +259,19 @@ Sub lx.advance_until(disallowed$)
 End Sub
 
 Sub lx.parse_identifier()
+  If lx.char$ = "#" Then
+    If InStr("0123456789", lx.next_char$) Then
+      lx.parse_number()
+      Exit Sub
+    Else If Not InStr("._abcdefghijklmnopqrstuvwxyz", lx.next_char$) Then
+      ' A token beginning with # is only a valid identifier if
+      ' followed by a letter, digit, full-stop or underscore.
+      ' Otherwise treat as a comment.
+      lx.parse_comment_or_directive()
+      Exit Sub
+    EndIf
+  EndIf
+
   Local start = lx.pos
 
   lx.advance()
@@ -264,7 +279,7 @@ Sub lx.parse_identifier()
 
   If lx.char$ = " " Then
     ' Handle old-school REM statements.
-    If LCase$(Mid$(lx.line$, start, lx.pos - start)) = "rem") Then
+    If LCase$(Mid$(lx.line$, start, lx.pos - start)) = "rem" Then
       lx.store(TK_COMMENT, start, Len(lx.line$) - start + 1)
       lx.char$ = Chr$(10)
       Exit Sub
@@ -281,7 +296,7 @@ Sub lx.parse_identifier()
   If keywords.contains%(Mid$(lx.line$, start, ln%)) Then
     lx.store(TK_KEYWORD, start, ln%)
     Select Case lx.token_lc$(lx.num - 1)
-      Case "csub" :       lx.csub = Not lx.csub
+      Case "csub", "cfunction" : lx.csub = Not lx.csub
       Case "definefont" : lx.font = Not lx.font
     End Select
   Else
@@ -550,3 +565,39 @@ Sub lx.replace_token(idx%, replacement$, type%)
     Inc lx.start(j%), shift%
   Next
 End Sub
+
+' Sets the number of spaces before a token.
+'
+' @param  idx%  the token index.
+' @param  n%    the number of spaces.
+' @return       sys.SUCCESS on success, otherwise sys.FAILURE and sets 'sys.err$'.
+Function lx.set_space_before%(idx%, n%)
+  If idx% < 0 Or idx% >= lx.num Then sys.err$ = "Invalid token index: " + Str$(idx%)
+  If n% < 0 Then sys.err$ = "Invalid number of spaces: " + Str$(n%)
+  If Len(sys.err$) Then lx.set_space_before% = sys.FAILURE : Exit Function
+
+  Const p% = Choice(idx%, lx.start(idx% - 1) + lx.len(idx% - 1) - 1, 0)
+  Const q% = lx.start(idx%)
+  lx.line$ = Left$(lx.line$, p%) + Space$(n%) + Mid$(lx.line$, q%)
+  Const delta% = n% - q% + p% + 1
+  Local i%
+  For i% = idx% To lx.num - 1 : Inc lx.start(i%), delta% : Next
+End Function
+
+' Sets the number of spaces after a token.
+'
+' @param  idx%  the token index.
+' @param  n%    the number of spaces.
+' @return       sys.SUCCESS on success, otherwise sys.FAILURE and sets 'sys.err$'.
+Function lx.set_space_after%(idx%, n%)
+  If idx% < 0 Or idx% >= lx.num Then sys.err$ = "Invalid token index: " + Str$(idx%)
+  If n% < 0 Then sys.err$ = "Invalid number of spaces: " + Str$(n%)
+  If Len(sys.err$) Then lx.set_space_after% = sys.FAILURE : Exit Function
+
+  Const p% = lx.start(idx%) + lx.len(idx%) ' Position of first char after token.
+  Const q% = lx.start(idx% + 1)            ' Position of first char of next token.
+  lx.line$ = Left$(lx.line$, p% - 1) + Space$(n%) + Choice(q%, Mid$(lx.line$, q%), "")
+  Const delta% = n% - q% + p%
+  Local i%
+  For i% = idx% + 1 To lx.num - 1 : Inc lx.start(i%), delta% : Next
+End Function

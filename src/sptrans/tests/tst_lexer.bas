@@ -31,6 +31,7 @@ add_test("test_identifiers")
 add_test("test_includes")
 add_test("test_integer_literals")
 add_test("test_integer_literals_with_e")
+add_test("test_integer_with_hash_prefix")
 add_test("test_keywords")
 add_test("test_octal_literals")
 add_test("test_real_literals")
@@ -46,10 +47,14 @@ add_test("test_get_token_lc")
 add_test("test_old_tokens_cleared")
 add_test("test_parse_command_line")
 add_test("test_csub")
+add_test("test_cfunction")
 add_test("test_define_font")
+add_test("test_hash_bang")
 add_test("test_insert_token")
 add_test("test_remove_token")
 add_test("test_replace_token")
+add_test("test_set_space_before")
+add_test("test_set_space_after")
 
 run_tests()
 
@@ -211,6 +216,11 @@ Sub test_integer_literals_with_e()
   expect_parse_succeeds("12345ENDPROC", 2)
   expect_token(0, TK_NUMBER,     "12345")
   expect_token(1, TK_IDENTIFIER, "ENDPROC")
+End Sub
+
+Sub test_integer_with_hash_prefix()
+  expect_parse_succeeds("Open s$ For Output As #2", 6, TK_KEYWORD, "Open")
+  expect_token(5, TK_NUMBER, "#2")
 End Sub
 
 Sub test_keywords()
@@ -402,10 +412,12 @@ Sub test_old_tokens_cleared()
   Next i
 End Sub
 
-Sub test_csub()
+Sub test_csub(s$)
+  If Not Len(s$) Then s$ = "CSub"
+
   ' Within the confines of the CSUB we expect numbers to be treated as identifiers.
-  expect_parse_succeeds("CSub foo() 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End CSub", 13)
-  expect_token(0, TK_KEYWORD,    "CSub")
+  expect_parse_succeeds(s$ + " foo() 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End " + s$, 13)
+  expect_token(0, TK_KEYWORD,    s$)
   expect_token(1, TK_IDENTIFIER, "foo")
   expect_token(2, TK_SYMBOL,     "(")
   expect_token(3, TK_SYMBOL,     ")")
@@ -417,7 +429,7 @@ Sub test_csub()
   expect_token(9, TK_IDENTIFIER, "&o1234")
   expect_token(10, TK_IDENTIFIER, "FFFFFFFF")
   expect_token(11, TK_KEYWORD,    "End")
-  expect_token(12, TK_KEYWORD,    "CSub")
+  expect_token(12, TK_KEYWORD,    s$)
 
   ' But once we get outside the CSUB numbers and identifiers are distinct again.
   expect_parse_succeeds("0.12345 00AABBCC", 3)
@@ -426,8 +438,8 @@ Sub test_csub()
   expect_token(2, TK_IDENTIFIER, "AABBCC")
 
   ' It should also work when the CSUB is split over multiple lines.
-  expect_parse_succeeds("CSub foo() ' comment", 5)
-  expect_token(0, TK_KEYWORD,    "CSub")
+  expect_parse_succeeds(s$ + " foo() ' comment", 5)
+  expect_token(0, TK_KEYWORD,    s$)
   expect_token(1, TK_IDENTIFIER, "foo")
   expect_token(2, TK_SYMBOL,     "(")
   expect_token(3, TK_SYMBOL,     ")")
@@ -443,14 +455,18 @@ Sub test_csub()
   expect_token(4, TK_IDENTIFIER, "&o1234")
   expect_token(5, TK_IDENTIFIER, "FFFFFFFF")
 
-  expect_parse_succeeds("End CSub", 2)
+  expect_parse_succeeds("End " + s$, 2)
   expect_token(0, TK_KEYWORD, "End")
-  expect_token(1, TK_KEYWORD, "CSub")
+  expect_token(1, TK_KEYWORD, s$)
 
   expect_parse_succeeds("0.12345 00AABBCC", 3)
   expect_token(0, TK_NUMBER,     "0.12345")
   expect_token(1, TK_NUMBER,     "00")
   expect_token(2, TK_IDENTIFIER, "AABBCC")
+End Sub
+
+Sub test_cfunction()
+  test_csub("CFunction")
 End Sub
 
 Sub test_define_font()
@@ -498,6 +514,10 @@ Sub test_define_font()
   expect_token(0, TK_NUMBER,     "0.12345")
   expect_token(1, TK_NUMBER,     "00")
   expect_token(2, TK_IDENTIFIER, "AABBCC")
+End Sub
+
+Sub test_hash_bang()
+  expect_parse_succeeds("#!/foo/bar", 1, TK_COMMENT, "#!/foo/bar")
 End Sub
 
 Sub test_insert_token()
@@ -623,6 +643,80 @@ Sub test_replace_token()
   assert_string_equals("  wombat  ", lx.line$)
   expect_token_count(1)
   expect_token(0, TK_KEYWORD, "wombat", 3)
+End Sub
+
+Sub test_set_space_before()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Print 200"))
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(0, 4))
+  assert_string_equals("    Print 200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 5)
+  expect_token(1, TK_NUMBER, "200", 11)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(1, 4))
+  assert_string_equals("    Print    200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 5)
+  expect_token(1, TK_NUMBER, "200", 14)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(0, 1))
+  assert_string_equals(" Print    200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 2)
+  expect_token(1, TK_NUMBER, "200", 11)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_before%(1, 0))
+  assert_string_equals(" Print200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 2)
+  expect_token(1, TK_NUMBER, "200", 7)
+
+  assert_int_equals(sys.FAILURE, lx.set_space_before%(-1, 1))
+  assert_error("Invalid token index: -1")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_before%(2, 1))
+  assert_error("Invalid token index: 2")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_before%(0, -2))
+  assert_error("Invalid number of spaces: -2")
+End Sub
+
+Sub test_set_space_after()
+  assert_int_equals(sys.SUCCESS, lx.parse_basic%("Print 200"))
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(0, 4))
+  assert_string_equals("Print    200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 10)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(1, 4))
+  assert_string_equals("Print    200    ", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 10)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(0, 0))
+  assert_string_equals("Print200    ", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 6)
+
+  assert_int_equals(sys.SUCCESS, lx.set_space_after%(1, 0))
+  assert_string_equals("Print200", lx.line$)
+  assert_int_equals(2, lx.num)
+  expect_token(0, TK_KEYWORD, "Print", 1)
+  expect_token(1, TK_NUMBER, "200", 6)
+
+  assert_int_equals(sys.FAILURE, lx.set_space_after%(-1, 1))
+  assert_error("Invalid token index: -1")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_after%(2, 1))
+  assert_error("Invalid token index: 2")
+
+  assert_int_equals(sys.FAILURE, lx.set_space_after%(0, -2))
+  assert_error("Invalid number of spaces: -2")
 End Sub
 
 Sub expect_parse_succeeds(line$, expected_count%, type0%, txt0$)

@@ -10,7 +10,7 @@ If sys.err$ <> "" Then Error sys.err$
 '!endif
 
 Const GLOBAL_SCOPE$ = "*GLOBAL*"
-Const MAX_NUM_SUBS = Choice(sys.is_device%("pm*"), 224, 1000)
+Const MAX_NUM_SUBS = Choice(InStr(Mm.Device$, "PicoMite"), 224, 1000)
 
 ' Map of all the declared subroutines created by pass 1.
 '

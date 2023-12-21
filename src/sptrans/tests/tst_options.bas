@@ -18,17 +18,19 @@ Option Default Integer
 add_test("test_colour")
 add_test("test_comments")
 add_test("test_crunch")
+add_test("test_disable_format")
 add_test("test_empty_lines")
 add_test("test_format_only")
 add_test("test_include_only")
 add_test("test_indent")
 add_test("test_infile")
+add_test("test_list_all")
 add_test("test_keywords")
 add_test("test_outfile")
-add_test("test_pretty_print")
-add_test("test_process_directives")
+add_test("test_format")
 add_test("test_quiet")
 add_test("test_spacing")
+add_test("test_tree_shake")
 add_test("test_unknown")
 
 run_tests()
@@ -150,6 +152,39 @@ Sub test_crunch()
   Loop
 
   opt.set("crunch", "foo")
+  assert_error("expects 'on|off' argument")
+End Sub
+
+Sub test_disable_format()
+  Local elements$(10) Length 10, i%
+
+  assert_int_equals(0, opt.disable_format%)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i% = 0
+  Do While elements$(i%) <> Chr$(0)
+    opt.disable_format% = 999
+    opt.set("disable-format", elements$(i%))
+    assert_int_equals(0, opt.disable_format%)
+    Inc i%
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i% = 0
+  Do While elements$(i%) <> Chr$(0)
+    opt.disable_format% = 999
+    opt.set("disable-format", elements$(i%))
+    assert_int_equals(1, opt.disable_format%)
+    Inc i%
+  Loop
+
+  opt.set("format-only", "foo")
   assert_error("expects 'on|off' argument")
 End Sub
 
@@ -467,6 +502,39 @@ Sub test_spacing()
   assert_error("expects 'on|minimal|compact|generous' argument")
 End Sub
 
+Sub test_tree_shake()
+  Local elements$(10) Length 10, i
+
+  assert_int_equals(0, opt.tree_shake)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.tree_shake = 999
+    opt.set("tree-shake", elements$(i))
+    assert_int_equals(0, opt.tree_shake)
+    Inc i
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i = 0
+  Do While elements$(i) <> Chr$(0)
+    opt.tree_shake = 999
+    opt.set("tree-shake", elements$(i))
+    assert_int_equals(1, opt.tree_shake)
+    Inc i
+  Loop
+
+  opt.set("tree-shake", "foo")
+  assert_error("expects 'on|off' argument")
+End Sub
+
 Sub test_infile()
   assert_string_equals("", opt.infile$)
 
@@ -474,6 +542,42 @@ Sub test_infile()
   opt.set("infile", "foo.bas")
   assert_no_error()
   assert_string_equals("foo.bas", opt.infile$)
+End Sub
+
+Sub test_list_all()
+  Local elements$(10) Length 10, i%
+
+  assert_int_equals(0, opt.list_all%)
+
+  elements$(0) = "0"
+  elements$(1) = "off"
+  elements$(2) = ""
+  elements$(3) = "default"
+  elements$(4) = Chr$(0)
+  i% = 0
+  Do While elements$(i%) <> Chr$(0)
+    opt.list_all% = 999
+    opt.set("list-all", elements$(i))
+    assert_int_equals(0, opt.list_all%)
+    assert_no_error()
+    Inc i%
+  Loop
+
+  elements$(0) = "1"
+  elements$(1) = "on"
+  elements$(2) = Chr$(0)
+  i% = 0
+  Do While elements$(i%) <> Chr$(0)
+    opt.list_all% = 999
+    opt.set("list-all", elements$(i%))
+    assert_int_equals(1, opt.list_all%)
+    assert_no_error()
+    Inc i%
+  Loop
+
+  opt.set("list-all", "foo")
+  assert_error("expects 'on|off' argument")
+
 End Sub
 
 Sub test_outfile()
@@ -491,48 +595,51 @@ Sub test_unknown()
   assert_error("unknown option: unknown")
 End Sub
 
-Sub test_pretty_print()
+Sub test_format()
   given_options("")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("colour=1")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("comments=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("comments=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("empty-lines=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("format-only=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("indent=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("keywords=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("help=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("include-only=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("no-comments=0")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
 
   given_options("no-comments=1")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("spacing=0")
-  assert_int_equals(1, opt.pretty_print%())
+  assert_int_equals(1, opt.format%)
 
   given_options("version=1")
-  assert_int_equals(0, opt.pretty_print%())
+  assert_int_equals(0, opt.format%)
+
+  given_options("spacing=0,disable-format=1")
+  assert_int_equals(0, opt.format%)
 End Sub
 
 Sub given_options(s$)
@@ -545,48 +652,4 @@ Sub given_options(s$)
     opt.set(k$, v$)
     Inc i%, 2
   Loop
-End Sub
-
-Sub test_process_directives()
-  given_options("")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("colour=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("comments=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("comments=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("empty-lines=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("format-only=1")
-  assert_int_equals(0, opt.process_directives%())
-
-  given_options("indent=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("keywords=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("help=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("include-only=1")
-  assert_int_equals(0, opt.process_directives%())
-
-  given_options("no-comments=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("no-comments=1")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("spacing=0")
-  assert_int_equals(1, opt.process_directives%())
-
-  given_options("version=1")
-  assert_int_equals(1, opt.process_directives%())
 End Sub

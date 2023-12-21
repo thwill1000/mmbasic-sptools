@@ -10,52 +10,6 @@ sys.provides("ctrl")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-'!if not(defined(GAMEMITE) or or defined(PICOMITE) or defined(CMM2) or defined(MMB4L))
-  '!error "File 'ctrl.inc' was transpiled without CMM2, MMB4L, GAMEMITE or PICOMITE defined"
-'!endif
-
-'!if defined(PICOMITE)
-  '!undef PICOMITE
-'!endif
-
-'!if not(defined(GAMEMITE) xor defined(CMM2) xor defined(MMB4L))
-  '!error "File 'ctrl.inc' was transpiled with more than one of CMM2, MMB4L, GAMEMITE and PICOMITE defined"
-'!endif
-
-'!if defined(GAMEMITE)
-  '!define PICOMITE
-'!endif
-
-'!info defined CMM2
-'!info defined MMB4L
-'!info defined GAMEMITE
-'!info defined PICOMITE
-
-'!if defined(GAMEMITE)
-  '!if !defined(CTRL_NO_SNES)
-    '!define CTRL_NO_SNES
-  '!endif
-  '!define CTRL_ONE_PLAYER
-  '!define CTRL_USE_INKEY
-'!endif
-
-'!if not defined(CTRL_USE_INKEY)
-  '!if defined(CMM2)
-    '!define CTRL_USE_KEYDOWN
-  '!elif defined(MMB4L)
-    '!define CTRL_USE_INKEY
-  '!elif defined(PICOMITE)
-    '!define CTRL_USE_ON_PS2
-  '!endif
-'!endif
-
-'!info defined CTRL_ONE_PLAYER
-'!info defined CTRL_NO_CURSORS
-'!info defined CTRL_NO_SNES
-'!info defined CTRL_USE_INKEY
-'!info defined CTRL_USE_ON_PS2
-'!info defined CTRL_USE_KEYDOWN
-
 ' Button values as returned by controller driver subroutines.
 Const ctrl.R      = &h01
 Const ctrl.START  = &h02
@@ -89,6 +43,12 @@ Const ctrl.UI_DELAY = 200 ' 200 micro-seconds.
 ' (i.e. keyboard) then it does not need to be added to this list.
 Dim ctrl.open_drivers$
 
+' Mechanism to use for reading the keyboard.
+'   0 = INKEY$
+'   1 = KEYDOWN
+'   2 = ON PS2
+Dim ctrl.key_type%
+
 ' When a key is down the corresponding byte of this 256-byte map is set,
 ' when the key is up then it is unset.
 '
@@ -97,52 +57,70 @@ Dim ctrl.open_drivers$
 ' keyup events and instead automatically clear a byte after it is read.
 Dim ctrl.key_map%(31 + Mm.Info(Option Base))
 
-'!ifdef CTRL_USE_ON_PS2
 ' Map used to convert PS/2 set 2 scan codes to entries in ctrl.key_map%().
 ' The scan code first has to be converted into a single byte value,
 ' see ctrl.on_ps2().
-Dim ctrl.scan_map%(31)
+'!if !defined(GAMEMITE)
+If sys.is_platform%("pmvga*") Then Dim ctrl.scan_map%(31)
 '!endif
 
-'!ifdef CTRL_USE_KEYDOWN
 ' Timer number configured for reading the KEYDOWN state on the CMM2.
-Dim ctrl.tick_nbr%
+'!if !defined(GAMEMITE)
+If sys.is_platform%("cmm2*", "mmb4w") Then Dim ctrl.tick_nbr%
 '!endif
 
 ' Initialises keyboard reading.
 '
-' @param  period%  CMM2 only - interval to read KEYDOWN state, default 40 ms.
-' @param  nbr%     CMM2 only - timer nbr to read KEYDOWN state, default 4.
-Sub ctrl.init_keys(period%, nbr%)
+' @param  use_inkey%  Use INKEY$ even on platforms with KEYDOWN or ON PS2.
+' @param  period%     CMM2 only, interval to read KEYDOWN state, default 40 ms.
+' @param  nbr%        CMM2 only, timer nbr to read KEYDOWN state, default 4.
+Sub ctrl.init_keys(use_inkey%, period%, nbr%)
   ctrl.term_keys()
-'!if false ' This is the untranspiled branch.
-  If Mm.Device$ = "MMB4L" Then
-    On Key ctrl.on_key()
-  Else
-    ctrl.tick_nbr% = Choice(nbr% = 0, 4, nbr%)
-    SetTick Choice(period% = 0, 40, period%), ctrl.on_tick(), ctrl.tick_nbr%
-  EndIf
-  Exit Sub
-'!elif defined(CTRL_USE_INKEY)
-  On Key ctrl.on_key()
-'!elif defined(CTRL_USE_ON_PS2)
-  Read Save
-  Restore ctrl.scan_map_data
-  Local i%
-  For i% = Bound(ctrl.scan_map%(), 0) To Bound(ctrl.scan_map%(), 1)
-    Read ctrl.scan_map%(i%)
-  Next
-  Read Restore
-  On Ps2 ctrl.on_ps2()
-'!elif defined(CTRL_USE_KEYDOWN)
-  ctrl.tick_nbr% = Choice(nbr% = 0, 4, nbr%)
-  SetTick Choice(period% = 0, 40, period%), ctrl.on_tick(), ctrl.tick_nbr%
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' ctrl.key_type% = 0 ' INKEY$
+  ' On Key ctrl.on_key()
+  '!endif
 '!else
-'!error "Unknown keyboard controller"
+  Select Case Choice(use_inkey%, "Inkey", Mm.Device$)
+    Case "Colour Maximite 2", "Colour Maximite 2 G2", "MMBasic for Windows"
+      ctrl.key_type% = 1 ' KEYDOWN
+      ctrl.tick_nbr% = Choice(nbr% = 0, 4, nbr%)
+      SetTick Choice(period% = 0, 40, period%), ctrl.on_tick(), ctrl.tick_nbr%
+    Case "PicoMiteVGA"
+      ctrl.key_type% = 2 ' ON PS 2
+      Read Save
+      Restore ctrl.scan_map_data
+      Local i%
+      For i% = Bound(ctrl.scan_map%(), 0) To Bound(ctrl.scan_map%(), 1)
+        Read ctrl.scan_map%(i%)
+      Next
+      Read Restore
+      On Ps2 ctrl.on_ps2()
+    Case Else
+      ctrl.key_type% = 0 ' INKEY$
+      On Key ctrl.on_key()
+  End Select
 '!endif
 End Sub
 
-'!ifdef CTRL_USE_KEYDOWN
+' TODO: use the 'lower-case' character for all keys, not just letters.
+Sub ctrl.on_key()
+  Poke Var ctrl.key_map%(), Asc(LCase$(Inkey$)), 1
+End Sub
+
+'!if !defined(GAMEMITE)
+
+Sub ctrl.on_ps2()
+  Local ps2% = Mm.Info(PS2)
+  Select Case ps2%
+    Case < &hE000 : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), ps2% And &hFF), 1
+    Case < &hF000 : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), (ps2% And &hFF) + &h80), 1
+    Case < &hE0F000 : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), ps2% And &hFF), 0
+    Case Else : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), (ps2% And &hFF) + &h80), 0
+  End Select
+End Sub
+
 ' Note there is little point in calling KeyDown(0) to determine the number of
 ' keys that are down, hardware limitations mean it's unlikely ever to be > 4
 ' and if a given key isn't down it just returns 0 so we harmlessly set that
@@ -154,26 +132,8 @@ Sub ctrl.on_tick()
   Poke Var ctrl.key_map%(), KeyDown(3), 1
   Poke Var ctrl.key_map%(), KeyDown(4), 1
 End Sub
-'!endif
 
-'!ifdef CTRL_USE_INKEY
-' TODO: use the 'lower-case' character for all keys, not just letters.
-Sub ctrl.on_key()
-  Poke Var ctrl.key_map%(), Asc(LCase$(Inkey$)), 1
-End Sub
-'!endif
-
-'!ifdef CTRL_USE_ON_PS2
-Sub ctrl.on_ps2()
-  Local ps2% = Mm.Info(PS2)
-  Select Case ps2%
-    Case < &hE000 : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), ps2% And &hFF), 1
-    Case < &hF000 : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), (ps2% And &hFF) + &h80), 1
-    Case < &hE0F000 : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), ps2% And &hFF), 0
-    Case Else : Poke Var ctrl.key_map%(), Peek(Var ctrl.scan_map%(), (ps2% And &hFF) + &h80), 0
-  End Select
-End Sub
-'!endif
+'!endif ' !defined(GAMEMITE)
 
 Sub ctrl.term()
   ctrl.term_keys()
@@ -186,23 +146,21 @@ End Sub
 
 ' Terminates keyboard reading.
 Sub ctrl.term_keys()
-'!if false ' This is the untranspiled branch.
-  If Mm.Device$ = "MMB4L" Then
-    On Key 0
-  Else
-    If ctrl.tick_nbr% <> 0 Then SetTick 0, 0, ctrl.tick_nbr%
-  EndIf
-  Memory Set Peek(VarAddr ctrl.key_map%()), 0, 256
-  Do While Inkey$ <> "" : Loop
-  Exit Sub
-'!elif defined(CTRL_USE_INKEY)
-  On Key 0
-'!elif defined(CTRL_USE_ON_PS2)
-  On Ps2 0
-'!elif defined(CTRL_USE_KEYDOWN)
-  If ctrl.tick_nbr% <> 0 Then SetTick 0, 0, ctrl.tick_nbr%
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' On Key 0
+  '!endif
 '!else
-'!error "Unknown keyboard controller"
+  Select Case ctrl.key_type%
+    Case 0 ' INKEY$
+      On Key 0
+    Case 1 ' KEYDOWN
+      If ctrl.tick_nbr% <> 0 Then SetTick 0, 0, ctrl.tick_nbr%
+    Case 2 ' ON PS2
+      On Ps2 0
+    Case Else
+      Error "Invalid state"
+  End Select
 '!endif
   Memory Set Peek(VarAddr ctrl.key_map%()), 0, 256
   Do While Inkey$ <> "" : Loop
@@ -210,15 +168,10 @@ End Sub
 
 Function ctrl.keydown%(i%)
   ctrl.keydown% = Peek(Var ctrl.key_map%(), i%)
-'!if false ' This is the untranspiled branch.
-  If Mm.Device$ = "MMB4L" Then Poke Var ctrl.key_map%(), i%, 0
-  Exit Function
-'!elif defined(CTRL_USE_INKEY)
-  Poke Var ctrl.key_map%(), i%, 0
-'!endif
+  If ctrl.key_type% = 0 Then Poke Var ctrl.key_map%(), i%, 0
 End Function
 
-' Iterates through array of controller drivers$(), opensing, polling and closing
+' Iterates through array of controller drivers$(), opening, polling and closing
 ' each in turn waiting for the user to provide an input that matches a mask%.
 '
 ' @param[in]      drivers$()  controller drivers to poll.
@@ -302,8 +255,6 @@ Sub ctrl.wait_until_idle(d1$, d2$, d3$, d4$, d5$)
   Loop
 End Sub
 
-'!ifndef CTRL_NO_CURSORS
-
 ' Reads the keyboard as if it were a controller.
 '
 ' Note that the PicoMite has no KEYDOWN function so we are limited to
@@ -330,8 +281,6 @@ Sub keys_cursor_ext(x%)
   Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
 End Sub
 
-'!endif ' CTRL_NO_CURSORS
-
 Sub ctrl.open_driver(d$)
   Cat ctrl.open_drivers$, d$ + ","
 End Sub
@@ -347,8 +296,6 @@ Sub ctrl.close_driver(d$)
       ctrl.open_drivers$ = Mid$(ctrl.open_drivers$, 1, idx% - 1) + Mid$(ctrl.open_drivers$, idx% + Len(d$) + 1)
   End Select
 End Sub
-
-'!if defined(PICOMITE) && !defined(GAMEMITE)
 
 ' Atari joystick on PicoGAME Port A.
 Sub atari_a(x%)
@@ -369,8 +316,6 @@ Sub atari_a(x%)
   End Select
 End Sub
 
-'!ifndef CTRL_ONE_PLAYER
-
 ' Atari joystick on PicoGAME Port B.
 Sub atari_b(x%)
   Select Case x%
@@ -389,10 +334,6 @@ Sub atari_b(x%)
       ctrl.close_driver("atari_b")
     End Select
 End Sub
-
-'!endif ' CTRL_ONE_PLAYER
-
-'!ifndef CTRL_NO_SNES
 
 ' SNES gamepad on PicoGAME Port A.
 '
@@ -425,8 +366,6 @@ Sub snes_a(x%)
   End Select
 End Sub
 
-'!ifndef CTRL_ONE_PLAYER
-
 ' SNES gamepad on PicoGAME Port B.
 '
 '   GP5: Latch, GP22: Clock, GP4: Data
@@ -458,10 +397,6 @@ Sub snes_b(x%)
   End Select
 End Sub
 
-'!endif ' !ifndef CTRL_ONE_PLAYER
-
-'!endif ' !ifndef CTRL_NO_SNES
-
 ' Reads port A connected to a NES gamepad.
 '
 ' Note that the extra pulse after reading bit 7 (Right) should not be necessary,
@@ -492,8 +427,6 @@ Sub nes_a(x%)
   End Select
 End Sub
 
-'!ifndef CTRL_ONE_PLAYER
-
 ' NES gamepad on PicoGAME Port B.
 '
 '   GP5: Latch, GP22: Clock, GP4: Data
@@ -521,11 +454,6 @@ Sub nes_b(x%)
   End Select
 End Sub
 
-'!endif ' CTRL_ONE_PLAYER
-
-'!endif ' PICOMITE
-
-'!if defined(GAMEMITE)
 ' Gamepad on the Game*Mite
 ' The single 'crazy' PORT call efficiently reads the buttons in the correct
 ' order for the return bitmap but we then have to mask out filler values.
@@ -545,9 +473,6 @@ Sub ctrl.gamemite(x%)
       ctrl.close_driver("ctrl.gamemite")
   End Select
 End Sub
-'!endif ' GAMEMITE
-
-'!ifdef CMM2
 
 ' Atari joystick port on CMM2 Deluxe G2.
 Sub atari_dx(x%)
@@ -601,8 +526,6 @@ Sub nes_dx(x%)
   End Select
 End Sub
 
-'!ifndef CTRL_NO_SNES
-
 ' SNES gamepad attached USING ADAPTER to Atari joystick port on CMM2 Deluxe G2.
 '
 ' IMPORTANT! the adapter is required to swap the Male DB9 (CMM2) +5V supply on
@@ -636,8 +559,6 @@ Sub snes_dx(x%)
       ctrl.close_driver("snes_dx")
   End Select
 End Sub
-
-'!endif '!ifndef CTRL_NO_SNES
 
 Sub wii_internal(i2c%, x%, type%)
   Static is_open%(3)
@@ -761,9 +682,8 @@ Sub wii_nunchuk_3(x%)
   wii_internal(3, x%, &h01)
 End Sub
 
-'!endif ' CMM2
+'!if !defined(GAMEMITE)
 
-'!ifdef CTRL_USE_ON_PS2
 ctrl.scan_map_data:
 
 Data &h9C92919395009900, &h0060099496989A00, &h0031710000008B00, &h00327761737A0000
@@ -774,4 +694,5 @@ Data &h0000000097000000, &h0000000000000000, &h0000000000008B00, &h0000000000000
 Data &h0000000000000000, &h0000000000000000, &h0000000000000000, &h0000000000000000
 Data &h0000000000000000, &h0000000000000000, &h0000000000000000, &h0000000000000000
 Data &h0000000000000000, &h0000008682008700, &h0000808300817F84, &h0000889D00890000
-'!endif
+
+'!endif ' !defined(GAMEMITE)

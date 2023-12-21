@@ -67,12 +67,18 @@ End Function
 ' Adds a key/value pair to the map.
 Sub map2.put(mp$(), k$, v$)
   Const lb% = Bound(mp$(), 0), ub% = Bound(mp$(), 1)
-  Const key_len% = Val(Field$(mp$(ub%), 1)), sz% = Val(Field$(mp$(ub%), 2))
-  If sz% = ub% - lb% Then Error "Map full" : Exit Sub
+  Const key_len% = Val(Field$(mp$(ub%), 1))
+  Local sz% = Val(Field$(mp$(ub%), 2))
   If Len(k$) > key_len% Then Error "Key too long" : Exit Sub
-  mp$(lb% + sz%) = k$ + Space$(key_len% - Len(k$)) + v$
-  mp$(ub%) = Str$(key_len%) + "," + Str$(sz% + 1)
-  Sort mp$(), , , lb%, sz% + 1
+  Local idx% = map2.get_key_index%(mp$(), k$)
+  If idx% = -1 Then
+    If sz% = ub% - lb% Then Error "Map full" : Exit Sub
+    idx% = lb% + sz%
+    Inc sz%
+  EndIf
+  mp$(idx%) = k$ + Space$(key_len% - Len(k$)) + v$
+  mp$(ub%) = Str$(key_len%) + "," + Str$(sz%)
+  Sort mp$(), , , lb%, sz%
 End Sub
 
 ' Adds a key/value pair to the map if the key is not already present
@@ -127,4 +133,16 @@ Sub map2.clear(mp$())
     mp$(i%) = sys.NO_DATA$
   Next
   mp$(ub%) = Str$(key_len%) + ",0"
+End Sub
+
+' Prints the contents of the map.
+Sub map2.dump(mp$(), fnbr%)
+  Const lb% = Bound(mp$(), 0), ub% = Bound(mp$(), 1), sz% = Val(Field$(mp$(ub%), 2))
+  Const width% = Len(Str$(sz%))
+  Local i%
+  For i% = lb% To lb% + sz% - 1
+    Print #fnbr%, "[" Str$(i%, width%) "] ";
+    Print #fnbr%, mp$(i%)
+  Next
+  Print #fnbr%, "END"
 End Sub
