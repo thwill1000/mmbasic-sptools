@@ -60,10 +60,14 @@ Dim ctrl.key_map%(31 + Mm.Info(Option Base))
 ' Map used to convert PS/2 set 2 scan codes to entries in ctrl.key_map%().
 ' The scan code first has to be converted into a single byte value,
 ' see ctrl.on_ps2().
-If sys.is_device%("pmvga*") Then Dim ctrl.scan_map%(31)
+'!if !defined(GAMEMITE)
+If sys.is_platform%("pmvga*") Then Dim ctrl.scan_map%(31)
+'!endif
 
 ' Timer number configured for reading the KEYDOWN state on the CMM2.
-If sys.is_device%("cmm2*", "mmb4w") Then Dim ctrl.tick_nbr%
+'!if !defined(GAMEMITE)
+If sys.is_platform%("cmm2*", "mmb4w") Then Dim ctrl.tick_nbr%
+'!endif
 
 ' Initialises keyboard reading.
 '
@@ -72,6 +76,12 @@ If sys.is_device%("cmm2*", "mmb4w") Then Dim ctrl.tick_nbr%
 ' @param  nbr%        CMM2 only, timer nbr to read KEYDOWN state, default 4.
 Sub ctrl.init_keys(use_inkey%, period%, nbr%)
   ctrl.term_keys()
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' ctrl.key_type% = 0 ' INKEY$
+  ' On Key ctrl.on_key()
+  '!endif
+'!else
   Select Case Choice(use_inkey%, "Inkey", Mm.Device$)
     Case "Colour Maximite 2", "Colour Maximite 2 G2", "MMBasic for Windows"
       ctrl.key_type% = 1 ' KEYDOWN
@@ -91,6 +101,7 @@ Sub ctrl.init_keys(use_inkey%, period%, nbr%)
       ctrl.key_type% = 0 ' INKEY$
       On Key ctrl.on_key()
   End Select
+'!endif
 End Sub
 
 ' TODO: use the 'lower-case' character for all keys, not just letters.
@@ -135,6 +146,11 @@ End Sub
 
 ' Terminates keyboard reading.
 Sub ctrl.term_keys()
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' On Key 0
+  '!endif
+'!else
   Select Case ctrl.key_type%
     Case 0 ' INKEY$
       On Key 0
@@ -145,7 +161,7 @@ Sub ctrl.term_keys()
     Case Else
       Error "Invalid state"
   End Select
-
+'!endif
   Memory Set Peek(VarAddr ctrl.key_map%()), 0, 256
   Do While Inkey$ <> "" : Loop
 End Sub

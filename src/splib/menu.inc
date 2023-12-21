@@ -18,13 +18,20 @@ Sub menu.init(ctrl$, callback$)
   Dim menu.item_count%, menu.selection%
 
   Font 1
-  If sys.is_device%("mmb4l") Then
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' Dim menu.height% = Mm.VRes \ Mm.Info(FontHeight)
+  ' Dim menu.width% = Mm.HRes \ Mm.Info(FontWidth)
+  '!endif
+'!else
+  If sys.is_platform%("mmb4l") Then
     Dim menu.height% = Min(Mm.VRes, 50)
     Dim menu.width% = Min(Mm.HRes, 100)
   Else
     Dim menu.height% = Mm.VRes \ Mm.Info(FontHeight)
     Dim menu.width% = Mm.HRes \ Mm.Info(FontWidth)
   EndIf
+'!endif
   Local sz%
   Inc sz%, 7 + 2 * menu.height% * menu.width%
   Inc sz%, 7 + 2 * (menu.height% - 10) * (menu.width% - 10)

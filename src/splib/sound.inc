@@ -56,7 +56,7 @@ Sub sound.init(fx_int$, music_int$)
   sound.music_int$ = Choice(Len(music_int$), music_int$, "sound.music_default_int")
 
   ' On the Game*Mite we always play an octave higher.
-  Const offset% = Choice(sys.is_device%("gamemite"), 12, 0)
+  Const offset% = Choice(sys.PLATFORM$() = "Game*Mite", 12, 0)
   Local i%
   For i% = 0 To 127
     ' 16.35 Hz is C0, the lowest (?) frequency allowed.

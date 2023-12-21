@@ -90,7 +90,7 @@ Function file.find$(path$, pattern$, type$)
     On Error Skip
     Erase file.find_stack$()
     On Error Clear
-    If sys.is_device%("mmb4l", "mmb4w") Then
+    If sys.is_platform%("mmb4l", "mmb4w") Then
       Dim file.find_stack$(1000) Length 255
     Else
       Dim file.find_stack$(500) Length 128

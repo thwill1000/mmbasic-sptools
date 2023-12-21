@@ -94,9 +94,7 @@ End Sub
 
 ' Fills all the elements of string array a$() to x$.
 Sub array.fill(a$(), x$)
-  Local lb% = Bound(a$(), 0)
-  Local ub% = Bound(a$(), 1)
-  Local i%
+  Local i%, lb% = Bound(a$(), 0), ub% = Bound(a$(), 1)
   For i% = lb% To ub% : a$(i%) = x$ : Next
 End Sub
 

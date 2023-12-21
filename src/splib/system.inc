@@ -54,14 +54,19 @@
 '!endif
 
 Const sys.VERSION = 102201 ' 1.2.0 RC 1
-Const sys.DEVICE = sys.get_config$("device", Mm.Device$)
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
+'!if defined(GAMEMITE)
+  '!uncomment_if true
+  ' Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
+  '!endif
+'!else
 If Mm.Info$(Device) = "MMB4L" Then
   Const sys.FIRMWARE = Mm.Info(Version) \ 100
 Else
   Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
 EndIf
+'!endif
 
 Const sys.SUCCESS = 0
 Const sys.FAILURE = -1
@@ -200,8 +205,11 @@ Sub sys.restore_break()
   Option Break 3
 End Sub
 
+'!if defined(GAMEMITE)
+  '!replace { sys.HOME$ ( ) } { "A:" }
+'!else
 Function sys.HOME$()
-  Select Case sys.DEVICE
+  Select Case Mm.Device$
     Case "MMB4L"
       sys.HOME$ = Mm.Info$(EnvVar "HOME")
     Case "MMBasic for Windows"
@@ -210,13 +218,35 @@ Function sys.HOME$()
       sys.HOME$ = "A:"
   End Select
 End Function
+'!endif
 
-Function sys.SEPARATOR$()
-  sys.SEPARATOR$ = Choice(sys.DEVICE = "MMBasic for Windows", "\", "/")
+'!if defined(GAMEMITE)
+  '!replace { sys.PLATFORM$ ( ) } { "Game*Mite" }
+'!else
+Function sys.PLATFORM$()
+  sys.PLATFORM$ = Choice(InStr(Mm.Device$, "PicoMite"), Mm.Info$(Platform), "")
+  If sys.PLATFORM$ = "" Then sys.PLATFORM$ = Mm.Device$
+
+  ' Allow platform to be overridden for unit-tests.
+  On Error Skip
+  sys.PLATFORM$ = sys.OVERRIDE_PLATFORM$
+  On Error Clear
 End Function
+'!endif
 
+'!if defined(GAMEMITE)
+  '!replace { sys.SEPARATOR$ ( ) } { "/" }
+'!else
+Function sys.SEPARATOR$()
+  sys.SEPARATOR$ = Choice(Mm.Device$ = "MMBasic for Windows", "\", "/")
+End Function
+'!endif
+
+'!if defined(GAMEMITE)
+  '!replace { sys.TMPDIR$ ( ) } { "A:/tmp" }
+'!else
 Function sys.TMPDIR$()
-  Select Case sys.DEVICE
+  Select Case Mm.Device$
     Case "MMB4L"
       sys.TMPDIR$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
     Case "MMBasic for Windows"
@@ -225,6 +255,7 @@ Function sys.TMPDIR$()
       sys.TMPDIR$ = "A:/tmp"
   End Select
 End Function
+'!endif
 
 ' Are we running on one of the given devices ?
 '
@@ -240,31 +271,33 @@ End Function
 '                pmvga    - PicoMiteVGA
 '                pmvga*   - PicoMiteVGA or PicoGAME VGA
 '                pm*      - PicoMite, PicoMiteVGA, PicoGAME VGA and Game*Mite
-Function sys.is_device%(d1$, d2$, d3$, d4$, d5$)
+Function sys.is_platform%(d1$, d2$, d3$, d4$, d5$)
+  Const platform$ = LCase$(sys.PLATFORM$())
   Local devices$(5 + Mm.Info(Option Base)) Length 16 = (d1$, d2$, d3$, d4$, d5$, "")
   Local ii% = Mm.Info(Option Base), match$
 
-  sys.is_device% = 1
+  sys.is_platform% = 1
   Do While Len(devices$(ii%)) > 0
-    Select Case sys.DEVICE
-      Case "Colour Maximite 2" : match$ = "|cmm2|cmm2*|"
-      Case "Colour Maximite 2 G2" : match$ = "|cmm2g2|cmm2*"
-      Case "Game*Mite" : match$ = "|pm*|gamemite|"
-      Case "MMB4L"
+    If platform$ = LCase$(devices$(ii%)) Then Exit Function
+    Select Case platform$
+      Case "colour maximite 2" : match$ = "|cmm2|cmm2*|"
+      Case "colour maximite 2 g2" : match$ = "|cmm2g2|cmm2*"
+      Case "game*mite" : match$ = "|pm*|gamemite|"
+      Case "mmb4l"
         If LCase$(devices$(ii%)) = "mmb4l-armv6l" Then
           If Mm.Info$(Arch) = "Linux armv6l" Then Exit Function
         EndIf
         match$ = "|mmb4l|"
-      Case "MMBasic for Windows" : match$ = "|mmb4w|"
-      Case "PicoGAME VGA" : match$ = "|pgvga|pmvga*|pm*|"
-      Case "PicoMite" : match$ = "|pm|pm*|"
-      Case "PicoMiteVGA": match$ = "|pmvga|pmvga*|pm*|"
-      Case Else : Error "Unknown device: " + sys.DEVICE
+      Case "mmbasic for windows" : match$ = "|mmb4w|"
+      Case "picogame vga" : match$ = "|pgvga|pmvga*|pm*|"
+      Case "picomite" : match$ = "|pm|pm*|"
+      Case "picomitevga": match$ = "|pmvga|pmvga*|pm*|"
+      Case Else : Error "Unknown platform: " + sys.PLATFORM$
     End Select
     If InStr(match$, "|" + LCase$(devices$(ii%)) + "|") Then Exit Function
     Inc ii%
   Loop
-  sys.is_device% = 0
+  sys.is_platform% = 0
 End Function
 
 Function sys.error%(code%, msg$)

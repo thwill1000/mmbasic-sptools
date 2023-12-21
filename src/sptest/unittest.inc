@@ -10,7 +10,7 @@ sys.provides("unittest")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-If sys.is_device%("mmb4w") Then Option Console Both
+If sys.is_platform%("mmb4w") Then Option Console Both
 
 Const TMPDIR$ = ut.get_tmp_dir$() ' Test specific temporary directory.
 
@@ -358,7 +358,7 @@ Function ut.run_single_test%(idx%)
 
   ' Cache working directory and change drive.
   Const OLD_DIR = Cwd$
-  If sys.is_device%("pm*") Then
+  If sys.is_platform%("pm*") Then
     Const OLD_DRIVE = Mm.Info(Drive)
     Const NEW_DRIVE = Choice(InStr(Mm.CmdLine$, "--drive=b"), "B:", "A:")
     If Mm.Info$(Drive) <> NEW_DRIVE Then Drive NEW_DRIVE
@@ -419,7 +419,7 @@ Function ut.run_single_test%(idx%)
   EndIf
 
   ' Restore working directory and drive.
-  If sys.is_device%("pm*") Then
+  If sys.is_platform%("pm*") Then
     If Mm.Info(Drive) <> OLD_DRIVE Then Drive OLD_DRIVE
   EndIf
   If Cwd$ <> OLD_DIR Then ChDir OLD_DIR
@@ -548,7 +548,7 @@ Sub ut.run_same(find$, replace$)
     Cat cmdline$, find$
   EndIf
 
-  If sys.is_device%("cmm2*") Then
+  If sys.is_platform%("cmm2*") Then
     Execute "Run " + str.quote$(Mm.Info$(Current)) + ", " + cmdline$
   Else
     Run Mm.Info$(Current), cmdline$
@@ -556,7 +556,7 @@ Sub ut.run_same(find$, replace$)
 End Sub
 
 Sub ut.print_colour(c$)
-  If sys.is_device%("pm*") Then
+  If sys.is_platform%("pm*") Then
     Print vt100.colour$(c$);
     Exit Sub
   EndIf

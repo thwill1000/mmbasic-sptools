@@ -34,8 +34,10 @@ Option Explicit On
 Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
 Dim CTRL_DRIVERS$(1) = ("ctrl.gamemite", "keys_cursor_ext")
 
-If sys.is_device%("mmb4l") Then Option CodePage CMM2
-If sys.is_device%("mmb4w", "cmm2*") Then Option Console Serial
+'!if !defined(GAMEMITE)
+If sys.is_platform%("mmb4l") Then Option CodePage CMM2
+If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
+'!endif
 Mode 7
 Page Write 1
 
@@ -46,7 +48,7 @@ Sub main()
   ctrl.init_keys()
   sys.override_break()
   sound.init()
-  Local ctrl_idx% = Choice(sys.is_device%("gamemite"), 0, 1)
+  Local ctrl_idx% = Choice(sys.PLATFORM$() = "Game*Mite", 0, 1)
   menu.init(CTRL_DRIVERS$(ctrl_idx%), "menu_cb")
   menu.load_data("main_menu_data")
   menu.selection% = ctrl_idx% + 2

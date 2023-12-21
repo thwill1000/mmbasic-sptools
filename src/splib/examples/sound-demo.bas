@@ -28,7 +28,7 @@ Option Explicit On
 #Include "../menu.inc"
 #Include "../gamemite.inc"
 
-If sys.is_device%("pm*") Then
+If InStr(Mm.Device$, "PicoMite") Then
   Dim CHANNELS$(3) Length 14
   CHANNELS$(0) = str.decode$("\x95    Both    \x94")
   CHANNELS$(1) = str.decode$("\x95    Mono    \x94")
@@ -63,8 +63,10 @@ Dim octave% = 0
 Dim octave_idx% = 0
 Dim type_idx% = 0
 
-If sys.is_device%("mmb4l") Then Option CodePage CMM2
-If sys.is_device%("mmb4w", "cmm2*") Then Option Console Serial
+'!if !defined(GAMEMITE)
+If sys.is_platform%("mmb4l") Then Option CodePage CMM2
+If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
+'!endif
 Mode 7
 Page Write 1
 
@@ -74,7 +76,7 @@ Error "Invalid state"
 Sub main()
   '!dynamic_call ctrl.gamemite
   '!dynamic_call keys_cursor_ext
-  Const ctrl$ = Choice(sys.is_device%("gamemite"), "ctrl.gamemite", "keys_cursor_ext")
+  Const ctrl$ = Choice(sys.PLATFORM$() = "Game*Mite", "ctrl.gamemite", "keys_cursor_ext")
   ctrl.init_keys()
   sys.override_break()
   Call ctrl$, ctrl.OPEN
@@ -210,7 +212,8 @@ Sub update_menu_data(data_label$)
     menu.items$(idx% + 1) = " TYPE:    " + TYPES$(type_idx%) + " |cmd_type"
     menu.items$(idx% + 2) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
   EndIf
-  If sys.is_device%("gamemite") Then
+
+  If sys.PLATFORM$() = "Game*Mite" Then
     menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and SELECT|")
   EndIf
 End Sub

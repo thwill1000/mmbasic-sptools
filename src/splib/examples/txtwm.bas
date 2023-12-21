@@ -8,7 +8,7 @@ Option Default None
 #Include "../system.inc"
 #Include "../txtwm.inc"
 
-If sys.is_device%("mmb4l") Then Option CodePage CMM2
+If sys.is_platform%("mmb4l") Then Option CodePage CMM2
 
 Cls
 
