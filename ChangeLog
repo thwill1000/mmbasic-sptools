@@ -22,6 +22,8 @@ Version 1.2 RC 1 - 21-Dec-2023:
    - Added gamemite.file$() function
      - given a non-absolute path looks for and returns file relative to
        "A:/GameMite" or if not found, "B:/GameMite".
+   - Added 'spupdate' utility which updates a local copy of the 'splib'
+     directory from a checkout of the 'master' branch.
    - Changed menu.msgbox%() to support
      - message boxes with only one button.
      - optional frame colour.
