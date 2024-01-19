@@ -1,7 +1,7 @@
 ChangeLog
 ---------
 
-Version 1.2 RC 1 - 21-Dec-2023:
+Version 1.2.0 - 19-Jan-2024:
  - splib:
    - Added subs/functions to 'bits.inc' to handle bit-sets > 64 bits:
        bits.big_clear()

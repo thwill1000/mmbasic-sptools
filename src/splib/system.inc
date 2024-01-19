@@ -53,7 +53,7 @@
   '!endif
 '!endif
 
-Const sys.VERSION = 102201 ' 1.2.0 RC 1
+Const sys.VERSION = 102300 ' 1.2.0
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
 '!if defined(GAMEMITE)
