@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -149,6 +149,17 @@ Function str.replace$(haystack$, needle$, rep$)
   Loop
   Cat s$, Mid$(haystack$, st%)
   str.replace$ = s$
+End Function
+
+' Reverses the order of the characters in a string.
+'
+' @param  s$  the string.
+' @return     the reversed string.
+Function str.reverse$(s$)
+  Local i%
+  For i% = Len(s$) To 1 Step -1
+    Cat str.reverse$, Mid$(s$, i%, 1)
+  Next
 End Function
 
 ' Gets a string padded to a given width with spaces to the right.

@@ -22,6 +22,7 @@ add_test("test_next_token")
 add_test("test_next_token_given_quotes")
 add_test("test_quote")
 add_test("test_replace")
+add_test("test_reverse")
 add_test("test_rpad")
 add_test("test_trim")
 add_test("test_rtrim")
@@ -240,6 +241,13 @@ Sub test_replace()
   assert_string_equals("Goodbye World", str.replace$("Hello World", "Hello", "Goodbye"))
   assert_string_equals("Hello Goodbye", str.replace$("Hello World", "World", "Goodbye"))
   assert_string_equals("He**o Wor*d", str.replace$("Hello World", "l", "*"))
+End Sub
+
+Sub test_reverse()
+  assert_string_equals("", str.reverse$(""))
+  assert_string_equals("a", str.reverse$("a"))
+  assert_string_equals("ba", str.reverse$("ab"))
+  assert_string_equals("dlroW olleH", str.reverse$("Hello World"))
 End Sub
 
 Sub test_rpad()

@@ -1,7 +1,7 @@
 ChangeLog
 ---------
 
-Version 1.2.0 - 19-Jan-2024:
+Version 1.2.0 - 1-Feb-2024:
  - splib:
    - Added subs/functions to 'bits.inc' to handle bit-sets > 64 bits:
        bits.big_clear()
@@ -10,6 +10,8 @@ Version 1.2.0 - 19-Jan-2024:
        bits.big_set()
      and also for 64-bit sets:
        bits.fill()
+   - Added str.reverse$() function
+     - reverses the characters in a string.
    - Added str.rtrim$() function
      - right trims spaces from string.
    - Added array.qsort_ints%() function
@@ -38,7 +40,7 @@ Version 1.2.0 - 19-Jan-2024:
    - Added new features/options:
      -L, --list-all    Output lists of identifiers, functions/subs,
                        references and orphan functions/subs.
-     -T, --tree-shake  Remove unused functionssSubs.
+     -T, --tree-shake  Remove unused functions/subs.
    - Added new directives:
      !DYNAMIC_CALL <fn-name>       Flags function/sub so it isn't removed by
                                    tree-shaking, required if a function/sub is
