@@ -129,14 +129,16 @@ Sub test_format_firmware_version()
   ' Override sys.FIRMWARE to make test stable.
   Erase sys.FIRMWARE
   Dim sys.FIRMWARE As Integer = 12345600
-  assert_string_equals("12.34.56", sys.format_firmware_version$())
 
   If Mm.Device$ = "MMB4L" Then
-    assert_string_equals("0.6.0", sys.format_firmware_version$(60000))
-    assert_string_equals("10.7.8b7", sys.format_firmware_version$(10070807))
-    assert_string_equals("5.7.8b7", sys.format_firmware_version$(5070807))
-    assert_string_equals("5.6.0", sys.format_firmware_version$(5060000))
+    assert_string_equals("0.1 RC 34 build 5600", sys.format_firmware_version$())
+    assert_string_equals("0.6.0", sys.format_firmware_version$(63000000))
+    assert_string_equals("6.5 alpha 4", sys.format_firmware_version$(6050040000))
+    assert_string_equals("6.5 beta 3", sys.format_firmware_version$(6051030000))
+    assert_string_equals("6.5 RC 2", sys.format_firmware_version$(6052020000))
+    assert_string_equals("6.5.1 build 1", sys.format_firmware_version$(6053010001))
   Else
+    assert_string_equals("12.34.56", sys.format_firmware_version$())
     assert_string_equals("0.06.00", sys.format_firmware_version$(60000))
     assert_string_equals("10.07.08b7", sys.format_firmware_version$(10070807))
     assert_string_equals("5.07.08b7", sys.format_firmware_version$(5070807))

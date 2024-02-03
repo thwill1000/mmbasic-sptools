@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -62,7 +62,7 @@ Const sys.CRLF$ = Chr$(13) + Chr$(10)
   '!endif
 '!else
 If Mm.Info$(Device) = "MMB4L" Then
-  Const sys.FIRMWARE = Mm.Info(Version) \ 100
+  Const sys.FIRMWARE = Mm.Info(Version)
 Else
   Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
 EndIf
@@ -153,26 +153,40 @@ Function sys.get_config$(key$, default$, file$)
   Close #1
 End Function
 
-' Formats an SP Tools integer version as a string.
+' Formats an integer version as a string.
+'
+' @param  v%   version number: AABBCDD
+'              - AA is the 2-digit major version.
+'              - BB is the 2-digit minor version.
+'              - C  = 0 for alpha
+'                   = 1 for beta
+'                   = 2 for release candidate
+'                   = 3..9 for release.
+'              - DD is the micro version if c <= 3.
+'                If c > 3 Then CDD - 300 is the micro version.
 Function sys.format_version$(v%)
-  Const v_% = Choice(v%, v%, sys.VERSION), a% = v_%\10^5, b% = (v_%-a%*10^5)\10^3
-  Local c% = v_%-a%*10^5-b%*10^3, s$ = Str$(a%) + "." + Str$(b%)
-  Select Case c%
-    Case < 100 : Cat s$, " alpha "
-    Case < 200 : Cat s$, " beta " : Inc c%, -100
-    Case < 300 : Cat s$, " RC " : Inc c%, -200
-    Case Else  : Cat s$, "." : Inc c%, -300
+  Const v_% = Choice(v%, v%, sys.VERSION)
+  Local s$ = Str$(v_%\10^5) + "." + Str$((v_% Mod 10^5) \ 10^3)
+  Select Case v_% Mod 1000
+    Case < 100 : Cat s$, " alpha " + Str$(v_% Mod 1000)
+    Case < 200 : Cat s$, " beta " + Str$((v_% Mod 1000) - 100)
+    Case < 300 : Cat s$, " RC " + Str$((v_% Mod 1000) - 200)
+    Case Else  : Cat s$, "." + Str$((v_% Mod 1000) - 300)
   End Select
-  sys.format_version$ = s$ + Str$(c%)
+  sys.format_version$ = s$
 End Function
 
 ' Formats a firmware integer version as a string.
 Function sys.format_firmware_version$(v%)
-  Const v_% = Choice(v%, v%, sys.FIRMWARE), a% = v_%\10^6, b% = (v_%-a%*10^6)\10^4
-  Const c% = (v_%-a%*10^6-b%*10^4)\100, d% = v_%-a%*10^6-b%*10^4-c%*100
-  Const digits% = Choice(Mm.Info(Device) = "MMB4L", 1, 2)
-  Const s$ = Str$(a%) + "." + Str$(b%,digits%,0,"0") + "." + Str$(c%,digits%,0,"0")
-  sys.format_firmware_version$ = s$ + Choice(d%, "b" + Str$(d%), "")
+  Const v_% = Choice(v%, v%, sys.FIRMWARE)
+  If Mm.Device$ = "MMB4L" Then
+    sys.format_firmware_version$ = sys.format_version$(v_% \ 10000)
+    If v_% Mod 10000 Then Cat sys.format_firmware_version$, " build " + Str$(v_% Mod 10000)
+  Else
+    Const a% = v_%\10^6, b% = (v_ Mod 10^6)\10^4, c% = (v_% Mod 10^4)\100
+    sys.format_firmware_version$ = Str$(a%) + "." + Str$(b%,2,0,"0") + "." + Str$(c%,2,0,"0")
+    Cat sys.format_firmware_version$, Choice(v_% Mod 100%, "b" + Str$(v_% Mod 100), "")
+  EndIf
 End Function
 
 ' Overrides Ctrl-C behaviour such that:

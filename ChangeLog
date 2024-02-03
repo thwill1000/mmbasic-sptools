@@ -29,6 +29,8 @@ Version 1.2.0 - 1-Feb-2024:
    - Changed menu.msgbox%() to support
      - message boxes with only one button.
      - optional frame colour.
+   - Changed sys.format_firmware$() to handle new (v0.6.0+) MMB4L version
+     number.
    - Renamed sys.is_device%() => sys.is_platform$().
    - Fixed bug in sys.is_device%("gamemite") which would always return 1 if not
      pre-processed.
