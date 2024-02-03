@@ -1,7 +1,7 @@
 ChangeLog
 ---------
 
-Version 1.2.0 - 1-Feb-2024:
+Version 1.2.0 - 3-Feb-2024:
  - splib:
    - Added subs/functions to 'bits.inc' to handle bit-sets > 64 bits:
        bits.big_clear()
@@ -31,7 +31,7 @@ Version 1.2.0 - 1-Feb-2024:
      - optional frame colour.
    - Changed sys.format_firmware$() to handle new (v0.6.0+) MMB4L version
      number.
-   - Renamed sys.is_device%() => sys.is_platform$().
+   - Renamed sys.is_device%() => sys.is_platform%().
    - Fixed bug in sys.is_device%("gamemite") which would always return 1 if not
      pre-processed.
    - Fixed bug in map2.put() when element already present.
