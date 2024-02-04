@@ -201,5 +201,6 @@ End Sub
 Sub override_platform(platform$)
   On Error Skip
   Erase sys.OVERRIDE_PLATFORM$
+  On Error Clear
   Dim sys.OVERRIDE_PLATFORM$ = platform$
 End Sub

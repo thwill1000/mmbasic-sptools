@@ -241,7 +241,9 @@ Function sys.PLATFORM$()
   sys.PLATFORM$ = Choice(InStr(Mm.Device$, "PicoMite"), Mm.Info$(Platform), "")
   If sys.PLATFORM$ = "" Then sys.PLATFORM$ = Mm.Device$
 
-  ' Allow platform to be overridden for unit-tests.
+  ' Allow platform to be overridden for unit-tests, but not if there is already
+  ' an error because the use of ON ERROR would discard the existing error.
+  If Mm.ErrNo Then Exit Function
   On Error Skip
   sys.PLATFORM$ = sys.OVERRIDE_PLATFORM$
   On Error Clear
@@ -306,7 +308,7 @@ Function sys.is_platform%(d1$, d2$, d3$, d4$, d5$)
       Case "picogame vga" : match$ = "|pgvga|pmvga*|pm*|"
       Case "picomite" : match$ = "|pm|pm*|"
       Case "picomitevga": match$ = "|pmvga|pmvga*|pm*|"
-      Case Else : Error "Unknown platform: " + sys.PLATFORM$
+      Case Else : Error "Unknown platform: " + sys.PLATFORM$()
     End Select
     If InStr(match$, "|" + LCase$(devices$(ii%)) + "|") Then Exit Function
     Inc ii%
