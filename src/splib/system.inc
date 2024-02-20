@@ -185,7 +185,7 @@ Function sys.format_firmware_version$(v%)
   Else
     Const a% = v_%\10^6, b% = (v_ Mod 10^6)\10^4, c% = (v_% Mod 10^4)\100
     sys.format_firmware_version$ = Str$(a%) + "." + Str$(b%,2,0,"0") + "." + Str$(c%,2,0,"0")
-    Cat sys.format_firmware_version$, Choice(v_% Mod 100%, "b" + Str$(v_% Mod 100), "")
+    Cat sys.format_firmware_version$, Choice(v_% Mod 100, "b" + Str$(v_% Mod 100), "")
   EndIf
 End Function
 
