@@ -4,6 +4,8 @@ ChangeLog
 Version 1.2.1 - ??-???-????:
  - splib:
    - Fixed syntax error in sys.format_firmware_version$() function.
+ - sptest:
+   - Added assert_string_neq() subroutine.
 
 Version 1.2.0 - 3-Feb-2024:
  - splib:
