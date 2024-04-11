@@ -98,6 +98,24 @@ Sub array.fill(a$(), x$)
   For i% = lb% To ub% : a$(i%) = x$ : Next
 End Sub
 
+' Finds a string in an array.
+'
+' @param  a$()    the array.
+' @param  s$      the string to find.
+' @param  flags$  "i" to search case-insensitively.
+' @return         the index of the element containing the value,
+'                 or -1 if not present.
+Function array.find_string%(a$(), s$, flags$)
+  Local i%
+  For i% = Bound(a$(), 0) To Bound(a$(), 1)
+    If Choice(InStr(flags$, "i"), LCase$(a$(i%)) = LCase$(s$), a$(i%) = s$) Then
+      array.find_string% = i%
+      Exit Function
+    Endif
+  Next
+  array.find_string% = -1
+End Function
+
 ' Returns a string consisting of the concatenated elements of a float array
 ' joined together with a delimiter.
 '

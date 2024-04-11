@@ -21,6 +21,8 @@ add_test("test_copy")
 add_test("test_fill")
 add_test("test_case_sens_bsearch")
 add_test("test_case_insens_bsearch")
+add_test("test_find")
+add_test("test_find_gvn_case_insensitive")
 add_test("test_join_floats")
 add_test("test_join_ints")
 add_test("test_join_strings")
@@ -149,6 +151,36 @@ Sub test_fill()
   Next
 End Sub
 
+Sub test_find()
+  Local a$(array.new%(6)) = ("foo", "BAR", "bar", "wom", "wom", "bat")
+
+  assert_int_equals(BASE + 0, array.find_string%(a$(), "foo"))
+  assert_int_equals(-1,       array.find_string%(a$(), "FOO"))
+  assert_int_equals(BASE + 2, array.find_string%(a$(), "bar"))
+  assert_int_equals(BASE + 1, array.find_string%(a$(), "BAR"))
+  assert_int_equals(BASE + 3, array.find_string%(a$(), "wom"))
+  assert_int_equals(-1,       array.find_string%(a$(), "WOM"))
+  assert_int_equals(BASE + 5, array.find_string%(a$(), "bat"))
+  assert_int_equals(-1,       array.find_string%(a$(), "BAT"))
+  assert_int_equals(-1,       array.find_string%(a$(), "snafu"))
+  assert_int_equals(-1,       array.find_string%(a$(), ""))
+End Sub
+
+Sub test_find_gvn_case_insensitive()
+  Local a$(array.new%(6)) = ("foo", "BAR", "bar", "wom", "wom", "bat")
+
+  assert_int_equals(BASE + 0, array.find_string%(a$(), "foo", "i"))
+  assert_int_equals(BASE + 0, array.find_string%(a$(), "FOO", "i"))
+  assert_int_equals(BASE + 1, array.find_string%(a$(), "bar", "i"))
+  assert_int_equals(BASE + 1, array.find_string%(a$(), "BAR", "i"))
+  assert_int_equals(BASE + 3, array.find_string%(a$(), "wom", "i"))
+  assert_int_equals(BASE + 3, array.find_string%(a$(), "WOM", "i"))
+  assert_int_equals(BASE + 5, array.find_string%(a$(), "bat", "i"))
+  assert_int_equals(BASE + 5, array.find_string%(a$(), "BAT", "i"))
+  assert_int_equals(-1,       array.find_string%(a$(), "snafu", "i"))
+  assert_int_equals(-1,       array.find_string%(a$(), "", "i"))
+End Sub
+
 Sub test_case_sens_bsearch()
   Local a$(array.new%(5)) = ("abc", "def", "ghi", "jkl", "mno")
 
@@ -157,18 +189,18 @@ Sub test_case_sens_bsearch()
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi"))
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl"))
   assert_int_equals(BASE + 4, array.bsearch%(a$(), "mno"))
-  assert_int_equals(-1,        array.bsearch%(a$(), "wombat"))
+  assert_int_equals(-1,       array.bsearch%(a$(), "wombat"))
 
   Local lb% = BASE + 1
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "", lb%))
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "", lb%))
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "", lb%))
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "", lb%))
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl", "", lb%))
   assert_int_equals(BASE + 4, array.bsearch%(a$(), "mno", "", lb%))
 
   lb% = BASE + 2
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "", lb%))
-  assert_int_equals(-1,        array.bsearch%(a$(), "def", "", lb%))
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "", lb%))
+  assert_int_equals(-1,       array.bsearch%(a$(), "def", "", lb%))
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "", lb%))
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl", "", lb%))
   assert_int_equals(BASE + 4, array.bsearch%(a$(), "mno", "", lb%))
@@ -179,29 +211,29 @@ Sub test_case_sens_bsearch()
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "", lb%, num%));
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "", lb%, num%));
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "", lb%, num%));
 
   num% = 3
   assert_int_equals(BASE + 0, array.bsearch%(a$(), "abc", "", lb%, num%));
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "", lb%, num%));
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "jkl", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "jkl", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "", lb%, num%));
 
   lb% = BASE + 1
   num% = 2
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "", lb%, num%));
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "", lb%, num%));
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "jkl", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "jkl", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "", lb%, num%));
 
   num% = 1
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "", lb%, num%));
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "ghi", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "jkl", "", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "ghi", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "jkl", "", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "", lb%, num%));
 
   ' Test that the search is case-sensitive.
   assert_int_equals(-1, array.bsearch%(a$(), "abC"))
@@ -219,18 +251,18 @@ Sub test_case_insens_bsearch()
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "i"))
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl", "i"))
   assert_int_equals(BASE + 4, array.bsearch%(a$(), "mno", "i"))
-  assert_int_equals(-1,        array.bsearch%(a$(), "wombat"))
+  assert_int_equals(-1,       array.bsearch%(a$(), "wombat"))
 
   Local lb% = BASE + 1
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "i", lb%))
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "i", lb%))
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "i", lb%))
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "i", lb%))
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl", "i", lb%))
   assert_int_equals(BASE + 4, array.bsearch%(a$(), "mno", "i", lb%))
 
   lb% = BASE + 2
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "i", lb%))
-  assert_int_equals(-1,        array.bsearch%(a$(), "def", "i", lb%))
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "i", lb%))
+  assert_int_equals(-1,       array.bsearch%(a$(), "def", "i", lb%))
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "i", lb%))
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl", "i", lb%))
   assert_int_equals(BASE + 4, array.bsearch%(a$(), "mno", "i", lb%))
@@ -241,29 +273,29 @@ Sub test_case_insens_bsearch()
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "i", lb%, num%));
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "i", lb%, num%));
   assert_int_equals(BASE + 3, array.bsearch%(a$(), "jkl", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "i", lb%, num%));
 
   num% = 3
   assert_int_equals(BASE + 0, array.bsearch%(a$(), "abc", "i", lb%, num%));
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "i", lb%, num%));
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "jkl", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "jkl", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "i", lb%, num%));
 
   lb% = BASE + 1
   num% = 2
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "i", lb%, num%));
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "i", lb%, num%));
   assert_int_equals(BASE + 2, array.bsearch%(a$(), "ghi", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "jkl", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "jkl", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "i", lb%, num%));
 
   num% = 1
-  assert_int_equals(-1,        array.bsearch%(a$(), "abc", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "abc", "i", lb%, num%));
   assert_int_equals(BASE + 1, array.bsearch%(a$(), "def", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "ghi", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "jkl", "i", lb%, num%));
-  assert_int_equals(-1,        array.bsearch%(a$(), "mno", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "ghi", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "jkl", "i", lb%, num%));
+  assert_int_equals(-1,       array.bsearch%(a$(), "mno", "i", lb%, num%));
 End Sub
 
 Sub test_join_floats()
