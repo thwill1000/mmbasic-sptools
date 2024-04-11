@@ -138,6 +138,16 @@ Function ut.sanitise_string$(s$)
   ut.sanitise_string$ = s2$
 End Function
 
+Sub assert_string_neq(unexpected$, actual$)
+  Inc ut.asserts_count%
+  If unexpected$ = actual$ Then
+    Const s$ = Choice(Len(actual$) = 1, "Chr$(" + Str$(Asc(actual$)) + ")", str.quote$(actual$))
+    ut.add_failure("Assert not equals failed, did not expect ")
+    LongString Append ut.failure_txt%(), ut.sanitise_string$(s$)
+    ut.update_failure()
+  EndIf
+End Sub
+
 Sub assert_int_array_equals(expected%(), actual%(), use_hex%)
   Inc ut.asserts_count%
 
