@@ -645,14 +645,14 @@ End Sub
 Sub test_get_files_given_too_many()
   given_file_tree()
   Local actual$(array.new%(2)) Length 128
-  Local expected$(array.new%(2)) Length 128
 
-  array.fill(actual$(), "")
   assert_int_equals(4, file.get_files%(TMPDIR$ + "/wombat-dir", "*", "all", actual$()))
-  array.fill(expected$(), "")
-  expected$(BASE% + 0) = "one.foo" ' Which of the 4 files is present will be system dependent.
-  expected$(BASE% + 1) = "subdir"
-  assert_string_array_equals(expected$(), actual$())
+
+  ' Which 2 of the 4 files is present is system dependent.
+  Local all_files$(array.new%(4)) Length 128 = ("one.foo", "two.foo", "three.bar", "subdir")
+  assert_int_neq(-1, array.find_string%(all_files$(), actual$(BASE% + 0)))
+  assert_int_neq(-1, array.find_string%(all_files$(), actual$(BASE% + 1)))
+  assert_string_neq(actual$(BASE% + 0), actual$(BASE% + 1))
 End Sub
 
 Sub test_trim_extension()
@@ -793,28 +793,25 @@ Sub test_depth_first_given_dir()
   list.init(actual$())
   assert_int_equals(sys.SUCCESS, file.depth_first%(TMPDIR$, "depth_first_callback%", 5))
 
-  ' The order of files at the same level may be a bit variable.
+  ' The order of files at the same level is system dependent.
   ' The important thing is that the contents of a directory is visited before
   ' the directory itself is.
-  Local expected$(list.new%(10))
-  list.init(expected$())
-  If actual$(BASE%) = file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5") Then
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
-  Else
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/foo_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/zzz_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir/wombat_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "/bar-dir_5"))
-    list.add(expected$(), file.get_canonical$(TMPDIR$ + "_5"))
-  EndIf
-  assert_string_array_equals(expected$(), actual$())
+  assert_int_neq(-1, find_path%(actual$(), "/bar-dir/wombat_5"))
+  assert_int_neq(-1, find_path%(actual$(), "/bar-dir_5"))
+  assert_int_neq(-1, find_path%(actual$(), "/foo_5"))
+  assert_int_neq(-1, find_path%(actual$(), "/zzz_5"))
+  assert_int_neq(-1, find_path%(actual$(), "_5"))
+  assert_true(find_path%(actual$(), "/bar-dir/wombat_5") < find_path%(actual$(), "/bar-dir_5"))
+  assert_true(find_path%(actual$(), "/bar-dir_5") < find_path%(actual$(), "_5"))
+  assert_true(find_path%(actual$(), "/foo_5") < find_path%(actual$(), "_5"))
+  assert_true(find_path%(actual$(), "/zzz_5") < find_path%(actual$(), "_5"))
 
   Erase actual$()
 End Sub
+
+Function find_path%(a$(), f$)
+  find_path% = array.find_string%(a$(), file.get_canonical$(TMPDIR$ + f$))
+End Function
 
 Sub test_depth_first_given_symlink()
   If Mm.Device$ <> "MMB4L" Then Exit Sub
