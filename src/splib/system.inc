@@ -52,6 +52,11 @@
   '!endif
 '!endif
 
+On Error Skip
+xyz_not_declared% = 1
+If Not Mm.ErrNo Then Error "OPTION EXPLICIT is required by splib"
+On Error Clear
+
 Const sys.VERSION = 103300 ' 1.3.0
 Const sys.NO_DATA$ = Chr$(&h7F)
 Const sys.CRLF$ = Chr$(13) + Chr$(10)
