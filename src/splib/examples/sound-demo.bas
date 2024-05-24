@@ -21,6 +21,8 @@ Option Explicit On
   '!replace { Mode 7 } { FrameBuffer Create }
 '!endif
 
+If Mm.Device$ = "MMB4L" Then Option Simulate "Colour Maximite 2"
+
 #Include "../ctrl.inc"
 #Include "../sound.inc"
 #Include "../string.inc"

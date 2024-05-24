@@ -1,4 +1,4 @@
-' Copyright (c) 2022-2023 Thomas Hugo Williams
+' Copyright (c) 2022-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 ' MMBasic Controller Library
@@ -680,6 +680,50 @@ End Sub
 ' Wii Nunchuk on I2C3.
 Sub wii_nunchuk_3(x%)
   wii_internal(3, x%, &h01)
+End Sub
+
+Sub mmb4l_gamepad_internal(id%, x%)
+  If x% >= 0 Then
+    x% = Device(Gamepad id%, B)
+    Exit Sub
+  EndIf
+
+  Select Case x%
+    Case ctrl.SOFT_CLOSE
+      Device Gamepad Close id%
+      ctrl.close_driver("mmb4l_gamepad_" + Str$(id%))
+      Exit Sub
+
+    Case ctrl.CLOSE
+      Device Gamepad Close id%
+      ctrl.close_driver("mmb4l_gamepad_" + Str$(id%))
+      Exit Sub
+
+    Case ctrl.OPEN
+      Device Gamepad Open id%
+      ctrl.open_driver("mmb4l_gamepad_" + Str$(id%))
+      Exit Sub
+  End Select
+End Sub
+
+' USB Gamepad 1 on MMB4L
+Sub mmb4l_gamepad_1(x%)
+  mmb4l_gamepad_internal(1, x%)
+End Sub
+
+' USB Gamepad 2 on MMB4L
+Sub mmb4l_gamepad_2(x%)
+  mmb4l_gamepad_internal(2, x%)
+End Sub
+
+' USB Gamepad 3 on MMB4L
+Sub mmb4l_gamepad_3(x%)
+  mmb4l_gamepad_internal(3, x%)
+End Sub
+
+' USB Gamepad 4 on MMB4L
+Sub mmb4l_gamepad_4(x%)
+  mmb4l_gamepad_internal(4, x%)
 End Sub
 
 '!if !defined(GAMEMITE)

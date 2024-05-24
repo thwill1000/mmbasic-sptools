@@ -1,9 +1,11 @@
-' Copyright (c) 2022-2023 Thomas Hugo Williams
+' Copyright (c) 2022-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 Option Base 0
 Option Default None
 Option Explicit On
+
+If Mm.Device$ = "MMB4L" Then Option Simulate "Game*Mite"
 
 '!define NO_INCLUDE_GUARDS
 

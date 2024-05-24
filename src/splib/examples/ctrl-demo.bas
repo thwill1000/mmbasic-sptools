@@ -1,4 +1,4 @@
-' Copyright (c) 2022-2023 Thomas Hugo Williams
+' Copyright (c) 2022-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 Option Base 0
@@ -13,6 +13,8 @@ Option Explicit On
 ' For CMM2 running MMBasic 5.07.02b6
 '!endif
 
+Const DEVICE$ = determine_device$()
+
 #Include "../system.inc"
 #Include "../bits.inc"
 #Include "../string.inc"
@@ -20,6 +22,8 @@ Option Explicit On
 
 If Mm.Device$ = "PicoMite" Then
   Const FONT_NUM = 7
+ElseIf Mm.Device$ = "MMB4L" Then
+  Const FONT_NUM = 1
 Else
   Const FONT_NUM = 1
   Mode 1
@@ -44,6 +48,23 @@ read_controller_data()
 show_menu()
 main_loop()
 end_program()
+
+' On MMB4L this sets OPTION SIMULATE based on any --simulate="..." command line flag,
+' on other devices/platforms is does nothing.
+'
+' @return Name to display for the current device/platform.
+Function determine_device$()
+  determine_device$ = Mm.Info(Device)
+  If Mm.Info(Device) <> "MMB4L" Then Exit Function
+  Local start% = InStr(Mm.CmdLine$, "--simulate=" + Chr$(34))
+  If Not start% Then Exit Function
+  Inc start%, 12
+  Local end% = InStr(start%, Mm.CmdLine$, Chr$(34))
+  If Not end% Then Exit Function
+  Const simulate$ = Mid$(Mm.CmdLine$, start%, end% - start%)
+  Option Simulate simulate$
+  determine_device$ = "MMB4L (" + simulate$ + ")"
+End Function
 
 Sub on_break()
   Option Break 3
@@ -84,11 +105,11 @@ End Sub
 Sub restore_controller_data()
   Select Case Mm.Device$
     Case "PicoMite", "PicoMiteVGA"
-'!if defined(GAMEMITE)
-      Restore controller_data_gamemite
-'!elif true
-      Restore controller_data_picomite
-'!endif
+      If Mm.Info(Platform) = "Game*Mite" Then
+        Restore controller_data_gamemite
+      Else
+        Restore controller_data_picomite
+      EndIf
     Case "Colour Maximite 2", "Colour Maximite 2 G2"
       Restore controller_data_cmm2
     Case "MMB4L"
@@ -103,7 +124,7 @@ End Sub
 Sub show_menu()
   Cls
   print_at(0, 0, "MMBasic Controller Driver Test " + sys.format_version$())
-  print_at(0, 1, "Running on " + Mm.Device$ + " " + Str$(Mm.Info(Version)))
+  print_at(0, 1, "Running on " + DEVICE$ + " " + sys.format_firmware_version$())
   print_at(0, 3,  "Select driver using [A-Z]")
   print_at(0, 4,  "Then 'play' with controller to test response")
   Local i%
@@ -116,7 +137,7 @@ End Sub
 Sub main_loop()
   Local bits%, current%, i%, s$
 
-  ctrl.init_keys();
+  ctrl.init_keys(Mm.Info$(Device X) = "MMB4L")
 
   Do
     If ctrl.keydown%(27) Then Exit Do ' Escape pressed.
@@ -144,7 +165,7 @@ Sub main_loop()
       Call ctrl$, bits%
       s$ = str.rpad$("Currently reading: " + ctrl.bits_to_string$(bits%), WIDTH%)
     Else
-      s$ = str.rpad$(Mid$(err$, InStr(err$, ":") + 1), WIDTH%)
+      s$ = str.rpad$(str.trim$(Mid$(err$, InStr(err$, ":") + 1)), WIDTH%)
     EndIf
     print_at(0, 8 + NUM_CTRL%, s$)
 
@@ -229,6 +250,10 @@ Data "", ""
 controller_data_mmb4l:
 
 Data "keys_cursor", "Keyboard: Cursor keys & Space"
+Data "mmb4l_gamepad_1", "USB Gamepad 1"
+Data "mmb4l_gamepad_2", "USB Gamepad 2"
+Data "mmb4l_gamepad_3", "USB Gamepad 3"
+Data "mmb4l_gamepad_4", "USB Gamepad 4"
 Data "", ""
 
 controller_data_mmb4w:
