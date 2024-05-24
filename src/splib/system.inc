@@ -65,7 +65,7 @@ Const sys.CRLF$ = Chr$(13) + Chr$(10)
   ' Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
   '!endif
 '!else
-If Mm.Info$(Device) = "MMB4L" Then
+If Mm.Info$(Device X) = "MMB4L" Then
   Const sys.FIRMWARE = Mm.Info(Version)
 Else
   Const sys.FIRMWARE = Int(1000000 * Mm.Info(Version))
@@ -183,7 +183,7 @@ End Function
 ' Formats a firmware integer version as a string.
 Function sys.format_firmware_version$(v%)
   Const v_% = Choice(v%, v%, sys.FIRMWARE)
-  If Mm.Device$ = "MMB4L" Then
+  If Mm.Info(Device X) = "MMB4L" Then
     sys.format_firmware_version$ = sys.format_version$(v_% \ 10000)
     If v_% Mod 10000 Then Cat sys.format_firmware_version$, " build " + Str$(v_% Mod 10000)
   Else
