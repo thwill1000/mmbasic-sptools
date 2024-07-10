@@ -282,6 +282,7 @@ Sub keys_cursor_ext(x%)
 End Sub
 
 Sub ctrl.open_driver(d$)
+  If Mm.ErrNo Then Exit Sub ' Do not record driver opening if failed.
   Cat ctrl.open_drivers$, d$ + ","
 End Sub
 
