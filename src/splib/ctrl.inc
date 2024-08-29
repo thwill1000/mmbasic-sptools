@@ -618,7 +618,7 @@ Sub wii_internal(i2c%, x%, type%)
           If Not(type% And &h01) Then
             Controller Nunchuk Close i2c%
             is_open%(i2c%) = -1
-            Error "Nunchuck controller on I2C" + Str$(i2c%) + " not supported"
+            Error "Nunchuk controller on I2C" + Str$(i2c%) + " not supported"
           EndIf
         Case &hA4200101
           Controller Nunchuk Close i2c%
@@ -680,6 +680,79 @@ End Sub
 ' Wii Nunchuk on I2C3.
 Sub wii_nunchuk_3(x%)
   wii_internal(3, x%, &h01)
+End Sub
+
+Sub wii_classic_pm(x%)
+  Select Case x%
+    Case >= 0
+      x% = Device(Wii b)
+      Exit Sub
+
+    Case ctrl.SOFT_CLOSE
+      ' Do nothing
+
+    Case ctrl.CLOSE
+      Device Wii Close
+      ctrl.close_driver("wii_classic_pm")
+
+    Case ctrl.OPEN
+      Device Wii Open
+      ctrl.open_driver("wii_classic_pm")
+  End Select
+End Sub
+
+Sub wii_nunchuk_pm(x%)
+  Select Case x%
+    Case >= 0
+      Const xa%, ya%, za%, c%, z%
+      read_val(xa%, ya%, za%, c%, z%)
+      x% =    z% * ctrl.A
+      Inc x%, c% * ctrl.B
+      Inc x%, ya% > 200 * ctrl.UP
+      Inc x%, ya% < 60  * ctrl.DOWN
+      Inc x%, xa% < 60  * ctrl.LEFT
+      Inc x%, xa% > 200 * ctrl.RIGHT
+      Exit Sub
+
+    Case ctrl.SOFT_CLOSE
+      ' Do nothing
+
+    Case ctrl.CLOSE
+      ' TODO
+      ctrl.close_driver("wii_classic_pm")
+
+    Case ctrl.OPEN
+      init_no_enc()
+      Const id% = read_id%()
+      If id% <> &hA4200000 Then Error "Not a Nunchuk controller"
+      ctrl.open_driver("wii_nunchuk_pm")
+  End Select
+End Sub
+
+Sub init_no_enc()
+  I2C Write &h52, 0, 2, &h40, &h00
+  Pause 10
+  I2C Write &h52, 0, 2, &hF0, &h55
+  I2C Write &h52, 0, 2, &hFB, &h00
+End Sub
+ 
+Function read_id%()
+  Local x%(5)
+  I2C Write &h52, 0, 1, &hFA
+  I2C Read &h52, 0, 6, x%()
+  read_id% = ((x(2)*256+x(3))*256+x(4))*256+x(5)
+End Function
+ 
+Sub read_val(xa%, ya%, za%, c%, z%)
+  Local x%(5)
+  I2C Write &h52, 0, 1, &h00
+  Pause 1 'needed for nunchuk response....
+  I2C Read &h52, 0, 6, x%()
+  xa% = 4*x%(2) + ((x%(5) And &b11000000) >> 6)
+  ya% = 4*x%(3) + ((x%(5) And &b00110000) >> 4)
+  za% = 4*x%(4) + ((x%(5) And &b00001100) >> 2)
+  c% = (x%(5) And &b00000010) >> 1
+  z% = x%(5) And &b00000001
 End Sub
 
 '!if !defined(GAMEMITE)
