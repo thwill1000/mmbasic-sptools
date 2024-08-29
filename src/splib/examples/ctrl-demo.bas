@@ -8,7 +8,7 @@ Option Explicit On
 '!if defined(GAMEMITE)
 ' For GameMite running PicoMite MMBasic 5.07.07
 '!elif defined(PICOMITE)
-' For PicoGAME VGA 1.4 running PicoMiteVGA MMBasic 5.07.07
+' For PicoGAME VGA 1.4 running PicoMiteVGA MMBasic 5.09
 '!elif defined(CMM2)
 ' For CMM2 running MMBasic 5.07.02b6
 '!endif
@@ -228,6 +228,8 @@ Data "nes_a",       "Port A: NES gamepad"
 Data "nes_b",       "Port B: NES gamepad"
 Data "snes_a",      "Port A: SNES gamepad"
 Data "snes_b",      "Port B: SNES gamepad"
+Data "wii_classic_pm", "Wii Classic Controller"
+Data "wii_nunchuk_pm", "Wii Nunchuk Controller"
 Data "", ""
 
 controller_data_cmm2:
