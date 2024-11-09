@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -227,6 +227,10 @@ Sub lx.parse_replace_directive()
       lx.advance()
     ElseIf InStr("{}", lx.char$) Then
       lx.parse_symbol()
+    ElseIf lx.char$ = Chr$(34) Then
+      lx.parse_string()
+      ' Not a STRING, but a REPLACEMENT token.
+      If sys.err$ = "" Then lx.type(lx.num - 1) = TK_KEYWORD
     Else
       start = lx.pos
       lx.advance()

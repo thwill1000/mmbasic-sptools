@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -119,6 +119,11 @@ Sub test_replace_directives()
   expect_token(0, TK_DIRECTIVE, "'!replace")
   expect_token(1, TK_KEYWORD,   "DEF")
   expect_token(2, TK_KEYWORD,   "Sub")
+
+  expect_parse_succeeds(str.decode$("'!replace \qFoo, Bar\q \qWom, Bat\q"), 3)
+  expect_token(0, TK_DIRECTIVE, "'!replace")
+  expect_token(1, TK_KEYWORD,    str.quote$("Foo, Bar"))
+  expect_token(2, TK_KEYWORD,    str.quote$("Wom, Bat"))
 
   expect_parse_succeeds("'!replace ENDPROC { End Sub }", 6)
   expect_token(0, TK_DIRECTIVE, "'!replace")
