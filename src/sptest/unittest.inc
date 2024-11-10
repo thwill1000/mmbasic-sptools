@@ -411,7 +411,7 @@ Function ut.run_single_test%(idx%)
         j% = ut.failure_start%(i%)
         Do
           Print LGetStr$(ut.failure_txt%(), j%, Min(255, ut.failure_len%(i%)));
-          Inc j%, Min(255, ut.failure_len%(i%))
+          Inc j%, ut.failure_len%(i%)
         Loop While j% < ut.failure_len%(i%)
       Next
       If ut.failure_count% > ut.MAX_FAILURES% Then
