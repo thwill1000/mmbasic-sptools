@@ -47,7 +47,9 @@ add_test("test_get_token_lc")
 add_test("test_old_tokens_cleared")
 add_test("test_parse_command_line")
 add_test("test_csub")
+add_test("test_csub_given_name_is_dword")
 add_test("test_cfunction")
+add_test("test_cfunc_given_name_is_dword")
 add_test("test_define_font")
 add_test("test_hash_bang")
 add_test("test_insert_token")
@@ -420,23 +422,23 @@ End Sub
 Sub test_csub(s$)
   If Not Len(s$) Then s$ = "CSub"
 
-  ' Within the confines of the CSUB we expect numbers to be treated as identifiers.
+  ' Within the confines of the CSUB 8-digit hex numbers should to be parsed as DWORD.
   expect_parse_succeeds(s$ + " foo() 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End " + s$, 13)
   expect_token(0, TK_KEYWORD,    s$)
   expect_token(1, TK_IDENTIFIER, "foo")
   expect_token(2, TK_SYMBOL,     "(")
   expect_token(3, TK_SYMBOL,     ")")
-  expect_token(4, TK_IDENTIFIER, "00000000")
-  expect_token(5, TK_IDENTIFIER, "00AABBCC")
-  expect_token(6, TK_IDENTIFIER, "0.7")
-  expect_token(7, TK_IDENTIFIER, "&hFF")
-  expect_token(8, TK_IDENTIFIER, "&b0101")
-  expect_token(9, TK_IDENTIFIER, "&o1234")
-  expect_token(10, TK_IDENTIFIER, "FFFFFFFF")
-  expect_token(11, TK_KEYWORD,    "End")
-  expect_token(12, TK_KEYWORD,    s$)
+  expect_token(4, TK_DWORD,      "00000000")
+  expect_token(5, TK_DWORD,      "00AABBCC")
+  expect_token(6, TK_NUMBER,     "0.7")
+  expect_token(7, TK_NUMBER,     "&hFF")
+  expect_token(8, TK_NUMBER,     "&b0101")
+  expect_token(9, TK_NUMBER,     "&o1234")
+  expect_token(10, TK_DWORD,     "FFFFFFFF")
+  expect_token(11, TK_KEYWORD,   "End")
+  expect_token(12, TK_KEYWORD,   s$)
 
-  ' But once we get outside the CSUB numbers and identifiers are distinct again.
+  ' But once we get outside the CSUB they should be parsed as NUMBERs/IDENTIFIERs.
   expect_parse_succeeds("0.12345 00AABBCC", 3)
   expect_token(0, TK_NUMBER,     "0.12345")
   expect_token(1, TK_NUMBER,     "00")
@@ -450,15 +452,15 @@ Sub test_csub(s$)
   expect_token(3, TK_SYMBOL,     ")")
   expect_token(4, TK_COMMENT,    "' comment")
 
-  expect_parse_succeeds("  00000000", 1, TK_IDENTIFIER, "00000000")
+  expect_parse_succeeds("  00000000", 1, TK_DWORD, "00000000")
 
   expect_parse_succeeds("  00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF", 6)
-  expect_token(0, TK_IDENTIFIER, "00AABBCC")
-  expect_token(1, TK_IDENTIFIER, "0.7")
-  expect_token(2, TK_IDENTIFIER, "&hFF")
-  expect_token(3, TK_IDENTIFIER, "&b0101")
-  expect_token(4, TK_IDENTIFIER, "&o1234")
-  expect_token(5, TK_IDENTIFIER, "FFFFFFFF")
+  expect_token(0, TK_DWORD, "00AABBCC")
+  expect_token(1, TK_NUMBER, "0.7")
+  expect_token(2, TK_NUMBER, "&hFF")
+  expect_token(3, TK_NUMBER, "&b0101")
+  expect_token(4, TK_NUMBER, "&o1234")
+  expect_token(5, TK_DWORD,  "FFFFFFFF")
 
   expect_parse_succeeds("End " + s$, 2)
   expect_token(0, TK_KEYWORD, "End")
@@ -470,26 +472,45 @@ Sub test_csub(s$)
   expect_token(2, TK_IDENTIFIER, "AABBCC")
 End Sub
 
+Sub test_csub_given_name_is_dword(s$)
+  If Not Len(s$) Then s$ = "CSub"
+
+  ' The name of the CSUB should be parsed as an IDENTIFIER not a DWORD,
+  ' even if it matches the DWORD pattern.
+  expect_parse_succeeds(s$ + " abcdef12() ABCDEF12 End " + s$, 7)
+  expect_token(0, TK_KEYWORD,    s$)
+  expect_token(1, TK_IDENTIFIER, "abcdef12")
+  expect_token(2, TK_SYMBOL,     "(")
+  expect_token(3, TK_SYMBOL,     ")")
+  expect_token(4, TK_DWORD,      "ABCDEF12")
+  expect_token(5, TK_KEYWORD,    "End")
+  expect_token(6, TK_KEYWORD,    s$)
+End Sub
+
 Sub test_cfunction()
   test_csub("CFunction")
 End Sub
 
-Sub test_define_font()
-  ' Within the confines of the DEFINEFONT we expect numbers to be treated as identifiers.
-  expect_parse_succeeds("DefineFont 9 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End DefineFont", 11))
-  expect_token(0, TK_KEYWORD,    "DefineFont")
-  expect_token(1, TK_IDENTIFIER, "9")
-  expect_token(2, TK_IDENTIFIER, "00000000")
-  expect_token(3, TK_IDENTIFIER, "00AABBCC")
-  expect_token(4, TK_IDENTIFIER, "0.7")
-  expect_token(5, TK_IDENTIFIER, "&hFF")
-  expect_token(6, TK_IDENTIFIER, "&b0101")
-  expect_token(7, TK_IDENTIFIER, "&o1234")
-  expect_token(8, TK_IDENTIFIER, "FFFFFFFF")
-  expect_token(9, TK_KEYWORD,    "End")
-  expect_token(10, TK_KEYWORD,    "DefineFont")
+Sub test_cfunc_given_name_is_dword()
+  test_csub_given_name_is_dword("CFunction")
+End Sub
 
-  ' But once we get outside the DEFINEFONT numbers and identifiers are distinct again.
+Sub test_define_font()
+  ' Within the confines of the DEFINEFONT 8-digit hex numbers should to be parsed as DWORD.
+  expect_parse_succeeds("DefineFont 9 00000000 00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF End DefineFont", 11)
+  expect_token(0, TK_KEYWORD,  "DefineFont")
+  expect_token(1, TK_NUMBER,   "9")
+  expect_token(2, TK_DWORD,    "00000000")
+  expect_token(3, TK_DWORD,    "00AABBCC")
+  expect_token(4, TK_NUMBER,   "0.7")
+  expect_token(5, TK_NUMBER,   "&hFF")
+  expect_token(6, TK_NUMBER,   "&b0101")
+  expect_token(7, TK_NUMBER,   "&o1234")
+  expect_token(8, TK_DWORD,    "FFFFFFFF")
+  expect_token(9, TK_KEYWORD,  "End")
+  expect_token(10, TK_KEYWORD, "DefineFont")
+
+  ' But once we get outside the DEFINEFONT they should be parsed as NUMBERs/IDENTIFIERs.
   expect_parse_succeeds("0.12345 00AABBCC", 3)
   expect_token(0, TK_NUMBER,     "0.12345")
   expect_token(1, TK_NUMBER,     "00")
@@ -497,19 +518,19 @@ Sub test_define_font()
 
   ' It should also work when the DEFINEFONT is split over multiple lines.
   expect_parse_succeeds("DefineFont 9 ' comment", 3)
-  expect_token(0, TK_KEYWORD,    "DefineFont")
-  expect_token(1, TK_IDENTIFIER, "9")
-  expect_token(2, TK_COMMENT,    "' comment")
+  expect_token(0, TK_KEYWORD, "DefineFont")
+  expect_token(1, TK_NUMBER,  "9")
+  expect_token(2, TK_COMMENT, "' comment")
 
-  expect_parse_succeeds("  00000000", 1, TK_IDENTIFIER, "00000000")
+  expect_parse_succeeds("  00000000", 1, TK_DWORD, "00000000")
 
   expect_parse_succeeds("  00AABBCC 0.7 &hFF &b0101 &o1234 FFFFFFFF", 6)
-  expect_token(0, TK_IDENTIFIER, "00AABBCC")
-  expect_token(1, TK_IDENTIFIER, "0.7")
-  expect_token(2, TK_IDENTIFIER, "&hFF")
-  expect_token(3, TK_IDENTIFIER, "&b0101")
-  expect_token(4, TK_IDENTIFIER, "&o1234")
-  expect_token(5, TK_IDENTIFIER, "FFFFFFFF")
+  expect_token(0, TK_DWORD,  "00AABBCC")
+  expect_token(1, TK_NUMBER, "0.7")
+  expect_token(2, TK_NUMBER, "&hFF")
+  expect_token(3, TK_NUMBER, "&b0101")
+  expect_token(4, TK_NUMBER, "&o1234")
+  expect_token(5, TK_DWORD,  "FFFFFFFF")
 
   expect_parse_succeeds("End DefineFont", 2)
   expect_token(0, TK_KEYWORD, "End")

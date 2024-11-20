@@ -31,7 +31,12 @@ Const TK_SYMBOL = 6
 Const TK_DIRECTIVE = 7
 Const TK_LABEL = 8
 Const TK_OPTION = 9
+Const TK_DWORD = 10
 '!endif
+
+Const LX_ST_DEFAULT = 0
+Const LX_ST_NAME = 1
+Const LX_ST_BODY = 2
 
 Const LX_MAX_TOKENS = 255 ' In theory every character may be a separate token.
 Dim lx.type(LX_MAX_TOKENS - 1)
@@ -43,8 +48,7 @@ Dim lx.line$
 Dim lx.next_char$
 Dim lx.num         ' number of tokens.
 Dim lx.pos
-Dim lx.csub        ' 1 if we are tokenising within a CFUNCTION|CSUB definition, otherwise 0.
-Dim lx.font        ' 1 if we are tokenising within a DEFINEFONT definition, otherwise 0.
+Dim lx.state% = LX_ST_DEFAULT
 
 ' Parses a line of BASIC code.
 '
@@ -57,12 +61,10 @@ Function lx.parse_basic%(line$)
   Do While lx.char$ <> Chr$(10)
     If lx.char$ = " " Then
       lx.advance()
+    ElseIf (lx.state% = LX_ST_BODY) And (InStr("0123456789abcdef", lx.char$) > 0) Then
+      lx.parse_dword()
     ElseIf InStr("&.0123456789", lx.char$) Then
-      If lx.csub Or lx.font Then
-        lx.parse_identifier()
-      Else
         lx.parse_number()
-      EndIf
     ElseIf lx.char$ = "'" Then
       lx.parse_comment_or_directive()
     ElseIf lx.char$ = Chr$(34) Then
@@ -107,7 +109,12 @@ Sub lx.advance()
   Else
     lx.next_char$ = Chr$(10)
   EndIf
+End Sub
 
+Sub lx.rewind(new_pos)
+  lx.pos = new_pos - 1
+  lx.next_char$ = ""
+  lx.advance()
 End Sub
 
 Sub lx.parse_number()
@@ -123,6 +130,23 @@ Sub lx.parse_number()
     Else
       sys.err$ = "Unknown literal type &" + lx.next_char$
     EndIf
+  EndIf
+End Sub
+
+Sub lx.parse_dword()
+  Const start = lx.pos
+  lx.advance_while("0123456789abcdef")
+  If lx.char$ = "." Then
+    lx.rewind(start)
+    lx.parse_number()
+  ElseIf InStr("_abcdefghijklmnopqrstuvwxyz", lx.char$) Then
+    lx.pos = start
+    lx.parse_identifier()
+  ElseIf lx.pos - start = 8 Then
+    lx.store(TK_DWORD, start, 8)
+  Else
+    lx.rewind(start)
+    lx.parse_number()
   EndIf
 End Sub
 
@@ -300,12 +324,29 @@ Sub lx.parse_identifier()
   If keywords.contains%(Mid$(lx.line$, start, ln%)) Then
     lx.store(TK_KEYWORD, start, ln%)
     Select Case lx.token_lc$(lx.num - 1)
-      Case "csub", "cfunction" : lx.csub = Not lx.csub
-      Case "definefont" : lx.font = Not lx.font
+      Case "csub", "cfunction"
+        Select Case lx.state%
+          Case LX_ST_DEFAULT
+            lx.state = LX_ST_NAME
+          Case LX_ST_BODY
+            lx.state = LX_ST_DEFAULT
+          Case Else
+            Error "Unexpected token: " + UCase$(lx.token_lc$(lx.num - 1))
+        End Select
+      Case "definefont"
+        Select Case lx.state%
+          Case LX_ST_DEFAULT
+            lx.state = LX_ST_BODY
+          Case LX_ST_BODY
+            lx.state = LX_ST_DEFAULT
+          Case Else
+            Error "Unexpected token: " + UCase$(lx.token_lc$(lx.num - 1))
+        End Select
     End Select
   Else
     lx.store(TK_IDENTIFIER, start, ln%)
     If Right$(lx.token$(lx.num - 1), 1) = ":" Then lx.type(lx.num - 1) = TK_LABEL
+    If lx.state% = LX_ST_NAME Then lx.state% = LX_ST_BODY
   EndIf
 End Sub
 
@@ -471,6 +512,7 @@ Sub lx.dump()
       Case TK_DIRECTIVE  : type$ = "DIRECTIVE "
       Case TK_LABEL      : type$ = "LABEL     "
       Case TK_OPTION     : type$ = "OPTION    "
+      Case TK_DWORD      : type$ = "DWORD     "
       Case Else          : type$ = "<UNKNOWN> "
     End Select
     Print Str$(i%) ": " type$ ", " Str$(lx.start%(i%)) ", " Str$(lx.len%(i%)) ", [[[" lx.token$(i%) "]]]"
