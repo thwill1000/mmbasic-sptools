@@ -10,7 +10,7 @@ sys.provides("output")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
-Dim TK_COLOUR$(8) Length 12
+Dim TK_COLOUR$(10) Length 12
 TK_COLOUR$(TK_IDENTIFIER) = vt100.colour$("white")
 TK_COLOUR$(TK_NUMBER)     = vt100.colour$("green")
 TK_COLOUR$(TK_COMMENT)    = vt100.colour$("yellow")
@@ -19,6 +19,8 @@ TK_COLOUR$(TK_KEYWORD)    = vt100.colour$("cyan")
 TK_COLOUR$(TK_SYMBOL)     = vt100.colour$("white")
 TK_COLOUR$(TK_DIRECTIVE)  = vt100.colour$("red")
 TK_COLOUR$(TK_LABEL)      = vt100.colour$("green")
+TK_COLOUR$(TK_OPTION)     = vt100.colour$("white")
+TK_COLOUR$(TK_DWORD)      = vt100.colour$("green")
 
 Dim out.append%
 Dim out.eol$ = Chr$(10)
