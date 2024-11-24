@@ -256,13 +256,9 @@ Sub ctrl.wait_until_idle(d1$, d2$, d3$, d4$, d5$)
 End Sub
 
 ' Reads the keyboard as if it were a controller.
-'
-' Note that the PicoMite has no KEYDOWN function so we are limited to
-' reading a single keypress from the input buffer and cannot handle multiple
-' simultaneous keys or properly handle a key being pressed and not released.
 Sub keys_cursor(x%)
   If x% < 0 Then Exit Sub
-  x% =    ctrl.keydown%(32)  * ctrl.A
+  x% =    ctrl.keydown%(32)  * ctrl.A ' Space
   Inc x%, ctrl.keydown%(128) * ctrl.UP
   Inc x%, ctrl.keydown%(129) * ctrl.DOWN
   Inc x%, ctrl.keydown%(130) * ctrl.LEFT
@@ -271,14 +267,15 @@ End Sub
 
 Sub keys_cursor_ext(x%)
   If x% < 0 Then Exit Sub
-  x% =    ctrl.keydown%(32)  * ctrl.A ' Space
-  Inc x%, ctrl.keydown%(98)  * ctrl.B ' B
-  Inc x%, (ctrl.keydown%(101) Or ctrl.keydown%(113)) * ctrl.SELECT ' E or Q
+  x% = (ctrl.keydown%(32) Or ctrl.keydown%(120)) * ctrl.A ' Space or X
+  Inc x%, ctrl.keydown%(122) * ctrl.B ' Z
+  Inc x%, ctrl.keydown%(97)  * ctrl.SELECT ' A
   Inc x%, ctrl.keydown%(115) * ctrl.START ' S
   Inc x%, ctrl.keydown%(128) * ctrl.UP
   Inc x%, ctrl.keydown%(129) * ctrl.DOWN
   Inc x%, ctrl.keydown%(130) * ctrl.LEFT
   Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
+  Inc x%, ctrl.keydown%(27)  * ctrl.HOME ' Escape
 End Sub
 
 Sub ctrl.open_driver(d$)
@@ -296,6 +293,12 @@ Sub ctrl.close_driver(d$)
     Case Else
       ctrl.open_drivers$ = Mid$(ctrl.open_drivers$, 1, idx% - 1) + Mid$(ctrl.open_drivers$, idx% + Len(d$) + 1)
   End Select
+End Sub
+
+' Driver subroutine for "No controller".
+'!dynamic_call ctrl.no_controller
+Sub ctrl.no_controller(x%)
+  x% = 0
 End Sub
 
 ' Atari joystick on PicoGAME Port A.

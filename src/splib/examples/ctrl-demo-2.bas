@@ -5,42 +5,50 @@ Option Base 0
 Option Default None
 Option Explicit On
 
-If Mm.Device$ = "MMB4L" Then Option Simulate "Game*Mite"
-
 '!define NO_INCLUDE_GUARDS
-
-#Include "../system.inc"
 
 '!if defined(PICOMITEVGA)
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N , B }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { Mode 2 : FrameBuffer Create }
+  '!replace { Option Simulate "Colour Maximite 2" } { Option Simulate "PicoMiteVGA" }
+  '!replace { Const ctrl$ = "wii_classic_3" } { Const ctrl$ = "snes_a" }
+  '!dynamic_call snes_a
 '!elif defined(PICOMITE) || defined(GAMEMITE)
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { FrameBuffer Create }
+  '!replace { Const ctrl$ = "wii_classic_3" } { Const ctrl$ = "ctrl.gamemite" }
+  '!dynamic_call ctrl.gamemite
+'!else
+  '!dynamic_call wii_classic_3
 '!endif
 
+If Mm.Device$ = "MMB4L" Then
+  Option Simulate "Colour Maximite 2"
+  Option CodePage CMM2
+EndIf
+
+#Include "../system.inc"
 #Include "../ctrl.inc"
 #Include "../sound.inc"
 #Include "../string.inc"
 #Include "../txtwm.inc"
 #Include "../menu.inc"
-#Include "../gamemite.inc"
+#Include "../game.inc"
 
-'!dynamic_call ctrl.gamemite
-'!dynamic_call keys_cursor_ext
+Const GAMEPAD_DRIVER$ = "wii_classic_3"
 
 Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
-Dim CTRL_DRIVERS$(1) = ("ctrl.gamemite", "keys_cursor_ext")
+Dim CTRL_DRIVERS$(1) = (GAMEPAD_DRIVER$, "keys_cursor_ext")
 
 '!if !defined(GAMEMITE)
-If sys.is_platform%("mmb4l") Then Option CodePage CMM2
 If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
 '!endif
 Mode 7
+If Mm.Info$(Device X) = "MMB4L" Then Graphics Title 0, "MMBasic for Linux - Controller Test"
 Page Write 1
 
 main()
@@ -50,11 +58,19 @@ Sub main()
   ctrl.init_keys()
   sys.override_break()
   sound.init()
-  Local ctrl_idx% = Choice(sys.PLATFORM$() = "Game*Mite", 0, 1)
+  Local ctrl_idx% = 0
   menu.init(CTRL_DRIVERS$(ctrl_idx%), "menu_cb")
   menu.load_data("main_menu_data")
   menu.selection% = ctrl_idx% + 2
+  On Error Ignore
   Call menu.ctrl$, ctrl.OPEN
+  On Error Abort
+  If Mm.ErrNo Then
+    menu.ctrl$ = "ctrl.no_controller"
+    ' NOTE: Connection/disconnection whilst program is running is not responded to.
+    menu.items$(2) = str.replace$(menu.items$(2), "               ", " (Disconnected)")
+  EndIf
+  
   menu.render(1)
 
   Local i%, key%, old%, t% = 0
@@ -65,7 +81,7 @@ Sub main()
     ElseIf ctrl.keydown%(Asc("2")) Then
       menu.select_item(3)
     Else
-      Call menu.ctrl$, key%
+      If Len(menu.ctrl$) Then Call menu.ctrl$, key% Else key% = 0
       If key% = ctrl.A Then
         If t% = 0 Then t% = Timer + 2000
         If Timer >= t% Then on_quit()
@@ -110,13 +126,15 @@ End Sub
 Sub on_selection_changed(cb_data$)
   On Error Ignore
   Call menu.ctrl$, ctrl.CLOSE
-  Local err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
   On Error Abort
+
   menu.ctrl$ = CTRL_DRIVERS$(menu.selection% - 2)
+
   On Error Ignore
   Call menu.ctrl$, ctrl.OPEN
-  err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
   On Error Abort
+  If Mm.ErrNo Then menu.ctrl$ = "ctrl.no_controller"
+
   on_render()
 End Sub
 
@@ -158,7 +176,7 @@ Sub on_quit()
   Const msg$ = str.decode$("\nAre you sure you want to quit this program?")  
   Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
     Case "Yes"
-      gamemite.end()
+      game.end()
     Case "No"
       twm.switch(menu.win1%)
       twm.redraw()
@@ -171,7 +189,7 @@ End Sub
 main_menu_data:
 Data "\x9F Controller Test \x9F|"
 Data "|"
-Data " 1) GameMite gamepad             |menu.cmd_open|music_menu_data"
+Data " 1) Gamepad                       |menu.cmd_open|music_menu_data"
 Data " 2) Keyboard: Cursor keys & Space |menu.cmd_open|music_menu_data"
 Data "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|"
 Data ""

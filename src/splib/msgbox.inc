@@ -11,14 +11,20 @@ If sys.err$ <> "" Then Error sys.err$
 '!endif
 
 Const msgbox.NO_PAGES = &h01
+Dim msgbox.buffer% = 64
 
 Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg%, frame%, flags%)
+  Const key_driver$ = msgbox.key_driver$()
   Const base% = Mm.Info(Option Base), num% = Bound(buttons$(), 1) - base% + 1
   Local i%, btn_x%(num%), p% = 1
   btn_x%(base%) = x% + 2
   For i% = base% + 1 To base% + num% - 1
     btn_x%(i%) = btn_x%(i% - 1) + Len(buttons$(i% - 1)) + 5
   Next
+
+  ' Backup display.
+  Const fh% = Mm.Info(FontHeight), fw% = Mm.Info(FontWidth)
+  Blit Read msgbox.buffer%, x% * fw%, y% * fh%, w% * fw%, h% * fh%
 
   msgbox.box(x%, y%, w%, h%, 1, Choice(frame% = -1, fg%, frame%), bg%)
   i% = y% + 2
@@ -35,11 +41,13 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
       For i% = base% To base% + num% - 1
         msgbox.button(btn_x%(i%), y% + h% - 4, buttons$(i%), i% = msgbox.show%, fg%, bg%)
       Next
-      If Not flags% And msgbox.NO_PAGES Then Page Copy 1 To 0, B
+      If Not flags% And msgbox.NO_PAGES Then
+        If sys.is_platform%("pm*") Then FrameBuffer Copy F , N , B Else Page Copy 1 To 0, B
+      EndIf
       valid% = 0
     EndIf
     Call ctrl$, key%
-    If Not key% Then keys_cursor(key%)
+    If Not key% Then Call key_driver$, key%
     If Not key% Then released% = 1 : Continue Do
     If Not released% Then key% = 0 : Continue Do
     valid% = 0
@@ -56,11 +64,27 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
     Pause ctrl.UI_DELAY - 100
   Loop Until key% = ctrl.SELECT
 
-  ctrl.wait_until_idle(ctrl$, "keys_cursor")
+  ctrl.wait_until_idle(ctrl$, key_driver$)
+
+  ' Restore display.
+  Blit Write msgbox.buffer%, x% * fw%, y% * fh%
+  Blit Close msgbox.buffer%
+End Function
+
+' Gets the driver routine to use for reading the keyboard.
+Function msgbox.key_driver$()
+  Local key%
+  msgbox.key_driver$ = "keys_cursor"
+  On Error Skip
+  Call msgbox.key_driver$, key%
+  If Mm.ErrNo Then msgbox.key_driver$ = "keys_cursor_ext"
+  On Error Skip
+  Call msgbox.key_driver$, key%
+  If Mm.ErrNo Then msgbox.key_driver$ = "ctrl.no_controller"
 End Function
 
 Sub msgbox.button(x%, y%, txt$, selected%, fg%, bg%)
-  msgbox.box(x%, y%, Len(txt$) + 4, 3, 0, fg%, bg%)
+  msgbox.box(x%, y%, Len(txt$) + 4, 3, 0, fg%, -1)
   Const fg_% = Choice(selected%, bg%, fg%)
   Const bg_% = Choice(selected%, fg%, bg%)
   msgbox.print_at(x% + 2, y% + 1, txt$, fg_%, bg_%)
@@ -69,7 +93,7 @@ End Sub
 Sub msgbox.box(x%, y%, w%, h%, dbl%, fg%, bg%)
   Const fh% = Mm.Info(FontHeight), fw% = Mm.Info(FontWidth)
   Local d% = fw% \ 2
-  Box x% * fw%, y% * fh%, w% * fw%, h% * fh%, , bg%, bg%
+  If bg% >= 0 Then Box x% * fw%, y% * fh%, w% * fw%, h% * fh%, , bg%, bg%
   Box x% * fw% + d%, y% * fh% + d%, w% * fw% - 2 * d%, h% * fh% - 2 * d%, 1, fg%
   Inc d%, d%
   If dbl% Then Box x% * fw% + d%, y% * fh% + d%, w% * fw% - 2 * d%, h% * fh% - 2 * d%, 1, fg%
@@ -89,6 +113,7 @@ Sub msgbox.beep(valid%)
     Local notes!(4) = (1046.50, 987.77, 739.99, 698.46, 30.87) ' C6,B5,F#5,F5,-
   EndIf
   Play Stop
+  Pause 10 ' The PAUSE helps to suppress an (MMB4L specific?) audio glitch.
   Local i%
   For i% = Bound(notes!(), 0) To Bound(notes!(), 1)
     If notes!(i%) > 16.0 Then Play Sound 4, B, S, notes!(i%), 25

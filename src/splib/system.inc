@@ -228,7 +228,7 @@ End Sub
   '!replace { sys.HOME$ ( ) } { "A:" }
 '!else
 Function sys.HOME$()
-  Select Case Mm.Device$
+  Select Case Mm.Info$(Device X)
     Case "MMB4L"
       sys.HOME$ = Mm.Info$(EnvVar "HOME")
     Case "MMBasic for Windows"

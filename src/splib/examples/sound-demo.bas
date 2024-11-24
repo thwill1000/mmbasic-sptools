@@ -1,4 +1,4 @@
-' Copyright (c) 2023 Thomas Hugo Williams
+' Copyright (c) 2023-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 Option Base 0
@@ -7,28 +7,39 @@ Option Explicit On
 
 '!define NO_INCLUDE_GUARDS
 
-#Include "../system.inc"
-
-'!if defined PICOMITEVGA
+'!if defined(PICOMITEVGA)
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N , B }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { Mode 2 : FrameBuffer Create }
+  '!replace { Option Simulate "Colour Maximite 2" } { Option Simulate "PicoMiteVGA" }
+  '!replace { Const GAMEPAD_DRIVER$ = "wii_classic_3" } { Const GAMEPAD_DRIVER$ = "snes_a" }
+  '!dynamic_call snes_a
 '!elif defined(PICOMITE) || defined(GAMEMITE)
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { FrameBuffer Create }
+  '!replace { Const GAMEPAD_DRIVER$= "wii_classic_3" } { Const GAMEPAD_DRIVER$ = "ctrl.gamemite" }
+  '!dynamic_call ctrl.gamemite
+'!else
+  '!dynamic_call wii_classic_3
 '!endif
 
-If Mm.Device$ = "MMB4L" Then Option Simulate "Colour Maximite 2"
+If Mm.Device$ = "MMB4L" Then
+  Option Simulate "Colour Maximite 2"
+  Option CodePage CMM2
+EndIf
 
+#Include "../system.inc"
 #Include "../ctrl.inc"
 #Include "../sound.inc"
 #Include "../string.inc"
 #Include "../txtwm.inc"
 #Include "../menu.inc"
-#Include "../gamemite.inc"
+#Include "../game.inc"
+
+Const GAMEPAD_DRIVER$ = "wii_classic_3"
 
 If InStr(Mm.Device$, "PicoMite") Then
   Dim CHANNELS$(3) Length 14
@@ -66,22 +77,23 @@ Dim octave_idx% = 0
 Dim type_idx% = 0
 
 '!if !defined(GAMEMITE)
-If sys.is_platform%("mmb4l") Then Option CodePage CMM2
 If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
 '!endif
 Mode 7
+If Mm.Info$(Device X) = "MMB4L" Then Graphics Title 0, "MMBasic for Linux - Sound Test"
 Page Write 1
 
 main()
 Error "Invalid state"
 
 Sub main()
-  '!dynamic_call ctrl.gamemite
-  '!dynamic_call keys_cursor_ext
-  Const ctrl$ = Choice(sys.PLATFORM$() = "Game*Mite", "ctrl.gamemite", "keys_cursor_ext")
+  Local ctrl$ = GAMEPAD_DRIVER$
   ctrl.init_keys()
   sys.override_break()
+  On Error Ignore
   Call ctrl$, ctrl.OPEN
+  If Mm.ErrNo Then ctrl$ = "ctrl.no_controller"
+  On Error Abort
   sound.init("fx_test_int", "music_test_int")
   menu.init(ctrl$, "menu_cb")
   update_menu_data("main_menu_data")
@@ -215,7 +227,7 @@ Sub update_menu_data(data_label$)
     menu.items$(idx% + 2) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
   EndIf
 
-  If sys.PLATFORM$() = "Game*Mite" Then
+  If menu.ctrl$ <> "ctrl.no_controller" Then
     menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and SELECT|")
   EndIf
 End Sub
@@ -333,7 +345,7 @@ Sub cmd_quit(key%)
       Const msg$ = str.decode$("\nAre you sure you want to quit this program?")
       Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
         Case "Yes"
-          gamemite.end()
+          game.end()
         Case "No"
           twm.switch(menu.win1%)
           twm.redraw()

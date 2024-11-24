@@ -114,7 +114,7 @@ Sub menu.main_loop()
   Do
     If sys.break_flag% Then menu.on_break()
     Call menu.ctrl$, key%
-    If Not key% Then keys_cursor(key%)
+    If Not key% Then keys_cursor_ext(key%)
     menu.process_key(key%)
   Loop
 End Sub
@@ -210,7 +210,7 @@ Function menu.msgbox%(msg$, buttons$(), default%, frameCol%)
       valid% = 0
     EndIf
     Call menu.ctrl$, key%
-    If Not key% Then keys_cursor(key%)
+    If Not key% Then keys_cursor_ext(key%)
     If Not key% Then released% = 1 : Continue Do
     If Not released% Then key% = 0 : Continue Do
     valid% = 0
