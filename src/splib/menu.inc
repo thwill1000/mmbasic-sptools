@@ -1,4 +1,4 @@
-' Copyright (c) 2023 Thomas Hugo Williams
+' Copyright (c) 2023-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -24,7 +24,7 @@ Sub menu.init(ctrl$, callback$)
   ' Dim menu.width% = Mm.HRes \ Mm.Info(FontWidth)
   '!endif
 '!else
-  If sys.is_platform%("mmb4l") Then
+  If Mm.Device$ = "MMB4L" Then
     Dim menu.height% = Min(Mm.VRes, 50)
     Dim menu.width% = Min(Mm.HRes, 100)
   Else

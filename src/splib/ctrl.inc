@@ -61,12 +61,13 @@ Dim ctrl.key_map%(31 + Mm.Info(Option Base))
 ' The scan code first has to be converted into a single byte value,
 ' see ctrl.on_ps2().
 '!if !defined(GAMEMITE)
-If sys.is_platform%("pmvga*") Then Dim ctrl.scan_map%(31)
+If InStr(Mm.Device$, "PicoMiteVGA") Then Dim ctrl.scan_map%(31)
 '!endif
 
 ' Timer number configured for reading the KEYDOWN state on the CMM2.
 '!if !defined(GAMEMITE)
-If sys.is_platform%("cmm2*", "mmb4w") Then Dim ctrl.tick_nbr%
+If InStr(Mm.Device$, "Colour Maximite 2") Then Dim ctrl.tick_nbr%
+If Mm.Device$ = "MMBasic for Windows"  Then Dim ctrl.tick_nbr%
 '!endif
 
 ' Initialises keyboard reading.

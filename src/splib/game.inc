@@ -81,10 +81,11 @@ Sub game.end(break%)
   If Len(f$) Then Run f$ Else End
 End Sub
 
-Sub game.init_window(title$, version%)
+Sub game.init_window(title$, version%, title_suffix$)
   If Mm.Info$(Device X) = "MMB4L" Then
     Local s$ = title$
     If version% Then Cat s$, ", v" + sys.format_version$(version%)
+    Cat s$, title_suffix$
     Graphics Title 0, s$
     Graphics Interrupt 0, game.on_window_event
   EndIf

@@ -1,4 +1,4 @@
-' Copyright (c) 2023 Thomas Hugo Williams
+' Copyright (c) 2023-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -42,7 +42,7 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
         msgbox.button(btn_x%(i%), y% + h% - 4, buttons$(i%), i% = msgbox.show%, fg%, bg%)
       Next
       If Not flags% And msgbox.NO_PAGES Then
-        If sys.is_platform%("pm*") Then FrameBuffer Copy F , N , B Else Page Copy 1 To 0, B
+        If InStr(Mm.Device$, "PicoMite") Then FrameBuffer Copy F, N, B Else Page Copy 1 To 0, B
       EndIf
       valid% = 0
     EndIf
@@ -69,6 +69,9 @@ Function msgbox.show%(x%, y%, w%, h%, msg$, buttons$(), default%, ctrl$, fg%, bg
   ' Restore display.
   Blit Write msgbox.buffer%, x% * fw%, y% * fh%
   Blit Close msgbox.buffer%
+  If Not flags% And msgbox.NO_PAGES Then
+    If InStr(Mm.Device$, "PicoMite") Then FrameBuffer Copy F, N, B Else Page Copy 1 To 0, B
+  EndIf
 End Function
 
 ' Gets the driver routine to use for reading the keyboard.
