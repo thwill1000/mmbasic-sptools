@@ -227,7 +227,7 @@ End Sub
   '!replace { sys.HOME$ ( ) } { "A:" }
 '!else
 Function sys.HOME$()
-  Select Case Mm.Device$
+  Select Case Mm.Info$(Device X)
     Case "MMB4L"
       sys.HOME$ = Mm.Info$(EnvVar "HOME")
     Case "MMBasic for Windows"
@@ -325,3 +325,41 @@ Function sys.error%(code%, msg$)
   sys.error% = code%
   sys.err$ = msg$
 End Function
+
+' Reads the '.mmbasic-shell' file.
+'
+' @param  exist%  If 1 then ERROR if file does not exist, otherwise return empty string.
+' @param  fnbr%   File number to use for accessing the file, if unspecified/0 then uses #9.
+' @return         The contents of the first line of the file.
+Function sys.read_shell_file$(exist%, fnbr%)
+  Const f$ = sys.HOME$() + "/.mmbasic-shell"
+  If Not exist% And Not Mm.Info(Exists f$) Then Exit Function
+  Const _fnbr% = Choice(fnbr%, fnbr%, 9)
+  Open f$ For Input As _fnbr%
+  Line Input #_fnbr%, sys.read_shell_file$
+  Close _fnbr%
+End Function
+
+' Writes the '.mmbasic-shell' file for later reading by sys.run_shell().
+'
+' @param  s$     Contents to write to the file, if empty then writes path of current program.
+' @param  fnbr%  File number to use for accessing the file, if unspecified/0 then uses #9.
+Sub sys.write_shell_file(s$, fnbr%)
+  Const f$ = sys.HOME$() + "/.mmbasic-shell"
+  Const _s$ = Choice(s$ = "", Mm.Info(Current), s$)
+  Const _fnbr% = Choice(fnbr%, fnbr%, 9)
+  If sys.read_shell_file$(0, _fnbr%) <> _s$ Then
+    ' Only write if content has changed.
+    Open f$ For Output As _fnbr%
+    Print #_fnbr%, _s$
+    Close _fnbr%
+  EndIf
+End Sub
+
+' Runs the program specified by the '.mmbasic-shell' file.
+'
+' @param  fnbr%  File number to use for accessing the file, if unspecified/0 then uses #9.
+Sub sys.run_shell(fnbr%)
+  Const prog$ = sys.read_shell_file$(1, fnbr%)
+  If prog$ <> "" Then Run prog$
+End Sub
