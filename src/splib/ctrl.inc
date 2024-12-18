@@ -41,7 +41,7 @@ Const ctrl.UI_DELAY = 200 ' 200 micro-seconds.
 ' Comma separated list of OPEN controller drivers that should automatically
 ' be CLOSEd when ctrl.term() is called. If a driver does not need closing
 ' (i.e. keyboard) then it does not need to be added to this list.
-Dim ctrl.open_drivers$
+Dim ctrl.driver_list$
 
 ' Mechanism to use for reading the keyboard.
 '   0 = INKEY$
@@ -139,8 +139,8 @@ End Sub
 Sub ctrl.term()
   ctrl.term_keys()
   On Error Ignore
-  Do While Len(ctrl.open_drivers$)
-    Call Field$(ctrl.open_drivers$, 1), ctrl.CLOSE
+  Do While Len(ctrl.driver_list$)
+    Call Field$(ctrl.driver_list$, 1), ctrl.CLOSE
   Loop
   On Error Abort
 End Sub
@@ -282,20 +282,20 @@ Sub keys_cursor_ext(x%)
   Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
 End Sub
 
-Sub ctrl.open_driver(d$)
+Sub ctrl.add_driver(d$)
   If Mm.ErrNo Then Exit Sub ' Do not record driver opening if failed.
-  Cat ctrl.open_drivers$, d$ + ","
+  Cat ctrl.driver_list$, d$ + ","
 End Sub
 
-Sub ctrl.close_driver(d$)
-  Local idx% = InStr(ctrl.open_drivers$, d$)
+Sub ctrl.remove_driver(d$)
+  Local idx% = InStr(ctrl.driver_list$, d$)
   Select Case idx%
     Case 0
       ' d$ not present, ignore.
     Case 1
-      ctrl.open_drivers$ = Mid$(ctrl.open_drivers$, Len(d$) + 2)
+      ctrl.driver_list$ = Mid$(ctrl.driver_list$, Len(d$) + 2)
     Case Else
-      ctrl.open_drivers$ = Mid$(ctrl.open_drivers$, 1, idx% - 1) + Mid$(ctrl.open_drivers$, idx% + Len(d$) + 1)
+      ctrl.driver_list$ = Mid$(ctrl.driver_list$, 1, idx% - 1) + Mid$(ctrl.driver_list$, idx% + Len(d$) + 1)
   End Select
 End Sub
 
@@ -311,10 +311,10 @@ Sub atari_a(x%)
       Exit Sub
     Case ctrl.OPEN
       SetPin GP0, DIn : SetPin GP1, DIn : SetPin GP2, DIn : SetPin GP3, DIn : SetPin GP14, DIn
-      ctrl.open_driver("atari_a")
+      ctrl.add_driver("atari_a")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP0, Off : SetPin GP1, Off : SetPin GP2, Off : SetPin GP3, Off : SetPin GP14, Off
-      ctrl.close_driver("atari_a")
+      ctrl.remove_driver("atari_a")
   End Select
 End Sub
 
@@ -330,10 +330,10 @@ Sub atari_b(x%)
       Exit Sub
     Case ctrl.OPEN
       SetPin GP4, DIn : SetPin GP5, DIn : SetPin GP15, DIn : SetPin GP22, DIn : SetPin GP28, DIn
-      ctrl.open_driver("atari_b")
+      ctrl.add_driver("atari_b")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP4, Off : SetPin GP5, Off : SetPin GP15, Off : SetPin GP22, Off : SetPin GP28, Off
-      ctrl.close_driver("atari_b")
+      ctrl.remove_driver("atari_b")
     End Select
 End Sub
 
@@ -361,10 +361,10 @@ Sub snes_a(x%)
       SetPin GP1, Din : SetPin GP2, Dout : SetPin GP3, Dout
       Pin(GP2) = 0 : Pin(GP3) = 0
       snes_a(0) ' Discard the first reading.
-      ctrl.open_driver("snes_a")
+      ctrl.add_driver("snes_a")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP1, Off : SetPin GP2, Off : SetPin GP3, Off
-      ctrl.close_driver("snes_a")
+      ctrl.remove_driver("snes_a")
   End Select
 End Sub
 
@@ -392,10 +392,10 @@ Sub snes_b(x%)
       SetPin GP4, Din : SetPin GP5, Dout : SetPin GP22, Dout
       Pin(GP5) = 0 : Pin(GP22) = 0
       snes_b(0) ' Discard the first reading.
-      ctrl.open_driver("snes_b")
+      ctrl.add_driver("snes_b")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP4, Off : SetPin GP5, Off : SetPin GP22, Off
-      ctrl.close_driver("snes_b")
+      ctrl.remove_driver("snes_b")
   End Select
 End Sub
 
@@ -422,10 +422,10 @@ Sub nes_a(x%)
       SetPin GP1, Din : SetPin GP2, Dout : SetPin GP3, Dout
       Pin(GP2) = 0 : Pin(GP3) = 0
       nes_a(0) ' Discard the first reading.
-      ctrl.open_driver("nes_a")
+      ctrl.add_driver("nes_a")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP1, Off : SetPin GP2, Off : SetPin GP3, Off
-      ctrl.close_driver("nes_a")
+      ctrl.remove_driver("nes_a")
   End Select
 End Sub
 
@@ -449,10 +449,10 @@ Sub nes_b(x%)
       SetPin GP4, Din : SetPin GP5, Dout : SetPin GP22, Dout
       Pin(GP5) = 0 : Pin(GP22) = 0
       nes_b(0) ' Discard the first reading.
-      ctrl.open_driver("nes_b")
+      ctrl.add_driver("nes_b")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin GP4, Off : SetPin GP5, Off : SetPin GP22, Off
-      ctrl.close_driver("nes_b")
+      ctrl.remove_driver("nes_b")
   End Select
 End Sub
 
@@ -468,11 +468,11 @@ Sub ctrl.gamemite(x%)
     Case ctrl.OPEN
       Local i%
       For i% = 8 To 15 : SetPin Mm.Info(PinNo "GP" + Str$(i%)), Din, PullUp : Next
-      ctrl.open_driver("ctrl.gamemite")
+      ctrl.add_driver("ctrl.gamemite")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       Local i%
       For i% = 8 To 15 : SetPin Mm.Info(PinNo "GP" + Str$(i%)), Off : Next
-      ctrl.close_driver("ctrl.gamemite")
+      ctrl.remove_driver("ctrl.gamemite")
   End Select
 End Sub
 
@@ -490,11 +490,11 @@ Sub atari_dx(x%)
     Case ctrl.OPEN
       SetPin 32, Din, PullUp : SetPin 33, Din, PullUp : SetPin 35, Din, PullUp
       SetPin 36, Din, PullUp : SetPin 38, Din, PullUp : SetPin 40, Din, PullUp
-      ctrl.open_driver("atari_dx")
+      ctrl.add_driver("atari_dx")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin 32, Off : SetPin 33, Off : SetPin 35, Off
       SetPin 36, Off : SetPin 38, Off : SetPin 40, Off
-      ctrl.close_driver("atari_dx")
+      ctrl.remove_driver("atari_dx")
   End Select
 End Sub
 
@@ -521,10 +521,10 @@ Sub nes_dx(x%)
       SetPin 36, Din, PullUp : SetPin 38, Dout : SetPin 40, Dout
       Pin(38) = 0 : Pin(40) = 0
       nes_dx(0) ' Discard the first reading.
-      ctrl.open_driver("nes_dx")
+      ctrl.add_driver("nes_dx")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin 36, Off : SetPin 38, Off : SetPin 40, Off
-      ctrl.close_driver("nes_dx")
+      ctrl.remove_driver("nes_dx")
   End Select
 End Sub
 
@@ -555,10 +555,10 @@ Sub snes_dx(x%)
       SetPin 36, Din, PullUp : SetPin 38, Dout : SetPin 40, Dout
       Pin(38) = 0 : Pin(40) = 0
       snes_dx(0) ' Discard the first reading.
-      ctrl.open_driver("snes_dx")
+      ctrl.add_driver("snes_dx")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
       SetPin 36, Off : SetPin 38, Off : SetPin 40, Off
-      ctrl.close_driver("snes_dx")
+      ctrl.remove_driver("snes_dx")
   End Select
 End Sub
 
@@ -599,7 +599,7 @@ Sub wii_internal(i2c%, x%, type%)
           Controller Classic Close i2c%
       End Select
       is_open%(i2c%) = 0
-      ctrl.close_driver("wii_any_" + Str$(i2c%))
+      ctrl.remove_driver("wii_any_" + Str$(i2c%))
       Exit Sub
 
     Case ctrl.OPEN
@@ -635,7 +635,7 @@ Sub wii_internal(i2c%, x%, type%)
           is_open%(i2c%) = -1
           Error "Unrecognised controller on I2C" + Str$(i2c%)
       End Select
-      ctrl.open_driver("wii_any_" + Str$(i2c%))
+      ctrl.add_driver("wii_any_" + Str$(i2c%))
   End Select
 End Sub
 
@@ -695,11 +695,11 @@ Sub wii_classic_pm(x%)
 
     Case ctrl.CLOSE
       Device Wii Close
-      ctrl.close_driver("wii_classic_pm")
+      ctrl.remove_driver("wii_classic_pm")
 
     Case ctrl.OPEN
       Device Wii Open
-      ctrl.open_driver("wii_classic_pm")
+      ctrl.add_driver("wii_classic_pm")
   End Select
 End Sub
 
@@ -721,13 +721,13 @@ Sub wii_nunchuk_pm(x%)
 
     Case ctrl.CLOSE
       ' TODO
-      ctrl.close_driver("wii_classic_pm")
+      ctrl.remove_driver("wii_classic_pm")
 
     Case ctrl.OPEN
       init_no_enc()
       Const id% = read_id%()
       If id% <> &hA4200000 Then Error "Not a Nunchuk controller"
-      ctrl.open_driver("wii_nunchuk_pm")
+      ctrl.add_driver("wii_nunchuk_pm")
   End Select
 End Sub
 
@@ -766,17 +766,17 @@ Sub mmb4l_gamepad_internal(id%, x%)
   Select Case x%
     Case ctrl.SOFT_CLOSE
       Device Gamepad Close id%
-      ctrl.close_driver("mmb4l_gamepad_" + Str$(id%))
+      ctrl.remove_driver("mmb4l_gamepad_" + Str$(id%))
       Exit Sub
 
     Case ctrl.CLOSE
       Device Gamepad Close id%
-      ctrl.close_driver("mmb4l_gamepad_" + Str$(id%))
+      ctrl.remove_driver("mmb4l_gamepad_" + Str$(id%))
       Exit Sub
 
     Case ctrl.OPEN
       Device Gamepad Open id%
-      ctrl.open_driver("mmb4l_gamepad_" + Str$(id%))
+      ctrl.add_driver("mmb4l_gamepad_" + Str$(id%))
       Exit Sub
   End Select
 End Sub
