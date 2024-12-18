@@ -1,6 +1,5 @@
-' Copyright (c) 2021-2023 Thomas Hugo Williams
+' Copyright (c) 2021-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07
 
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
@@ -55,6 +54,8 @@ Dim twm.y%  ' y cursor-position
 Dim twm.at% ' attributes to use for printing
 Dim twm.pc% ' pointer to the character data
 Dim twm.pa% ' pointer to the attribute data
+
+Dim twm.console_only% = 0 ' Set 1 to only write to console.
 
 ' Initialises the 'txtwm' library.
 '
@@ -327,8 +328,10 @@ Sub twm.putc(ch%)
   Print Chr$(27) "[" Str$(by%) ";" Str$(ax%) "H" s$;
 
   ' Update VGA display:
-  Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),twm.bg%(at%)
-  If at% And &b01000000 Then Text (ax%-1)*twm.fw%+1,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),-1
+  If Not twm.console_only% Then
+    Text (ax%-1)*twm.fw%,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),twm.bg%(at%)
+    If at% And &b01000000 Then Text (ax%-1)*twm.fw%+1,(by%-1)*twm.fh%,s$,,,,twm.fg%(at%),-1
+  EndIf
 End Sub
 
 Sub twm.print(s$)
@@ -379,8 +382,10 @@ Sub twm.print(s$)
     Print Chr$(27) "[" Str$(by%) ";" Str$(ax%) "H" seg$;
 
     ' Update VGA display:
-    Text (ax% - 1) * twm.fw%, (by% - 1) * twm.fh%, seg$,,,, fg%, bg%
-    If at% And &b01000000 Then Text (ax% - 1) * twm.fw% + 1, (by% - 1) * twm.fh%, seg$,,,, fg%, -1
+    If Not twm.console_only% Then
+      Text (ax% - 1) * twm.fw%, (by% - 1) * twm.fh%, seg$,,,, fg%, bg%
+      If at% And &b01000000 Then Text (ax% - 1) * twm.fw% + 1, (by% - 1) * twm.fh%, seg$,,,, fg%, -1
+    EndIf
 
     Inc is%, nc%
     Inc twm.x%, nc%
@@ -464,8 +469,10 @@ Sub twm.redraw()
       Print ch$;
 
       ' Update VGA display:
-      Text vx%, vy%, ch$,,,, twm.fg%(at%), twm.bg%(at%)
-      If at% And &b01000000 Then Text vx%+1, vy%, ch$,,,, twm.fg%(at%), -1
+      If Not twm.console_only% Then
+        Text vx%, vy%, ch$,,,, twm.fg%(at%), twm.bg%(at%)
+        If at% And &b01000000 Then Text vx%+1, vy%, ch$,,,, twm.fg%(at%), -1
+      EndIf
       Inc vx%, twm.fw%
     Next ' x%
     Inc pa%, twm.w%
@@ -619,6 +626,8 @@ End Sub
 ' Toggle whether the VGA cursor is lit or not,
 ' intended to be called as an ISR via SetTick.
 Sub twm.update_vga_cursor()
+  If twm.console_only% Then Exit Sub
+
   Static lit% = 0
 
   If twm.cursor_locked% Then Exit Sub
@@ -639,6 +648,8 @@ End Sub
 ' Lock/unlock the VGA cursor.
 ' The cursor should be locked whilst manipulating twm.x% & twm.y%
 Sub twm.lock_vga_cursor(lock%)
+  If twm.console_only% Then Exit Sub
+
   Inc twm.cursor_locked%, Choice(lock%, 1, -1))
   If twm.id% = -1 Then Exit Sub
 
