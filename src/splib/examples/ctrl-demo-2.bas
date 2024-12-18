@@ -28,7 +28,7 @@ If Mm.Device$ = "MMB4L" Then Option Simulate "Game*Mite"
 #Include "../string.inc"
 #Include "../txtwm.inc"
 #Include "../menu.inc"
-#Include "../gamemite.inc"
+#Include "../game.inc"
 
 '!dynamic_call ctrl.gamemite
 '!dynamic_call keys_cursor_ext
@@ -158,7 +158,7 @@ Sub on_quit()
   Const msg$ = str.decode$("\nAre you sure you want to quit this program?")  
   Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
     Case "Yes"
-      gamemite.end()
+      game.end()
     Case "No"
       twm.switch(menu.win1%)
       twm.redraw()

@@ -28,7 +28,7 @@ If Mm.Device$ = "MMB4L" Then Option Simulate "Colour Maximite 2"
 #Include "../string.inc"
 #Include "../txtwm.inc"
 #Include "../menu.inc"
-#Include "../gamemite.inc"
+#Include "../game.inc"
 
 If InStr(Mm.Device$, "PicoMite") Then
   Dim CHANNELS$(3) Length 14
@@ -333,7 +333,7 @@ Sub cmd_quit(key%)
       Const msg$ = str.decode$("\nAre you sure you want to quit this program?")
       Select Case YES_NO_BTNS$(menu.msgbox%(msg$, YES_NO_BTNS$(), 1))
         Case "Yes"
-          gamemite.end()
+          game.end()
         Case "No"
           twm.switch(menu.win1%)
           twm.redraw()
