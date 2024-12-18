@@ -114,7 +114,7 @@ Sub menu.main_loop()
   Do
     If sys.break_flag% Then menu.on_break()
     Call menu.ctrl$, key%
-    If Not key% Then keys_cursor(key%)
+    If Not key% Then keys_cursor_ext(key%)
     menu.process_key(key%)
   Loop
 End Sub
@@ -124,7 +124,7 @@ Sub menu.process_key(key%)
   If Not key% Then Exit Sub
 
   Select Case key%
-    Case ctrl.A, ctrl.B, ctrl.START, ctrl.SELECT, ctrl.LEFT, ctrl.RIGHT
+    Case ctrl.A, ctrl.B, ctrl.HOME, ctrl.START, ctrl.SELECT, ctrl.LEFT, ctrl.RIGHT
       ' TODO: there is a bug in CALL which means it can't handle the case
       '       where an expression that provides the command name contains a
       '       comma or single-quote.
@@ -210,7 +210,7 @@ Function menu.msgbox%(msg$, buttons$(), default%, frameCol%)
       valid% = 0
     EndIf
     Call menu.ctrl$, key%
-    If Not key% Then keys_cursor(key%)
+    If Not key% Then keys_cursor_ext(key%)
     If Not key% Then released% = 1 : Continue Do
     If Not released% Then key% = 0 : Continue Do
     valid% = 0
