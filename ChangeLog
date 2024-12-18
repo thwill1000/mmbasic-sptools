@@ -1,12 +1,56 @@
 ChangeLog
 ---------
 
-Version 1.3.0 - ??-???-????:
+Version 1.3.0 - 18-Dec-2024:
  - splib:
-   - Added array.find_string$() function.
-   - Fixed syntax error in sys.format_firmware_version$().
+   - system.inc:
+     - Added check that OPTION EXPLICIT is set; throws ERROR if not.
+     - Added sys.run_shell(), sys.read_shell_file$() and sys.write_shell_file()
+       to support a new mechanism for launching a program from a "shell"
+       program and then returning to the "shell" when finished.
+     - Removed internal use of sys.is_platform%() with the intent of removing
+       the function entirely in the future.
+     - Fixed syntax error in sys.format_firmware_version$().
+   - array.inc:
+     - Added array.find_string$() function.
+   - ctrl.inc:
+     - Added Linux/USB gamepad support.
+     - Added PicoMiteVGA Wii controller support.
+     - Added missing entries to PS/2 scan-code map.
+     - Added ctrl.default_driver$() and ctrl.open_no_error%() functions.
+     - Fixed bug where a controller driver that failed to open would be
+       recorded as opened.
+     - Several other minor changes.
+   - game.inc:
+     - Replaces 'gamemite.inc' adding several new routines to support
+       Game*Pack:
+         - game.init_window()
+         - game.on_break()
+         - game.on_window_event()
+         - game.highscore_file$()
+         - game.highscore_read()
+         - game.highscore_write()
+     - Removed gamemite.file$() function; replaced by the new "shell" mechanism
+       and/or local routines in the Game*Mite startup and menu programs.
+   - menu.inc:
+     - Changed to use 'keys_cursor_ext' keyboard driver and respond to
+       ctrl.HOME.
+   - msgbox.inc:
+     - Changed to backup and restore display after the message box has been
+       dismissed.
+   - txtwm.inc:
+     - Added global twm.console_only% flag to allow use without a graphics
+       display.
  - sptest:
    - Added assert_string_neq() subroutine.
+   - Fixed bug when error text > 255 characters.
+   - Fixed bug on MMB4L caused by calling the non-existent (in MMB4L) DRIVE
+     command.
+ - sptrans:
+   - Added support for replacing literal strings using !REPLACE directives.
+   - Fixed bug in symbol processing that was caused by the 8-digit hex words
+     in CSUB/DEFINEFONT being treated as TK_IDENTIFIER tokens; they now have
+     a unique TK_WORD type.
 
 Version 1.2.0 - 3-Feb-2024:
  - splib:
