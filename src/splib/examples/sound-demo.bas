@@ -1,4 +1,4 @@
-' Copyright (c) 2023 Thomas Hugo Williams
+' Copyright (c) 2023-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 Option Base 0
@@ -66,8 +66,9 @@ Dim octave_idx% = 0
 Dim type_idx% = 0
 
 '!if !defined(GAMEMITE)
-If sys.is_platform%("mmb4l") Then Option CodePage CMM2
-If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
+If Mm.Info(Device X) = "MMB4L" Then Option CodePage CMM2
+If Mm.Device$ = "MMBasic for Windows" Then Option Console Serial
+If InStr(Mm.Device$, "Colour Maximite 2") Then Option Console Serial
 '!endif
 Mode 7
 Page Write 1

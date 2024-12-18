@@ -1,6 +1,5 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
 
 Option Explicit On
 Option Default None
@@ -8,7 +7,7 @@ Option Default None
 #Include "../system.inc"
 #Include "../txtwm.inc"
 
-If sys.is_platform%("mmb4l") Then Option CodePage CMM2
+If Mm.Info(Device X) = "MMB4L" Then Option CodePage CMM2
 
 Cls
 

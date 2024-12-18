@@ -37,8 +37,9 @@ Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ct
 Dim CTRL_DRIVERS$(1) = ("ctrl.gamemite", "keys_cursor_ext")
 
 '!if !defined(GAMEMITE)
-If sys.is_platform%("mmb4l") Then Option CodePage CMM2
-If sys.is_platform%("mmb4w", "cmm2*") Then Option Console Serial
+If Mm.Info(Device X) = "MMB4L" Then Option CodePage CMM2
+If Mm.Device$ = "MMBasic for Windows" Then Option Console Serial
+If InStr(Mm.Device$, "Colour Maximite 2") Then Option Console Serial
 '!endif
 Mode 7
 Page Write 1

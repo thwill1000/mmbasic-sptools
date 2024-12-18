@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -90,7 +90,7 @@ Function file.find$(path$, pattern$, type$)
     On Error Skip
     Erase file.find_stack$()
     On Error Clear
-    If sys.is_platform%("mmb4l", "mmb4w") Then
+    If Mm.Device$ = "MMB4L" Or Mm.Device$ = "MMBasic for Windows" Then
       Dim file.find_stack$(1000) Length 255
     Else
       Dim file.find_stack$(500) Length 128
