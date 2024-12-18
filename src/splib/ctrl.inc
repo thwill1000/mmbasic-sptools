@@ -70,6 +70,32 @@ If InStr(Mm.Device$, "Colour Maximite 2") Then Dim ctrl.tick_nbr%
 If Mm.Device$ = "MMBasic for Windows"  Then Dim ctrl.tick_nbr%
 '!endif
 
+' Gets a default controller driver based on the current platform.
+Function ctrl.default_driver$()
+  If sys.PLATFORM$() = "Game*Mite" Then
+    ctrl.default_driver$ = "ctrl.gamemite"
+  ElseIf InStr(Mm.Device$, "PicoMiteVGA") Then
+    ctrl.default_driver$ = "nes_a"
+  ElseIf InStr(Mm.Device$, "Colour Maximite 2") Then
+    ctrl.default_driver$ = "wii_classic_3"
+  ElseIf Mm.Device$ = "MMB4L" Then
+    ctrl.default_driver$ = "mmb4l_gamepad_1"
+  Else
+    ctrl.default_driver$ = "keys_cursor_ext"
+  EndIf
+End Function
+
+' Opens a controller driver without throwing an ERROR on failure.
+'
+' @param  ctrl$  The controller driver.
+' @return        0 on success, otherwise failure.
+Function ctrl.open_no_error%(ctrl$)
+  On Error Ignore
+  Call ctrl$, ctrl.OPEN
+  If Mm.ErrNo Then ctrl.open_no_error% = sys.FAILURE
+  On Error Abort
+End Function
+
 ' Initialises keyboard reading.
 '
 ' @param  use_inkey%  Use INKEY$ even on platforms with KEYDOWN or ON PS2.
@@ -257,13 +283,9 @@ Sub ctrl.wait_until_idle(d1$, d2$, d3$, d4$, d5$)
 End Sub
 
 ' Reads the keyboard as if it were a controller.
-'
-' Note that the PicoMite has no KEYDOWN function so we are limited to
-' reading a single keypress from the input buffer and cannot handle multiple
-' simultaneous keys or properly handle a key being pressed and not released.
 Sub keys_cursor(x%)
   If x% < 0 Then Exit Sub
-  x% =    ctrl.keydown%(32)  * ctrl.A
+  x% =    ctrl.keydown%(32)  * ctrl.A ' Space
   Inc x%, ctrl.keydown%(128) * ctrl.UP
   Inc x%, ctrl.keydown%(129) * ctrl.DOWN
   Inc x%, ctrl.keydown%(130) * ctrl.LEFT
@@ -272,14 +294,15 @@ End Sub
 
 Sub keys_cursor_ext(x%)
   If x% < 0 Then Exit Sub
-  x% =    ctrl.keydown%(32)  * ctrl.A ' Space
-  Inc x%, ctrl.keydown%(98)  * ctrl.B ' B
-  Inc x%, (ctrl.keydown%(101) Or ctrl.keydown%(113)) * ctrl.SELECT ' E or Q
+  x% = (ctrl.keydown%(32) Or ctrl.keydown%(120)) * ctrl.A ' Space or X
+  Inc x%, ctrl.keydown%(122) * ctrl.B ' Z
+  Inc x%, ctrl.keydown%(97)  * ctrl.SELECT ' A
   Inc x%, ctrl.keydown%(115) * ctrl.START ' S
   Inc x%, ctrl.keydown%(128) * ctrl.UP
   Inc x%, ctrl.keydown%(129) * ctrl.DOWN
   Inc x%, ctrl.keydown%(130) * ctrl.LEFT
   Inc x%, ctrl.keydown%(131) * ctrl.RIGHT
+  Inc x%, ctrl.keydown%(27)  * ctrl.HOME ' Escape
 End Sub
 
 Sub ctrl.add_driver(d$)
@@ -297,6 +320,12 @@ Sub ctrl.remove_driver(d$)
     Case Else
       ctrl.driver_list$ = Mid$(ctrl.driver_list$, 1, idx% - 1) + Mid$(ctrl.driver_list$, idx% + Len(d$) + 1)
   End Select
+End Sub
+
+' Driver subroutine for "No controller".
+'!dynamic_call ctrl.no_controller
+Sub ctrl.no_controller(x%)
+  x% = 0
 End Sub
 
 ' Atari joystick on PicoGAME Port A.
@@ -406,6 +435,7 @@ End Sub
 '
 '   GP2: Latch, GP3: Clock, GP1: Data
 Sub nes_a(x%)
+  If Mm.Info(Device X) = "MMB4L" Then snes_a(x%) : Exit Sub
   Select Case x%
     Case >= 0
       Pulse GP2, ctrl.PULSE
@@ -433,6 +463,7 @@ End Sub
 '
 '   GP5: Latch, GP22: Clock, GP4: Data
 Sub nes_b(x%)
+  If Mm.Info(Device X) = "MMB4L" Then snes_b(x%) : Exit Sub
   Select Case x%
     Case >= 0
       Pulse GP5, ctrl.PULSE

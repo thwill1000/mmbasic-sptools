@@ -5,24 +5,31 @@ Option Base 0
 Option Default None
 Option Explicit On
 
-If Mm.Device$ = "MMB4L" Then Option Simulate "Game*Mite"
-
-'!define NO_INCLUDE_GUARDS
-
-#Include "../system.inc"
-
+'!dynamic_call keys_cursor_ext
 '!if defined(PICOMITEVGA)
+  '!replace { Option Simulate "Colour Maximite 2" } { Option Simulate "PicoMiteVGA" }
+  '!dynamic_call nes_a
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N , B }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { Mode 2 : FrameBuffer Create }
 '!elif defined(PICOMITE) || defined(GAMEMITE)
+  '!replace { Option Simulate "Colour Maximite 2" } { Option Simulate "Game*Mite" }
+  '!dynamic_call ctrl.gamemite
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { FrameBuffer Create }
+'!else
+  '!dynamic_call wii_classic_3
 '!endif
 
+If Mm.Device$ = "MMB4L" Then
+  Option Simulate "Colour Maximite 2"
+  Option CodePage CMM2
+EndIf
+
+#Include "../system.inc"
 #Include "../ctrl.inc"
 #Include "../sound.inc"
 #Include "../string.inc"
@@ -30,18 +37,20 @@ If Mm.Device$ = "MMB4L" Then Option Simulate "Game*Mite"
 #Include "../menu.inc"
 #Include "../game.inc"
 
-'!dynamic_call ctrl.gamemite
-'!dynamic_call keys_cursor_ext
+'!dynamic_call game.on_break
+sys.override_break("game.on_break")
 
 Dim BUTTONS%(7) = (ctrl.A, ctrl.B, ctrl.UP, ctrl.DOWN, ctrl.LEFT, ctrl.RIGHT, ctrl.START, ctrl.SELECT)
-Dim CTRL_DRIVERS$(1) = ("ctrl.gamemite", "keys_cursor_ext")
+Dim CTRL_DRIVERS$(1) = (ctrl.default_driver$(), "keys_cursor_ext")
 
 '!if !defined(GAMEMITE)
-If Mm.Info(Device X) = "MMB4L" Then Option CodePage CMM2
 If Mm.Device$ = "MMBasic for Windows" Then Option Console Serial
 If InStr(Mm.Device$, "Colour Maximite 2") Then Option Console Serial
-'!endif
 Mode 7
+If Mm.Info$(Device X) = "MMB4L" Then
+  Graphics Title 0, "MMBasic for Linux - Controller Test, v" + sys.format_version$(sys.VERSION)
+EndIf
+'!endif
 Page Write 1
 
 main()
@@ -49,30 +58,38 @@ Error "Invalid state"
 
 Sub main()
   ctrl.init_keys()
-  sys.override_break()
   sound.init()
-  Local ctrl_idx% = Choice(sys.PLATFORM$() = "Game*Mite", 0, 1)
+  Local ctrl_idx% = 0
   menu.init(CTRL_DRIVERS$(ctrl_idx%), "menu_cb")
   menu.load_data("main_menu_data")
   menu.selection% = ctrl_idx% + 2
-  Call menu.ctrl$, ctrl.OPEN
+  If ctrl.open_no_error%(menu.ctrl$) <> sys.SUCCESS Then
+    menu.ctrl$ = "ctrl.no_controller"
+    ' NOTE: Connection/disconnection whilst program is running is not responded to.
+    menu.items$(2) = str.replace$(menu.items$(2), "               ", " (Disconnected)")
+  EndIf
+
   menu.render(1)
 
   Local i%, key%, old%, t% = 0
   Do
-    If sys.break_flag% Then menu.on_break()
     If ctrl.keydown%(Asc("1")) Then
       menu.select_item(2)
     ElseIf ctrl.keydown%(Asc("2")) Then
       menu.select_item(3)
     Else
-      Call menu.ctrl$, key%
-      If key% = ctrl.A Then
-        If t% = 0 Then t% = Timer + 2000
-        If Timer >= t% Then on_quit()
-      Else
-        t% = 0
-      EndIf
+      If Len(menu.ctrl$) Then Call menu.ctrl$, key% Else key% = 0
+      Select Case key%
+        Case ctrl.HOME
+          on_quit()
+          key% = 0
+          t% = 0
+        Case ctrl.A
+          If t% = 0 Then t% = Timer + 2000
+          If Timer >= t% Then on_quit()
+        Case Else
+          t% = 0
+      End Select
       If key% = old% Then Pause 50 : Continue Do
       old% = key%
       For i% = Bound(BUTTONS%(), 0) To Bound(BUTTONS%(), 1)
@@ -111,13 +128,15 @@ End Sub
 Sub on_selection_changed(cb_data$)
   On Error Ignore
   Call menu.ctrl$, ctrl.CLOSE
-  Local err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
   On Error Abort
+
   menu.ctrl$ = CTRL_DRIVERS$(menu.selection% - 2)
+
   On Error Ignore
   Call menu.ctrl$, ctrl.OPEN
-  err$ = Choice(Mm.ErrNo = 0, "", Mm.ErrMsg$)
   On Error Abort
+  If Mm.ErrNo Then menu.ctrl$ = "ctrl.no_controller"
+
   on_render()
 End Sub
 
@@ -172,7 +191,7 @@ End Sub
 main_menu_data:
 Data "\x9F Controller Test \x9F|"
 Data "|"
-Data " 1) GameMite gamepad             |menu.cmd_open|music_menu_data"
+Data " 1) Gamepad                       |menu.cmd_open|music_menu_data"
 Data " 2) Keyboard: Cursor keys & Space |menu.cmd_open|music_menu_data"
 Data "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|", "|"
 Data ""

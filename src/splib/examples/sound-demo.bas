@@ -5,30 +5,39 @@ Option Base 0
 Option Default None
 Option Explicit On
 
-'!define NO_INCLUDE_GUARDS
-
-#Include "../system.inc"
-
-'!if defined PICOMITEVGA
+'!if defined(PICOMITEVGA)
+  '!replace { Option Simulate "Colour Maximite 2" } { Option Simulate "PicoMiteVGA" }
+  '!dynamic_call nes_a
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N , B }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { Mode 2 : FrameBuffer Create }
-'!elif defined(PICOMITE) || defined(GAMEMITE)
+'!elif defined(GAMEMITE)
+  '!replace { Option Simulate "Colour Maximite 2" } { Option Simulate "Game*Mite" }
+  '!dynamic_call ctrl.gamemite
   '!replace { Page Copy 1 To 0 , B } { FrameBuffer Copy F , N }
   '!replace { Page Write 1 } { FrameBuffer Write F }
   '!replace { Page Write 0 } { FrameBuffer Write N }
   '!replace { Mode 7 } { FrameBuffer Create }
+'!else
+  '!dynamic_call wii_classic_3
 '!endif
 
-If Mm.Device$ = "MMB4L" Then Option Simulate "Colour Maximite 2"
+If Mm.Device$ = "MMB4L" Then
+  Option Simulate "Colour Maximite 2"
+  Option CodePage CMM2
+EndIf
 
+#Include "../system.inc"
 #Include "../ctrl.inc"
 #Include "../sound.inc"
 #Include "../string.inc"
 #Include "../txtwm.inc"
 #Include "../menu.inc"
 #Include "../game.inc"
+
+'!dynamic_call game.on_break
+sys.override_break("game.on_break")
 
 If InStr(Mm.Device$, "PicoMite") Then
   Dim CHANNELS$(3) Length 14
@@ -66,23 +75,22 @@ Dim octave_idx% = 0
 Dim type_idx% = 0
 
 '!if !defined(GAMEMITE)
-If Mm.Info(Device X) = "MMB4L" Then Option CodePage CMM2
 If Mm.Device$ = "MMBasic for Windows" Then Option Console Serial
 If InStr(Mm.Device$, "Colour Maximite 2") Then Option Console Serial
-'!endif
 Mode 7
+If Mm.Info$(Device X) = "MMB4L" Then
+  Graphics Title 0, "MMBasic for Linux - Sound Test, v" + sys.format_version$(sys.VERSION)
+EndIf
+'!endif
 Page Write 1
 
 main()
 Error "Invalid state"
 
 Sub main()
-  '!dynamic_call ctrl.gamemite
-  '!dynamic_call keys_cursor_ext
-  Const ctrl$ = Choice(sys.PLATFORM$() = "Game*Mite", "ctrl.gamemite", "keys_cursor_ext")
+  Local ctrl$ = ctrl.default_driver$()
   ctrl.init_keys()
-  sys.override_break()
-  Call ctrl$, ctrl.OPEN
+  If ctrl.open_no_error%(ctrl$) <> sys.SUCCESS Then ctrl$ = "ctrl.no_controller"
   sound.init("fx_test_int", "music_test_int")
   menu.init(ctrl$, "menu_cb")
   update_menu_data("main_menu_data")
@@ -193,7 +201,7 @@ Sub default_handler(key%)
       Next
       menu.play_invalid_fx(1)
 
-    Case ctrl.START
+    Case ctrl.HOME, ctrl.START
       cmd_quit(ctrl.SELECT)
 
     Case Else
@@ -216,7 +224,7 @@ Sub update_menu_data(data_label$)
     menu.items$(idx% + 2) = " OCTAVE:  " + OCTAVES$(octave_idx%) + " |cmd_octave"
   EndIf
 
-  If sys.PLATFORM$() = "Game*Mite" Then
+  If menu.ctrl$ <> "ctrl.no_controller" Then
     menu.items$(Bound(menu.items$(), 1)) = str.decode$("Use \x92 \x93 and SELECT|")
   EndIf
 End Sub
@@ -243,7 +251,7 @@ Sub cmd_play_music(key%)
       Do : Call menu.ctrl$, key% : Loop Until Not key%
       Do While (Not key%) And sound.is_playing%()
         Call menu.ctrl$, key%
-        If Not key% Then keys_cursor(key%)
+        If Not key% Then keys_cursor_ext(key%)
       Loop
       sound.enable(&h00)
       sound.enable(sound.FX_FLAG% Or sound.MUSIC_FLAG%)
