@@ -223,7 +223,7 @@ Sub sys.restore_break()
   Option Break 3
 End Sub
 
-'!if defined(GAMEMITE)
+'!if defined(REAL_GAMEMITE)
   '!replace { sys.HOME$ ( ) } { "A:" }
 '!else
 Function sys.HOME$()
@@ -262,11 +262,11 @@ Function sys.SEPARATOR$()
 End Function
 '!endif
 
-'!if defined(GAMEMITE)
+'!if defined(REAL_GAMEMITE)
   '!replace { sys.TMPDIR$ ( ) } { "A:/tmp" }
 '!else
 Function sys.TMPDIR$()
-  Select Case Mm.Device$
+  Select Case Mm.Info$(Device X)
     Case "MMB4L"
       sys.TMPDIR$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
     Case "MMBasic for Windows"
