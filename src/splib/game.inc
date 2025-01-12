@@ -9,6 +9,13 @@ sys.provides("game")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
 
+' Common code for cleaning up and returning to any shell program after a game
+' ends. Note that it is possible that much of this is (now) unnecessary due to
+' improvements in how MMBasic handles the cleanup itself on calling END or RUN.
+'
+' @param  break%  If 0 then this is a "normal" end, if 1 then it is the result
+'                 of Ctrl-C. In the current version of this subroutine this
+'                 does not have an effect on behaviour.
 Sub game.end(break%)
   If InStr(Mm.Device$, "PicoMite") Then
     FrameBuffer Write N
@@ -28,6 +35,9 @@ Sub game.end(break%)
 
   SetTick 0,0,1 : SetTick 0,0,2 : SetTick 0,0,3 : SetTick 0,0,4
   Play Stop
+
+  ' For the moment always return to shell/menu if available.
+  break% = 0
 
   Local msg$
   If break% Then

@@ -1,7 +1,7 @@
 ChangeLog
 ---------
 
-Version 1.3.0 - 18-Dec-2024:
+Version 1.3.0 - 12-Jan-2024:
  - splib:
    - system.inc:
      - Added check that OPTION EXPLICIT is set; throws ERROR if not.
@@ -30,6 +30,8 @@ Version 1.3.0 - 18-Dec-2024:
          - game.highscore_file$()
          - game.highscore_read()
          - game.highscore_write()
+     - Changed game.end() to return to menu/shell even when the break% flag is
+       set.
      - Removed gamemite.file$() function; replaced by the new "shell" mechanism
        and/or local routines in the Game*Mite startup and menu programs.
    - menu.inc:
