@@ -44,6 +44,7 @@ add_test("test_get_files_given_too_many")
 add_test("test_trim_extension")
 add_test("test_mkdir_abs_path")
 add_test("test_mkdir_rel_path")
+add_test("test_mkdir_skips_path_len")
 add_test("test_depth_first_given_file")
 add_test("test_depth_first_given_dir")
 add_test("test_depth_first_given_symlink")
@@ -759,6 +760,24 @@ Sub test_mkdir_rel_path()
 
   ' Cleanup.
   ChDir old_cwd$
+End Sub
+
+' Test that fails if file.mkdir%() does not skip the length byte at the start of the path string.
+Sub test_mkdir_skips_path_len()
+  MkDir TMPDIR$
+  Local path_len% = Asc("/")
+  Local f$ = TMPDIR$ + "/" + String$(path_len% - 1 - Len(TMPDIR$), "a")
+
+  assert_int_equals(sys.SUCCESS, file.mkdir%(f$))
+  assert_no_error()
+  assert_true(file.is_directory%(f$))
+
+  path_len% = Asc("\")
+  f$ = TMPDIR$ + "/" + String$(path_len% - 1 - Len(TMPDIR$), "a")
+
+  assert_int_equals(sys.SUCCESS, file.mkdir%(f$))
+  assert_no_error()
+  assert_true(file.is_directory%(f$))
 End Sub
 
 Sub test_depth_first_given_file()

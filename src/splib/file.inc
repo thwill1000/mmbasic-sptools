@@ -433,7 +433,7 @@ End Function
 Function file.mkdir%(f$)
   Local ad%, faddr% = Peek(VarAddr f$), parent$
   sys.err$ = ""
-  For ad% = faddr% To faddr% + Len(f$)
+  For ad% = faddr% + 1 To faddr% + Len(f$)
     Select Case Peek(Byte ad%)
       Case 47, 92 ' / and \
         parent$ = Left$(f$, ad% - faddr% - 1)

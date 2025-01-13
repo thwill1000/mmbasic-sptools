@@ -1,7 +1,7 @@
 ChangeLog
 ---------
 
-Version 1.3.0 - 12-Jan-2024:
+Version 1.3.0 - 18-Jan-2024:
  - splib:
    - system.inc:
      - Added check that OPTION EXPLICIT is set; throws ERROR if not.
@@ -21,6 +21,10 @@ Version 1.3.0 - 12-Jan-2024:
      - Fixed bug where a controller driver that failed to open would be
        recorded as opened.
      - Several other minor changes.
+   - file.inc:
+    - Fixed bug in file.mkdir%() where it was not skipping the path string's
+      length byte and thus failing when the length was the ASCII code for
+      '/' (47) or '\' (92).
    - game.inc:
      - Replaces 'gamemite.inc' adding several new routines to support
        Game*Pack:
