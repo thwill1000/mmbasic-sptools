@@ -296,7 +296,7 @@ Sub keys_cursor_ext(x%)
   If x% < 0 Then Exit Sub
   x% = (ctrl.keydown%(32) Or ctrl.keydown%(120)) * ctrl.A ' Space or X
   Inc x%, ctrl.keydown%(122) * ctrl.B ' Z
-  Inc x%, ctrl.keydown%(97)  * ctrl.SELECT ' A
+  Inc x%, (ctrl.keydown%(&hA) Or ctrl.keydown%(97))  * ctrl.SELECT ' Enter or A
   Inc x%, ctrl.keydown%(115) * ctrl.START ' S
   Inc x%, ctrl.keydown%(128) * ctrl.UP
   Inc x%, ctrl.keydown%(129) * ctrl.DOWN
