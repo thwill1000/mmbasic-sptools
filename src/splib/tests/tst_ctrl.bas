@@ -1,4 +1,4 @@
-' Copyright (c) 2023 Thomas Hugo Williams
+' Copyright (c) 2023-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -15,47 +15,47 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../../sptest/unittest.inc"
 #Include "../ctrl.inc"
 
-add_test("test_open_driver")
-add_test("test_close_driver")
+add_test("test_add_driver")
+add_test("test_remove_driver")
 
 run_tests(Choice(InStr(Mm.CmdLine$, "--base"), "", "--base=1"))
 
 End
 
 Sub setup_test()
-  ctrl.open_drivers$ = ""
+  ctrl.driver_list$ = ""
 End Sub
 
-Sub test_open_driver()
-  ctrl.open_driver("atari_a")
-  assert_string_equals("atari_a,", ctrl.open_drivers$)
-  ctrl.open_driver("nes_b")
-  assert_string_equals("atari_a,nes_b,", ctrl.open_drivers$)
+Sub test_add_driver()
+  ctrl.add_driver("atari_a")
+  assert_string_equals("atari_a,", ctrl.driver_list$)
+  ctrl.add_driver("nes_b")
+  assert_string_equals("atari_a,nes_b,", ctrl.driver_list$)
 End Sub
 
-Sub test_close_driver()
-  ctrl.open_driver("one")
-  ctrl.open_driver("two")
-  ctrl.open_driver("three")
-  ctrl.open_driver("four")
-  ctrl.open_driver("five")
+Sub test_remove_driver()
+  ctrl.add_driver("one")
+  ctrl.add_driver("two")
+  ctrl.add_driver("three")
+  ctrl.add_driver("four")
+  ctrl.add_driver("five")
 
   ' Remove first element
-  ctrl.close_driver("one")
-  assert_string_equals("two,three,four,five,", ctrl.open_drivers$)
+  ctrl.remove_driver("one")
+  assert_string_equals("two,three,four,five,", ctrl.driver_list$)
 
   ' Remove last element
-  ctrl.close_driver("five")
-  assert_string_equals("two,three,four,", ctrl.open_drivers$)
+  ctrl.remove_driver("five")
+  assert_string_equals("two,three,four,", ctrl.driver_list$)
 
   ' Remove middle element
-  ctrl.close_driver("three")
-  assert_string_equals("two,four,", ctrl.open_drivers$)
+  ctrl.remove_driver("three")
+  assert_string_equals("two,four,", ctrl.driver_list$)
 
-  ctrl.close_driver("four")
-  assert_string_equals("two,", ctrl.open_drivers$)
+  ctrl.remove_driver("four")
+  assert_string_equals("two,", ctrl.driver_list$)
 
   ' Close last element
-  ctrl.close_driver("two")
-  assert_string_equals("", ctrl.open_drivers$)
+  ctrl.remove_driver("two")
+  assert_string_equals("", ctrl.driver_list$)
 End Sub
