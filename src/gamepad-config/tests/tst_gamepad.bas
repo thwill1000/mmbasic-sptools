@@ -18,11 +18,16 @@ Option Default Integer
 '#Include "../../common/sptools.inc"
 '#Include "../input.inc"
 
+Const UI_NAMES = "D-Up D-Down D-Left D-Right A B X Y L1 L2 R1 R2 Select Start Home Touch"
+Const C_NAMES = "R START HOME SELECT L DOWN RIGHT UP LEFT R2 X A Y B L2 TOUCH"
+Dim UI_2_C(18) As Integer = (-1, -1, -1, 9, 7, 10, 8, 13, 15, 12, 14, 6, 16, 2, 11, 5, 3, 4, 17)
+
 add_test("test_num_changed_bits")
 add_test("test_compute_mapping_analog")
 add_test("test_compute_mapping_binary")
 add_test("test_buffalo")
 add_test("test_pihut")
+'add_test("test_ui_to_c_data")
 
 run_tests()
 
@@ -80,6 +85,11 @@ End Function
 
 Sub translate_record(button$, up%(), down%(), index%, value%)
   Local found%, i%
+  If down%(0) = -1 Then
+    index% = -1
+    value% = 0
+    Exit Sub
+  EndIf
   For i% = 0 To 7
     Select Case num_changed_bits%(up%(i%), down%(i%))
       Case 0:
@@ -115,7 +125,11 @@ Sub translate_record(button$, up%(), down%(), index%, value%)
 End Sub
 
 Function format_chex$(value%, digits%)
-  format_chex$ = "0x" + Hex$(value%, Choice(digits%, digits%, 2))
+  If value% = -1 Then
+    format_chex$ = "-1"
+  Else
+    format_chex$ = "0x" + Hex$(value%, Choice(digits%, digits%, 2))
+  EndiF
 End Function
 
 Function format_cmember$(name$, value%, digits%)
@@ -167,15 +181,23 @@ End Function
 '   (17)  L2
 '   (18)  Touch
 
-Const UI_NAMES = "D-Up D-Down D-Left D-Right A B X Y L1 L2 R1 R2 Select Start Home Touch"
-Const C_NAMES = "R START HOME SELECT L DOWN RIGHT UP LEFT R2 X A Y B L2 TOUCH"
-Dim UI_2_C(15) As Integer = (7, 5, 8, 6, 11, 13, 10, 12, 4, 14, 0, 9, 3, 1, 2, 15)
-
 ' Generates 'c_data' data from 'ui_data' data.
-Sub usb_to_c_data(ui_data%(), c_data%())
+Sub ui_to_c_data(ui_data%(), c_data%())
   c_data%(0, 0) = ui_data%(0, 0)
   c_data%(1, 0) = ui_data%(1, 0)
-  Local i% = 1
+  Local button$, i%, j%, up%(7), down%(7), index%, value%
+  For i% = 3 To 18
+    button$ = Field$(UI_NAMES, i% - 2, " ")
+    For j% = 0 To 7
+      up%(j%) = ui_data%(2, j%)
+      down%(j%) = ui_data%(i%, j%)
+    Next
+'    ? button$
+    translate_record(button$, up%(), down%(), index%, value%)
+'    ? i%, UI_2_C(i% - 3)
+    c_data%(UI_2_C(i%), 0) = index%
+    c_data%(UI_2_C(i%), 1) = value%
+  Next
 End Sub
 
 ' Print C-struct for gamepad suitable for inclusion in PicoMite source code.
@@ -186,7 +208,6 @@ Sub print_c_data(c_data%(), fnbr%)
   Print #fnbr%, format_cmember$("vid", c_data%(0, 0), 4);
   Print #fnbr%, ", ";
   Print #fnbr%, format_cmember$("pid", c_data%(1, 0), 4);
-  Print #fnbr%, ",";
   i% = 1
   Do
     name$ = Field$(C_NAMES, i%, " ")
@@ -262,46 +283,54 @@ Sub test_buffalo()
   test_gamepad("gamepad_buffalo")
 End Sub
 
-Sub test_gamepad(label$)
-  Local c_data%(17, 1)
+Sub test_pihut()
+  test_gamepad("gamepad_pihut")
+End Sub
 
-  Local count%, down%(7), expected_index%, expected_value%, name$, s$, pid%, up%(7), vid%
-  Local index%, value%
+Sub test_gamepad(label$)
+  Local actual_c_data%(17, 1), expected_c_data%(17, 1)
+  Local ui_data(18, 7)
+  Local count%, i%, j%, name$
+  Local expected_index%, expected_value%
+
   Restore label$
-  Read name$, vid%
-  Read name$, pid%
-  Read name$, count%, up%(0), up%(1), up%(2), up%(3), up%(4), up%(5), up%(6), up%(7)
-  If count% <> 8 Then Error "Invalid DATA: count <> 8"
+
+  Read name$, ui_data%(0, 0) ' vid
+  expected_c_data%(0, 0) = ui_data%(0, 0)
+  Read name$, ui_data%(1, 0) ' pid
+  expected_c_data%(1, 0) = ui_data%(1, 0)
+  i% = 2
   Do
     Read name$
     If name$ = "" Then Exit Do
     Read count%
-    If count% = 0 Then Continue Do
-    If count% <> 8 Then Error "Invalid DATA: count <> 8"
-    Read down%(0), down%(1), down%(2), down%(3), down%(4), down%(5), down%(6), down%(7)
-
-    Read expected_index%, expected_value%
-
-    index% = 0
-    value% = 0
-    translate_record(name$, up%(), down%(), index%, value%)
-    assert_int_equals(expected_index%, index%)
-    assert_int_equals(expected_value%, value%)
+    If count% <> 8 Then Error "Invalid DATA, expected count <> 8: " + Str$(count%)
+    For j% = 0 To count% - 1
+      Read ui_data%(i%, j%)
+    Next
+    If i% <> 2 Then
+      Read expected_c_data%(UI_2_C(i%), 0), expected_c_data%(UI_2_C(i%), 1)
+    EndIf
+    Inc i%
   Loop
 
-  Print
-  print_c_data(c_data%())
-End Sub
+  ' The SUB we are actually testing.
+  ui_to_c_data(ui_data%(), actual_c_data%())
 
-Sub test_pihut()
-  test_gamepad("gamepad_pihut")
+  For i% = 0 To Bound(expected_c_data%(), 1)
+    assert_hex_equals(expected_c_data%(i%, 0), actual_c_data%(i%, 0))
+    assert_hex_equals(expected_c_data%(i%, 1), actual_c_data%(i%, 1))
+  Next
+
+  Print
+  print_c_data(actual_c_data%())
 End Sub
 
 gamepad_buffalo:
 Data "VID",     &h0583
 Data "PID" ,    &h2060
 Data "None",    8, &h81, &h7F, &h00, &h00, &h00, &h00, &h00, &h00
-Data "D-Up",    8, &h81, &h00, &h00, &h00, &h00, &h00, &h00, &h00, 1, 64 
+Data "D-Up",    8, &h81, &h00, &h00, &h00, &h00, &h00, &h00, &h00, 1, 64
 Data "D-Down",  8, &h80, &hFF, &h00, &h00, &h00, &h00, &h00, &h00, 1, 192
 Data "D-Left",  8, &h00, &h80, &h00, &h00, &h00, &h00, &h00, &h00, 0, 64
 Data "D-Right", 8, &hFF, &h80, &h00, &h00, &h00, &h00, &h00, &h00, 0, 192
@@ -315,8 +344,8 @@ Data "R1",      8, &h81, &h7F, &h20, &h00, &h00, &h00, &h00, &h00, 2, 5
 Data "R2",      8, &h81, &h80, &h00, &h20, &h00, &h00, &h00, &h00, 3, 5 ' Clear
 Data "Select",  8, &h80, &h80, &h40, &h00, &h00, &h00, &h00, &h00, 2, 6
 Data "Start",   8, &h81, &h80, &h80, &h00, &h00, &h00, &h00, &h00, 2, 7
-Data "Home",    0
-Data "Touch",   0
+Data "Home",    8, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0
+Data "Touch",   8, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0
 Data ""
 
 gamepad_pihut:
@@ -332,11 +361,11 @@ Data "B",       8, &h01, &h7F, &h7F, &h7F, &h7F, &h4F, &h00, &h00, 5, 6
 Data "X",       8, &h01, &h7F, &h7F, &h7F, &h7F, &h1F, &h00, &h00, 5, 4
 Data "Y",       8, &h01, &h7F, &h7F, &h7F, &h7F, &h8F, &h00, &h00, 5, 7
 Data "L1",      8, &h01, &h7F, &h7F, &h7F, &h7F, &h0F, &h01, &h00, 6, 0
-Data "L2",      0
+Data "L2",      8, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0
 Data "R1",      8, &h01, &h7F, &h7F, &h7F, &h7F, &h0F, &h02, &h00, 6, 1
-Data "R2",      0
+Data "R2",      8, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0
 Data "Select",  8, &h01, &h7F, &h7F, &h7F, &h7F, &h0F, &h10, &h00, 6, 4
 Data "Start",   8, &h01, &h7F, &h7F, &h7F, &h7F, &h0F, &h20, &h00, 6, 5
-Data "Home",    0
-Data "Touch",   0
+Data "Home",    8, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0
+Data "Touch",   8, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0
 Data ""
