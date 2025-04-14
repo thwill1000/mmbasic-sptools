@@ -1,4 +1,4 @@
-' Copyright (c) 2022-2024 Thomas Hugo Williams
+' Copyright (c) 2022-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 ' MMBasic Controller Library
@@ -6,6 +6,7 @@
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
 If sys.VERSION = -1 Then Error "'system.inc' not included"
+On Error Clear
 sys.provides("ctrl")
 If sys.err$ <> "" Then Error sys.err$
 '!endif
@@ -226,6 +227,7 @@ End Function
 ' @param  mask%    bit mask to match against.
 ' @return          matching bits, otherwise 0.
 Function ctrl.poll_single%(driver$, mask%)
+  If Mm.Info(Device X) = "MMB4L" And Left$(driver$, 5) = "atari" Then Exit Function ' Unsupported
   On Error Ignore
   Call driver$, ctrl.OPEN
   If Mm.ErrNo = 0 Then
@@ -387,11 +389,13 @@ Sub snes_a(x%)
       Inc x%, Not Pin(GP1) * ctrl.R      : Pulse GP3, ctrl.PULSE
       Exit Sub
     Case ctrl.OPEN
+      If Mm.Info(Device X) = "MMB4L" And InStr(ctrl.driver_list$, "snes_a") Then Exit Sub
       SetPin GP1, Din : SetPin GP2, Dout : SetPin GP3, Dout
       Pin(GP2) = 0 : Pin(GP3) = 0
       snes_a(0) ' Discard the first reading.
       ctrl.add_driver("snes_a")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
+      If Mm.Info(Device X) = "MMB4L" And x% = ctrl.SOFT_CLOSE Then Exit Sub
       SetPin GP1, Off : SetPin GP2, Off : SetPin GP3, Off
       ctrl.remove_driver("snes_a")
   End Select
@@ -418,11 +422,13 @@ Sub snes_b(x%)
       Inc x%, Not Pin(GP4) * ctrl.R      : Pulse GP22, ctrl.PULSE
       Exit Sub
     Case ctrl.OPEN
+      If Mm.Info(Device X) = "MMB4L" And InStr(ctrl.driver_list$, "snes_b") Then Exit Sub
       SetPin GP4, Din : SetPin GP5, Dout : SetPin GP22, Dout
       Pin(GP5) = 0 : Pin(GP22) = 0
       snes_b(0) ' Discard the first reading.
       ctrl.add_driver("snes_b")
     Case ctrl.CLOSE, ctrl.SOFT_CLOSE
+      If Mm.Info(Device X) = "MMB4L" And x% = ctrl.SOFT_CLOSE Then Exit Sub
       SetPin GP4, Off : SetPin GP5, Off : SetPin GP22, Off
       ctrl.remove_driver("snes_b")
   End Select
