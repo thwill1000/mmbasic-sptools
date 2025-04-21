@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2021 Thomas Hugo Williams
+' Copyright (c) 2020-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 6.00
 
 Option Explicit On
 Option Default None
@@ -78,6 +78,7 @@ End Sub
 Sub test_lpad()
   assert_string_equals("     hello", str.lpad$("hello", 10))
   assert_string_equals("hello", str.lpad$("hello", 2))
+  assert_string_equals("?????hello", str.lpad$("hello", 10, "?"))
 End Sub
 
 Sub test_is_plain_ascii()
@@ -253,6 +254,7 @@ End Sub
 Sub test_rpad()
   assert_string_equals("hello     ", str.rpad$("hello", 10))
   assert_string_equals("hello", str.rpad$("hello", 2))
+  assert_string_equals("hello?????", str.rpad$("hello", 10, "?"))
 End Sub
 
 Sub test_trim()

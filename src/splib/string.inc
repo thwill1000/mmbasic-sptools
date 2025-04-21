@@ -46,9 +46,17 @@ Function str.is_plain_ascii%(s$)
   str.is_plain_ascii% = 1
 End Function
 
-Function str.lpad$(s$, x%)
+' Gets a string padded to a given width with to the left.
+'
+' @param  s$  the string.
+' @param  w%  the width.
+' @param  c$  the padding character, a space if omitted.
+' @return     the padded string.
+'             If Len(s$) > w% then returns the unpadded string.
+Function str.lpad$(s$, x%, c$)
   str.lpad$ = s$
-  If Len(s$) < x% Then str.lpad$ = Space$(x% - Len(s$)) + s$
+  If c$ = "" Then c$ = " "
+  If Len(s$) < x% Then str.lpad$ = String$(x% - Len(s$), c$) + s$
 End Function
 
 ' Tokenises a string separated by delimiters.
@@ -162,15 +170,17 @@ Function str.reverse$(s$)
   Next
 End Function
 
-' Gets a string padded to a given width with spaces to the right.
+' Gets a string padded to a given width to the right.
 '
 ' @param  s$  the string.
 ' @param  w%  the width.
+' @param  c$  the padding character, a space if omitted.
 ' @return     the padded string.
 '             If Len(s$) > w% then returns the unpadded string.
-Function str.rpad$(s$, x%)
+Function str.rpad$(s$, x%, c$)
   str.rpad$ = s$
-  If Len(s$) < x% Then str.rpad$ = s$ + Space$(x% - Len(s$))
+  If c$ = "" Then c$ = " "
+  If Len(s$) < x% Then str.rpad$ = s$ + String$(x% - Len(s$), c$)
 End Function
 
 ' Returns a copy of s$ with leading and trailing spaces removed.
