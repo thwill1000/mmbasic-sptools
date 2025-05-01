@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2024 Thomas Hugo Williams
+' Copyright (c) 2020-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 ' For MMBasic 5.07
 
@@ -575,4 +575,9 @@ Function file.trim_extension$(f$)
     End Select
   Next
   file.trim_extension$ = f$
+End Function
+
+' Resolves a file against a given parent.
+Function file.resolve$(parent$, f$)
+  file.resolve$ = parent$ + file.SEPARATOR + f$
 End Function
