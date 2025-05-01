@@ -1,7 +1,7 @@
 ChangeLog
 ---------
 
-Version 1.3.0 - 18-Jan-2024:
+Version 1.3.0 - 18-Jan-2025:
  - splib:
    - system.inc:
      - Added check that OPTION EXPLICIT is set; throws ERROR if not.
