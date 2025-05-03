@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07
+' For MMBasic 6.00
 
 Option Explicit On
 Option Default Integer
@@ -23,8 +23,8 @@ Const BASE = Mm.Info(Option Base)
 
 Dim CY$, GR$, MA$, RD$, RS$, WH$, YE$
 Dim expected$(array.new%(20))
-Dim in$(array.new%(20))
-Dim out$(array.new%(20))
+Dim lin$(array.new%(20))
+Dim lout$(array.new%(20))
 Dim out_next%
 
 keywords.init()
@@ -51,12 +51,12 @@ End
 
 Sub setup_test()
   Local i%
-  For i% = Bound(in$(), 0) To Bound(in$(), 1)
+  For i% = Bound(lin$(), 0) To Bound(lin$(), 1)
     expected$(i%) = ""
-    in$(i%) = ""
-    out$(i%) = ""
+    lin$(i%) = ""
+    lout$(i%) = ""
   Next
-  out_next% = Bound(out$(), 0)
+  out_next% = Bound(lout$(), 0)
   out.append% = 0
   out.line_num% = 0
   out.line_num_width% = 0
@@ -68,20 +68,20 @@ End Sub
 Sub write_cb(fnbr%, s$)
   If fnbr% <> 0 Then Error "Invalid state"
   If Right$(s$, 2) = Chr$(13) + Chr$(10) Then
-    Cat out$(out_next%), Left$(s$, Len(s$) - 2)
+    Cat lout$(out_next%), Left$(s$, Len(s$) - 2)
     Inc out_next%
   ElseIf InStr(Chr$(13) + Chr$(10), Right$(s$, 1)) Then
-    Cat out$(out_next%), Left$(s$, Len(s$) - 1)
+    Cat lout$(out_next%), Left$(s$, Len(s$) - 1)
     Inc out_next%
   Else
-    Cat out$(out_next%), s$
+    Cat lout$(out_next%), s$
   EndIf
 End Sub
 
 Sub output_lines()
   Local i%, result%
-  For i% = Bound(in$(), 0) To Bound(in$(), 1)
-    result% = lx.parse_basic%(in$(i%))
+  For i% = Bound(lin$(), 0) To Bound(lin$(), 1)
+    result% = lx.parse_basic%(lin$(i%))
     If result% <> sys.SUCCESS Then Exit For
     out.line()
   Next
@@ -99,11 +99,11 @@ Sub expect_colours(colour%)
 End Sub
 
 Sub test_line(colour%)
-  in$(0) = "Dim a = 1 + 2"
-  in$(1) = "Dim b$ = " + str.quote$("foo")
-  in$(2) = "'!if defined(bar)"
-  in$(3) = "100 Dim line_number"
-  in$(4) = "wombat: Dim label"
+  lin$(0) = "Dim a = 1 + 2"
+  lin$(1) = "Dim b$ = " + str.quote$("foo")
+  lin$(2) = "'!if defined(bar)"
+  lin$(3) = "100 Dim line_number"
+  lin$(4) = "wombat: Dim label"
 
   expect_colours(colour%)
   opt.colour% = colour%
@@ -114,7 +114,7 @@ Sub test_line(colour%)
   expected$(2) = RD$ + "'!if " + WH$ + "defined" + WH$ + "(" + WH$ + "bar" + WH$ + ")" + RS$
   expected$(3) = GR$ + "100 " + CY$ + "Dim " + WH$ + "line_number" + RS$
   expected$(4) = GR$ + "wombat: " + CY$ + "Dim " + WH$ + "label" + RS$
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_line_gvn_colour()
@@ -123,21 +123,21 @@ End Sub
 
 Sub test_line_gvn_empty()
   assert_int_equals(sys.SUCCESS, lx.parse_basic%("foo"))
-  in$(0) = "foo"
-  in$(1) = ""
-  in$(0) = "bar"
+  lin$(0) = "foo"
+  lin$(1) = ""
+  lin$(0) = "bar"
 
   output_lines()
 
-  assert_string_array_equals(in$(), out$())
+  assert_string_array_equals(lin$(), lout$())
 End Sub
 
 Sub test_line_gvn_line_num(colour%)
-  in$(0) = "Dim a = 1 + 2"
-  in$(1) = "Dim b$ = " + str.quote$("foo")
-  in$(2) = "'!if defined(bar)"
-  in$(3) = "100 Dim line_number"
-  in$(4) = "wombat: Dim label"
+  lin$(0) = "Dim a = 1 + 2"
+  lin$(1) = "Dim b$ = " + str.quote$("foo")
+  lin$(2) = "'!if defined(bar)"
+  lin$(3) = "100 Dim line_number"
+  lin$(4) = "wombat: Dim label"
 
   out.line_num_width% = 5
   expect_colours(colour%)
@@ -150,10 +150,10 @@ Sub test_line_gvn_line_num(colour%)
   expected$(3) = "4     " + GR$ + "100 " + CY$ + "Dim " + WH$ + "line_number" + RS$
   expected$(4) = "5     " + GR$ + "wombat: " + CY$ + "Dim " + WH$ + "label" + RS$
   Local i%
-  For i% = 5 To Bound(out$(), 1)
+  For i% = 5 To Bound(lout$(), 1)
     expected$(i%) = str.rpad$(Str$(i% + 1), 6)
   Next
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_line_gvn_line_num_colour()
@@ -163,13 +163,13 @@ End Sub
 Sub test_line_csub(fn$, colour%)
   If Not Len(fn$) Then fn$ = "CSub"
 
-  in$(0) = fn$ + " abcdef()"
-  in$(1) = "  00000000"
-  in$(2) = "  00AABBCC FFFFFFFF"
-  in$(3) = "  ' comment"
-  in$(5) = "  not_valid = 5"
-  in$(6) = "  not_valid_either = " + str.quote$("wombat")
-  in$(7) = "End " + fn$
+  lin$(0) = fn$ + " abcdef()"
+  lin$(1) = "  00000000"
+  lin$(2) = "  00AABBCC FFFFFFFF"
+  lin$(3) = "  ' comment"
+  lin$(5) = "  not_valid = 5"
+  lin$(6) = "  not_valid_either = " + str.quote$("wombat")
+  lin$(7) = "End " + fn$
 
   expect_colours(colour%)
   opt.colour% = colour%
@@ -182,7 +182,7 @@ Sub test_line_csub(fn$, colour%)
   expected$(5) = "  " + WH$ + "not_valid " + WH$ + "= " + GR$ + "5" + RS$
   expected$(6) = "  " + WH$ + "not_valid_either " + WH$ + "= " + ma$ + str.quote$("wombat") + RS$
   expected$(7) = CY$ + "End " + CY$ + fn$ + RS$
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_line_csub_gvn_colour()
@@ -198,11 +198,11 @@ Sub test_line_cfunc_gvn_colour()
 End Sub
 
 Sub test_line_comment(colour%)
-  in$(0) = "' Comment 1"
-  in$(1) = "foo 'Comment2"
-  in$(2) = "bar REM Comment 3"
-  in$(3) = "'_Comment 4"
-  in$(4) = "' _Comment 5"
+  lin$(0) = "' Comment 1"
+  lin$(1) = "foo 'Comment2"
+  lin$(2) = "bar REM Comment 3"
+  lin$(3) = "'_Comment 4"
+  lin$(4) = "' _Comment 5"
 
   expect_colours(colour%)
   opt.colour% = colour%
@@ -213,7 +213,7 @@ Sub test_line_comment(colour%)
   expected$(2) = WH$ + "bar " + YE$ + "REM Comment 3" + RS$
   expected$(3) = YE$ + "' Comment 4" + RS$ ' Leading _ should be stripped.
   expected$(4) = YE$ + "' _Comment 5" + RS$
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_line_comment_gvn_colour()
@@ -229,7 +229,7 @@ Sub test_omit_line()
 
   expected$(0) = "foo"
   expected$(1) = "bar"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_empty_line()
@@ -242,7 +242,7 @@ Sub test_empty_line()
   expected$(0) = "foo"
   expected$(1) = ""
   expected$(2) = "bar"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 ' IF the current line is empty
@@ -261,7 +261,7 @@ Sub test_empty_line_gvn_omit()
   expected$(0) = "foo"
   expected$(1) = ""
   expected$(2) = "bar"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 ' Omit empty lines at start of file.
@@ -272,5 +272,5 @@ Sub test_empty_line_gvn_start()
   out.line()
 
   expected$(0) = "foo"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub

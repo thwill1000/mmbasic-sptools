@@ -1,6 +1,6 @@
-' Copyright (c) 2023 Thomas Hugo Williams
+' Copyright (c) 2023-025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07
+' For MMBasic 6.00
 
 Option Explicit On
 Option Default Integer
@@ -21,7 +21,7 @@ Option Default Integer
 #Include "../format.inc"
 
 Const NUM_LINES = 50
-Dim expected$(NUM_LINES) Length 64, in$(NUM_LINES) Length 64, out$(NUM_LINES) Length 64
+Dim expected$(NUM_LINES) Length 64, lin$(NUM_LINES) Length 64, lout$(NUM_LINES) Length 64
 
 keywords.init()
 
@@ -57,10 +57,10 @@ Sub setup_test()
   opt.init()
   fmt.indent_lvl% = 0
   Local i%
-  For i% = Bound(in$(), 0) To Bound(in$(), 1)
+  For i% = Bound(lin$(), 0) To Bound(lin$(), 1)
     expected$(i%) = ""
-    in$(i%) = ""
-    out$(i%) = ""
+    lin$(i%) = ""
+    lout$(i%) = ""
   Next
 End Sub
 
@@ -68,30 +68,30 @@ Sub format_lines()
   Local i%, j% = Mm.Info(Option Base), result%
   fmt.previous% = 0
   fmt.indent_lvl% = 0
-  For i% = Bound(in$(), 0) To Bound(in$(), 1)
-    assert_int_equals(sys.SUCCESS, lx.parse_basic%(in$(i%)))
+  For i% = Bound(lin$(), 0) To Bound(lin$(), 1)
+    assert_int_equals(sys.SUCCESS, lx.parse_basic%(lin$(i%)))
     result% = fmt.format%()
     assert_true(result% >= 0)
     assert_no_error()
     If result% = fmt.EMPTY_LINE_BEFORE Then
-      out$(j%) = ""
+      lout$(j%) = ""
       Inc j%
     EndIf
     If result% <> fmt.OMIT_LINE Then
-      out$(j%) = lx.line$
+      lout$(j%) = lx.line$
       Inc j%
     EndIf
     If result% = fmt.EMPTY_LINE_AFTER Then
-      out$(j%) = ""
+      lout$(j%) = ""
       Inc j%
     EndIf
   Next
 End Sub
 
 Sub test_indent_multi_line_if_then()
-  in$(0) = "If a = b Then"
-  in$(1) = "Print c"
-  in$(2) = "EndIf"
+  lin$(0) = "If a = b Then"
+  lin$(1) = "Print c"
+  lin$(2) = "EndIf"
 
   opt.indent_sz% = 2
   format_lines()
@@ -99,13 +99,13 @@ Sub test_indent_multi_line_if_then()
   expected$(0) = "If a = b Then"
   expected$(1) = "  Print c"
   expected$(2) = "EndIf"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_multi_line_end_if()
-  in$(0) = "If a = b Then"
-  in$(1) = "Print c"
-  in$(2) = "End If"
+  lin$(0) = "If a = b Then"
+  lin$(1) = "Print c"
+  lin$(2) = "End If"
 
   opt.indent_sz% = 2
   format_lines()
@@ -113,27 +113,27 @@ Sub test_indent_multi_line_end_if()
   expected$(0) = "If a = b Then"
   expected$(1) = "  Print c"
   expected$(2) = "End If"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_single_line_if_then()
-  in$(0) = "If a = b Then c = d"
-  in$(1) = "Print c"
+  lin$(0) = "If a = b Then c = d"
+  lin$(1) = "Print c"
 
   opt.indent_sz% = 2
   format_lines()
 
   expected$(0) = "If a = b Then c = d"
   expected$(1) = "Print c"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_continue_for()
-  in$(0) = "If 1 Then"
-  in$(1) = "If a = b Then"
-  in$(2) = "Continue For"
-  in$(3) = "EndIf"
-  in$(4) = "EndIf"
+  lin$(0) = "If 1 Then"
+  lin$(1) = "If a = b Then"
+  lin$(2) = "Continue For"
+  lin$(3) = "EndIf"
+  lin$(4) = "EndIf"
 
   opt.indent_sz% = 2
   format_lines()
@@ -143,14 +143,14 @@ Sub test_indent_continue_for()
   expected$(2) = "    Continue For"
   expected$(3) = "  EndIf"
   expected$(4) = "EndIf"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_sub()
-  in$(0) = "Sub foo()"
-  in$(1) = "Print a"
-  in$(2) = "End Sub"
-  in$(3) = "Print b"
+  lin$(0) = "Sub foo()"
+  lin$(1) = "Print a"
+  lin$(2) = "End Sub"
+  lin$(3) = "Print b"
 
   opt.indent_sz% = 2
   format_lines()
@@ -159,14 +159,14 @@ Sub test_indent_sub()
   expected$(1) = "  Print a"
   expected$(2) = "End Sub"
   expected$(3) = "Print b"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_function()
-  in$(0) = "Function foo()"
-  in$(1) = "Print a"
-  in$(2) = "End Function"
-  in$(3) = "Print b"
+  lin$(0) = "Function foo()"
+  lin$(1) = "Print a"
+  lin$(2) = "End Function"
+  lin$(3) = "Print b"
 
   opt.indent_sz% = 2
   format_lines()
@@ -175,15 +175,15 @@ Sub test_indent_function()
   expected$(1) = "  Print a"
   expected$(2) = "End Function"
   expected$(3) = "Print b"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_exit_for()
-  in$(0) = "If 1 Then"
-  in$(1) = "If a = b Then"
-  in$(2) = "Exit For"
-  in$(3) = "EndIf"
-  in$(4) = "EndIf"
+  lin$(0) = "If 1 Then"
+  lin$(1) = "If a = b Then"
+  lin$(2) = "Exit For"
+  lin$(3) = "EndIf"
+  lin$(4) = "EndIf"
 
   opt.indent_sz% = 2
   format_lines()
@@ -193,15 +193,15 @@ Sub test_indent_exit_for()
   expected$(2) = "    Exit For"
   expected$(3) = "  EndIf"
   expected$(4) = "EndIf"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_exit_function()
-  in$(0) = "If 1 Then"
-  in$(1) = "If a = b Then"
-  in$(2) = "Exit Function"
-  in$(3) = "EndIf"
-  in$(4) = "EndIf"
+  lin$(0) = "If 1 Then"
+  lin$(1) = "If a = b Then"
+  lin$(2) = "Exit Function"
+  lin$(3) = "EndIf"
+  lin$(4) = "EndIf"
 
   opt.indent_sz% = 2
   format_lines()
@@ -211,15 +211,15 @@ Sub test_indent_exit_function()
   expected$(2) = "    Exit Function"
   expected$(3) = "  EndIf"
   expected$(4) = "EndIf"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_exit_sub()
-  in$(0) = "If 1 Then"
-  in$(1) = "If a = b Then"
-  in$(2) = "Exit Sub"
-  in$(3) = "EndIf"
-  in$(4) = "EndIf"
+  lin$(0) = "If 1 Then"
+  lin$(1) = "If a = b Then"
+  lin$(2) = "Exit Sub"
+  lin$(3) = "EndIf"
+  lin$(4) = "EndIf"
 
   opt.indent_sz% = 2
   format_lines()
@@ -229,22 +229,22 @@ Sub test_indent_exit_sub()
   expected$(2) = "    Exit Sub"
   expected$(3) = "  EndIf"
   expected$(4) = "EndIf"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_select_case()
-  in$(0)  = "If 1 Then"
-  in$(1)  = "Select Case a"
-  in$(2)  = "Case 1"
-  in$(3)  = "Print 1"
-  in$(4)  = "Case 2 : Print 2"
-  in$(5)  = "Case 3"
-  in$(6)  = "Print 3"
-  in$(7)  = "Case Else"
-  in$(8)  = "Print 4"
-  in$(9)  = "Case Else : Print 5" ' Not actually legal BASIC to have two Case Else's
-  in$(10) = "End Select"
-  in$(11) = "EndIf"
+  lin$(0)  = "If 1 Then"
+  lin$(1)  = "Select Case a"
+  lin$(2)  = "Case 1"
+  lin$(3)  = "Print 1"
+  lin$(4)  = "Case 2 : Print 2"
+  lin$(5)  = "Case 3"
+  lin$(6)  = "Print 3"
+  lin$(7)  = "Case Else"
+  lin$(8)  = "Print 4"
+  lin$(9)  = "Case Else : Print 5" ' Not actually legal BASIC to have two Case Else's
+  lin$(10) = "End Select"
+  lin$(11) = "EndIf"
 
   opt.indent_sz% = 2
   format_lines()
@@ -261,15 +261,15 @@ Sub test_indent_select_case()
   expected$(9)  = "    Case Else : Print 5"
   expected$(10) = "  End Select"
   expected$(11) = "EndIf"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_csub()
-  in$(0) = "CSub foo()"
-  in$(1) = "00000000"
-  in$(2) = "00AABBCC FFFFFFFF"
-  in$(3) = "End CSub"
-  in$(4) = "x = x + 1 ' something at global level"
+  lin$(0) = "CSub foo()"
+  lin$(1) = "00000000"
+  lin$(2) = "00AABBCC FFFFFFFF"
+  lin$(3) = "End CSub"
+  lin$(4) = "x = x + 1 ' something at global level"
 
   opt.indent_sz% = 2
   format_lines()
@@ -278,19 +278,19 @@ Sub test_indent_csub()
   expected$(1) = "  00000000"
   expected$(2) = "  00AABBCC FFFFFFFF"
   expected$(3) = "End CSub"
-  expected$(4) = in$(4)
-  assert_string_array_equals(expected$(), out$())
+  expected$(4) = lin$(4)
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_indent_line_numbers()
 
   ' Line numbers left-padded to 6 characters.
-  in$(0) = "1 foo"
-  in$(1) = "12 foo"
-  in$(2) = "1234 foo"
-  in$(3) = "12345 foo"
-  in$(4) = "123456 foo"
-  in$(5) = "1234567 foo"
+  lin$(0) = "1 foo"
+  lin$(1) = "12 foo"
+  lin$(2) = "1234 foo"
+  lin$(3) = "12345 foo"
+  lin$(4) = "123456 foo"
+  lin$(5) = "1234567 foo"
 
   opt.indent_sz% = 2
   format_lines()
@@ -301,16 +301,16 @@ Sub test_indent_line_numbers()
   expected$(3) = " 12345 foo"
   expected$(4) = "123456 foo"
   expected$(5) = "1234567 foo"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 
   ' Line numbers not indented, but subsequent tokens are.
   setup_test()
 
-  in$(0) = "10 For i% = 1 To 5"
-  in$(1) = "20 If a% = b% Then"
-  in$(2) = "30 foo"
-  in$(3) = "40 EndIf"
-  in$(4) = "50 Next"
+  lin$(0) = "10 For i% = 1 To 5"
+  lin$(1) = "20 If a% = b% Then"
+  lin$(2) = "30 foo"
+  lin$(3) = "40 EndIf"
+  lin$(4) = "50 Next"
 
   opt.indent_sz% = 2
   format_lines()
@@ -320,7 +320,7 @@ Sub test_indent_line_numbers()
   expected$(2) = "    30     foo"
   expected$(3) = "    40   EndIf"
   expected$(4) = "    50 Next"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_preserve_spacing()
@@ -330,63 +330,63 @@ Sub test_preserve_spacing()
   format_lines()
 
   Local i%
-  For i% = Bound(in$(), 0) To Bound(in$(), 1)
+  For i% = Bound(lin$(), 0) To Bound(lin$(), 1)
     ' Expect trailing whitespace removed.
-    expected$(i%) = str.rtrim$(in$(i%))
+    expected$(i%) = str.rtrim$(lin$(i%))
   Next
 
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub setup_spacing_test()
-  in$(0) = "Dim  a  =  -5"
-  in$(1) = "If  a  >  -1  Then"
-  in$(2) = "If  a  <  -1  Then"
-  in$(3) = "If  a  <>  -1  Then"
-  in$(4) = "If  (a  <  0)  Or  (b  >  1)  Then"
-  in$(5) = "ElseIf  (a  <  0)  And  (b  >  1)  Then"
-  in$(6) = "x  =  myfun(a)    ' comment"
-  in$(7) = "    ' comment"
-  in$(8) = "myfun(a,  ,  b)"
-  in$(9) = "Dim  a(4)  =  (-2,  -1,  0,  1,  2)"
-  in$(10) = "For  i%  =  5  To  1  Step  -1"
-  in$(11) = "Loop Until  (  -a  >  -b  )"
-  in$(12) = "label: foo  :  bar"
-  in$(13) = "Dim a = b - 1"
-  in$(14) = "foo(" + str.quote$("bar") + ")"
-  in$(15) = "c% = Bound(a$(), 1) - Bound(a$(), 0) + 1"
-  in$(16) = "x%(j%) = x%(j%) And Inv(1 << (i% Mod 64))"
-  in$(17) = "Print 5 ;"
-  in$(18) = "Local shift% = Len(token$) + Len(sep$) + (idx% = 0)"
-  in$(19) = "tr.update_num_comments( + 1)"
-  in$(20) = "trailing = whitespace  "
-  in$(21) = "If Mm.Info$(Device) = " + str.quote$("MMB4L") + " Then"
-  in$(22) = "If f$ <> " + str.quote$("MMB4L") + " Then"
-  in$(23) = "lx.store(TK_NUMBER, start , lx.pos - start)"
-  in$(24) = "Case Else : a = 1"
-  in$(25) = "Print " + str.quote$("foo") + " s$ " + str.quote$("bar")
-  in$(26) = "If p% > Len(s$) Then"
-  in$(27) = "If p% <= Len(s$) Then"
-  in$(28) = "If p% <> Len(s$) Then"
-  in$(29) = "Print " + str.quote$("[") + " Str$(i%) " + str.quote$("]")
-  in$(30) = "Inc x, (5)"
-  in$(31) = "con.print(Left$(ia_str$(i), p - 1))"
-  in$(32) = "Local h% = Mm.VRes \ Mm.Info(FontHeight)"
-  in$(33) = "Local h%=Mm.VRes*Mm.Info(FontHeight)"
-  in$(34) = "Local h%=Mm.VRes/Mm.Info(FontHeight)"
-  in$(35) = "Local h%=Mm.VRes+Mm.Info(FontHeight)"
-  in$(36) = "Local h%=Mm.VRes-Mm.Info(FontHeight)"
-  in$(37) = "Case <32, >126 : Exit Function"
-  in$(38) = "Print Chr$(&h08) s$"
-  in$(39) = "Print Chr$(8) ; " + str.quote$(" ") + " ; Chr$(8) ;"
-  in$(40) = "If Not flags% And msgbox.NO_PAGES Then ? ;"
-  in$(41) = "Case Is >= 0"
-  in$(42) = "? Mm.Info(Exists " + str.quote$("foo") + ")"
-  in$(43) = "foo'comment1"
-  in$(44) = "bar    ' comment2"
-  in$(45) = "Dim a As Integer = 10"
-  in$(46) = "Dim a As Float = 10.0"
-  in$(47) = "Dim a As String = " + str.quote$("foobar")
+  lin$(0) = "Dim  a  =  -5"
+  lin$(1) = "If  a  >  -1  Then"
+  lin$(2) = "If  a  <  -1  Then"
+  lin$(3) = "If  a  <>  -1  Then"
+  lin$(4) = "If  (a  <  0)  Or  (b  >  1)  Then"
+  lin$(5) = "ElseIf  (a  <  0)  And  (b  >  1)  Then"
+  lin$(6) = "x  =  myfun(a)    ' comment"
+  lin$(7) = "    ' comment"
+  lin$(8) = "myfun(a,  ,  b)"
+  lin$(9) = "Dim  a(4)  =  (-2,  -1,  0,  1,  2)"
+  lin$(10) = "For  i%  =  5  To  1  Step  -1"
+  lin$(11) = "Loop Until  (  -a  >  -b  )"
+  lin$(12) = "label: foo  :  bar"
+  lin$(13) = "Dim a = b - 1"
+  lin$(14) = "foo(" + str.quote$("bar") + ")"
+  lin$(15) = "c% = Bound(a$(), 1) - Bound(a$(), 0) + 1"
+  lin$(16) = "x%(j%) = x%(j%) And Inv(1 << (i% Mod 64))"
+  lin$(17) = "Print 5 ;"
+  lin$(18) = "Local shift% = Len(token$) + Len(sep$) + (idx% = 0)"
+  lin$(19) = "tr.update_num_comments( + 1)"
+  lin$(20) = "trailing = whitespace  "
+  lin$(21) = "If Mm.Info$(Device) = " + str.quote$("MMB4L") + " Then"
+  lin$(22) = "If f$ <> " + str.quote$("MMB4L") + " Then"
+  lin$(23) = "lx.store(TK_NUMBER, start , lx.pos - start)"
+  lin$(24) = "Case Else : a = 1"
+  lin$(25) = "Print " + str.quote$("foo") + " s$ " + str.quote$("bar")
+  lin$(26) = "If p% > Len(s$) Then"
+  lin$(27) = "If p% <= Len(s$) Then"
+  lin$(28) = "If p% <> Len(s$) Then"
+  lin$(29) = "Print " + str.quote$("[") + " Str$(i%) " + str.quote$("]")
+  lin$(30) = "Inc x, (5)"
+  lin$(31) = "con.print(Left$(ia_str$(i), p - 1))"
+  lin$(32) = "Local h% = Mm.VRes \ Mm.Info(FontHeight)"
+  lin$(33) = "Local h%=Mm.VRes*Mm.Info(FontHeight)"
+  lin$(34) = "Local h%=Mm.VRes/Mm.Info(FontHeight)"
+  lin$(35) = "Local h%=Mm.VRes+Mm.Info(FontHeight)"
+  lin$(36) = "Local h%=Mm.VRes-Mm.Info(FontHeight)"
+  lin$(37) = "Case <32, >126 : Exit Function"
+  lin$(38) = "Print Chr$(&h08) s$"
+  lin$(39) = "Print Chr$(8) ; " + str.quote$(" ") + " ; Chr$(8) ;"
+  lin$(40) = "If Not flags% And msgbox.NO_PAGES Then ? ;"
+  lin$(41) = "Case Is >= 0"
+  lin$(42) = "? Mm.Info(Exists " + str.quote$("foo") + ")"
+  lin$(43) = "foo'comment1"
+  lin$(44) = "bar    ' comment2"
+  lin$(45) = "Dim a As Integer = 10"
+  lin$(46) = "Dim a As Float = 10.0"
+  lin$(47) = "Dim a As String = " + str.quote$("foobar")
 End Sub
 
 Sub test_minimal_spacing()
@@ -443,7 +443,7 @@ Sub test_minimal_spacing()
   expected$(45) = "Dim a As Integer =10"
   expected$(46) = "Dim a As Float =10.0"
   expected$(47) = "Dim a As String =" + str.quote$("foobar")
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_compact_spacing()
@@ -500,7 +500,7 @@ Sub test_compact_spacing()
   expected$(45) = "Dim a As Integer =10"
   expected$(46) = "Dim a As Float =10.0"
   expected$(47) = "Dim a As String =" + str.quote$("foobar")
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_generous_spacing()
@@ -557,40 +557,40 @@ Sub test_generous_spacing()
   expected$(45) = "Dim a As Integer = 10"
   expected$(46) = "Dim a As Float = 10.0"
   expected$(47) = "Dim a As String = " + str.quote$("foobar")
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_keyword_capitalisation()
-  in$(0) = "FOr i=20 TO 1 StEP -2"
+  lin$(0) = "FOr i=20 TO 1 StEP -2"
 
   opt.keywords = -1 ' preserve capitalisation.
   format_lines()
   expected$(0) = "FOr i=20 TO 1 StEP -2"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 
   opt.keywords = 0 ' lower-case.
   format_lines()
   expected$(0) = "for i=20 to 1 step -2"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 
   opt.keywords = 1 ' pascal-case.
   format_lines()
   expected$(0) = "For i=20 To 1 Step -2"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 
   opt.keywords = 2 ' upper-case.
   format_lines()
   expected$(0) = "FOR i=20 TO 1 STEP -2"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_preserve_empty_lines()
-  in$(0) = ""
-  in$(1) = "foo"
-  in$(2) = ""
-  in$(3) = ""
-  in$(4) = "bar"
-  in$(5) = ""
+  lin$(0) = ""
+  lin$(1) = "foo"
+  lin$(2) = ""
+  lin$(3) = ""
+  lin$(4) = "bar"
+  lin$(5) = ""
 
   opt.empty_lines% = -1
   format_lines()
@@ -601,35 +601,35 @@ Sub test_preserve_empty_lines()
   expected$(3) = ""
   expected$(4) = "bar"
   expected$(5) = ""
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_ignore_empty_lines()
-  in$(0) = ""
-  in$(1) = "foo"
-  in$(2) = ""
-  in$(3) = ""
-  in$(4) = "bar"
-  in$(5) = ""
+  lin$(0) = ""
+  lin$(1) = "foo"
+  lin$(2) = ""
+  lin$(3) = ""
+  lin$(4) = "bar"
+  lin$(5) = ""
 
   opt.empty_lines% = 0
   format_lines()
 
   expected$(0) = "foo"
   expected$(1) = "bar"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_insert_empty_lines()
-  in$(0) = "a = 1"
-  in$(1) = "Function foo()"
-  in$(2) = "End Function"
-  in$(3) = "Sub bar()"
-  in$(4) = "End Sub"
-  in$(5) = "CFunction wom()"
-  in$(6) = "End CFunction"
-  in$(7) = "CSub bat()"
-  in$(8) = "End CSub"
+  lin$(0) = "a = 1"
+  lin$(1) = "Function foo()"
+  lin$(2) = "End Function"
+  lin$(3) = "Sub bar()"
+  lin$(4) = "End Sub"
+  lin$(5) = "CFunction wom()"
+  lin$(6) = "End CFunction"
+  lin$(7) = "CSub bat()"
+  lin$(8) = "End CSub"
 
   opt.empty_lines% = 1
   format_lines()
@@ -647,17 +647,17 @@ Sub test_insert_empty_lines()
   expected$(10) = ""
   expected$(11) = "CSub bat()"
   expected$(12) = "End CSub"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_empty_lines_given_comment()
-  in$(0) = "a = 1"
-  in$(1) = "' Leading comment 1"
-  in$(2) = "Function foo()"
-  in$(3) = "End Function"
-  in$(4) = "' Leading comment 2"
-  in$(5) = "Sub bar()"
-  in$(6) = "End Sub"
+  lin$(0) = "a = 1"
+  lin$(1) = "' Leading comment 1"
+  lin$(2) = "Function foo()"
+  lin$(3) = "End Function"
+  lin$(4) = "' Leading comment 2"
+  lin$(5) = "Sub bar()"
+  lin$(6) = "End Sub"
 
   opt.empty_lines% = 1
   format_lines()
@@ -670,18 +670,18 @@ Sub test_empty_lines_given_comment()
   expected$(5) = "' Leading comment 2"
   expected$(6) = "Sub bar()"
   expected$(7) = "End Sub"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_omit_comments()
-  in$(0) = "' leading space"
-  in$(1) = "'no leading space"
-  in$(2) = "'_leading underscore"
-  in$(3) = "' license"
-  in$(4) = "' LICENCE"
-  in$(5) = "' copyRIGHT"
-  in$(6) = "' (c)"
-  in$(7) = "REM legacy comment"
+  lin$(0) = "' leading space"
+  lin$(1) = "'no leading space"
+  lin$(2) = "'_leading underscore"
+  lin$(3) = "' license"
+  lin$(4) = "' LICENCE"
+  lin$(5) = "' copyRIGHT"
+  lin$(6) = "' (c)"
+  lin$(7) = "REM legacy comment"
 
   opt.comments% = 0
   format_lines()
@@ -691,23 +691,23 @@ Sub test_omit_comments()
   expected$(2) = "' LICENCE"
   expected$(3) = "' copyRIGHT"
   expected$(4) = "' (c)"
-  assert_string_array_equals(expected$(), out$())
+  assert_string_array_equals(expected$(), lout$())
 End Sub
 
 Sub test_preserve_comments()
-  in$(0) = "' leading space"
-  in$(1) = "'no leading space"
-  in$(2) = "'_leading underscore"
-  in$(3) = "' license"
-  in$(4) = "' LICENCE"
-  in$(5) = "' copyRIGHT"
-  in$(6) = "' (c)"
-  in$(7) = "REM legacy comment"
+  lin$(0) = "' leading space"
+  lin$(1) = "'no leading space"
+  lin$(2) = "'_leading underscore"
+  lin$(3) = "' license"
+  lin$(4) = "' LICENCE"
+  lin$(5) = "' copyRIGHT"
+  lin$(6) = "' (c)"
+  lin$(7) = "REM legacy comment"
 
   opt.comments% = -1
   format_lines()
 
-  assert_string_array_equals(in$(), out$())
+  assert_string_array_equals(lin$(), lout$())
 End Sub
 
 Sub expect_token(i%, type%, txt$, start%)

@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07
+' For MMBasic 6.00
 
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
@@ -75,11 +75,11 @@ Sub cli.parse_no_arg(option$, i)
 End Sub
 
 Sub cli.usage()
-  Local in$ = "<input-file>"
-  Local out$ = "<output-file>"
-  Print "Usage: RUN " str.quote$("spflow.bas") ", [OPTION]... " in$ " [" out$ "]"
+  Const fin$ = "<input-file>"
+  Const fout$ = "<output-file>"
+  Print "Usage: RUN " str.quote$("spflow.bas") ", [OPTION]... " fin$ " [" fout$ "]"
   Print
-  Print "Generate an MMBasic flowgraph for the " in$
+  Print "Generate an MMBasic flowgraph for the " fin$
   Print
   Print "  -A, --all      produce graphs for all functions/subroutines, even those"
   Print "                 unreachable from the global scope"

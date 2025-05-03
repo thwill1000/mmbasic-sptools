@@ -106,13 +106,13 @@ Sub cli.parse_no_arg(option$, i)
 End Sub
 
 Sub cli.usage()
-  Local in$ = "<input-file>"
-  Local out$ = "<output-file>"
-  Print "Usage: RUN " str.quote$("sptrans.bas") ", [OPTION]... " in$ " [" out$ "]"
+  Const fin$ = "<input-file>"
+  Const fout$ = "<output-file>"
+  Print "Usage: RUN " str.quote$("sptrans.bas") ", [OPTION]... " fin$ " [" fout$ "]"
   Print
-  Print "Transcompile the given " in$ " flattening any #INCLUDE hierarchy and"
+  Print "Transcompile the given " fin$ " flattening any #INCLUDE hierarchy and"
   Print "processing any !directives encountered. The transpiled output is written to"
-  Print "the " out$ ", or the console if unspecified. By using the --format-only"
+  Print "the " fout$ ", or the console if unspecified. By using the --format-only"
   Print "option it can also be used as a simple BASIC code formatter."
   Print
   Print "  -C, --colour           syntax highlight the output,"

@@ -1,6 +1,6 @@
-' Copyright (c) 2021-2023 Thomas Hugo Williams
+' Copyright (c) 2021-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMB4L 0.6.0
+' For MMBasic 6.00
 
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
@@ -114,25 +114,25 @@ Sub spsh.cmd_files(cmd$, argc%, argv$())
   con.foreground("default")
 End Sub
 
-Function spsh.get_files$(f$, out$())
+Function spsh.get_files$(f$, ofiles$())
   Local i%
-  For i% = Bound(out$(), 0) To Bound(out$(), 1) : out$(i%) = "" : Next
+  For i% = Bound(ofiles$(), 0) To Bound(ofiles$(), 1) : ofiles$(i%) = "" : Next
   Local d$ = file.get_canonical$(Choice(f$ = "", ".", f$))
   If (f$ = "A:") Or (Mm.Info(FileSize f$) = -2) Then
     ' Directory
-    out$(0) = file.get_name$(d$)
+    ofiles$(0) = file.get_name$(d$)
     spsh.get_files$ = file.get_parent$(d$)
     Exit Function
   Else
     Local pattern$ = file.get_name$(d$)
     d$ = file.get_parent$(d$)
   EndIf
-  Local count% = file.get_files%(d$, pattern$, "all", out$())
+  Local count% = file.get_files%(d$, pattern$, "all", ofiles$())
   spsh.get_files$ = d$
 End Function
 
 Sub spsh.cmd_pwd(cmd$, argc%, argv$())
-  If argc% <> 0 Then Error "expects 0 arguments")
+  If argc% <> 0 Then Error "expects 0 arguments"
   con.println(Cwd$)
 End Sub
 

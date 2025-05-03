@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 6.00
 
 Option Explicit On
 Option Default None
@@ -436,52 +436,52 @@ Sub test_join_strings()
 End Sub
 
 Sub test_qsort_ints_gvn_ordered()
-  Local in%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+  Local ia%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
   Local expected%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
-  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
-  assert_int_array_equals(expected%(), in%())
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(ia%()))
+  assert_int_array_equals(expected%(), ia%())
 End Sub
 
 Sub test_qsort_ints_gvn_reversed()
-  Local in%(array.new%(10)) = (10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+  Local ia%(array.new%(10)) = (10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
   Local expected%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
-  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
-  assert_int_array_equals(expected%(), in%())
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(ia%()))
+  assert_int_array_equals(expected%(), ia%())
 End Sub
 
 Sub test_qsort_ints_gvn_identical()
-  Local in%(array.new%(10)) = (5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+  Local ia%(array.new%(10)) = (5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
   Local expected%(array.new%(10)) = (5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
 
-  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
-  assert_int_array_equals(expected%(), in%())
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(ia%()))
+  assert_int_array_equals(expected%(), ia%())
 End Sub
 
 Sub test_qsort_ints_gvn_1_element()
-  Local in%(array.new%(2)) = (2, 1)
+  Local ia%(array.new%(2)) = (2, 1)
   Local expected%(array.new%(2)) = (2, 1)
 
   ' Sort 1 element of a two element array.
-  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%(), BASE, 1))
-  assert_int_array_equals(expected%(), in%())
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(ia%(), BASE, 1))
+  assert_int_array_equals(expected%(), ia%())
 End Sub
 
 Sub test_qsort_ints_gvn_2_elements()
-  Local in%(array.new%(2)) = (2, 1)
+  Local ia%(array.new%(2)) = (2, 1)
   Local expected%(array.new%(2)) = (1, 2)
 
-  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%()))
-  assert_int_array_equals(expected%(), in%())
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(ia%()))
+  assert_int_array_equals(expected%(), ia%())
 End Sub
 
 Sub test_qsort_ints_gvn_comparator()
-  Local in%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+  Local ia%(array.new%(10)) = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
   Local expected%(array.new%(10)) = (10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
 
-  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(in%(), BASE, 10, "reverse_comparator%"))
-  assert_int_array_equals(expected%(), in%())
+  assert_int_equals(sys.SUCCESS%, array.qsort_ints%(ia%(), BASE, 10, "reverse_comparator%"))
+  assert_int_array_equals(expected%(), ia%())
 End Sub
 
 Function reverse_comparator%(a%, b%)

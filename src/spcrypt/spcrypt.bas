@@ -1,6 +1,6 @@
-' Copyright (c) 2021-2022 Thomas Hugo Williams
+' Copyright (c) 2021-2025 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For Colour Maximite 2, MMBasic 5.07
+' For MMBasic 6.00
 '
 ' MD5 algorithm from https://en.wikipedia.org/wiki/MD5
 ' XXTEA algorithm from https://en.wikipedia.org/wiki/XXTEA
@@ -136,12 +136,12 @@ Function parse_option%(token$)
 End Function
 
 Sub print_usage()
-  Local in$ = "<input-file>"
-  Local out$ = "<output-file>"
+  Const fin$ = "<input-file>"
+  Const fout$ = "<output-file>"
 
   If sys.err$ <> "" Then Print PROG_NAME$ + ": " + sys.err$ : Print
 
-  Print "Usage *" PROG_NAME$ " [OPTION]... <command> " in$ " [" out$ "]"
+  Print "Usage *" PROG_NAME$ " [OPTION]... <command> " fin$ " [" fout$ "]"
   Print
   Print "Options:"
   Print "  -p, --password=<password>  Use <password> for encryption/decryption."
@@ -149,9 +149,9 @@ Sub print_usage()
   Print "  --version                  Output version information and exit."
   Print
   Print "Commands:"
-  Print "  decrypt  Decrypt " in$ " using XXTEA algorithm."
-  Print "  encrypt  Encrypt " in$ " using XXTEA algorithm."
-  Print "  md5      Calculate MD5 checksum for " in$ "."
+  Print "  decrypt  Decrypt " fin$ " using XXTEA algorithm."
+  Print "  encrypt  Encrypt " fin$ " using XXTEA algorithm."
+  Print "  md5      Calculate MD5 checksum for " fin$ "."
 End Sub
 
 Function cmd_decrypt%()

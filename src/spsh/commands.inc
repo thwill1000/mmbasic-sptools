@@ -1,6 +1,6 @@
-' Copyright (c) 2021-2023 Thomas Hugo Williams
+' Copyright (c) 2021-2024 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07
+' For MMBasic 6.00
 
 ' TODO
 ' ----
@@ -242,20 +242,20 @@ Sub cmd.ls()
   con.foreground("default")
 End Sub
 
-Function cmd.get_files$(f$, out$())
+Function cmd.get_files$(f$, ofiles$())
   Local i%
-  For i% = Bound(out$(), 0) To Bound(out$(), 1) : out$(i%) = "" : Next
+  For i% = Bound(ofiles$(), 0) To Bound(ofiles$(), 1) : ofiles$(i%) = "" : Next
   Local d$ = file.get_canonical$(Choice(f$ = "", ".", f$))
   If (f$ = "A:") Or (Mm.Info(FileSize f$) = -2) Then
     ' Directory
-    out$(0) = file.get_name$(d$)
+    ofiles$(0) = file.get_name$(d$)
     cmd.get_files$ = file.get_parent$(d$)
     Exit Function
   Else
     Local pattern$ = file.get_name$(d$)
     d$ = file.get_parent$(d$)
   EndIf
-  file.get_files(d$, pattern$, "all", out$())
+  file.get_files(d$, pattern$, "all", ofiles$())
   cmd.get_files$ = d$
 End Function
 

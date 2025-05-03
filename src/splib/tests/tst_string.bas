@@ -95,10 +95,10 @@ Sub test_is_plain_ascii()
 End Sub
 
 Sub test_next_token()
-  Local in$ = "!foo !@bar !!  wombat$ @@snafu@! @"
+  Local s$ = "!foo !@bar !!  wombat$ @@snafu@! @"
 
   ' Default space separator and no empty tokens.
-  assert_string_equals("!foo", str.next_token$(in$))
+  assert_string_equals("!foo", str.next_token$(s$))
   assert_string_equals("!@bar", str.next_token$())
   assert_string_equals("!!", str.next_token$())
   assert_string_equals("wombat$", str.next_token$())
@@ -107,7 +107,7 @@ Sub test_next_token()
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' ! separator keeping empty tokens.
-  assert_string_equals("", str.next_token$(in$, "!"))
+  assert_string_equals("", str.next_token$(s$, "!"))
   assert_string_equals("foo ", str.next_token$())
   assert_string_equals("@bar ", str.next_token$())
   assert_string_equals("", str.next_token$())
@@ -116,14 +116,14 @@ Sub test_next_token()
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' ! separator skipping empty tokens.
-  assert_string_equals("foo ", str.next_token$(in$, "!", 1))
+  assert_string_equals("foo ", str.next_token$(s$, "!", 1))
   assert_string_equals("@bar ", str.next_token$())
   assert_string_equals("  wombat$ @@snafu@", str.next_token$())
   assert_string_equals(" @", str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ separator keeping empty tokens.
-  assert_string_equals("!foo !", str.next_token$(in$, "@"))
+  assert_string_equals("!foo !", str.next_token$(s$, "@"))
   assert_string_equals("bar !!  wombat$ ", str.next_token$())
   assert_string_equals("", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
@@ -132,14 +132,14 @@ Sub test_next_token()
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ separator skipping empty tokens.
-  assert_string_equals("!foo !", str.next_token$(in$, "@", 1))
+  assert_string_equals("!foo !", str.next_token$(s$, "@", 1))
   assert_string_equals("bar !!  wombat$ ", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
   assert_string_equals("! ", str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ or ! separators keeping empty tokens.
-  assert_string_equals("", str.next_token$(in$, "@!"))
+  assert_string_equals("", str.next_token$(s$, "@!"))
   assert_string_equals("foo ", str.next_token$())
   assert_string_equals("", str.next_token$())
   assert_string_equals("bar ", str.next_token$())
@@ -153,7 +153,7 @@ Sub test_next_token()
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
   ' @ or ! separators skipping empty tokens.
-  assert_string_equals("foo ", str.next_token$(in$, "@!", 1))
+  assert_string_equals("foo ", str.next_token$(s$, "@!", 1))
   assert_string_equals("bar ", str.next_token$())
   assert_string_equals("  wombat$ ", str.next_token$())
   assert_string_equals("snafu", str.next_token$())
@@ -173,50 +173,50 @@ Sub test_next_token()
 End Sub
 
 Sub test_next_token_given_quotes()
-  Local in$ = str.replace$("@token1@ @token 2@", "@", Chr$(34))
-  assert_string_equals(Chr$(34) + "token1" + Chr$(34), str.next_token$(in$))
+  Local s$ = str.replace$("@token1@ @token 2@", "@", Chr$(34))
+  assert_string_equals(Chr$(34) + "token1" + Chr$(34), str.next_token$(s$))
   assert_string_equals(Chr$(34) + "token 2" + Chr$(34), str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ = str.replace$("@token1", "@", Chr$(34))
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = str.replace$("@token1", "@", Chr$(34))
+  assert_string_equals(s$, str.next_token$(s$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ = str.replace$("token1@", "@", Chr$(34))
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = str.replace$("token1@", "@", Chr$(34))
+  assert_string_equals(s$, str.next_token$(s$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ = Chr$(34)
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = Chr$(34)
+  assert_string_equals(s$, str.next_token$(s$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ = Chr$(34) + Chr$(34)
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = Chr$(34) + Chr$(34)
+  assert_string_equals(s$, str.next_token$(s$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ = Chr$(34) + Chr$(34) + Chr$(34)
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = Chr$(34) + Chr$(34) + Chr$(34)
+  assert_string_equals(s$, str.next_token$(s$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ =  Chr$(34) + Chr$(34) + Chr$(34) + Chr$(34)
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ =  Chr$(34) + Chr$(34) + Chr$(34) + Chr$(34)
+  assert_string_equals(s$, str.next_token$(s$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ = str.replace$("@\@\@\@\@@", "@", Chr$(34))
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = str.replace$("@\@\@\@\@@", "@", Chr$(34))
+  assert_string_equals(s$, str.next_token$(s$))
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 
-  in$ = str.replace$("foo@bar", "@", Chr$(34))
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = str.replace$("foo@bar", "@", Chr$(34))
+  assert_string_equals(s$, str.next_token$(s$))
 
-  in$ = str.replace$("@foo@bar@", "@", Chr$(34))
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = str.replace$("@foo@bar@", "@", Chr$(34))
+  assert_string_equals(s$, str.next_token$(s$))
 
-  in$ = str.replace$("@foo\@bar@", "@", Chr$(34))
-  assert_string_equals(in$, str.next_token$(in$))
+  s$ = str.replace$("@foo\@bar@", "@", Chr$(34))
+  assert_string_equals(s$, str.next_token$(s$))
 
-  in$ = str.replace$("rcmd @RUN \@foo bar.bas\@@", "@", Chr$(34))
-  assert_string_equals("rcmd", str.next_token$(in$))
+  s$ = str.replace$("rcmd @RUN \@foo bar.bas\@@", "@", Chr$(34))
+  assert_string_equals("rcmd", str.next_token$(s$))
   assert_string_equals(Chr$(34) + "RUN \" + Chr$(34) + "foo bar.bas\" + Chr$(34) + Chr$(34), str.next_token$())
   assert_string_equals(sys.NO_DATA$, str.next_token$())
 End Sub
