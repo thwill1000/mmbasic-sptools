@@ -1,4 +1,4 @@
-' Copyright (c) 2020-2025 Thomas Hugo Williams
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 '!info defined CMM2
@@ -275,7 +275,10 @@ End Function
 Function sys.TMPDIR$()
   Select Case Mm.Info$(Device X)
     Case "MMB4L"
-      sys.TMPDIR$ = Choice(Mm.Info$(EnvVar "TMPDIR") = "", "/tmp", Mm.Info$(EnvVar "TMPDIR"))
+      Local tmp$ = Mm.Info$(EnvVar "TMPDIR")
+      ' Workaround UserLAnd not returning normalized tmp dir.
+      If Left$(tmp$, 6) = "/data/" Then tmp$ = ""
+      sys.TMPDIR$ = Choice(tmp$ = "", "/tmp", tmp$)
     Case "MMBasic for Windows"
       sys.TMPDIR$ = Mm.Info$(EnvVar "TMP")
     Case Else
