@@ -15,6 +15,7 @@ Option Base InStr(Mm.CmdLine$, "--base=1") > 0
 #Include "../../sptest/unittest.inc"
 
 Const BASE% = Mm.Info(Option Base)
+Const IS_WINDOWS% = sys.is_windows%()
 
 add_test("test_get_parent")
 add_test("test_get_name")
@@ -172,7 +173,7 @@ Sub test_exists()
   assert_false(file.exists%(file.get_parent$(f$) + "/foo/" + file.get_name$(f$)))
 
   ' Given A: drive.
-  Local expected% = Not sys.is_platform%("mmb4w")
+  Local expected% = Not IS_WINDOWS%
   assert_int_equals(expected%, file.exists%("A:"))
   assert_int_equals(expected%, file.exists%("A:/"))
   assert_int_equals(expected%, file.exists%("A:\"))
@@ -242,6 +243,7 @@ Sub test_is_symlink()
 
   ' Test on symbolic link to file.
   If Mm.Device$ <> "MMB4L" Then Exit Sub
+  If IS_WINDOWS% Then Exit Sub
   Local symlink$ = TMPDIR$ + "/test_is_symlink.lnk"
   If file.exists%(symlink$) Then Kill symlink$
   System("ln -s " + filename$ + " " + symlink$)
@@ -267,12 +269,12 @@ End Sub
 Sub test_is_directory()
   assert_true(file.is_directory%(Mm.Info$(Path)))
 
-  Const has_a% = Choice(sys.is_platform%("mmb4w"), 0, 1)
+  Const has_a% = Not IS_WINDOWS%
   assert_int_equals(has_a%, file.is_directory%("A:"))
   assert_int_equals(has_a%, file.is_directory%("A:/"))
   assert_int_equals(has_a%, file.is_directory%("A:\"))
 
-  Const has_b% = Choice(sys.is_platform%("mmb4w"), 0, 1)
+  Const has_b% = Not IS_WINDOWS%
   assert_int_equals(has_b%, file.is_directory%("A:"))
   assert_int_equals(has_b%, file.is_directory%("A:/"))
   assert_int_equals(has_b%, file.is_directory%("A:\"))
@@ -438,6 +440,7 @@ End Sub
 
 Sub test_find_with_symlinks()
   If Not sys.is_platform%("mmb4l") Then Exit Sub
+  If IS_WINDOWS% Then Exit Sub
 
   ' Setup.
   MkDir TMPDIR$
@@ -834,6 +837,7 @@ End Function
 
 Sub test_depth_first_given_symlink()
   If Mm.Device$ <> "MMB4L" Then Exit Sub
+  If IS_WINDOWS% Then Exit Sub
 
   MkDir TMPDIR$
   MkDir TMPDIR$ + "/foo-dir"
@@ -901,6 +905,7 @@ End Sub
 
 Sub test_delete_given_symlink()
   If Mm.Device$ <> "MMB4L" Then Exit Sub
+  If IS_WINDOWS% Then Exit Sub
 
   MkDir TMPDIR$
   MkDir TMPDIR$ + "/foo-dir"

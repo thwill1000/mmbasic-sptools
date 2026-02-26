@@ -230,18 +230,34 @@ Sub sys.restore_break()
   Option Break 3
 End Sub
 
+Function sys.is_windows%()
+  If Mm.Device$ = "MMB4L" Then
+    sys.is_windows% = (Mm.Info$(Arch) = "Windows x86_64")
+  Else
+    sys.is_windows% = (Mm.Device$ = "MMBasic for Windows")
+  EndIf
+End Function
+
+Sub sys.normalize_separators(path$)
+  Local i%
+  For i% = 1 To Len(path$)
+    If Peek(Var path$, i%) = Asc("\") Then Poke Var path$, i%, Asc("/")
+  Next
+End Sub
+
 '!if defined(REAL_GAMEMITE)
   '!replace { sys.HOME$ ( ) } { "A:" }
 '!else
 Function sys.HOME$()
-  Select Case Mm.Info$(Device X)
-    Case "MMB4L"
-      sys.HOME$ = Mm.Info$(EnvVar "HOME")
-    Case "MMBasic for Windows"
-      sys.HOME$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
-    Case Else
-      sys.HOME$ = "A:"
-  End Select
+  If sys.is_windows%() Then
+    sys.HOME$ = Mm.Info$(EnvVar "USERPROFILE")
+    If sys.HOME$ = "" Then sys.HOME$ = Mm.Info$(EnvVar "HOMEDIR") + Mm.Info$(EnvVar "HOMEPATH")
+    sys.normalize_separators(sys.HOME$)
+  ElseIf Mm.Info$(Device X) = "MMB4L" Then
+    sys.HOME$ = Mm.Info$(EnvVar "HOME")
+  Else
+    sys.HOME$ = "A:"
+  EndIf
 End Function
 '!endif
 
@@ -273,17 +289,17 @@ End Function
   '!replace { sys.TMPDIR$ ( ) } { "A:/tmp" }
 '!else
 Function sys.TMPDIR$()
-  Select Case Mm.Info$(Device X)
-    Case "MMB4L"
-      Local tmp$ = Mm.Info$(EnvVar "TMPDIR")
-      ' Workaround UserLAnd not returning normalized tmp dir.
-      If Left$(tmp$, 6) = "/data/" Then tmp$ = ""
-      sys.TMPDIR$ = Choice(tmp$ = "", "/tmp", tmp$)
-    Case "MMBasic for Windows"
-      sys.TMPDIR$ = Mm.Info$(EnvVar "TMP")
-    Case Else
-      sys.TMPDIR$ = "A:/tmp"
-  End Select
+  If sys.is_windows%() Then
+    sys.TMPDIR$ = Mm.Info$(EnvVar "TMP")
+    If sys.TMPDIR$ = "" Then sys.TMPDIR$ = Mm.Info$(EnvVar "TEMP")
+    If sys.TMPDIR$ = "" Then sys.TMPDIR$ = sys.HOME$() + "/AppData/Local/Temp"
+    sys.normalize_separators(sys.TMPDIR$)
+  ElseIf Mm.Info$(Device X) = "MMB4L" Then
+    sys.TMPDIR$ = Mm.Info$(EnvVar "TMPDIR")
+    If sys.TMPDIR$ = "" Then sys.TMPDIR$ = "/tmp"
+  Else
+    sys.TMPDIR$ = "A:/tmp"
+  EndIf
 End Function
 '!endif
 
