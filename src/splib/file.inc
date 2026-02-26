@@ -29,9 +29,12 @@ Function file.count_files%(d$, pattern$, type$)
 
   Local f$
   Select Case LCase$(type$)
-    Case "all"      : f$ = Dir$(d$ + "/*", All)
-    Case "dir"      : f$ = Dir$(d$ + "/*", Dir)
-    Case "file", "" : f$ = Dir$(d$ + "/*", File)
+    Case "all"
+      f$ = Dir$(d$ + "/*", All)
+    Case "dir"
+      f$ = Dir$(d$ + "/*", Dir)
+    Case "file", ""
+      f$ = Dir$(d$ + "/*", File)
     Case Else
       file.count_files% = sys.error%(sys.FAILURE, "Invalid file type '" + type$ + "'")
       Exit Function
@@ -359,9 +362,12 @@ Function file.get_files%(d$, pattern$, type$, onames$())
 
   Local f$
   Select Case LCase$(type$)
-    Case "all"      : f$ = Dir$(d$ + "/*", All)
-    Case "dir"      : f$ = Dir$(d$ + "/*", Dir)
-    Case "file", "" : f$ = Dir$(d$ + "/*", File)
+    Case "all"
+      f$ = Dir$(d$ + "/*", All)
+    Case "dir"
+      f$ = Dir$(d$ + "/*", Dir)
+    Case "file", ""
+      f$ = Dir$(d$ + "/*", File)
     Case Else
       file.get_files% = sys.error%(sys.FAILURE, "Invalid file type '" + type$ + "'")
       Exit Function
