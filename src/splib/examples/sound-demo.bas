@@ -1,4 +1,4 @@
-' Copyright (c) 2023-2024 Thomas Hugo Williams
+' Copyright (c) 2023-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
 
 Option Base 0
@@ -26,6 +26,7 @@ Option Explicit On
 If Mm.Device$ = "MMB4L" Then
   Option Simulate "Colour Maximite 2"
   Option CodePage CMM2
+  Option Console Serial
 EndIf
 
 #Include "../system.inc"
