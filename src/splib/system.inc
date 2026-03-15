@@ -389,3 +389,14 @@ Sub sys.run_shell(fnbr%)
   Const prog$ = sys.read_shell_file$(1, fnbr%)
   If prog$ <> "" Then Run prog$
 End Sub
+
+' Is audio available?
+Function sys.has_audio%()
+  If Mm.Info(Device X) = "MMB4L" Then
+    sys.has_audio% = 1
+  Else If InStr(Mm.Device$, "PicoMite") Then
+    sys.has_audio% = Mm.Info$(Option Audio) <> "NONE"
+  Else
+    sys.has_audio% = 1
+  EndIf
+End Function
