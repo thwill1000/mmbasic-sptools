@@ -500,6 +500,30 @@ Function gonzo.strip_garbage$(s$)
   gonzo.strip_garbage$ = s$
 End Function
 
+Function strip_leading_ansi$(s$)
+  Local i%, ch$, in_escape%
+  i% = 1
+  Do While i% <= Len(s$)
+    ch$ = Mid$(s$, i%, 1)
+    If in_escape% Then
+      ' End of escape sequence is a letter
+      If (Asc(ch$) >= 65 And Asc(ch$) <= 90) Or (Asc(ch$) >= 97 And Asc(ch$) <= 122) Then
+        in_escape% = 0
+      EndIf
+    ElseIf Asc(ch$) = &h1B Then
+      ' ESC character starts an escape sequence
+      in_escape% = 1
+    Else
+      ' First non-escape character, return the rest of the string from here
+      strip_leading_ansi$ = Mid$(s$, i%)
+      Exit Function
+    EndIf
+    i% = i% + 1
+  Loop
+  ' String was entirely escape sequences
+  strip_leading_ansi$ = ""
+End Function
+
 ' Reads input until there is a command-prompt.
 Sub gonzo.read_until_prompt(flags%)
   Const CMM2_MESS$ = Chr$(&h1B) + "[?25h" + Chr$(&h1B) + "[37m" + Chr$(&h1B) + "[m"
@@ -520,7 +544,7 @@ Sub gonzo.read_until_prompt(flags%)
       If flags% And ECHO Then con.println(s$)
       If flags% And COLLECT Then LongString Append gonzo.buf%(), s$ + Chr$(&h0A)
     Else
-      If Left$(gonzo.rx_buf$, 2) = "> " Then Exit Do
+      If Left$(strip_leading_ansi$(gonzo.rx_buf$), 2) = "> " Then Exit Do
     EndIf
   Loop
 End Sub
