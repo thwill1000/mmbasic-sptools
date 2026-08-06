@@ -1,6 +1,6 @@
-' Copyright (c) 2020-2023 Thomas Hugo Williams
+' Copyright (c) 2020-2026 Thomas Hugo Williams
 ' License MIT <https://opensource.org/licenses/MIT>
-' For MMBasic 5.07
+' For MMBasic 6
 
 '!if !defined(NO_INCLUDE_GUARDS)
 On Error Skip 1 : Dim sys.VERSION = -1
@@ -15,6 +15,7 @@ If sys.is_platform%("mmb4w") Then Option Console Both
 Const TMPDIR$ = ut.get_tmp_dir$() ' Test specific temporary directory.
 
 Const ut.MAX_FAILURES% = 20 ' Maximum number of failures reported per test method.
+On Error Skip ' So a different value can be specified before the file is included.
 Const ut.MAX_TESTS% = 100
 Const ut.MAX_ARRAY_DIFFS% = 5
 
@@ -36,6 +37,7 @@ Function ut.get_tmp_dir$()
 End Function
 
 Sub add_test(name$, sub$)
+  If list.is_full%(ut.test_names$()) Then Error "Too many tests"
   list.add(ut.test_names$(), name$)
   list.add(ut.test_subs$(), Choice(sub$ = "", name$, sub$))
 End Sub
